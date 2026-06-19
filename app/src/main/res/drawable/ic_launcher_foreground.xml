@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Radio tower / antenna icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 C54,30 54,30 54,30 L54,78 M42,42 C46,38 50,36 54,36 C58,36 62,38 66,42 M36,36 C42,30 48,27 54,27 C60,27 66,30 72,36 M30,30 C38,22 46,18 54,18 C62,18 70,22 78,30"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 L54,78"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"/>
+    <path
+        android:pathData="M42,42 Q48,36 54,36 Q60,36 66,42"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M36,36 Q45,27 54,27 Q63,27 72,36"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M30,30 Q42,18 54,18 Q66,18 78,30"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:fillColor="#00000000"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,78 L58,78 L56,82 L52,82 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,82 L64,82 L64,86 L44,86 Z"/>
+</vector>

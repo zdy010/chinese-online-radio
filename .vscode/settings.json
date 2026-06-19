@@ -1,0 +1,31 @@
+{
+    // ===== GNU Global =====
+    // GTAGS 文件所在目录（通常是项目根目录）
+    "gnuglobal.rootpath": ".",
+    // 使用 GNU Global 进行定义跳转
+    "gnuglobal.useAbsolutePath": false,
+    // 自动更新标签（保存文件时）
+    "gnuglobal.updateOnSave": true,
+
+    // ===== Highlight Words =====
+    // 高亮样式：可选 border, background, underline, foreground
+    "highlightwords.highlightScope": "document",
+    "highlightwords.boxStyle": "border",
+    "highlightwords.color": "#FFCC00",
+    "highlightwords.backgroundColor": "rgba(255, 204, 0, 0.15)",
+    "highlightwords.borderColor": "#FFCC00",
+    // 最小触发长度（至少几个字符才触发高亮）
+    "highlightwords.minSelectionLength": 2,
+    // 是否高亮注释中的匹配词
+    "highlightwords.ignoreComments": false,
+    // 是否高亮字符串中的匹配词
+    "highlightwords.ignoreStrings": false,
+    // 自定义高亮颜色列表（多个词同时高亮时依次使用）
+    "highlightwords.colors": [
+        "#FFCC00",
+        "#FF6B6B",
+        "#4ECDC4",
+        "#45B7D1",
+        "#96CEB4"
+    ]
+}

@@ -1,0 +1,373 @@
+{
+  "stations": [
+    {
+      "id": "cnr1",
+      "name": "中国之声",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/zgzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/中国之声.png",
+      "frequency": "FM 106.1",
+      "description": "中央人民广播电台第一套节目，中国最具影响力的新闻广播频率"
+    },
+    {
+      "id": "cnr2",
+      "name": "经济之声",
+      "category": "finance",
+      "streamUrl": "https://ngcdn002.cnr.cn/live/jjzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/经济之声.png",
+      "frequency": "FM 96.6",
+      "description": "中央人民广播电台第二套节目，专业财经广播"
+    },
+    {
+      "id": "cnr3",
+      "name": "音乐之声",
+      "category": "music",
+      "streamUrl": "https://ngcdn003.cnr.cn/live/yyzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/音乐之声.png",
+      "frequency": "FM 90.0",
+      "description": "中央人民广播电台第三套节目，流行音乐广播"
+    },
+    {
+      "id": "cnr5",
+      "name": "中华之声",
+      "category": "general",
+      "streamUrl": "https://ngcdn005.cnr.cn/live/zhzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/中华之声.png",
+      "frequency": "FM 94.9",
+      "description": "中央人民广播电台第五套节目，对台湾广播"
+    },
+    {
+      "id": "cnr6",
+      "name": "神州之声",
+      "category": "general",
+      "streamUrl": "https://ngcdn006.cnr.cn/live/szzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/神州之声.png",
+      "frequency": "FM 101.2",
+      "description": "中央人民广播电台第六套节目"
+    },
+    {
+      "id": "cnr7",
+      "name": "大湾区之声",
+      "category": "general",
+      "streamUrl": "https://ngcdn007.cnr.cn/live/hxzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/大湾区之声.png",
+      "frequency": "FM 102.8",
+      "description": "中央广播电视总台粤港澳大湾区之声"
+    },
+    {
+      "id": "cnr8",
+      "name": "民族之声",
+      "category": "general",
+      "streamUrl": "https://ngcdn008.cnr.cn/live/mzzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/民族之声.png",
+      "frequency": "FM 104.5",
+      "description": "中央人民广播电台民族之声"
+    },
+    {
+      "id": "cnr9",
+      "name": "文艺之声",
+      "category": "arts",
+      "streamUrl": "https://ngcdn009.cnr.cn/live/wyzs/index.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/文艺之声.png",
+      "frequency": "FM 106.6",
+      "description": "中央人民广播电台文艺之声"
+    },
+    {
+      "id": "cnr10",
+      "name": "老年之声",
+      "category": "general",
+      "streamUrl": "https://ngcdn010.cnr.cn/live/lnzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "AM 1053",
+      "description": "中央人民广播电台老年之声"
+    },
+    {
+      "id": "cnr11",
+      "name": "藏语广播",
+      "category": "general",
+      "streamUrl": "https://ngcdn011.cnr.cn/live/zygb/index.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 105.7",
+      "description": "中央人民广播电台藏语广播"
+    },
+    {
+      "id": "bjr_news",
+      "name": "北京新闻广播",
+      "category": "news",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r1/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/北京新闻广播.png",
+      "frequency": "FM 100.6",
+      "description": "北京广播电视台新闻广播"
+    },
+    {
+      "id": "bjr_traffic",
+      "name": "北京交通广播",
+      "category": "traffic",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r4/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/北京交通广播.png",
+      "frequency": "FM 103.9",
+      "description": "北京广播电视台交通广播"
+    },
+    {
+      "id": "bjr_music",
+      "name": "北京音乐广播",
+      "category": "music",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r2/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/北京音乐广播.png",
+      "frequency": "FM 97.4",
+      "description": "北京广播电视台音乐广播"
+    },
+    {
+      "id": "bjr_arts",
+      "name": "北京文艺广播",
+      "category": "arts",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r3/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 87.6",
+      "description": "北京广播电视台文艺广播"
+    },
+    {
+      "id": "smg_news",
+      "name": "上海新闻广播",
+      "category": "news",
+      "streamUrl": "https://satp.chinactv.net/live/news/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/上海新闻广播.png",
+      "frequency": "FM 93.4",
+      "description": "上海广播电视台新闻广播"
+    },
+    {
+      "id": "smg_traffic",
+      "name": "上海交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satp.chinactv.net/live/traffic/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/上海交通广播.png",
+      "frequency": "FM 105.7",
+      "description": "上海广播电视台交通广播"
+    },
+    {
+      "id": "smg_music",
+      "name": "上海动感101",
+      "category": "music",
+      "streamUrl": "https://satp.chinactv.net/live/donggan/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 101.7",
+      "description": "上海广播电视台动感101"
+    },
+    {
+      "id": "gd_news",
+      "name": "广东新闻广播",
+      "category": "news",
+      "streamUrl": "https://ctt5.rgd.com.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/广东新闻广播.png",
+      "frequency": "FM 91.4",
+      "description": "广东广播电视台新闻广播"
+    },
+    {
+      "id": "gd_music",
+      "name": "广东音乐之声",
+      "category": "music",
+      "streamUrl": "https://ctt5.rgd.com.cn/live/yyzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 99.3",
+      "description": "广东广播电视台音乐之声"
+    },
+    {
+      "id": "gd_traffic",
+      "name": "广东交通之声",
+      "category": "traffic",
+      "streamUrl": "https://ctt5.rgd.com.cn/live/jtzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 105.2",
+      "description": "广东广播电视台交通之声"
+    },
+    {
+      "id": "zj_news",
+      "name": "浙江新闻广播",
+      "category": "news",
+      "streamUrl": "https://ali-m-l.cztv.com/channels/lantian/channel01/128k.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/浙江新闻广播.png",
+      "frequency": "FM 88.0",
+      "description": "浙江广播电视集团新闻广播"
+    },
+    {
+      "id": "zj_traffic",
+      "name": "浙江交通之声",
+      "category": "traffic",
+      "streamUrl": "https://ali-m-l.cztv.com/channels/lantian/channel02/128k.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 93.0",
+      "description": "浙江广播电视集团交通之声"
+    },
+    {
+      "id": "zj_music",
+      "name": "浙江音乐调频",
+      "category": "music",
+      "streamUrl": "https://ali-m-l.cztv.com/channels/lantian/channel03/128k.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 96.8",
+      "description": "浙江广播电视集团音乐调频"
+    },
+    {
+      "id": "js_news",
+      "name": "江苏新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.radiojs.com.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/江苏新闻广播.png",
+      "frequency": "FM 93.7",
+      "description": "江苏省广播电视总台新闻广播"
+    },
+    {
+      "id": "js_traffic",
+      "name": "江苏交通广播",
+      "category": "traffic",
+      "streamUrl": "https://live.radiojs.com.cn/live/jtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 101.1",
+      "description": "江苏省广播电视总台交通广播"
+    },
+    {
+      "id": "js_music",
+      "name": "江苏音乐广播",
+      "category": "music",
+      "streamUrl": "https://live.radiojs.com.cn/live/yygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 89.7",
+      "description": "江苏省广播电视总台音乐广播"
+    },
+    {
+      "id": "hn_news",
+      "name": "湖南新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.mgtv.com/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/湖南新闻广播.png",
+      "frequency": "FM 102.8",
+      "description": "湖南广播电视台新闻广播"
+    },
+    {
+      "id": "hn_traffic",
+      "name": "湖南交通广播",
+      "category": "traffic",
+      "streamUrl": "https://live.mgtv.com/live/jtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 91.8",
+      "description": "湖南广播电视台交通广播"
+    },
+    {
+      "id": "hn_music",
+      "name": "湖南音乐之声",
+      "category": "music",
+      "streamUrl": "https://live.mgtv.com/live/yyzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 89.3",
+      "description": "湖南广播电视台音乐之声"
+    },
+    {
+      "id": "sc_news",
+      "name": "四川新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.sctv.com.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/四川新闻广播.png",
+      "frequency": "FM 98.1",
+      "description": "四川广播电视台新闻广播"
+    },
+    {
+      "id": "sc_traffic",
+      "name": "四川交通广播",
+      "category": "traffic",
+      "streamUrl": "https://live.sctv.com.cn/live/jtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 101.7",
+      "description": "四川广播电视台交通广播"
+    },
+    {
+      "id": "sd_news",
+      "name": "山东新闻广播",
+      "category": "news",
+      "streamUrl": "https://live-hls.ihzlh.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/山东新闻广播.png",
+      "frequency": "FM 95.0",
+      "description": "山东广播电视台新闻广播"
+    },
+    {
+      "id": "hb_news",
+      "name": "湖北新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.hbtv.com.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/湖北新闻广播.png",
+      "frequency": "FM 104.6",
+      "description": "湖北广播电视台新闻广播"
+    },
+    {
+      "id": "hb_traffic",
+      "name": "湖北交通广播",
+      "category": "traffic",
+      "streamUrl": "https://live.hbtv.com.cn/live/jtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 107.8",
+      "description": "湖北广播电视台交通广播"
+    },
+    {
+      "id": "tj_news",
+      "name": "天津新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.tjrn.net.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/天津新闻广播.png",
+      "frequency": "FM 97.2",
+      "description": "天津广播电视台新闻广播"
+    },
+    {
+      "id": "tj_traffic",
+      "name": "天津交通广播",
+      "category": "traffic",
+      "streamUrl": "https://live.tjrn.net.cn/live/jtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 106.8",
+      "description": "天津广播电视台交通广播"
+    },
+    {
+      "id": "cq_news",
+      "name": "重庆新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.cbg.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "https://live.fanmingming.cn/radio/重庆新闻广播.png",
+      "frequency": "FM 96.8",
+      "description": "重庆广播电视台新闻广播"
+    },
+    {
+      "id": "cq_traffic",
+      "name": "重庆交通广播",
+      "category": "traffic",
+      "streamUrl": "https://live.cbg.cn/live/jtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 95.5",
+      "description": "重庆广播电视台交通广播"
+    },
+    {
+      "id": "ah_news",
+      "name": "安徽新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.ahtv.cn/live/xwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 95.5",
+      "description": "安徽广播电视台新闻广播"
+    },
+    {
+      "id": "fj_news",
+      "name": "福建新闻广播",
+      "category": "news",
+      "streamUrl": "https://live.fjtv.net/live/xwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 103.7",
+      "description": "福建广播电视台新闻广播"
+    },
+    {
+      "id": "sports_radio",
+      "name": "体育广播",
+      "category": "sports",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r6/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 102.5",
+      "description": "北京体育广播"
+    }
+  ]
+}
