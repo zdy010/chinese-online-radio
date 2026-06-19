@@ -18,6 +18,17 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        setProperty("archivesBaseName", "chinese-online-radio")
+    }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val buildType = variant.buildType.name
+            val version = variant.versionName
+            output.outputFileName = "chinese-online-radio-${version}-${buildType}.apk"
+        }
     }
 
     buildTypes {

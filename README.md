@@ -84,7 +84,7 @@ set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
 ./gradlew assembleDebug
 
 # 安装到设备
-adb install app/build/outputs/apk/debug/app-debug.apk
+adb install app/build/outputs/apk/debug/chinese-online-radio-1.0.0-debug.apk
 ```
 
 ### Android Studio 构建
