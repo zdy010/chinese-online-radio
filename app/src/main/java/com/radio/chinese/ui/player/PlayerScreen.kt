@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,11 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
+import com.radio.chinese.data.local.availabilityToColor
+import com.radio.chinese.domain.model.StationSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,6 +144,25 @@ fun PlayerScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         maxLines = 2
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Playback Status Indicator
+                PlaybackStatusIndicator(
+                    playbackState = uiState.playbackState,
+                    isPlaying = uiState.isPlaying,
+                    error = uiState.error
+                )
+
+                // Source Switching
+                if (uiState.sourceScores.size > 1) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SourceSelector(
+                        sources = uiState.sourceScores,
+                        currentSource = uiState.currentSource,
+                        onSwitch = { viewModel.switchToSource(it.url) }
                     )
                 }
 
@@ -265,6 +290,172 @@ fun PlayerScreen(
                 showTimerDialog = false
             }
         )
+    }
+}
+
+@Composable
+private fun SourceSelector(
+    sources: List<Pair<StationSource, Float>>,
+    currentSource: StationSource?,
+    onSwitch: (StationSource) -> Unit
+) {
+    Column {
+        Text(
+            text = "节目源切换",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        sources.forEach { (source, score) ->
+            val isActive = currentSource?.url == source.url
+            val colorInt = availabilityToColor(score)
+            val color = Color(
+                ((colorInt shr 16) and 0xFF) / 255f,
+                ((colorInt shr 8) and 0xFF) / 255f,
+                (colorInt and 0xFF) / 255f
+            )
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp)
+                    .clickable(enabled = !isActive) { onSwitch(source) },
+                shape = RoundedCornerShape(8.dp),
+                color = if (isActive) color.copy(alpha = 0.15f)
+                else MaterialTheme.colorScheme.surface,
+                border = if (isActive) CardDefaults.outlinedCardBorder().copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(color)
+                ) else null
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 颜色指示圆点
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = source.label.ifEmpty {
+                                val idx = sources.indexOfFirst { it.first.url == source.url }
+                                if (idx >= 0) "源 ${idx + 1}" else "源"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                        )
+                        if (source.bitrate > 0) {
+                            Text(
+                                text = "${source.bitrate}kbps",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (isActive) {
+                        Text(
+                            text = "当前",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = color
+                        )
+                    } else {
+                        Text(
+                            text = "%.0f%%".format(score * 100),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = color
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaybackStatusIndicator(
+    playbackState: Int,
+    isPlaying: Boolean,
+    error: String?
+) {
+    // 显示错误（优先级最高）
+    if (error != null) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+        return
+    }
+
+    // 显示播放状态
+    val (text, icon, color) = when (playbackState) {
+        Player.STATE_BUFFERING -> Triple(
+            "缓冲中…",
+            Icons.Default.HourglassEmpty,
+            MaterialTheme.colorScheme.tertiary
+        )
+        Player.STATE_READY -> if (isPlaying) Triple(
+            "正在播放",
+            Icons.Default.PlayCircle,
+            MaterialTheme.colorScheme.primary
+        ) else Triple(
+            "已暂停",
+            Icons.Default.PauseCircle,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Player.STATE_IDLE -> Triple(
+            "连接中…",
+            Icons.Default.HourglassEmpty,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        else -> Triple("", null, MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.1f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = color
+            )
+        }
     }
 }
 

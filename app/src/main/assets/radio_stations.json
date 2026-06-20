@@ -7,7 +7,14 @@
       "streamUrl": "https://ngcdn001.cnr.cn/live/zgzs/index.m3u8",
       "logoUrl": "https://live.fanmingming.cn/radio/中国之声.png",
       "frequency": "FM 106.1",
-      "description": "中央人民广播电台第一套节目，中国最具影响力的新闻广播频率"
+      "description": "中央人民广播电台第一套节目，中国最具影响力的新闻广播频率",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/zgzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ]
     },
     {
       "id": "cnr2",
@@ -16,169 +23,14 @@
       "streamUrl": "https://ngcdn002.cnr.cn/live/jjzs/index.m3u8",
       "logoUrl": "https://live.fanmingming.cn/radio/经济之声.png",
       "frequency": "FM 96.6",
-      "description": "中央人民广播电台第二套节目，专业财经广播"
-    },
-    {
-      "id": "cnr3",
-      "name": "音乐之声",
-      "category": "music",
-      "streamUrl": "https://ngcdn003.cnr.cn/live/yyzs/index.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/音乐之声.png",
-      "frequency": "FM 90.0",
-      "description": "中央人民广播电台第三套节目，流行音乐广播"
-    },
-    {
-      "id": "cnr5",
-      "name": "中华之声",
-      "category": "general",
-      "streamUrl": "https://ngcdn005.cnr.cn/live/zhzs/index.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/中华之声.png",
-      "frequency": "FM 94.9",
-      "description": "中央人民广播电台第五套节目，对台湾广播"
-    },
-    {
-      "id": "cnr6",
-      "name": "神州之声",
-      "category": "general",
-      "streamUrl": "https://ngcdn006.cnr.cn/live/szzs/index.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/神州之声.png",
-      "frequency": "FM 101.2",
-      "description": "中央人民广播电台第六套节目"
-    },
-    {
-      "id": "cnr7",
-      "name": "大湾区之声",
-      "category": "general",
-      "streamUrl": "https://ngcdn007.cnr.cn/live/hxzs/index.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/大湾区之声.png",
-      "frequency": "FM 102.8",
-      "description": "中央广播电视总台粤港澳大湾区之声"
-    },
-    {
-      "id": "cnr8",
-      "name": "民族之声",
-      "category": "general",
-      "streamUrl": "https://ngcdn008.cnr.cn/live/mzzs/index.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/民族之声.png",
-      "frequency": "FM 104.5",
-      "description": "中央人民广播电台民族之声"
-    },
-    {
-      "id": "cnr9",
-      "name": "文艺之声",
-      "category": "arts",
-      "streamUrl": "https://ngcdn009.cnr.cn/live/wyzs/index.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/文艺之声.png",
-      "frequency": "FM 106.6",
-      "description": "中央人民广播电台文艺之声"
-    },
-    {
-      "id": "cnr10",
-      "name": "老年之声",
-      "category": "general",
-      "streamUrl": "https://ngcdn010.cnr.cn/live/lnzs/index.m3u8",
-      "logoUrl": "",
-      "frequency": "AM 1053",
-      "description": "中央人民广播电台老年之声"
-    },
-    {
-      "id": "cnr11",
-      "name": "藏语广播",
-      "category": "general",
-      "streamUrl": "https://ngcdn011.cnr.cn/live/zygb/index.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 105.7",
-      "description": "中央人民广播电台藏语广播"
-    },
-    {
-      "id": "bjr_news",
-      "name": "北京新闻广播",
-      "category": "news",
-      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r1/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/北京新闻广播.png",
-      "frequency": "FM 100.6",
-      "description": "北京广播电视台新闻广播"
-    },
-    {
-      "id": "bjr_traffic",
-      "name": "北京交通广播",
-      "category": "traffic",
-      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r4/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/北京交通广播.png",
-      "frequency": "FM 103.9",
-      "description": "北京广播电视台交通广播"
-    },
-    {
-      "id": "bjr_music",
-      "name": "北京音乐广播",
-      "category": "music",
-      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r2/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/北京音乐广播.png",
-      "frequency": "FM 97.4",
-      "description": "北京广播电视台音乐广播"
-    },
-    {
-      "id": "bjr_arts",
-      "name": "北京文艺广播",
-      "category": "arts",
-      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r3/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 87.6",
-      "description": "北京广播电视台文艺广播"
-    },
-    {
-      "id": "smg_news",
-      "name": "上海新闻广播",
-      "category": "news",
-      "streamUrl": "https://satp.chinactv.net/live/news/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/上海新闻广播.png",
-      "frequency": "FM 93.4",
-      "description": "上海广播电视台新闻广播"
-    },
-    {
-      "id": "smg_traffic",
-      "name": "上海交通广播",
-      "category": "traffic",
-      "streamUrl": "https://satp.chinactv.net/live/traffic/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/上海交通广播.png",
-      "frequency": "FM 105.7",
-      "description": "上海广播电视台交通广播"
-    },
-    {
-      "id": "smg_music",
-      "name": "上海动感101",
-      "category": "music",
-      "streamUrl": "https://satp.chinactv.net/live/donggan/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 101.7",
-      "description": "上海广播电视台动感101"
-    },
-    {
-      "id": "gd_news",
-      "name": "广东新闻广播",
-      "category": "news",
-      "streamUrl": "https://ctt5.rgd.com.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/广东新闻广播.png",
-      "frequency": "FM 91.4",
-      "description": "广东广播电视台新闻广播"
-    },
-    {
-      "id": "gd_music",
-      "name": "广东音乐之声",
-      "category": "music",
-      "streamUrl": "https://ctt5.rgd.com.cn/live/yyzs/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 99.3",
-      "description": "广东广播电视台音乐之声"
-    },
-    {
-      "id": "gd_traffic",
-      "name": "广东交通之声",
-      "category": "traffic",
-      "streamUrl": "https://ctt5.rgd.com.cn/live/jtzs/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 105.2",
-      "description": "广东广播电视台交通之声"
+      "description": "中央人民广播电台第二套节目，专业财经广播",
+      "sources": [
+        {
+          "url": "https://ngcdn002.cnr.cn/live/jjzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ]
     },
     {
       "id": "zj_news",
@@ -197,42 +49,6 @@
       "logoUrl": "",
       "frequency": "FM 93.0",
       "description": "浙江广播电视集团交通之声"
-    },
-    {
-      "id": "zj_music",
-      "name": "浙江音乐调频",
-      "category": "music",
-      "streamUrl": "https://ali-m-l.cztv.com/channels/lantian/channel03/128k.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 96.8",
-      "description": "浙江广播电视集团音乐调频"
-    },
-    {
-      "id": "js_news",
-      "name": "江苏新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.radiojs.com.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/江苏新闻广播.png",
-      "frequency": "FM 93.7",
-      "description": "江苏省广播电视总台新闻广播"
-    },
-    {
-      "id": "js_traffic",
-      "name": "江苏交通广播",
-      "category": "traffic",
-      "streamUrl": "https://live.radiojs.com.cn/live/jtgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 101.1",
-      "description": "江苏省广播电视总台交通广播"
-    },
-    {
-      "id": "js_music",
-      "name": "江苏音乐广播",
-      "category": "music",
-      "streamUrl": "https://live.radiojs.com.cn/live/yygb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 89.7",
-      "description": "江苏省广播电视总台音乐广播"
     },
     {
       "id": "hn_news",
@@ -262,96 +78,6 @@
       "description": "湖南广播电视台音乐之声"
     },
     {
-      "id": "sc_news",
-      "name": "四川新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.sctv.com.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/四川新闻广播.png",
-      "frequency": "FM 98.1",
-      "description": "四川广播电视台新闻广播"
-    },
-    {
-      "id": "sc_traffic",
-      "name": "四川交通广播",
-      "category": "traffic",
-      "streamUrl": "https://live.sctv.com.cn/live/jtgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 101.7",
-      "description": "四川广播电视台交通广播"
-    },
-    {
-      "id": "sd_news",
-      "name": "山东新闻广播",
-      "category": "news",
-      "streamUrl": "https://live-hls.ihzlh.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/山东新闻广播.png",
-      "frequency": "FM 95.0",
-      "description": "山东广播电视台新闻广播"
-    },
-    {
-      "id": "hb_news",
-      "name": "湖北新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.hbtv.com.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/湖北新闻广播.png",
-      "frequency": "FM 104.6",
-      "description": "湖北广播电视台新闻广播"
-    },
-    {
-      "id": "hb_traffic",
-      "name": "湖北交通广播",
-      "category": "traffic",
-      "streamUrl": "https://live.hbtv.com.cn/live/jtgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 107.8",
-      "description": "湖北广播电视台交通广播"
-    },
-    {
-      "id": "tj_news",
-      "name": "天津新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.tjrn.net.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/天津新闻广播.png",
-      "frequency": "FM 97.2",
-      "description": "天津广播电视台新闻广播"
-    },
-    {
-      "id": "tj_traffic",
-      "name": "天津交通广播",
-      "category": "traffic",
-      "streamUrl": "https://live.tjrn.net.cn/live/jtgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 106.8",
-      "description": "天津广播电视台交通广播"
-    },
-    {
-      "id": "cq_news",
-      "name": "重庆新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.cbg.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "https://live.fanmingming.cn/radio/重庆新闻广播.png",
-      "frequency": "FM 96.8",
-      "description": "重庆广播电视台新闻广播"
-    },
-    {
-      "id": "cq_traffic",
-      "name": "重庆交通广播",
-      "category": "traffic",
-      "streamUrl": "https://live.cbg.cn/live/jtgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 95.5",
-      "description": "重庆广播电视台交通广播"
-    },
-    {
-      "id": "ah_news",
-      "name": "安徽新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.ahtv.cn/live/xwgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 95.5",
-      "description": "安徽广播电视台新闻广播"
-    },
-    {
       "id": "fj_news",
       "name": "福建新闻广播",
       "category": "news",
@@ -361,13 +87,1662 @@
       "description": "福建广播电视台新闻广播"
     },
     {
-      "id": "sports_radio",
-      "name": "体育广播",
-      "category": "sports",
-      "streamUrl": "https://brtv-radiolive.rbc.cn/brtv-r6/playlist.m3u8",
+      "id": "bj_opera",
+      "name": "北京戏曲曲艺",
+      "category": "opera",
+      "streamUrl": "http://live.xmcdn.com/live/106/64.m3u8",
       "logoUrl": "",
-      "frequency": "FM 102.5",
-      "description": "北京体育广播"
+      "frequency": "FM 105.1",
+      "description": "北京广播电视台戏曲曲艺频道，京剧曲艺综合"
+    },
+    {
+      "id": "suzhou_opera",
+      "name": "苏州戏曲广播",
+      "category": "opera",
+      "streamUrl": "http://live.xmcdn.com/live/576/64.m3u8",
+      "logoUrl": "",
+      "frequency": "AM 846",
+      "description": "苏州广播电视总台戏曲广播，昆曲评弹等江南戏曲"
+    },
+    {
+      "id": "st_河南新闻广播",
+      "name": "河南新闻广播",
+      "category": "news",
+      "streamUrl": "https://stream.hndt.com/live/xinwen/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河南经济广播",
+      "name": "河南经济广播",
+      "category": "finance",
+      "streamUrl": "https://stream.hndt.com/live/jingji/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河南交通广播",
+      "name": "河南交通广播",
+      "category": "traffic",
+      "streamUrl": "https://stream.hndt.com/live/jiaotong/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河南音乐广播",
+      "name": "河南音乐广播",
+      "category": "music",
+      "streamUrl": "https://stream.hndt.com/live/yinyue/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_大象资讯台",
+      "name": "大象资讯台",
+      "category": "news",
+      "streamUrl": "https://stream.hndt.com/live/nongcun/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_私家车999",
+      "name": "私家车999",
+      "category": "traffic",
+      "streamUrl": "https://stream.hndt.com/live/sijiache/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河南教育广播",
+      "name": "河南教育广播",
+      "category": "general",
+      "streamUrl": "https://stream.hndt.com/live/jiaoyu/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河南信息广播",
+      "name": "河南信息广播",
+      "category": "general",
+      "streamUrl": "https://stream.hndt.com/live/leling/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_环球资讯广播",
+      "name": "环球资讯广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhqzx01/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_华语环球广播",
+      "name": "华语环球广播",
+      "category": "general",
+      "streamUrl": "http://sk.cri.cn/hyhq.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_英语环球广播",
+      "name": "英语环球广播",
+      "category": "general",
+      "streamUrl": "http://sk.cri.cn/am846.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_南海之声",
+      "name": "南海之声",
+      "category": "news",
+      "streamUrl": "http://sk.cri.cn/nhzs.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_粤语国际",
+      "name": "粤语国际",
+      "category": "general",
+      "streamUrl": "http://sk.cri.cn/hxfh.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_上海长三角之声",
+      "name": "上海长三角之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32dfgbdt/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_上海第一财经广播",
+      "name": "上海第一财经广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32dycjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖南潇湘之声",
+      "name": "湖南潇湘之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hunyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖南经济广播",
+      "name": "湖南经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hunjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖南金鹰之声",
+      "name": "湖南金鹰之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32955/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖南综合广播",
+      "name": "湖南综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hunxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏故事广播",
+      "name": "江苏故事广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jsgsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏新闻综合广播",
+      "name": "江苏新闻综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jsxwzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏文艺广播",
+      "name": "江苏文艺广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jswygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏金陵之声",
+      "name": "江苏金陵之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jsqctp/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏财经广播",
+      "name": "江苏财经广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jscjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏健康广播",
+      "name": "江苏健康广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jsjkgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_苏州生活广播",
+      "name": "苏州生活广播",
+      "category": "arts",
+      "streamUrl": "http://audio-live.radio.cn/live/szsh1/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_苏州儿童广播",
+      "name": "苏州儿童广播",
+      "category": "arts",
+      "streamUrl": "http://audio-live.radio.cn/live/szet1/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_苏州综合广播",
+      "name": "苏州综合广播",
+      "category": "news",
+      "streamUrl": "http://audio-live.radio.cn/live/szxwzh1/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_苏州交通经济广播",
+      "name": "苏州交通经济广播",
+      "category": "traffic",
+      "streamUrl": "http://audio-live.radio.cn/live/szjtjj1/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽之声",
+      "name": "安徽之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahxxgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽生活广播城市之声",
+      "name": "安徽生活广播·城市之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahshgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽经济广播",
+      "name": "安徽经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽交通广播",
+      "name": "安徽交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽旅游广播高速之声",
+      "name": "安徽旅游广播·高速之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahlygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽戏曲广播动听995",
+      "name": "安徽戏曲广播·动听995",
+      "category": "opera",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahxqgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽故事广播",
+      "name": "安徽故事广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahxspsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖北之声",
+      "name": "湖北之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubzsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_楚天交通广播",
+      "name": "楚天交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubctjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖北城市之声",
+      "name": "湖北城市之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河北文艺广播",
+      "name": "河北文艺广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhebwygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河北综合广播",
+      "name": "河北综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhebzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河北交通广播",
+      "name": "河北交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhebjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河北经济广播",
+      "name": "河北经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhebjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河北生活广播",
+      "name": "河北生活广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhebshgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福建都市广播私家车987",
+      "name": "福建都市广播·私家车987",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32fjdndsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福建交通广播",
+      "name": "福建交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32fjdnjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福建经济广播",
+      "name": "福建经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32fjdnjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福建东南广播",
+      "name": "福建东南广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32fjdngb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江西综合新闻广播",
+      "name": "江西综合新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jiangxxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江西信息交通广播",
+      "name": "江西信息交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jiangxjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山东交通广播",
+      "name": "山东交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsdjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山东体育休闲广播",
+      "name": "山东体育休闲广播",
+      "category": "sports",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsdtyxxgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山东经济广播",
+      "name": "山东经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsdjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山东乡村广播",
+      "name": "山东乡村广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsdxcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_绍兴之声",
+      "name": "绍兴之声",
+      "category": "news",
+      "streamUrl": "http://live.shaoxing.com.cn/audio/s10001-xw1/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_绍兴交通广播",
+      "name": "绍兴交通广播",
+      "category": "traffic",
+      "streamUrl": "http://live.shaoxing.com.cn/audio/s10001-jt2/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_陕西交通广播",
+      "name": "陕西交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsxxjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_陕西经济广播896汽车调频",
+      "name": "陕西经济广播·896汽车调频",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsxxjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_陕西农村广播",
+      "name": "陕西农村广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsxxncgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_陕西新闻广播",
+      "name": "陕西新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsxxxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_浙江之声",
+      "name": "浙江之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzjzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_浙江经济广播",
+      "name": "浙江经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzjjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_浙江民生资讯广播",
+      "name": "浙江民生资讯广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzjmsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_浙江城市之声",
+      "name": "浙江城市之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzjcszs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_浙江旅游之声",
+      "name": "浙江旅游之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzj1045/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_重庆文艺广播",
+      "name": "重庆文艺广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxcqwygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_重庆经济广播",
+      "name": "重庆经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxcqjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_重庆之声",
+      "name": "重庆之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxcqxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_重庆都市广播私家车938",
+      "name": "重庆都市广播·私家车938",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxcqdsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广东股市广播",
+      "name": "广东股市广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgdgsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广东文体广播",
+      "name": "广东文体广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgdwtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广东城市之声",
+      "name": "广东城市之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgdcszs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广东南粤之声",
+      "name": "广东南粤之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxnyzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_珠江经济台",
+      "name": "珠江经济台",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgdzjjjt/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_南方生活广播",
+      "name": "南方生活广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgdnfshgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_羊城交通广播",
+      "name": "羊城交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgdycjtt/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_深圳交通广播",
+      "name": "深圳交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxszjjpl/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_海南新闻广播",
+      "name": "海南新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhainxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_海南交通广播",
+      "name": "海南交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhainjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_四川综合广播四川之声",
+      "name": "四川综合广播四川之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsczhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_四川私家车广播",
+      "name": "四川私家车广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsc925/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_贵州经济广播",
+      "name": "贵州经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gzjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_贵州旅游广播",
+      "name": "贵州旅游广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gzlygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_贵州故事广播",
+      "name": "贵州故事广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gzgsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_贵州综合广播",
+      "name": "贵州综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gzwxwzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_吉林新闻综合广播",
+      "name": "吉林新闻综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxjlxwzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_吉林经济广播",
+      "name": "吉林经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxjljjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_吉林交通广播",
+      "name": "吉林交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxjljtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_吉林乡村广播",
+      "name": "吉林乡村广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxjlxcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_延边新闻广播",
+      "name": "延边新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxybxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_辽宁之声",
+      "name": "辽宁之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxlnzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_辽宁乡村广播",
+      "name": "辽宁乡村广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxlnxcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_辽宁经济广播",
+      "name": "辽宁经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxlnjjtb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_辽宁交通广播",
+      "name": "辽宁交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxlnjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福州左海之声",
+      "name": "福州左海之声",
+      "category": "news",
+      "streamUrl": "http://live.zohi.tv/audio/s10001-FM901/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福州交通之声",
+      "name": "福州交通之声",
+      "category": "news",
+      "streamUrl": "http://live.zohi.tv/audio/s10001-FM876/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福州新闻广播",
+      "name": "福州新闻广播",
+      "category": "news",
+      "streamUrl": "http://live.zohi.tv/audio/s10001-FM944/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江新闻广播",
+      "name": "黑龙江新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江交通广播",
+      "name": "黑龙江交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江都市女性广播",
+      "name": "黑龙江都市女性广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljnxgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江都生活广播",
+      "name": "黑龙江都生活广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljsjcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江高校广播",
+      "name": "黑龙江高校广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljgxgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江老年少儿广播爱家调频",
+      "name": "黑龙江老年少儿广播·爱家调频",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljajgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江乡村广播",
+      "name": "黑龙江乡村广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljxcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江朝鲜语广播",
+      "name": "黑龙江朝鲜语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljcygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_内蒙古农村牧区广播绿野之声",
+      "name": "内蒙古农村牧区广播绿野之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmglyzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_内蒙古新闻广播",
+      "name": "内蒙古新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmghyzhxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_内蒙古蒙语对外广播草原之声",
+      "name": "内蒙古蒙语对外广播草原之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgdwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_内蒙古蒙语新闻综合广播",
+      "name": "内蒙古蒙语新闻综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgmygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_锡林郭勒汉语广播",
+      "name": "锡林郭勒汉语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgxlglhygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_锡林郭勒蒙语广播",
+      "name": "锡林郭勒蒙语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgxlglmygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_阿拉善汉语广播",
+      "name": "阿拉善汉语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgalshygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_阿拉善蒙语广播",
+      "name": "阿拉善蒙语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgalsmygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_呼伦贝尔汉语广播",
+      "name": "呼伦贝尔汉语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmghlbehygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_呼伦贝尔蒙语广播",
+      "name": "呼伦贝尔蒙语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmghlbemygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_新疆新闻广播",
+      "name": "新疆新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxjxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_新疆交通广播",
+      "name": "新疆交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxjjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_新疆私家车广播",
+      "name": "新疆私家车广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxjsjcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_新疆绿色广播",
+      "name": "新疆绿色广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxjlsgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_西藏都市生活广播",
+      "name": "西藏都市生活广播",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxzdsshgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_西藏对外交通广播",
+      "name": "西藏对外交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxzdwjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_西藏汉语广播",
+      "name": "西藏汉语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxzhygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_西藏藏语广播",
+      "name": "西藏藏语广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxxzzygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_甘肃交通广播",
+      "name": "甘肃交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgsjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_甘肃农村广播",
+      "name": "甘肃农村广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgsncgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_甘肃经济广播",
+      "name": "甘肃经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgshhzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_甘肃新闻综合广播",
+      "name": "甘肃新闻综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgsxwzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广西教育广播",
+      "name": "广西教育广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gbjyshgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广西综合广播",
+      "name": "广西综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gxrmgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广西北部湾之声",
+      "name": "广西北部湾之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gxdwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广西交通广播",
+      "name": "广西交通广播",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gxjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_云南新闻广播",
+      "name": "云南新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxynxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_云南经济广播私家车电台",
+      "name": "云南经济广播·私家车电台",
+      "category": "traffic",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxynjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_云南交通之声",
+      "name": "云南交通之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxynjtgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_云南民族广播",
+      "name": "云南民族广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxynmzgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_云南国际广播",
+      "name": "云南国际广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxynsegb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_宁夏新闻广播",
+      "name": "宁夏新闻广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxnxxwgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_青海新闻综合广播",
+      "name": "青海新闻综合广播",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32qhwxzhgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_青海经济广播",
+      "name": "青海经济广播",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32qhjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_世界华声",
+      "name": "世界华声",
+      "category": "general",
+      "streamUrl": "http://sk.cri.cn/hxfh.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_开州之声",
+      "name": "开州之声",
+      "category": "news",
+      "streamUrl": "http://183.64.174.171:10124/tlgb.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_MRadio全国广播",
+      "name": "M-Radio全国广播",
+      "category": "general",
+      "streamUrl": "http://stream.rcs.revma.com/044q61ha7a0uv/hls.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_全国治安交通网",
+      "name": "全国治安交通网",
+      "category": "traffic",
+      "streamUrl": "http://stream.pbs.gov.tw:1935/live/mp3:PBS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_台北广播电台FM931",
+      "name": "台北广播电台FM93.1",
+      "category": "general",
+      "streamUrl": "https://stream.ginnet.cloud/live0130lo-yfyo/_definst_/fm/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_台北广播电台AM1134",
+      "name": "台北广播电台AM1134",
+      "category": "general",
+      "streamUrl": "https://stream.ginnet.cloud/live0130lo-yfyo/_definst_/am/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_法国国际广播电台",
+      "name": "法国国际广播电台",
+      "category": "general",
+      "streamUrl": "https://rfienchinois64k.ice.infomaniak.ch/rfienchinois-64.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_阿里郎电台视频",
+      "name": "阿里郎电台(视频)",
+      "category": "general",
+      "streamUrl": "https://amdlive-ch03-ctnd-com.akamaized.net/arirang_3ch/smil:arirang_3ch.smil/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_阿里郎电台音频",
+      "name": "阿里郎电台(音频)",
+      "category": "general",
+      "streamUrl": "http://amdlive-ch03.ctnd.com.edgesuite.net/arirang_3ch/arirang_3ch_audio/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_HITFM广州",
+      "name": "HIT FM (广州)",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhitfm/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_陕西音乐广播",
+      "name": "陕西音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsxxyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_陕西青少广播好听1055",
+      "name": "陕西青少广播·好听1055",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsxxqcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_苏州都市音乐广播",
+      "name": "苏州都市音乐广播",
+      "category": "music",
+      "streamUrl": "http://audio-live.radio.cn/live/szyy1/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山东音乐广播",
+      "name": "山东音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsdyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山东经典音乐广播",
+      "name": "山东经典音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxsdshxxgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_安徽音乐广播",
+      "name": "安徽音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxahyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_山西音乐广播",
+      "name": "山西音乐广播",
+      "category": "music",
+      "streamUrl": "https://radiolive.sxrtv.com/live/yinyue/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_内蒙古音乐之声",
+      "name": "内蒙古音乐之声",
+      "category": "news",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32nmgyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_湖北经典音乐广播",
+      "name": "湖北经典音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_甘肃青春调频",
+      "name": "甘肃青春调频",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgsqcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_甘肃都市调频",
+      "name": "甘肃都市调频",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxgsdstb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广西音乐广播",
+      "name": "广西音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gxwygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_广西经济广播女主播电台",
+      "name": "广西经济广播·女主播电台",
+      "category": "finance",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gxjjgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_云南音乐广播",
+      "name": "云南音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxynyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_楚天音乐广播",
+      "name": "楚天音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubctyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江苏经典流行音乐广播",
+      "name": "江苏经典流行音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jsjdlxyy/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_浙江音乐调频动听968",
+      "name": "浙江音乐调频·动听968",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzj968/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_河北音乐广播",
+      "name": "河北音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhebyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_深圳飞扬971",
+      "name": "深圳飞扬971",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxszfy971/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_深圳生活942",
+      "name": "深圳生活942",
+      "category": "arts",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxszsjcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_海南音乐广播",
+      "name": "海南音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxhainyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_贵州音乐广播",
+      "name": "贵州音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gzyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_贵州都市广播",
+      "name": "贵州都市广播",
+      "category": "general",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32gzqcgb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_宁夏音乐广播",
+      "name": "宁夏音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxnxyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_重庆音乐广播",
+      "name": "重庆音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxcqyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_江西音乐广播",
+      "name": "江西音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32jiangxyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_黑龙江音乐广播",
+      "name": "黑龙江音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hljyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_福州音乐广播",
+      "name": "福州音乐广播",
+      "category": "music",
+      "streamUrl": "http://live.zohi.tv/audio/s10001-FM893/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_青岛音体广播",
+      "name": "青岛音体广播",
+      "category": "general",
+      "streamUrl": "http://video11.qtv.com.cn/zhiboytgb-sd/manifest.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_辽宁经典音乐广播",
+      "name": "辽宁经典音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxlnwygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "st_青海交通音乐广播",
+      "name": "青海交通音乐广播",
+      "category": "music",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32qhjtyygb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": ""
+    },
+    {
+      "id": "tv_bj",
+      "name": "北京卫视",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxbtv/playlist.m3u8",
+      "frequency": "",
+      "description": "北京卫视伴音",
+      "category": "tv_audio",
+      "logoUrl": "",
+      "website": ""
+    },
+    {
+      "id": "tv_nx",
+      "name": "宁夏卫视",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxnxws/playlist.m3u8",
+      "frequency": "",
+      "description": "宁夏卫视伴音",
+      "category": "tv_audio",
+      "logoUrl": "",
+      "website": ""
     }
   ]
 }

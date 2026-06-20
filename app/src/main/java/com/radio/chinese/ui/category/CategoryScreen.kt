@@ -144,6 +144,8 @@ private fun getCategoryIcon(categoryId: String) = when (categoryId) {
     "arts" -> Icons.Default.TheaterComedy
     "sports" -> Icons.Default.SportsSoccer
     "finance" -> Icons.Default.TrendingUp
+    "opera" -> Icons.Default.MusicNote
+    "tv_audio" -> Icons.Default.Tv
     else -> Icons.Default.Radio
 }
 
@@ -154,5 +156,7 @@ private fun getCategoryName(categoryId: String) = when (categoryId) {
     "arts" -> "文艺"
     "sports" -> "体育"
     "finance" -> "财经"
+    "opera" -> "戏曲"
+    "tv_audio" -> "电视伴音"
     else -> "综合"
 }

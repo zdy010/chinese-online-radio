@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">中文收音机</string>
+    <string name="app_name">时光收音机</string>
     <string name="tab_home">首页</string>
     <string name="tab_category">分类</string>
     <string name="tab_favorites">收藏</string>

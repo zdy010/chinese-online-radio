@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
@@ -23,7 +24,9 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.category.CategoryScreen
 import com.radio.chinese.ui.favorites.FavoritesScreen
 import com.radio.chinese.ui.home.HomeScreen
+import com.radio.chinese.ui.manage.ManageScreen
 import com.radio.chinese.ui.navigation.Screen
+import com.radio.chinese.ui.opera.OperaScreen
 import com.radio.chinese.ui.player.PlayerScreen
 import com.radio.chinese.ui.settings.SettingsScreen
 
@@ -96,7 +99,20 @@ fun RadioNavGraph(
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToManage = { navController.navigate(Screen.Manage.route) },
                 onThemeChanged = onThemeChanged
+            )
+        }
+
+        composable(Screen.Manage.route) {
+            ManageScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Opera.route) {
+            OperaScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
@@ -114,6 +130,7 @@ fun MainScreen(
 
     val bottomNavItems = listOf(
         BottomNavItem(Screen.Home, "首页", Icons.Default.Home, Icons.Outlined.Home),
+        BottomNavItem(Screen.Opera, "戏曲", Icons.Default.Radio, Icons.Default.Radio),
         BottomNavItem(Screen.Category, "分类", Icons.Default.Category, Icons.Outlined.Category),
         BottomNavItem(Screen.Favorites, "收藏", Icons.Default.Favorite, Icons.Outlined.FavoriteBorder),
     )
@@ -121,6 +138,7 @@ fun MainScreen(
     // Show bottom bar only on main screens
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
+        Screen.Opera.route,
         Screen.Category.route,
         Screen.Favorites.route
     )

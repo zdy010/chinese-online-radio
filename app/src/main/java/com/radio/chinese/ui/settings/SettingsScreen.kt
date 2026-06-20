@@ -50,6 +50,7 @@ class SettingsViewModel @Inject constructor(
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToManage: () -> Unit,
     onThemeChanged: (Int) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -93,10 +94,22 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
+            // Station Source Management
+            ListItem(
+                headlineContent = { Text("节目源管理") },
+                supportingContent = { Text("检测电台可用性、添加自定义电台、标记无效源") },
+                leadingContent = {
+                    Icon(Icons.Default.Radio, contentDescription = null)
+                },
+                modifier = Modifier.clickable(onClick = onNavigateToManage)
+            )
+
+            HorizontalDivider()
+
             // About
             ListItem(
                 headlineContent = { Text("关于") },
-                supportingContent = { Text("中文收音机 v1.0.0") },
+                supportingContent = { Text("时光收音机 v1.0.0") },
                 leadingContent = {
                     Icon(Icons.Default.Info, contentDescription = null)
                 }
@@ -107,7 +120,7 @@ fun SettingsScreen(
             // Version info at bottom
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "中文收音机 v1.0.0\n基于公开广播流媒体地址",
+                text = "时光收音机 v1.0.0\n基于公开广播流媒体地址",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier

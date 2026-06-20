@@ -17,9 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
@@ -36,11 +38,12 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
+    val playbackState by viewModel.playerManager.playbackState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("中文收音机") },
+                title = { Text("时光收音机") },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "设置")
@@ -53,6 +56,7 @@ fun HomeScreen(
                 MiniPlayerBar(
                     station = currentStation!!,
                     isPlaying = isPlaying,
+                    playbackState = playbackState,
                     onPlayPause = { viewModel.playerManager.togglePlayPause() },
                     onClick = { onNavigateToPlayer(currentStation!!.id) }
                 )
@@ -269,10 +273,17 @@ fun StationListItem(
 fun MiniPlayerBar(
     station: RadioStation,
     isPlaying: Boolean,
+    playbackState: Int,
     onPlayPause: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val statusText = when {
+        playbackState == Player.STATE_BUFFERING -> "缓冲中…"
+        isPlaying -> "正在播放"
+        else -> "已暂停"
+    }
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         tonalElevation = 3.dp,
@@ -305,7 +316,7 @@ fun MiniPlayerBar(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = if (isPlaying) "正在播放" else "已暂停",
+                    text = statusText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

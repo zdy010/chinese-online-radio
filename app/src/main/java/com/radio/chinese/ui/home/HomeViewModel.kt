@@ -67,7 +67,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                _stations.value = stationRepository.getAllStations()
+                _stations.value = stationRepository.getActiveStations()
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message
