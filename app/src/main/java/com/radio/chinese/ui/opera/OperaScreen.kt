@@ -1,5 +1,8 @@
 package com.radio.chinese.ui.opera
 
+import android.annotation.SuppressLint
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.DownloadedOpera
 import com.radio.chinese.domain.model.OperaAudioFile
@@ -44,6 +48,18 @@ fun OperaScreen(
                     } else {
                         IconButton(onClick = onNavigateBack) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        }
+                    }
+                },
+                actions = {
+                    if (!uiState.needPassword) {
+                        IconButton(onClick = {
+                            if (uiState.isLoggedIn) viewModel.logout() else viewModel.showLogin()
+                        }) {
+                            Icon(
+                                if (uiState.isLoggedIn) Icons.Default.AccountCircle else Icons.Default.Login,
+                                contentDescription = if (uiState.isLoggedIn) "退出登录" else "登录"
+                            )
                         }
                     }
                 }
@@ -99,6 +115,14 @@ fun OperaScreen(
                 )
             }
         }
+    }
+
+    // 123云盘登录弹窗
+    if (uiState.showLoginDialog) {
+        LoginWebViewDialog(
+            onTokenObtained = { viewModel.setAuthToken(it) },
+            onDismiss = { viewModel.dismissLogin() }
+        )
     }
 }
 
@@ -512,4 +536,57 @@ private fun formatSize(bytes: Long): String {
         bytes < 1024 * 1024 -> "${bytes / 1024} KB"
         else -> String.format("%.1f MB", bytes / (1024.0 * 1024.0))
     }
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun LoginWebViewDialog(
+    onTokenObtained: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var isTokenCaptured by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("登录123云盘") },
+        text = {
+            Box(modifier = Modifier.height(480.dp)) {
+                AndroidView(
+                    factory = { ctx ->
+                        android.webkit.WebView(ctx).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.allowFileAccess = false
+                            webViewClient = object : WebViewClient() {
+                                override fun onPageFinished(view: WebView, url: String) {
+                                    super.onPageFinished(view, url)
+                                    if (isTokenCaptured) return
+                                    // 只在非登录页URL尝试提取token
+                                    if (!url.contains("yun.123pan.cn") && !url.contains("user.123pan.cn")) return
+                                    view.evaluateJavascript(
+                                        "(function() { return localStorage.getItem('authorToken') })()"
+                                    ) { value ->
+                                        if (value != null && value != "null" && value.isNotEmpty()) {
+                                            val token = value.trim('"')
+                                            if (token.isNotEmpty()) {
+                                                isTokenCaptured = true
+                                                onTokenObtained(token)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            loadUrl("https://yun.123pan.cn/Login")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }

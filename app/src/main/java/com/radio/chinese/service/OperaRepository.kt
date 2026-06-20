@@ -29,6 +29,9 @@ class OperaRepository @Inject constructor(
     /** 当前使用的分享提取码，由 ViewModel 设置 */
     var sharePassword: String = ""
 
+    /** 123云盘账号登录Token，由 ViewModel 设置 */
+    var authToken: String = ""
+
     // ========== 云盘浏览 ==========
 
     /** 获取一级分类列表（戏曲种类） */
@@ -100,7 +103,8 @@ class OperaRepository @Inject constructor(
         if (s3KeyFlag != null) body["s3keyFlag"] = s3KeyFlag
         if (size > 0) body["size"] = size
 
-        val resp = yunPanApi.getDownloadInfo(body)
+        val authHeader = if (authToken.isNotEmpty()) "Bearer $authToken" else null
+        val resp = yunPanApi.getDownloadInfo(body, authHeader)
         if (resp.code != 0) throw Exception(resp.message ?: "下载API错误:${resp.code}")
         resp.data?.downloadUrl
     }

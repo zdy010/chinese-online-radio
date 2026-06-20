@@ -43,7 +43,9 @@ data class OperaUiState(
     val tabIndex: Int = 0,
     val localDownloads: List<DownloadedOpera> = emptyList(),
     val needPassword: Boolean = true,
-    val hasPassword: Boolean = false
+    val hasPassword: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val showLoginDialog: Boolean = false
 )
 
 @HiltViewModel
@@ -82,9 +84,46 @@ class OperaViewModel @Inject constructor(
 
     init {
         loadSavedPassword()
+        loadSavedToken()
         loadDownloaded()
         initPlayer()
         handler.post(positionUpdater)
+    }
+
+    private fun loadSavedToken() {
+        viewModelScope.launch {
+            val token = preferences.pan123AuthToken.first()
+            if (token.isNotEmpty()) {
+                operaRepository.authToken = token
+                _uiState.update { it.copy(isLoggedIn = true) }
+            }
+        }
+    }
+
+    // ========== 123云盘账号登录 ==========
+
+    fun showLogin() {
+        _uiState.update { it.copy(showLoginDialog = true) }
+    }
+
+    fun dismissLogin() {
+        _uiState.update { it.copy(showLoginDialog = false) }
+    }
+
+    fun setAuthToken(token: String) {
+        viewModelScope.launch {
+            operaRepository.authToken = token
+            preferences.savePan123AuthToken(token)
+            _uiState.update { it.copy(isLoggedIn = true, showLoginDialog = false) }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            operaRepository.authToken = ""
+            preferences.savePan123AuthToken("")
+            _uiState.update { it.copy(isLoggedIn = false) }
+        }
     }
 
     private fun loadSavedPassword() {

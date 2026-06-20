@@ -4,6 +4,7 @@ import com.radio.chinese.domain.model.YunPanDownloadResponse
 import com.radio.chinese.domain.model.YunPanListResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -28,6 +29,7 @@ interface YunPanApi {
 
     @POST("https://www.123pan.com/b/api/share/download/info")
     suspend fun getDownloadInfo(
-        @Body body: Map<String, @JvmSuppressWildcards Any>
+        @Body body: Map<String, @JvmSuppressWildcards Any>,
+        @Header("Authorization") authorization: String? = null
     ): YunPanDownloadResponse
 }

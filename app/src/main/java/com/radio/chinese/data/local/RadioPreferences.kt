@@ -147,6 +147,18 @@ class RadioPreferences @Inject constructor(
         }
     }
 
+    // ========== 123云盘账号登录Token ==========
+
+    val pan123AuthToken: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_PAN123_AUTH_TOKEN] ?: ""
+    }
+
+    suspend fun savePan123AuthToken(token: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_PAN123_AUTH_TOKEN] = token
+        }
+    }
+
     companion object {
         private val KEY_THEME_MODE = intPreferencesKey("theme_mode")
         private val KEY_LAST_STATION = stringPreferencesKey("last_played_station")
@@ -156,5 +168,6 @@ class RadioPreferences @Inject constructor(
         private val KEY_OPERA_PLAY_POSITIONS = stringPreferencesKey("opera_play_positions")
         private val KEY_LAST_OPERA_FILE_ID = longPreferencesKey("last_opera_file_id")
         private val KEY_OPERA_SHARE_PASSWORD = stringPreferencesKey("opera_share_password")
+        private val KEY_PAN123_AUTH_TOKEN = stringPreferencesKey("pan123_auth_token")
     }
 }
