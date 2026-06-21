@@ -268,11 +268,14 @@ class WebDavClient @Inject constructor() {
 
     /** 从block中提取标签内容，如 <D:displayname>xxx</D:displayname> */
     private fun extractTagContent(block: String, tag: String): String? {
-        val start = block.indexOf("<$tag>")
+        val startTag = "<$tag>"
+        val endTag = "</$tag>"
+        val start = block.indexOf(startTag)
         if (start < 0) return null
-        val end = block.indexOf("</$tag>", start)
+        val end = block.indexOf(endTag, start)
         if (end < 0) return null
-        return block.substring(start + tag.length + 3, end).ifEmpty { null }
+        val content = block.substring(start + startTag.length, end)
+        return content.ifEmpty { null }
     }
 
     /** 将 WebDavFile 列表按目录结构转换为 OperaCategory / OperaItem / OperaAudioFile */

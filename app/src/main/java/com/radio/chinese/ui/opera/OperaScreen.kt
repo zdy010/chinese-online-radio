@@ -60,18 +60,30 @@ fun OperaScreen(
                 }
                 when (uiState.tabIndex) {
                     0 -> OnlineBrowseContent(uiState, viewModel)
-                    1 -> DownloadedContent(uiState.localDownloads,
-                        onPlay = { viewModel.playFile(OperaAudioFile(it.fileId, it.fileName, it.fileSize, it.categoryName, it.operaName), it.localPath) },
-                        onDelete = { viewModel.deleteDownloaded(it.fileId) })
+                    1 -> DownloadedContent(uiState.localDownloads, uiState.currentFile?.fileId,
+                        onPlay = { viewModel.playDownloadedFile(it) }, onDelete = { viewModel.deleteDownloaded(it.fileId) })
                 }
             }
 
             if (uiState.currentFile != null) {
-                MiniOperaPlayer(uiState.currentFile!!, uiState.isPlaying, uiState.playError,
-                    uiState.positionMs, uiState.durationMs,
-                    onPlayPause = { viewModel.togglePlayPause() }, onClose = { viewModel.stopPlayback() },
-                    onSeek = { viewModel.seekTo(it) }, onSeekForward = { viewModel.seekForward() },
-                    onSeekBackward = { viewModel.seekBackward() }, onRetry = { viewModel.retryPlayback() })
+                MiniOperaPlayer(
+                    file = uiState.currentFile!!,
+                    isPlaying = uiState.isPlaying,
+                    error = uiState.playError,
+                    positionMs = uiState.positionMs,
+                    durationMs = uiState.durationMs,
+                    bitrate = uiState.bitrate,
+                    hasPrevious = uiState.currentIndex > 0,
+                    hasNext = uiState.currentIndex >= 0 && uiState.currentIndex < uiState.currentPlaylist.size - 1,
+                    onPlayPause = { viewModel.togglePlayPause() },
+                    onClose = { viewModel.stopPlayback() },
+                    onSeek = { viewModel.seekTo(it) },
+                    onSeekForward = { viewModel.seekForward() },
+                    onSeekBackward = { viewModel.seekBackward() },
+                    onRetry = { viewModel.retryPlayback() },
+                    onPrevious = { viewModel.playPrevious() },
+                    onNext = { viewModel.playNext() }
+                )
             }
         }
     }
@@ -160,16 +172,22 @@ private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel
                 uiState.level == BrowseLevel.FILES -> {
                     if (uiState.audioFiles.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该剧目下暂无音频文件") }
                     else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(uiState.audioFiles) { AudioFileCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
-                            onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
+                        items(uiState.audioFiles) { file ->
+                            AudioFileCard(file, uiState.downloadedIds.contains(file.fileId), uiState.downloadProgress[file.fileId],
+                                onPlay = { viewModel.playFile(file) }, onDownload = { viewModel.downloadFile(file) },
+                                isCurrentlyPlaying = uiState.currentFile?.fileId == file.fileId)
+                        }
                     }
                 }
                 uiState.level == BrowseLevel.SEARCH_RESULTS -> {
                     if (uiState.searchResults.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(if (uiState.searchQuery.length < 2) "输入至少2个字符搜索" else "未找到匹配结果")
                     } else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(uiState.searchResults) { SearchResultCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
-                            onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
+                        items(uiState.searchResults) { file ->
+                            SearchResultCard(file, uiState.downloadedIds.contains(file.fileId), uiState.downloadProgress[file.fileId],
+                                onPlay = { viewModel.playFile(file) }, onDownload = { viewModel.downloadFile(file) },
+                                isCurrentlyPlaying = uiState.currentFile?.fileId == file.fileId)
+                        }
                     }
                 }
             }
@@ -202,13 +220,21 @@ private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel
 }
 
 @Composable
-private fun AudioFileCard(file: OperaAudioFile, isDownloaded: Boolean, downloadProgress: Int?, onPlay: () -> Unit, onDownload: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+private fun AudioFileCard(file: OperaAudioFile, isDownloaded: Boolean, downloadProgress: Int?, onPlay: () -> Unit, onDownload: () -> Unit,
+    isCurrentlyPlaying: Boolean = false) {
+    val bgColor = if (isCurrentlyPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onPlay), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = bgColor)) {
         Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            // 播放指示器
+            if (isCurrentlyPlaying) {
+                Icon(Icons.Default.VolumeUp, contentDescription = "正在播放", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            } else {
+                Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            }
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = if (isCurrentlyPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 Text(formatSize(file.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (downloadProgress != null) CircularProgressIndicator(progress = { downloadProgress / 100f }, modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
@@ -222,13 +248,20 @@ private fun AudioFileCard(file: OperaAudioFile, isDownloaded: Boolean, downloadP
 }
 
 @Composable
-private fun SearchResultCard(file: OperaAudioFile, isDownloaded: Boolean, downloadProgress: Int?, onPlay: () -> Unit, onDownload: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+private fun SearchResultCard(file: OperaAudioFile, isDownloaded: Boolean, downloadProgress: Int?, onPlay: () -> Unit, onDownload: () -> Unit,
+    isCurrentlyPlaying: Boolean = false) {
+    val bgColor = if (isCurrentlyPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onPlay), shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = bgColor)) {
         Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            if (isCurrentlyPlaying) {
+                Icon(Icons.Default.VolumeUp, contentDescription = "正在播放", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            } else {
+                Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            }
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = if (isCurrentlyPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 Text("${file.categoryName} / ${file.operaName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(formatSize(file.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -242,7 +275,8 @@ private fun SearchResultCard(file: OperaAudioFile, isDownloaded: Boolean, downlo
 }
 
 @Composable
-private fun DownloadedContent(downloads: List<DownloadedOpera>, onPlay: (DownloadedOpera) -> Unit, onDelete: (DownloadedOpera) -> Unit) {
+private fun DownloadedContent(downloads: List<DownloadedOpera>, currentFileId: Long?,
+    onPlay: (DownloadedOpera) -> Unit, onDelete: (DownloadedOpera) -> Unit) {
     if (downloads.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -250,12 +284,19 @@ private fun DownloadedContent(downloads: List<DownloadedOpera>, onPlay: (Downloa
         }
     } else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         items(downloads, key = { it.fileId }) {
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+            val isPlaying = currentFileId == it.fileId
+            val bgColor = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
+            Card(modifier = Modifier.fillMaxWidth().clickable { onPlay(it) }, shape = RoundedCornerShape(10.dp), colors = CardDefaults.cardColors(containerColor = bgColor)) {
                 Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    if (isPlaying) {
+                        Icon(Icons.Default.VolumeUp, contentDescription = "正在播放", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    } else {
+                        Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(it.fileName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(it.fileName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                         Text("${it.categoryName} / ${it.operaName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = { onPlay(it) }) { Icon(Icons.Default.PlayCircle, contentDescription = "播放", tint = MaterialTheme.colorScheme.primary) }
@@ -269,14 +310,21 @@ private fun DownloadedContent(downloads: List<DownloadedOpera>, onPlay: (Downloa
 // ========== Mini Player ==========
 
 @Composable
-private fun MiniOperaPlayer(file: OperaAudioFile, isPlaying: Boolean, error: String?, positionMs: Long, durationMs: Long,
-    onPlayPause: () -> Unit, onClose: () -> Unit, onSeek: (Long) -> Unit, onSeekForward: () -> Unit, onSeekBackward: () -> Unit, onRetry: () -> Unit) {
+private fun MiniOperaPlayer(file: OperaAudioFile, isPlaying: Boolean, error: String?, positionMs: Long, durationMs: Long, bitrate: Int,
+    hasPrevious: Boolean, hasNext: Boolean,
+    onPlayPause: () -> Unit, onClose: () -> Unit, onSeek: (Long) -> Unit, onSeekForward: () -> Unit, onSeekBackward: () -> Unit,
+    onRetry: () -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
     Surface(tonalElevation = 4.dp, shadowElevation = 12.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                // 码率显示
+                if (bitrate > 0) {
+                    val bitrateText = if (bitrate >= 1000) "${bitrate / 1000} kbps" else "$bitrate bps"
+                    Text(bitrateText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
+                }
                 IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = "关闭", modifier = Modifier.size(18.dp)) }
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -288,9 +336,13 @@ private fun MiniOperaPlayer(file: OperaAudioFile, isPlaying: Boolean, error: Str
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                // 上一曲按钮
+                IconButton(onClick = onPrevious, enabled = hasPrevious) { Icon(Icons.Default.SkipPrevious, contentDescription = "上一曲", modifier = Modifier.size(32.dp), tint = if (hasPrevious) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)) }
                 IconButton(onClick = onSeekBackward) { Icon(Icons.Default.Replay10, contentDescription = "后退15秒", modifier = Modifier.size(32.dp)) }
                 FilledIconButton(onClick = onPlayPause) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(32.dp)) }
                 IconButton(onClick = onSeekForward) { Icon(Icons.Default.Forward10, contentDescription = "快进15秒", modifier = Modifier.size(32.dp)) }
+                // 下一曲按钮
+                IconButton(onClick = onNext, enabled = hasNext) { Icon(Icons.Default.SkipNext, contentDescription = "下一曲", modifier = Modifier.size(32.dp), tint = if (hasNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)) }
             }
             if (error != null) {
                 Spacer(modifier = Modifier.height(4.dp))

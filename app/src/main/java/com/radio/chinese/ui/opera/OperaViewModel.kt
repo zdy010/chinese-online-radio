@@ -49,7 +49,11 @@ data class OperaUiState(
     val isPlaying: Boolean = false,
     val playError: String? = null,
     val positionMs: Long = 0L,
-    val durationMs: Long = 0L
+    val durationMs: Long = 0L,
+    // 播放列表支持
+    val currentPlaylist: List<OperaAudioFile> = emptyList(),
+    val currentIndex: Int = -1,
+    val bitrate: Int = 0, // 码率，单位 bps
 )
 
 @HiltViewModel
@@ -133,7 +137,8 @@ class OperaViewModel @Inject constructor(
             try {
                 val cats = operaRepository.getCategories()
                 _uiState.update {
-                    it.copy(categories = cats, isLoading = false, selectedCategory = null, selectedOpera = null)
+                    it.copy(categories = cats, isLoading = false, selectedCategory = null, selectedOpera = null,
+                        currentPlaylist = emptyList(), currentIndex = -1)
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "加载分类失败") }
@@ -143,98 +148,59 @@ class OperaViewModel @Inject constructor(
 
     fun selectCategory(category: OperaCategory) {
         val currentState = _uiState.value
-        // 防止重复点击
         if (currentState.isLoading) return
         
         viewModelScope.launch {
-            // 先进入加载状态，保持当前level不变，只显示loading
-            _uiState.update { 
-                it.copy(
-                    isLoading = true, 
-                    error = null,
-                    // 不在这里改变 level 或 selectedCategory，避免触发错误的UI重组
-                ) 
-            }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val operas = operaRepository.getOperas(category)
-                
-                // 如果分类下没有子文件夹（剧目），直接获取音频文件
                 if (operas.isEmpty()) {
                     val files = operaRepository.getAudioFiles(category.name, OperaItem(name = "", folderId = 0, path = category.path))
                     val downloaded = operaRepository.getAllDownloadedIds()
-                    // 一次性原子化更新所有相关状态
                     _uiState.update {
                         it.copy(
-                            selectedCategory = category,
-                            selectedOpera = null,
-                            audioFiles = files, 
-                            downloadedIds = downloaded, 
-                            level = BrowseLevel.FILES, 
-                            isLoading = false,
-                            operas = emptyList()
+                            selectedCategory = category, selectedOpera = null,
+                            audioFiles = files, downloadedIds = downloaded,
+                            level = BrowseLevel.FILES, isLoading = false, operas = emptyList(),
+                            currentPlaylist = files, currentIndex = -1
                         )
                     }
                 } else {
-                    // 一次性原子化更新所有相关状态
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            selectedCategory = category,
-                            selectedOpera = null,
-                            operas = operas, 
-                            level = BrowseLevel.OPERAS, 
-                            isLoading = false,
-                            audioFiles = emptyList()
-                        ) 
+                            selectedCategory = category, selectedOpera = null,
+                            operas = operas, level = BrowseLevel.OPERAS,
+                            isLoading = false, audioFiles = emptyList(),
+                            currentPlaylist = emptyList(), currentIndex = -1
+                        )
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false, 
-                        error = e.message ?: "加载失败"
-                        // 保持原来的level不变
-                    ) 
-                }
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "加载失败") }
             }
         }
     }
 
     fun selectOpera(opera: OperaItem) {
         val currentState = _uiState.value
-        // 防止重复点击
         if (currentState.isLoading) return
         
         viewModelScope.launch {
-            // 先进入加载状态，不改变level或selectedOpera
-            _uiState.update { 
-                it.copy(
-                    isLoading = true, 
-                    error = null
-                ) 
-            }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val categoryName = currentState.selectedCategory?.name ?: ""
                 val files = operaRepository.getAudioFiles(categoryName, opera)
                 val downloaded = operaRepository.getAllDownloadedIds()
-                // 一次性原子化更新所有相关状态
                 _uiState.update {
                     it.copy(
-                        selectedOpera = opera,
-                        audioFiles = files, 
-                        downloadedIds = downloaded, 
-                        level = BrowseLevel.FILES, 
-                        isLoading = false,
-                        operas = emptyList()
+                        selectedOpera = opera, audioFiles = files,
+                        downloadedIds = downloaded, level = BrowseLevel.FILES,
+                        isLoading = false, operas = emptyList(),
+                        currentPlaylist = files, currentIndex = -1
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false, 
-                        error = e.message ?: "加载音频失败"
-                        // 保持原来的level不变
-                    ) 
-                }
+                _uiState.update { it.copy(isLoading = false, error = e.message ?: "加载音频失败") }
             }
         }
     }
@@ -260,13 +226,14 @@ class OperaViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = true) }
                 try {
                     val results = operaRepository.searchFiles(query)
-                    _uiState.update { it.copy(searchResults = results, isLoading = false, level = BrowseLevel.SEARCH_RESULTS) }
+                    _uiState.update { it.copy(searchResults = results, isLoading = false, level = BrowseLevel.SEARCH_RESULTS,
+                        currentPlaylist = results, currentIndex = -1) }
                 } catch (e: Exception) {
                     _uiState.update { it.copy(isLoading = false, error = e.message ?: "搜索失败") }
                 }
             }
         } else {
-            _uiState.update { it.copy(searchResults = emptyList()) }
+            _uiState.update { it.copy(searchResults = emptyList(), currentPlaylist = emptyList(), currentIndex = -1) }
         }
     }
 
@@ -284,8 +251,14 @@ class OperaViewModel @Inject constructor(
                 }
                 override fun onPlaybackStateChanged(state: Int) {
                     when (state) {
-                        Player.STATE_READY -> _uiState.update { it.copy(playError = null, durationMs = duration.coerceAtLeast(0)) }
-                        Player.STATE_ENDED -> _uiState.update { it.copy(isPlaying = false, positionMs = 0L) }
+                        Player.STATE_READY -> {
+                            val br = audioFormat?.bitrate ?: 0
+                            _uiState.update { it.copy(playError = null, durationMs = duration.coerceAtLeast(0), bitrate = br) }
+                        }
+                        Player.STATE_ENDED -> {
+                            _uiState.update { it.copy(isPlaying = false, positionMs = 0L) }
+                            playNext()
+                        }
                     }
                 }
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
@@ -297,8 +270,10 @@ class OperaViewModel @Inject constructor(
 
     fun playFile(file: OperaAudioFile, localPath: String? = null) {
         val player = exoPlayer ?: return
+        val currentState = _uiState.value
+        val index = currentState.currentPlaylist.indexOfFirst { it.fileId == file.fileId }
         viewModelScope.launch {
-            _uiState.update { it.copy(currentFile = file, playError = null) }
+            _uiState.update { it.copy(currentFile = file, playError = null, currentIndex = index) }
             val uri = if (localPath != null) {
                 android.net.Uri.fromFile(File(localPath))
             } else {
@@ -312,6 +287,45 @@ class OperaViewModel @Inject constructor(
             if (savedPosition > 0) player.seekTo(savedPosition)
             player.prepare(); player.play()
         }
+    }
+
+    /** 播放已下载的文件，同时设置播放列表为所有已下载文件 */
+    fun playDownloadedFile(downloaded: DownloadedOpera) {
+        val currentState = _uiState.value
+        val playlist = currentState.localDownloads.map {
+            OperaAudioFile(it.fileId, it.fileName, it.fileSize, it.categoryName, it.operaName, downloadUrl = null)
+        }
+        val index = playlist.indexOfFirst { it.fileId == downloaded.fileId }
+        val file = OperaAudioFile(downloaded.fileId, downloaded.fileName, downloaded.fileSize,
+            downloaded.categoryName, downloaded.operaName, downloadUrl = null)
+        _uiState.update { it.copy(currentPlaylist = playlist, currentIndex = index) }
+        playFile(file, downloaded.localPath)
+    }
+
+    fun playNext() {
+        val currentState = _uiState.value
+        val playlist = currentState.currentPlaylist
+        val idx = currentState.currentIndex
+        if (playlist.isEmpty() || idx < 0 || idx >= playlist.size - 1) return
+        val next = playlist[idx + 1]
+        // 检查是否已下载
+        val local = if (currentState.downloadedIds.contains(next.fileId)) {
+            val downloads = currentState.localDownloads
+            downloads.find { it.fileId == next.fileId }?.localPath
+        } else null
+        playFile(next, local)
+    }
+
+    fun playPrevious() {
+        val currentState = _uiState.value
+        val playlist = currentState.currentPlaylist
+        val idx = currentState.currentIndex
+        if (playlist.isEmpty() || idx <= 0) return
+        val prev = playlist[idx - 1]
+        val local = if (currentState.downloadedIds.contains(prev.fileId)) {
+            currentState.localDownloads.find { it.fileId == prev.fileId }?.localPath
+        } else null
+        playFile(prev, local)
     }
 
     fun togglePlayPause() {
