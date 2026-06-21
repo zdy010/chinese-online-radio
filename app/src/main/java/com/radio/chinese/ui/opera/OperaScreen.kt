@@ -44,27 +44,8 @@ fun OperaScreen(
                     }
                 }
             )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (uiState.needAuth) {
-                AuthCodeContent(
-                    error = uiState.authError,
-                    isConnecting = uiState.isConnecting,
-                    onSubmit = viewModel::submitAuthCode
-                )
-            } else {
-                TabRow(selectedTabIndex = uiState.tabIndex) {
-                    Tab(selected = uiState.tabIndex == 0, onClick = { viewModel.switchTab(0) }, text = { Text("在线浏览") })
-                    Tab(selected = uiState.tabIndex == 1, onClick = { viewModel.switchTab(1) }, text = { Text("已下载 (${uiState.localDownloads.size})") })
-                }
-                when (uiState.tabIndex) {
-                    0 -> OnlineBrowseContent(uiState, viewModel)
-                    1 -> DownloadedContent(uiState.localDownloads, uiState.currentFile?.fileId,
-                        onPlay = { viewModel.playDownloadedFile(it) }, onDelete = { viewModel.deleteDownloaded(it.fileId) })
-                }
-            }
-
+        },
+        bottomBar = {
             if (uiState.currentFile != null) {
                 MiniOperaPlayer(
                     file = uiState.currentFile!!,
@@ -84,6 +65,26 @@ fun OperaScreen(
                     onPrevious = { viewModel.playPrevious() },
                     onNext = { viewModel.playNext() }
                 )
+            }
+        }
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            if (uiState.needAuth) {
+                AuthCodeContent(
+                    error = uiState.authError,
+                    isConnecting = uiState.isConnecting,
+                    onSubmit = viewModel::submitAuthCode
+                )
+            } else {
+                TabRow(selectedTabIndex = uiState.tabIndex) {
+                    Tab(selected = uiState.tabIndex == 0, onClick = { viewModel.switchTab(0) }, text = { Text("在线浏览") })
+                    Tab(selected = uiState.tabIndex == 1, onClick = { viewModel.switchTab(1) }, text = { Text("已下载 (${uiState.localDownloads.size})") })
+                }
+                when (uiState.tabIndex) {
+                    0 -> OnlineBrowseContent(uiState, viewModel)
+                    1 -> DownloadedContent(uiState.localDownloads, uiState.currentFile?.fileId,
+                        onPlay = { viewModel.playDownloadedFile(it) }, onDelete = { viewModel.deleteDownloaded(it.fileId) })
+                }
             }
         }
     }
