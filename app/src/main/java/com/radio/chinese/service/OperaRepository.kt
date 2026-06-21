@@ -57,7 +57,7 @@ class OperaRepository @Inject constructor(
         val serverPath = try { java.net.URI(webDavClient.serverUrl).path.trimEnd('/') } catch (_: Exception) { "" }
         Log.d("OperaRepo", "serverPath=$serverPath")
         val categories = files.filter { it.isFolder && it.href.trimEnd('/') != serverPath }
-            .map { OperaCategory(name = it.displayName, folderId = it.href.hashCode().toLong()) }
+            .map { OperaCategory(name = it.displayName, folderId = it.href.hashCode().toLong(), path = it.href) }
         Log.d("OperaRepo", "filtered ${categories.size} categories")
         categories
     }
