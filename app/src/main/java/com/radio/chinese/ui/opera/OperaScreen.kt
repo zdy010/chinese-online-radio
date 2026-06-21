@@ -46,7 +46,7 @@ fun OperaScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (uiState.needAuth) {
                 AuthCodeContent(
                     error = uiState.authError,
@@ -118,7 +118,7 @@ private fun AuthCodeContent(error: String?, isConnecting: Boolean, onSubmit: (St
 
 @Composable
 private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel) {
-    Column {
+    Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = uiState.searchQuery, onValueChange = viewModel::updateSearchQuery,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
@@ -134,40 +134,43 @@ private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel
             }
         }
 
-        when {
-            uiState.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            uiState.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = { viewModel.loadCategories() }) { Text("重试") }
+        // 用 Box + weight(1f) 约束 LazyColumn 的高度，使其可以滚动
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            when {
+                uiState.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                uiState.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { viewModel.loadCategories() }) { Text("重试") }
+                    }
                 }
-            }
-            uiState.level == BrowseLevel.CATEGORIES -> {
-                if (uiState.categories.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("暂无戏曲分类") }
-                else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(uiState.categories) { CategoryCard(it) { viewModel.selectCategory(it) } }
+                uiState.level == BrowseLevel.CATEGORIES -> {
+                    if (uiState.categories.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("暂无戏曲分类") }
+                    else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(uiState.categories) { CategoryCard(it) { viewModel.selectCategory(it) } }
+                    }
                 }
-            }
-            uiState.level == BrowseLevel.OPERAS -> {
-                if (uiState.operas.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该分类下暂无剧目") }
-                else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(uiState.operas) { OperaCard(it) { viewModel.selectOpera(it) } }
+                uiState.level == BrowseLevel.OPERAS -> {
+                    if (uiState.operas.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该分类下暂无剧目") }
+                    else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(uiState.operas) { OperaCard(it) { viewModel.selectOpera(it) } }
+                    }
                 }
-            }
-            uiState.level == BrowseLevel.FILES -> {
-                if (uiState.audioFiles.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该剧目下暂无音频文件") }
-                else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(uiState.audioFiles) { AudioFileCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
-                        onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
+                uiState.level == BrowseLevel.FILES -> {
+                    if (uiState.audioFiles.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该剧目下暂无音频文件") }
+                    else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(uiState.audioFiles) { AudioFileCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
+                            onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
+                    }
                 }
-            }
-            uiState.level == BrowseLevel.SEARCH_RESULTS -> {
-                if (uiState.searchResults.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(if (uiState.searchQuery.length < 2) "输入至少2个字符搜索" else "未找到匹配结果")
-                } else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(uiState.searchResults) { SearchResultCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
-                        onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
+                uiState.level == BrowseLevel.SEARCH_RESULTS -> {
+                    if (uiState.searchResults.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(if (uiState.searchQuery.length < 2) "输入至少2个字符搜索" else "未找到匹配结果")
+                    } else LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(uiState.searchResults) { SearchResultCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
+                            onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
+                    }
                 }
             }
         }

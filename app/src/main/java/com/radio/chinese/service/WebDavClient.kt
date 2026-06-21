@@ -148,7 +148,12 @@ class WebDavClient @Inject constructor() {
             throw Exception("列出目录失败: HTTP ${response.code} | URL: ${url} | detail: ${bodyString}")
         }
         val body = response.body?.string() ?: throw Exception("响应为空")
-        Log.d(TAG, "listFiles body length: ${body.length}, first 500: ${body.take(500)}")
+        val responseBlockCount = body.split("<D:response>").size - 1
+        Log.d(TAG, "listFiles: url=$url, bodyLength=${body.length}, responseBlocks=$responseBlockCount")
+        // 如果responseBlockCount和预期不符，打印前1000字符帮助排查
+        if (responseBlockCount < 6) {
+            Log.w(TAG, "listFiles: 解析到的response块数较少($responseBlockCount)，原始响应前2000字符: ${body.take(2000)}")
+        }
         parsePropfindResponse(body, url)
     }
 
@@ -201,99 +206,73 @@ class WebDavClient @Inject constructor() {
 
     private fun parsePropfindResponse(xml: String, basePath: String): List<WebDavFile> {
         val files = mutableListOf<WebDavFile>()
-        // 预编译正则，避免每一条都重新编译
-        val hrefRegex = Regex("<D:href>([^<]+)</D:href>")
-        val nameRegex = Regex("<D:displayname>([^<]*)</D:displayname>")
-        val sizeRegex = Regex("<D:getcontentlength>([^<]*)</D:getcontentlength>")
-        
-        // 统计找到的 response 块数
         var responseCount = 0
-        
+
         try {
-            // 用字符串搜索提取每个 <D:response> 块
+            // 用正则找所有 <D:response ...> 块（支持带属性的标签，如 <D:response xmlns:D="DAV:">）
+            val startTagPattern = "<D:response[^>]*>".toRegex()
+            val endTag = "</D:response>"
+
             var searchStart = 0
             while (true) {
-                val respStart = xml.indexOf("<D:response>", searchStart)
-                if (respStart < 0) break
-                val respEnd = xml.indexOf("</D:response>", respStart)
+                val match = startTagPattern.find(xml, searchStart) ?: break
+                val tagEnd = xml.indexOf(">", match.range.start)
+                if (tagEnd < 0) break
+
+                val respEnd = xml.indexOf(endTag, tagEnd)
                 if (respEnd < 0) break
-                val block = xml.substring(respStart, respEnd + 14)
-                searchStart = respEnd + 14
-                
+
+                // block = 从 <D:response> 结束到 </D:response> 开始之间的内容
+                val block = xml.substring(tagEnd + 1, respEnd)
+                searchStart = respEnd + endTag.length
                 responseCount++
 
-                // 用 indexOf 提取 href（比正则快）
-                val hrefTagStart = "<D:href>"
-                val hrefTagEnd = "</D:href>"
-                val hrefBegin = block.indexOf(hrefTagStart)
-                val hrefClose = block.indexOf(hrefTagEnd, hrefBegin)
-                if (hrefBegin < 0 || hrefClose < 0) continue
-                val href = block.substring(hrefBegin + hrefTagStart.length, hrefClose)
-                
-                // 重要：保持href的原始编码形式，不要解码！
-                // 解码只在显示名称时使用，路径用于API请求时必须保持编码
+                // 提取 href
+                val hrefBegin = block.indexOf("<D:href>")
+                if (hrefBegin < 0) continue
+                val hrefClose = block.indexOf("</D:href>", hrefBegin)
+                if (hrefClose < 0) continue
+                val href = block.substring(hrefBegin + 8, hrefClose)
 
                 // 提取 displayname
-                val dnTagStart = "<D:displayname>"
-                val dnTagEnd = "</D:displayname>"
-                val dnBegin = block.indexOf(dnTagStart)
-                val name = if (dnBegin >= 0) {
-                    val dnClose = block.indexOf(dnTagEnd, dnBegin)
-                    if (dnClose >= 0) block.substring(dnBegin + dnTagStart.length, dnClose) else ""
-                } else {
-                    // 从href中提取名称（需要解码）
-                    val decoded = try { URLDecoder.decode(href, "UTF-8") } catch (_: Exception) { href }
-                    decoded.trimEnd('/').substringAfterLast('/')
-                }
+                val name = extractTagContent(block, "D:displayname")
+                    ?: try { URLDecoder.decode(href, "UTF-8") }
+                    catch (_: Exception) { href }
+                        .trimEnd('/').substringAfterLast('/')
 
                 // 检查是否是目录
                 val isFolder = block.contains("<D:collection")
 
-                // 提取大小
+                // 提取文件大小
                 val size = if (isFolder) 0L else {
-                    val szTagStart = "<D:getcontentlength>"
-                    val szTagEnd = "</D:getcontentlength>"
-                    val szBegin = block.indexOf(szTagStart)
-                    if (szBegin >= 0) {
-                        val szClose = block.indexOf(szTagEnd, szBegin)
-                        if (szClose >= 0) block.substring(szBegin + szTagStart.length, szClose).toLongOrNull() ?: 0L else 0L
-                    } else 0L
+                    extractTagContent(block, "D:getcontentlength")
+                        ?.toLongOrNull() ?: 0L
                 }
 
-                // 忽略根目录自身（比较href的path部分和basePath的path部分）
-                val baseHref = try { 
-                    val uri = java.net.URI(basePath)
-                    uri.path.trimEnd('/') 
-                } catch (_: Exception) { 
-                    basePath.trimEnd('/') 
-                }
-                
-                // 获取当前条目的path部分
-                val hrefPath = try { 
-                    val uri = java.net.URI(href)
-                    uri.path.trimEnd('/') 
-                } catch (_: Exception) { 
-                    href.trimEnd('/') 
-                }
-                
-                Log.d(TAG, "Parsing entry: href=$href, hrefPath=$hrefPath, baseHref=$baseHref, isFolder=$isFolder")
-                if (hrefPath != baseHref) {
-                    Log.d(TAG, "Adding entry: $href (name=$name)")
-                    files.add(WebDavFile(
-                        href = href,  // 保持原始编码
-                        displayName = name,
-                        isFolder = isFolder,
-                        contentLength = size
-                    ))
-                } else {
-                    Log.d(TAG, "Filtering self-entry: $href")
+                // 忽略根目录自身
+                val baseRef = try { java.net.URI(basePath).path.trimEnd('/') }
+                catch (_: Exception) { basePath.trimEnd('/') }
+                val hrefPath = try { java.net.URI(href).path.trimEnd('/') }
+                catch (_: Exception) { href.trimEnd('/') }
+
+                if (hrefPath != baseRef) {
+                    files.add(WebDavFile(href = href, displayName = name, isFolder = isFolder, contentLength = size))
                 }
             }
         } catch (e: Exception) {
             throw Exception("解析WebDAV响应失败: ${e.message}")
         }
-        Log.d("WebDavClient", "解析完成: 找到 ${responseCount} 个 response 块, 解析出 ${files.size} 个条目")
+        Log.d("WebDavClient", "解析完成: 找到 $responseCount 个response块, 解析出 ${files.size} 个条目")
         return files
+    }
+
+    /** 从block中提取标签内容，如 <D:displayname>xxx</D:displayname> */
+    private fun extractTagContent(block: String, tag: String): String? {
+        val start = block.indexOf("<$tag>")
+        if (start < 0) return null
+        val end = block.indexOf("</$tag>", start)
+        if (end < 0) return null
+        return block.substring(start + tag.length + 3, end).ifEmpty { null }
     }
 
     /** 将 WebDavFile 列表按目录结构转换为 OperaCategory / OperaItem / OperaAudioFile */
