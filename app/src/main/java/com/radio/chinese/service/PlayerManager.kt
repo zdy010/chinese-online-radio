@@ -328,6 +328,11 @@ class PlayerManager @Inject constructor(
     /** 已下载文件的本地路径映射：fileId → localPath，供上下切歌时使用 */
     private val downloadedPaths = java.util.concurrent.ConcurrentHashMap<Long, String>()
 
+    /** 预注册所有已下载文件的本地路径，上下切歌时自动使用本地路径 */
+    fun registerDownloadedPaths(paths: Map<Long, String>) {
+        downloadedPaths.putAll(paths)
+    }
+
     /** 播放戏曲文件，自动停止电台
      *  @param file 要播放的文件
      *  @param playlist 播放列表（用于上下切歌）

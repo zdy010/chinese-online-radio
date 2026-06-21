@@ -389,6 +389,10 @@ class OperaViewModel @Inject constructor(
         }
         val file = OperaAudioFile(downloaded.fileId, downloaded.fileName, downloaded.fileSize,
             downloaded.categoryName, downloaded.operaName, downloadUrl = null)
+        // 预注册所有已下载文件的本地路径，确保上下切歌也能走本地播放
+        playerManager.registerDownloadedPaths(
+            uiState.value.localDownloads.associate { it.fileId to it.localPath }
+        )
         playerManager.playOperaFile(file, playlist, downloaded.localPath)
     }
 
