@@ -15,6 +15,7 @@ import com.radio.chinese.service.WebDavClient
 import com.radio.chinese.service.YunPanConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -89,6 +90,7 @@ class OperaViewModel @Inject constructor(
             handler.postDelayed(this, 500)
         }
     }
+    private var searchJob: Job? = null
 
     init {
         loadDownloaded()
@@ -220,28 +222,45 @@ class OperaViewModel @Inject constructor(
     // ========== 搜索 ==========
 
     fun updateSearchQuery(query: String) {
+        // 取消上一次搜索
+        searchJob?.cancel()
         _uiState.update { it.copy(searchQuery = query) }
         if (query.length >= 2) {
-            viewModelScope.launch {
+            searchJob = viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true) }
                 try {
                     val results = operaRepository.searchFiles(query)
                     _uiState.update { it.copy(searchResults = results, isLoading = false, level = BrowseLevel.SEARCH_RESULTS,
                         currentPlaylist = results, currentIndex = -1) }
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(isLoading = false, error = e.message ?: "搜索失败") }
+                    // 如果是取消异常，不显示错误
+                    if (e is kotlinx.coroutines.CancellationException) {
+                        _uiState.update { it.copy(isLoading = false) }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, error = e.message ?: "搜索失败") }
+                    }
                 }
             }
         } else {
-            _uiState.update { it.copy(searchResults = emptyList(), currentPlaylist = emptyList(), currentIndex = -1) }
+            _uiState.update { it.copy(searchResults = emptyList(), currentPlaylist = emptyList(), currentIndex = -1, isLoading = false) }
         }
+    }
+
+    /** 取消正在进行的搜索 */
+    fun cancelSearch() {
+        searchJob?.cancel()
+        webDavClient.cancelSearch()
+        _uiState.update { it.copy(isLoading = false) }
     }
 
     // ========== 播放 ==========
 
     private fun initPlayer() {
-        val dataSourceFactory = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+        // DefaultDataSource.Factory 同时支持 file:// 和 http://，
+        // 远程请求走带 Auth 的 HttpDataSource，本地文件走默认 FileDataSource
+        val httpFactory = androidx.media3.datasource.DefaultHttpDataSource.Factory()
             .setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
+        val dataSourceFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
         exoPlayer = ExoPlayer.Builder(context)
             .setMediaSourceFactory(androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory))
             .build().apply {

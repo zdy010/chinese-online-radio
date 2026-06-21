@@ -150,7 +150,19 @@ private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel
         // 用 Box + weight(1f) 约束 LazyColumn 的高度，使其可以滚动
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when {
-                uiState.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                uiState.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        if (uiState.searchQuery.length >= 2) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("搜索中...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = { viewModel.cancelSearch() }, colors = ButtonDefaults.outlinedButtonColors()) {
+                                Text("取消")
+                            }
+                        }
+                    }
+                }
                 uiState.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
