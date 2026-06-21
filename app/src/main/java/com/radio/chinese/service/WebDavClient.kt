@@ -4,13 +4,18 @@ import android.util.Log
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.OperaCategory
 import com.radio.chinese.domain.model.OperaItem
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 import java.net.URLDecoder
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -44,6 +49,12 @@ class WebDavClient @Inject constructor() {
     var serverUrl: String = ""
     var username: String = ""
     var password: String = ""
+
+    /** 当前搜索请求的 Call，用于取消 */
+    private var currentSearchCall: Call? = null
+
+    /** 取消正在进行的搜索 */
+    fun cancelSearch() { currentSearchCall?.cancel() }
 
     private val client by lazy {
         // 创建信任所有证书的TrustManager（用于开发测试，生产环境应该使用正式的证书验证）
@@ -157,8 +168,10 @@ class WebDavClient @Inject constructor() {
         parsePropfindResponse(body, url)
     }
 
-    /** 搜索文件（递归列出所有文件后过滤） */
+    /** 搜索文件（列出所有文件后过滤），支持取消 */
     suspend fun searchFiles(query: String): List<WebDavFile> = withContext(Dispatchers.IO) {
+        // 取消上一次搜索
+        currentSearchCall?.cancel()
         val url = normalizeUrl("/")
         val request = Request.Builder()
             .url(url)
@@ -167,16 +180,23 @@ class WebDavClient @Inject constructor() {
             .header("Depth", "infinity")
             .header("User-Agent", "Mozilla/5.0 (Linux; Android 14)")
             .build()
-        val response = client.newCall(request).execute()
+        val call = client.newCall(request)
+        currentSearchCall = call
+
+        // 在 IO 调度器上执行阻塞调用，支持协程取消时中断
+        val response = try {
+            call.execute()
+        } catch (e: Exception) {
+            // 如果是取消导致的异常，转换为 CancellationException
+            if (call.isCanceled()) throw kotlinx.coroutines.CancellationException("搜索已取消")
+            throw e
+        }
         if (!response.isSuccessful) {
             throw Exception("搜索失败: HTTP ${response.code}")
         }
         val body = response.body?.string() ?: throw Exception("响应为空")
         val allFiles = parsePropfindResponse(body, url)
-        // 只返回非文件夹且文件名匹配的
-        allFiles.filter { f ->
-            !f.isFolder && f.displayName.contains(query, ignoreCase = true)
-        }
+        allFiles.filter { !it.isFolder && it.displayName.contains(query, ignoreCase = true) }
     }
 
     /** 获取文件的下载/流媒体URL */
