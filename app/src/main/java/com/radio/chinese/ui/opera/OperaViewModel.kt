@@ -262,7 +262,9 @@ class OperaViewModel @Inject constructor(
                     }
                 }
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    _uiState.update { it.copy(playError = error.localizedMessage ?: "播放失败") }
+                    val code = error.errorCode
+                    val msg = error.localizedMessage ?: "未知错误"
+                    _uiState.update { it.copy(playError = "播放失败(code=$code): $msg") }
                 }
             })
         }
@@ -296,6 +298,14 @@ class OperaViewModel @Inject constructor(
             OperaAudioFile(it.fileId, it.fileName, it.fileSize, it.categoryName, it.operaName, downloadUrl = null)
         }
         val index = playlist.indexOfFirst { it.fileId == downloaded.fileId }
+
+        // 检查本地文件是否存在
+        val localFile = java.io.File(downloaded.localPath)
+        if (!localFile.exists() || localFile.length() == 0L) {
+            _uiState.update { it.copy(currentPlaylist = playlist, currentIndex = index, playError = "下载文件不存在或已损坏，请重新下载") }
+            return
+        }
+
         val file = OperaAudioFile(downloaded.fileId, downloaded.fileName, downloaded.fileSize,
             downloaded.categoryName, downloaded.operaName, downloadUrl = null)
         _uiState.update { it.copy(currentPlaylist = playlist, currentIndex = index) }
