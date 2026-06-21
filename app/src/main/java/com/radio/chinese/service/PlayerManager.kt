@@ -174,6 +174,8 @@ class PlayerManager @Inject constructor(
     }
 
     fun playStation(station: RadioStation) {
+        // 互斥：清除戏曲状态
+        stopOpera()
         _currentStation.value = station
         _error.value = null
 
