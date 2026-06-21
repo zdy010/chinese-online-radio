@@ -213,6 +213,9 @@ class WebDavClient @Inject constructor() {
                 val hrefClose = block.indexOf(hrefTagEnd, hrefBegin)
                 if (hrefBegin < 0 || hrefClose < 0) continue
                 val href = block.substring(hrefBegin + hrefTagStart.length, hrefClose)
+                
+                // 重要：保持href的原始编码形式，不要解码！
+                // 解码只在显示名称时使用，路径用于API请求时必须保持编码
 
                 // 提取 displayname
                 val dnTagStart = "<D:displayname>"
@@ -222,7 +225,9 @@ class WebDavClient @Inject constructor() {
                     val dnClose = block.indexOf(dnTagEnd, dnBegin)
                     if (dnClose >= 0) block.substring(dnBegin + dnTagStart.length, dnClose) else ""
                 } else {
-                    href.trimEnd('/').substringAfterLast('/')
+                    // 从href中提取名称（需要解码）
+                    val decoded = try { URLDecoder.decode(href, "UTF-8") } catch (_: Exception) { href }
+                    decoded.trimEnd('/').substringAfterLast('/')
                 }
 
                 // 检查是否是目录
@@ -239,24 +244,33 @@ class WebDavClient @Inject constructor() {
                     } else 0L
                 }
 
-                // 忽略根目录自身（basePath是完整URL，提取path部分比较）
-                val baseHref = try { java.net.URI(basePath).path } catch (_: Exception) { basePath }
-                val decodedHref = try {
-                    URLDecoder.decode(href, "UTF-8")
-                } catch (_: Exception) {
-                    href
+                // 忽略根目录自身（比较href的path部分和basePath的path部分）
+                val baseHref = try { 
+                    val uri = java.net.URI(basePath)
+                    uri.path.trimEnd('/') 
+                } catch (_: Exception) { 
+                    basePath.trimEnd('/') 
                 }
-                Log.d(TAG, "Parsing entry: href=$href, decodedHref=$decodedHref, baseHref=$baseHref, isFolder=$isFolder")
-                if (decodedHref.trimEnd('/') != baseHref.trimEnd('/')) {
-                    Log.d(TAG, "Adding entry: $decodedHref")
+                
+                // 获取当前条目的path部分
+                val hrefPath = try { 
+                    val uri = java.net.URI(href)
+                    uri.path.trimEnd('/') 
+                } catch (_: Exception) { 
+                    href.trimEnd('/') 
+                }
+                
+                Log.d(TAG, "Parsing entry: href=$href, hrefPath=$hrefPath, baseHref=$baseHref, isFolder=$isFolder")
+                if (hrefPath != baseHref) {
+                    Log.d(TAG, "Adding entry: $href (name=$name)")
                     files.add(WebDavFile(
-                        href = decodedHref,
+                        href = href,  // 保持原始编码
                         displayName = name,
                         isFolder = isFolder,
                         contentLength = size
                     ))
                 } else {
-                    Log.d(TAG, "Filtering self-entry: $decodedHref")
+                    Log.d(TAG, "Filtering self-entry: $href")
                 }
             }
         } catch (e: Exception) {
@@ -269,12 +283,12 @@ class WebDavClient @Inject constructor() {
     /** 将 WebDavFile 列表按目录结构转换为 OperaCategory / OperaItem / OperaAudioFile */
     fun toOperaCategories(files: List<WebDavFile>): List<OperaCategory> {
         return files.filter { it.isFolder }
-            .map { OperaCategory(name = it.displayName, folderId = it.href.hashCode().toLong(), itemCount = 0) }
+            .map { OperaCategory(name = it.displayName, folderId = it.href.hashCode().toLong(), path = it.href, itemCount = 0) }
     }
 
     fun toOperaItems(files: List<WebDavFile>): List<OperaItem> {
         return files.filter { it.isFolder }
-            .map { OperaItem(name = it.displayName, folderId = it.href.hashCode().toLong()) }
+            .map { OperaItem(name = it.displayName, folderId = it.href.hashCode().toLong(), path = it.href) }
     }
 
     fun toAudioFiles(files: List<WebDavFile>, categoryName: String, operaName: String): List<OperaAudioFile> {

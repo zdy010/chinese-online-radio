@@ -152,7 +152,7 @@ private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel
             uiState.level == BrowseLevel.OPERAS -> {
                 if (uiState.operas.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该分类下暂无剧目") }
                 else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(uiState.operas) { OperaCard(it) { uiState.selectedCategory?.let { cat -> viewModel.selectOpera(cat, it) } } }
+                    items(uiState.operas) { OperaCard(it) { viewModel.selectOpera(it) } }
                 }
             }
             uiState.level == BrowseLevel.FILES -> {

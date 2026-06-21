@@ -145,12 +145,11 @@ class OperaViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, selectedCategory = category, error = null) }
             try {
-                val categoryHref = "/${category.name}"
-                val operas = operaRepository.getOperas(category.name, categoryHref)
+                val operas = operaRepository.getOperas(category)
                 
                 // 如果分类下没有子文件夹（剧目），直接获取音频文件
                 if (operas.isEmpty()) {
-                    val files = operaRepository.getAudioFiles(category.name, "", categoryHref)
+                    val files = operaRepository.getAudioFiles(category.name, OperaItem(name = "", folderId = 0, path = category.path))
                     val downloaded = operaRepository.getAllDownloadedIds()
                     _uiState.update {
                         it.copy(audioFiles = files, downloadedIds = downloaded, level = BrowseLevel.FILES, isLoading = false)
@@ -164,12 +163,12 @@ class OperaViewModel @Inject constructor(
         }
     }
 
-    fun selectOpera(category: OperaCategory, opera: OperaItem) {
+    fun selectOpera(opera: OperaItem) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, selectedOpera = opera, error = null) }
             try {
-                val operaHref = "/${category.name}/${opera.name}"
-                val files = operaRepository.getAudioFiles(category.name, opera.name, operaHref)
+                val categoryName = _uiState.value.selectedCategory?.name ?: ""
+                val files = operaRepository.getAudioFiles(categoryName, opera)
                 val downloaded = operaRepository.getAllDownloadedIds()
                 _uiState.update {
                     it.copy(audioFiles = files, downloadedIds = downloaded, level = BrowseLevel.FILES, isLoading = false)
