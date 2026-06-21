@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -109,7 +110,7 @@ fun SettingsScreen(
             // About
             ListItem(
                 headlineContent = { Text("关于") },
-                supportingContent = { Text("时光收音机 v1.0.0") },
+                supportingContent = { Text("时光收音机 v${getVersionName()}") },
                 leadingContent = {
                     Icon(Icons.Default.Info, contentDescription = null)
                 }
@@ -120,7 +121,7 @@ fun SettingsScreen(
             // Version info at bottom
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "时光收音机 v1.0.0\n基于公开广播流媒体地址",
+                text = "时光收音机 v${getVersionName()}\n基于公开广播流媒体地址",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -173,4 +174,12 @@ fun SettingsScreen(
             }
         )
     }
+}
+
+@Composable
+private fun getVersionName(): String {
+    val context = LocalContext.current
+    return try {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
+    } catch (_: Exception) { "?" }
 }
