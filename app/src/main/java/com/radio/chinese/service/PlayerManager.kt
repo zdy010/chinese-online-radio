@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.StationRepository
+import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,7 +31,8 @@ import javax.inject.Singleton
 class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: RadioPreferences,
-    private val stationRepository: StationRepository
+    private val stationRepository: StationRepository,
+    private val webDavClient: WebDavClient
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -65,6 +67,36 @@ class PlayerManager @Inject constructor(
     private var sourceQueue: List<StationSource> = emptyList()
     private var sourceQueueIndex: Int = 0
 
+    // ========== 戏曲播放状态 ==========
+
+    private val _operaFile = MutableStateFlow<OperaAudioFile?>(null)
+    val operaFile: StateFlow<OperaAudioFile?> = _operaFile
+
+    private val _operaPlaylist = MutableStateFlow<List<OperaAudioFile>>(emptyList())
+    val operaPlaylist: StateFlow<List<OperaAudioFile>> = _operaPlaylist
+
+    private val _operaIndex = MutableStateFlow(-1)
+    val operaIndex: StateFlow<Int> = _operaIndex
+
+    private val _operaPosition = MutableStateFlow(0L)
+    val operaPosition: StateFlow<Long> = _operaPosition
+
+    private val _operaDuration = MutableStateFlow(0L)
+    val operaDuration: StateFlow<Long> = _operaDuration
+
+    private val _operaBitrate = MutableStateFlow(0)
+    val operaBitrate: StateFlow<Int> = _operaBitrate
+
+    private val _isOperaMode = MutableStateFlow(false)
+    val isOperaMode: StateFlow<Boolean> = _isOperaMode
+
+    private var pendingOpera: OperaAudioFile? = null
+    private var pendingOperaPlaylist: List<OperaAudioFile> = emptyList()
+    private var pendingOperaLocalPath: String? = null
+
+    private var operaPositionUpdater: java.lang.Runnable? = null
+    private val operaPositionHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     fun connect() {
         val sessionToken = SessionToken(context, ComponentName(context, RadioService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
@@ -88,6 +120,7 @@ class PlayerManager @Inject constructor(
         controller?.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 _isPlaying.value = playing
+                if (_isOperaMode.value) startOperaPositionUpdater()
             }
 
             override fun onPlaybackStateChanged(state: Int) {
@@ -96,11 +129,17 @@ class PlayerManager @Inject constructor(
                     Player.STATE_READY -> {
                         _isPlaying.value = controller?.isPlaying == true
                         _error.value = null
-                        // 播放成功，提升当前源的可用性
-                        onPlaybackSuccess()
+                        if (_isOperaMode.value) {
+                            _operaDuration.value = controller?.duration?.coerceAtLeast(0) ?: 0L
+                            _operaBitrate.value = 0
+                        } else {
+                            onPlaybackSuccess()
+                        }
                     }
                     Player.STATE_ENDED -> {
                         _isPlaying.value = false
+                        stopOperaPositionUpdater()
+                        if (_isOperaMode.value) playOperaNext()
                     }
                     Player.STATE_BUFFERING -> {
                         _error.value = null
@@ -109,14 +148,19 @@ class PlayerManager @Inject constructor(
             }
 
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                // 当前源播放失败，尝试下一个
-                onSourceFailed()
-                when (error.errorCode) {
-                    androidx.media3.common.PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW ->
-                        _error.value = "直播流超时，尝试其他源…"
-                    androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ->
-                        _error.value = "网络连接失败，尝试其他源…"
-                    else -> _error.value = "播放失败，尝试其他源…"
+                if (_isOperaMode.value) {
+                    val code = error.errorCode
+                    val msg = error.localizedMessage ?: "未知错误"
+                    _error.value = "播放失败(code=$code): $msg"
+                } else {
+                    onSourceFailed()
+                    when (error.errorCode) {
+                        androidx.media3.common.PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW ->
+                            _error.value = "直播流超时，尝试其他源…"
+                        androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ->
+                            _error.value = "网络连接失败，尝试其他源…"
+                        else -> _error.value = "播放失败，尝试其他源…"
+                    }
                 }
             }
         })
@@ -273,12 +317,154 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    // ========== 戏曲播放 ==========
+
+    /** 播放戏曲文件，自动停止电台 */
+    fun playOperaFile(file: OperaAudioFile, playlist: List<OperaAudioFile>, localPath: String? = null) {
+        // 互斥：停止电台
+        _currentStation.value = null
+        _isOperaMode.value = true
+        _error.value = null
+        _operaPlaylist.value = playlist
+        val index = playlist.indexOfFirst { it.fileId == file.fileId }
+        _operaIndex.value = index
+        _operaFile.value = file
+
+        val ctrl = controller
+        if (ctrl != null) {
+            startOperaOnController(ctrl, file, localPath)
+        } else {
+            pendingOpera = file
+            pendingOperaPlaylist = playlist
+            pendingOperaLocalPath = localPath
+            if (controllerFuture == null) connect()
+            else scope.launch {
+                _isConnected.first { it }
+                val c = controller ?: return@launch
+                pendingOpera?.let { startOperaOnController(c, it, pendingOperaLocalPath) }
+                pendingOpera = null
+                pendingOperaPlaylist = emptyList()
+                pendingOperaLocalPath = null
+            }
+        }
+    }
+
+    private fun startOperaOnController(ctrl: MediaController, file: OperaAudioFile, localPath: String?) {
+        val uri = if (localPath != null) {
+            android.net.Uri.fromFile(java.io.File(localPath))
+        } else {
+            val url = file.downloadUrl ?: webDavClient.getFileUrl(file.name)
+            android.net.Uri.parse(url)
+        }
+
+        val metadata = MediaMetadata.Builder()
+            .setTitle(file.name)
+            .setArtist(file.operaName.ifEmpty { file.categoryName })
+            .setAlbumTitle(file.categoryName)
+            .build()
+
+        val mediaItem = MediaItem.Builder()
+            .setUri(uri)
+            .setMediaMetadata(metadata)
+            .build()
+
+        ctrl.stop()
+        ctrl.clearMediaItems()
+        ctrl.setMediaItem(mediaItem)
+
+        // 断点续听
+        scope.launch {
+            val saved = preferences.getOperaPlayPosition(file.fileId)
+            if (saved > 0) ctrl.seekTo(saved)
+        }
+
+        ctrl.prepare()
+        ctrl.play()
+    }
+
+    fun playOperaNext() {
+        val playlist = _operaPlaylist.value
+        val idx = _operaIndex.value
+        if (playlist.isEmpty() || idx < 0 || idx >= playlist.size - 1) {
+            _isOperaMode.value = false
+            return
+        }
+        saveOperaPosition()
+        val next = playlist[idx + 1]
+        val local = next.downloadUrl?.let { null } // remote only for now; maybe cached
+        playOperaFile(next, playlist)
+    }
+
+    fun playOperaPrevious() {
+        val playlist = _operaPlaylist.value
+        val idx = _operaIndex.value
+        if (playlist.isEmpty() || idx <= 0) return
+        saveOperaPosition()
+        val prev = playlist[idx - 1]
+        playOperaFile(prev, playlist)
+    }
+
+    fun seekOperaTo(posMs: Long) {
+        controller?.seekTo(posMs)
+        _operaPosition.value = posMs
+    }
+
+    fun seekOperaForward(seconds: Long = 15) {
+        val ctrl = controller ?: return
+        ctrl.seekTo((ctrl.currentPosition + seconds * 1000).coerceAtMost(ctrl.duration))
+    }
+
+    fun seekOperaBackward(seconds: Long = 15) {
+        val ctrl = controller ?: return
+        ctrl.seekTo((ctrl.currentPosition - seconds * 1000).coerceAtLeast(0))
+    }
+
+    private fun saveOperaPosition() {
+        val file = _operaFile.value ?: return
+        val pos = controller?.currentPosition ?: return
+        scope.launch { preferences.saveOperaPlayPosition(file.fileId, pos) }
+    }
+
+    private fun startOperaPositionUpdater() {
+        stopOperaPositionUpdater()
+        val updater = object : java.lang.Runnable {
+            override fun run() {
+                if (!_isOperaMode.value) return
+                val ctrl = controller ?: return
+                if (ctrl.isPlaying) {
+                    _operaPosition.value = ctrl.currentPosition
+                    _operaDuration.value = ctrl.duration.coerceAtLeast(0)
+                }
+                operaPositionHandler.postDelayed(this, 1000)
+            }
+        }
+        operaPositionUpdater = updater
+        operaPositionHandler.post(updater)
+    }
+
+    private fun stopOperaPositionUpdater() {
+        operaPositionUpdater?.let { operaPositionHandler.removeCallbacks(it) }
+        operaPositionUpdater = null
+    }
+
+    fun stopOpera() {
+        saveOperaPosition()
+        stopOperaPositionUpdater()
+        _isOperaMode.value = false
+        _operaFile.value = null
+        _operaPlaylist.value = emptyList()
+        _operaIndex.value = -1
+        controller?.stop()
+    }
+
     fun disconnect() {
+        stopOperaPositionUpdater()
         scope.coroutineContext[Job]?.cancelChildren()
         controllerFuture?.let {
             MediaController.releaseFuture(it)
         }
         controller = null
         _isConnected.value = false
+        _isOperaMode.value = false
     }
 }
