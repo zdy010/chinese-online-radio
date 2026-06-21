@@ -8,10 +8,11 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.radio.chinese.data.local.RadioPreferences
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import com.radio.chinese.data.local.RadioPreferences
+import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -37,12 +38,15 @@ class RadioService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        // 使用带 WebDAV Auth 的 DataSource（公共电台流不受影响，多一个无害 Auth header）
-        val httpFactory = DefaultHttpDataSource.Factory()
-            .setDefaultRequestProperties(
-                mapOf("Authorization" to webDavClient.authHeader())
-            )
-        val dataSourceFactory = DefaultDataSource.Factory(this, httpFactory)
+        // 动态 Auth：每次 ExoPlayer 加载媒体时实时读取 webDavClient 的最新凭证
+        // 解决"凭证在 Service 启动后才更新"的问题
+        val dataSourceFactory = DataSource.Factory {
+            val httpFactory = DefaultHttpDataSource.Factory()
+                .setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
+                .setConnectTimeoutMs(15000)
+                .setReadTimeoutMs(30000)
+            DefaultDataSource.Factory(this, httpFactory).createDataSource()
+        }
 
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, true)
