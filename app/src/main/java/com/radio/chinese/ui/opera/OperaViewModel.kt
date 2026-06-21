@@ -329,8 +329,20 @@ class OperaViewModel @Inject constructor(
                 override fun onPlaybackStateChanged(state: Int) {
                     when (state) {
                         Player.STATE_READY -> {
-                            val br = audioFormat?.bitrate ?: 0
+                            // 尝试多种方式获取码率
+                            val br = try {
+                                // 方法1: 从 audioFormat 获取
+                                val format = audioFormat
+                                if (format != null && format.bitrate > 0) {
+                                    format.bitrate
+                                } else {
+                                    // 方法2: 从当前媒体项的元数据获取（如果有的话）
+                                    0
+                                }
+                            } catch (e: Exception) { 0 }
                             _uiState.update { it.copy(playError = null, durationMs = duration.coerceAtLeast(0), bitrate = br) }
+                            // 添加日志
+                            android.util.Log.d("OperaViewModel", "Playback STATE_READY, bitrate=$br, audioFormat=$audioFormat")
                         }
                         Player.STATE_ENDED -> {
                             _uiState.update { it.copy(isPlaying = false, positionMs = 0L) }

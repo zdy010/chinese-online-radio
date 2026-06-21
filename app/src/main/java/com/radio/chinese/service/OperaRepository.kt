@@ -11,7 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
-import java.net.URLDecoder
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,11 +27,18 @@ class OperaRepository @Inject constructor(
         .followRedirects(true)
         .build()
 
+    // 本地文件缓存：key = 分类名，value = 该分类下所有文件（含剧目子目录）
+    private val fileCache = mutableMapOf<String, List<OperaAudioFile>>()
+    private var cacheInitialized = false
+
     /** 设置 WebDAV 连接凭证 */
     fun setCredentials(serverUrl: String, username: String, password: String) {
         webDavClient.serverUrl = serverUrl
         webDavClient.username = username
         webDavClient.password = password
+        // 凭证变化时清缓存
+        fileCache.clear()
+        cacheInitialized = false
     }
 
     /** 验证 WebDAV 连接 */
@@ -53,13 +59,56 @@ class OperaRepository @Inject constructor(
         val files = webDavClient.listFiles("/")
         Log.d("OperaRepo", "listFiles returned ${files.size} entries")
         files.forEach { Log.d("OperaRepo", "  -> ${it.displayName} folder=${it.isFolder} href=${it.href}") }
-        // 过滤掉根目录自身（href与服务器路径一致的是根目录）
         val serverPath = try { java.net.URI(webDavClient.serverUrl).path.trimEnd('/') } catch (_: Exception) { "" }
         Log.d("OperaRepo", "serverPath=$serverPath")
         val categories = files.filter { it.isFolder && it.href.trimEnd('/') != serverPath }
             .map { OperaCategory(name = it.displayName, folderId = it.href.hashCode().toLong(), path = it.href) }
         Log.d("OperaRepo", "filtered ${categories.size} categories")
         categories
+    }
+
+    /** 递归加载某个分类下所有音频文件（支持混合结构：既有子目录也有直接文件） */
+    private suspend fun loadAllFilesInCategory(category: OperaCategory): List<OperaAudioFile> {
+        val result = mutableListOf<OperaAudioFile>()
+        val entries = webDavClient.listFiles(category.path)
+        for (item in entries) {
+            if (item.isFolder) {
+                // 剧目目录，递归加载其中的音频文件
+                val files = webDavClient.listFiles(item.href)
+                for (f in files) {
+                    if (!f.isFolder && isAudioFile(f.displayName)) {
+                        result.add(OperaAudioFile(
+                            fileId = f.href.hashCode().toLong(),
+                            name = f.displayName,
+                            size = f.size,
+                            categoryName = category.name,
+                            operaName = item.displayName,
+                            downloadUrl = webDavClient.getFileUrl(f.href)
+                        ))
+                    }
+                }
+            } else {
+                // 文件直接在分类目录下（如"待确定"这类没有子目录的分类）
+                if (isAudioFile(item.displayName)) {
+                    result.add(OperaAudioFile(
+                        fileId = item.href.hashCode().toLong(),
+                        name = item.displayName,
+                        size = item.size,
+                        categoryName = category.name,
+                        operaName = "",
+                        downloadUrl = webDavClient.getFileUrl(item.href)
+                    ))
+                }
+            }
+        }
+        return result
+    }
+
+    /** 判断是否为音频文件 */
+    private fun isAudioFile(name: String): Boolean {
+        val lower = name.lowercase()
+        return lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".flac") ||
+                lower.endsWith(".m4a") || lower.endsWith(".aac") || lower.endsWith(".ogg") || lower.endsWith(".wma")
     }
 
     /** 获取某个分类下的剧目 */
@@ -74,8 +123,14 @@ class OperaRepository @Inject constructor(
         categoryName: String,
         opera: OperaItem,
     ): List<OperaAudioFile> = withContext(Dispatchers.IO) {
+        // 先查缓存
+        val cached = fileCache[categoryName]
+        if (cached != null) {
+            return@withContext cached.filter { it.operaName == opera.name }
+        }
+        // 缓存未命中，实时加载
         val files = webDavClient.listFiles(opera.path)
-        files.filter { !it.isFolder }
+        files.filter { !it.isFolder && isAudioFile(it.displayName) }
             .map {
                 OperaAudioFile(
                     fileId = it.href.hashCode().toLong(),
@@ -88,25 +143,50 @@ class OperaRepository @Inject constructor(
             }
     }
 
-    /** 搜索文件 */
-    suspend fun searchFiles(query: String): List<OperaAudioFile> = withContext(Dispatchers.IO) {
+    /** 搜索文件（从本地缓存搜索，极快） */
+    suspend fun searchFiles(query: String): List<OperaAudioFile> = searchLocalCache(query)
+
+    /** 搜索文件（从本地缓存搜索，极快） */
+    suspend fun searchLocalCache(query: String): List<OperaAudioFile> = withContext(Dispatchers.IO) {
+        val q = query.lowercase().trim()
+        if (q.length < 2) return@withContext emptyList()
+
+        // 如果缓存未初始化，先实时搜索
+        if (!cacheInitialized) {
+            Log.d("OperaRepo", "Cache not initialized, doing realtime search")
+            return@withContext searchFilesRealtime(q)
+        }
+
+        // 从缓存搜索
+        val results = mutableListOf<OperaAudioFile>()
+        for ((_, files) in fileCache) {
+            for (file in files) {
+                if (file.name.lowercase().contains(q) ||
+                    file.categoryName.lowercase().contains(q) ||
+                    file.operaName.lowercase().contains(q)) {
+                    results.add(file)
+                }
+            }
+        }
+        Log.d("OperaRepo", "Local cache search for '$q' returned ${results.size} results")
+        results
+    }
+
+    /** 实时搜索（递归 PROPFIND，慢） */
+    private suspend fun searchFilesRealtime(query: String): List<OperaAudioFile> {
         val results = webDavClient.searchFiles(query)
-        // 服务器 base path，用于从 href 中去掉前缀
         val serverUrl = webDavClient.serverUrl
         val basePath = try { java.net.URI(serverUrl).path.trimEnd('/') } catch (_: Exception) { "" }
-        results.map {
-            // 从 href 中解析分类和剧目名
-            // href 可能是完整URL或路径，如 https://example.com/webdav/豫剧/三夹弦/xxx.mp3
+        return results.map {
             val hrefPath = try {
                 val uri = java.net.URI(it.href)
                 if (uri.scheme != null) uri.path else it.href
             } catch (_: Exception) { it.href }
-            // 去掉 base path 前缀
             val relativePath = hrefPath.trimEnd('/').removePrefix(basePath).trimStart('/')
             val pathParts = relativePath.split("/").filter { it.isNotBlank() }
-            // pathParts = [分类, 剧目, 文件名] 或 [分类, 文件名]
-            val categoryName = if (pathParts.size >= 2) pathParts[pathParts.size - 3] else ""
-            val operaName = if (pathParts.size >= 2) pathParts[pathParts.size - 2] else ""
+            // pathParts = [分类, 文件名] 或 [分类, 剧目, 文件名]
+            val categoryName = if (pathParts.size >= 2) pathParts[0] else ""
+            val operaName = if (pathParts.size >= 3) pathParts[1] else ""
             OperaAudioFile(
                 fileId = it.href.hashCode().toLong(),
                 name = it.displayName,
@@ -116,6 +196,20 @@ class OperaRepository @Inject constructor(
                 downloadUrl = webDavClient.getFileUrl(it.href)
             )
         }
+    }
+
+    /** 刷新缓存（后台调用） */
+    suspend fun refreshCache(categories: List<OperaCategory>) = withContext(Dispatchers.IO) {
+        for (cat in categories) {
+            try {
+                val files = loadAllFilesInCategory(cat)
+                fileCache[cat.name] = files
+                Log.d("OperaRepo", "Refreshed cache for ${cat.name}: ${files.size} files")
+            } catch (e: Exception) {
+                Log.w("OperaRepo", "Failed to refresh cache for ${cat.name}: ${e.message}")
+            }
+        }
+        cacheInitialized = true
     }
 
     // ========== 本地下载 ==========
@@ -197,5 +291,29 @@ class OperaRepository @Inject constructor(
 
     suspend fun deleteDownloaded(fileId: Long) {
         dao.delete(fileId)
+    }
+
+    // ========== 收藏文件查找 ==========
+
+    /** 根据收藏的文件ID集合，从缓存中查找完整的 OperaAudioFile 对象 */
+    suspend fun getFavoriteFiles(favoriteFileIds: Set<Long>): List<OperaAudioFile> = withContext(Dispatchers.IO) {
+        if (favoriteFileIds.isEmpty()) return@withContext emptyList()
+        val result = mutableListOf<OperaAudioFile>()
+        for ((_, files) in fileCache) {
+            for (file in files) {
+                if (favoriteFileIds.contains(file.fileId)) {
+                    result.add(file)
+                }
+            }
+        }
+        // 按收藏顺序排序（如果文件ID在favoriteFileIds中的顺序有意义的话）
+        // 这里简单按文件名排序
+        result.distinctBy { it.fileId }.sortedBy { it.name }
+    }
+
+    /** 根据收藏的分类名集合，从分类列表中过滤 */
+    fun getFavoriteCategories(allCategories: List<OperaCategory>, favoriteCategoryNames: Set<String>): List<OperaCategory> {
+        if (favoriteCategoryNames.isEmpty()) return emptyList()
+        return allCategories.filter { favoriteCategoryNames.contains(it.name) }
     }
 }

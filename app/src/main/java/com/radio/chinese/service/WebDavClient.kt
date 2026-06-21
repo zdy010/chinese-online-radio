@@ -48,11 +48,11 @@ class WebDavClient @Inject constructor() {
 
     /** WebDAV 连接凭证 */
     var serverUrl: String = ""
-        set(value) { field = value; clearCache() }
+        set(value) { if (field != value) { field = value; clearCache() } }
     var username: String = ""
-        set(value) { field = value; clearCache() }
+        set(value) { if (field != value) { field = value; clearCache() } }
     var password: String = ""
-        set(value) { field = value; clearCache() }
+        set(value) { if (field != value) { field = value; clearCache() } }
 
     /** 目录列表缓存 */
     private val listFilesCache = mutableMapOf<String, List<WebDavFile>>()
