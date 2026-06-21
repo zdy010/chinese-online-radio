@@ -11,6 +11,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.domain.model.*
 import com.radio.chinese.service.OperaRepository
+import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.service.WebDavClient
 import com.radio.chinese.service.YunPanConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,7 +63,8 @@ class OperaViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val operaRepository: OperaRepository,
     private val webDavClient: WebDavClient,
-    private val preferences: RadioPreferences
+    private val preferences: RadioPreferences,
+    private val playerManager: PlayerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OperaUiState())
@@ -96,6 +98,54 @@ class OperaViewModel @Inject constructor(
         loadDownloaded()
         initPlayer()
         handler.post(positionUpdater)
+        // 启动时检查是否已验证过授权码
+        viewModelScope.launch {
+            val verified = preferences.operaAuthVerified.first()
+            if (verified) {
+                autoConnect()
+            }
+        }
+    }
+
+    /** 使用已保存的凭证自动连接 */
+    private fun autoConnect() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isConnecting = true, authError = null) }
+            // 先尝试使用保存的WebDAV凭证
+            val savedServerUrl = preferences.webDavServerUrl.first()
+            val savedUsername = preferences.webDavUsername.first()
+            val savedPassword = preferences.webDavPassword.first()
+            if (savedServerUrl.isNotBlank() && savedUsername.isNotBlank()) {
+                operaRepository.setCredentials(savedServerUrl, savedUsername, savedPassword)
+            } else {
+                // 使用默认凭证
+                operaRepository.setCredentials(
+                    YunPanConfig.WEBDAV_SERVER_URL,
+                    YunPanConfig.WEBDAV_USERNAME,
+                    YunPanConfig.WEBDAV_PASSWORD
+                )
+            }
+            exoPlayer?.release()
+            initPlayer()
+            val result = operaRepository.verifyConnection()
+            result.fold(
+                onSuccess = {
+                    _uiState.update { it.copy(isConnecting = false, needAuth = false, isConnected = true) }
+                    loadCategories()
+                },
+                onFailure = { e ->
+                    // 连接失败，清除验证状态，重新显示授权码输入
+                    preferences.setOperaAuthVerified(false)
+                    _uiState.update {
+                        it.copy(
+                            isConnecting = false,
+                            needAuth = true,
+                            authError = "WebDAV连接失败: ${e.message ?: "未知错误"}"
+                        )
+                    }
+                }
+            )
+        }
     }
 
     // ========== 授权码验证 ==========
@@ -113,12 +163,20 @@ class OperaViewModel @Inject constructor(
                 YunPanConfig.WEBDAV_USERNAME,
                 YunPanConfig.WEBDAV_PASSWORD
             )
+            // 保存WebDAV凭证到DataStore
+            preferences.saveWebDavCredentials(
+                YunPanConfig.WEBDAV_SERVER_URL,
+                YunPanConfig.WEBDAV_USERNAME,
+                YunPanConfig.WEBDAV_PASSWORD
+            )
             // 重新初始化ExoPlayer以使用新的auth header
             exoPlayer?.release()
             initPlayer()
             val result = operaRepository.verifyConnection()
             result.fold(
                 onSuccess = {
+                    // 保存授权码验证状态
+                    preferences.setOperaAuthVerified(true)
                     _uiState.update { it.copy(isConnecting = false, needAuth = false, isConnected = true) }
                     loadCategories()
                 },
@@ -290,6 +348,8 @@ class OperaViewModel @Inject constructor(
     }
 
     fun playFile(file: OperaAudioFile, localPath: String? = null) {
+        // 先停止收音机播放
+        playerManager.stop()
         val player = exoPlayer ?: return
         val currentState = _uiState.value
         val index = currentState.currentPlaylist.indexOfFirst { it.fileId == file.fileId }

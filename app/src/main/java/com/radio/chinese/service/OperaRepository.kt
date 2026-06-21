@@ -91,11 +91,22 @@ class OperaRepository @Inject constructor(
     /** 搜索文件 */
     suspend fun searchFiles(query: String): List<OperaAudioFile> = withContext(Dispatchers.IO) {
         val results = webDavClient.searchFiles(query)
+        // 服务器 base path，用于从 href 中去掉前缀
+        val serverUrl = webDavClient.serverUrl
+        val basePath = try { java.net.URI(serverUrl).path.trimEnd('/') } catch (_: Exception) { "" }
         results.map {
-            // 从路径中推断分类和剧目名
-            val pathParts = it.href.trim('/').split("/")
-            val categoryName = if (pathParts.size > 1) pathParts[pathParts.size - 3] else ""
-            val operaName = if (pathParts.size > 2) pathParts[pathParts.size - 2] else ""
+            // 从 href 中解析分类和剧目名
+            // href 可能是完整URL或路径，如 https://example.com/webdav/豫剧/三夹弦/xxx.mp3
+            val hrefPath = try {
+                val uri = java.net.URI(it.href)
+                if (uri.scheme != null) uri.path else it.href
+            } catch (_: Exception) { it.href }
+            // 去掉 base path 前缀
+            val relativePath = hrefPath.trimEnd('/').removePrefix(basePath).trimStart('/')
+            val pathParts = relativePath.split("/").filter { it.isNotBlank() }
+            // pathParts = [分类, 剧目, 文件名] 或 [分类, 文件名]
+            val categoryName = if (pathParts.size >= 2) pathParts[pathParts.size - 3] else ""
+            val operaName = if (pathParts.size >= 2) pathParts[pathParts.size - 2] else ""
             OperaAudioFile(
                 fileId = it.href.hashCode().toLong(),
                 name = it.displayName,
