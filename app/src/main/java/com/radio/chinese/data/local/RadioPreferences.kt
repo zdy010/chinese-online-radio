@@ -159,6 +159,36 @@ class RadioPreferences @Inject constructor(
         }
     }
 
+    // ========== WebDAV 凭证 ==========
+
+    val webDavServerUrl: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_WEBDAV_SERVER_URL] ?: ""
+    }
+
+    val webDavUsername: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_WEBDAV_USERNAME] ?: ""
+    }
+
+    val webDavPassword: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_WEBDAV_PASSWORD] ?: ""
+    }
+
+    suspend fun saveWebDavCredentials(serverUrl: String, username: String, password: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_WEBDAV_SERVER_URL] = serverUrl
+            prefs[KEY_WEBDAV_USERNAME] = username
+            prefs[KEY_WEBDAV_PASSWORD] = password
+        }
+    }
+
+    suspend fun clearWebDavCredentials() {
+        dataStore.edit { prefs ->
+            prefs.remove(KEY_WEBDAV_SERVER_URL)
+            prefs.remove(KEY_WEBDAV_USERNAME)
+            prefs.remove(KEY_WEBDAV_PASSWORD)
+        }
+    }
+
     companion object {
         private val KEY_THEME_MODE = intPreferencesKey("theme_mode")
         private val KEY_LAST_STATION = stringPreferencesKey("last_played_station")
@@ -169,5 +199,8 @@ class RadioPreferences @Inject constructor(
         private val KEY_LAST_OPERA_FILE_ID = longPreferencesKey("last_opera_file_id")
         private val KEY_OPERA_SHARE_PASSWORD = stringPreferencesKey("opera_share_password")
         private val KEY_PAN123_AUTH_TOKEN = stringPreferencesKey("pan123_auth_token")
+        private val KEY_WEBDAV_SERVER_URL = stringPreferencesKey("webdav_server_url")
+        private val KEY_WEBDAV_USERNAME = stringPreferencesKey("webdav_username")
+        private val KEY_WEBDAV_PASSWORD = stringPreferencesKey("webdav_password")
     }
 }

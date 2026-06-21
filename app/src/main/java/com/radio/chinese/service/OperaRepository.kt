@@ -1,5 +1,6 @@
 package com.radio.chinese.service
 
+import android.util.Log
 import com.radio.chinese.data.local.DownloadedOperaDao
 import com.radio.chinese.data.local.OperaDatabase
 import com.radio.chinese.domain.model.*
@@ -10,13 +11,14 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URLDecoder
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class OperaRepository @Inject constructor(
-    private val yunPanApi: YunPanApi,
+    private val webDavClient: WebDavClient,
     private val operaDatabase: OperaDatabase
 ) {
     private val dao = operaDatabase.downloadedOperaDao()
@@ -26,87 +28,86 @@ class OperaRepository @Inject constructor(
         .followRedirects(true)
         .build()
 
-    /** 当前使用的分享提取码，由 ViewModel 设置 */
-    var sharePassword: String = ""
+    /** 设置 WebDAV 连接凭证 */
+    fun setCredentials(serverUrl: String, username: String, password: String) {
+        webDavClient.serverUrl = serverUrl
+        webDavClient.username = username
+        webDavClient.password = password
+    }
 
-    /** 123云盘账号登录Token，由 ViewModel 设置 */
-    var authToken: String = ""
+    /** 验证 WebDAV 连接 */
+    suspend fun verifyConnection(): Result<Unit> {
+        return webDavClient.verifyConnection()
+    }
 
-    // ========== 云盘浏览 ==========
+    /** 是否已配置凭证 */
+    fun hasCredentials(): Boolean {
+        return webDavClient.serverUrl.isNotBlank() && webDavClient.username.isNotBlank()
+    }
 
-    /** 获取一级分类列表（戏曲种类） */
+    // ========== 目录浏览 ==========
+
+    /** 列出戏曲分类（第一级） */
     suspend fun getCategories(): List<OperaCategory> = withContext(Dispatchers.IO) {
-        val resp = yunPanApi.listFiles(
-            shareKey = YunPanConfig.SHARE_KEY,
-            sharePassword = sharePassword,
-            parentId = YunPanConfig.ROOT_PARENT_ID
-        )
-        if (resp.code != 0) throw Exception(resp.message ?: "API错误:${resp.code}")
-        (resp.data?.list ?: emptyList())
-            .filter { it.isFolder }
-            .map { OperaCategory(name = it.fileName, folderId = it.fileId) }
+        Log.d("OperaRepo", "getCategories called")
+        val files = webDavClient.listFiles("/")
+        Log.d("OperaRepo", "listFiles returned ${files.size} entries")
+        files.forEach { Log.d("OperaRepo", "  -> ${it.displayName} folder=${it.isFolder} href=${it.href}") }
+        // 过滤掉根目录自身（href与服务器路径一致的是根目录）
+        val serverPath = try { java.net.URI(webDavClient.serverUrl).path.trimEnd('/') } catch (_: Exception) { "" }
+        Log.d("OperaRepo", "serverPath=$serverPath")
+        val categories = files.filter { it.isFolder && it.href.trimEnd('/') != serverPath }
+            .map { OperaCategory(name = it.displayName, folderId = it.href.hashCode().toLong()) }
+        Log.d("OperaRepo", "filtered ${categories.size} categories")
+        categories
     }
 
-    /** 获取某个分类下的剧目列表 */
-    suspend fun getOperas(categoryFolderId: Long): List<OperaItem> = withContext(Dispatchers.IO) {
-        val resp = yunPanApi.listFiles(
-            shareKey = YunPanConfig.SHARE_KEY,
-            sharePassword = sharePassword,
-            parentId = categoryFolderId
-        )
-        if (resp.code != 0) throw Exception(resp.message ?: "API错误:${resp.code}")
-        (resp.data?.list ?: emptyList())
-            .filter { it.isFolder }
-            .map { OperaItem(name = it.fileName, folderId = it.fileId) }
+    /** 获取某个分类下的剧目 */
+    suspend fun getOperas(categoryName: String, categoryHref: String): List<OperaItem> = withContext(Dispatchers.IO) {
+        val decoded = URLDecoder.decode(categoryHref, "UTF-8")
+        val files = webDavClient.listFiles(decoded)
+        files.filter { it.isFolder }
+            .map { OperaItem(name = it.displayName, folderId = it.href.hashCode().toLong()) }
     }
 
-    /** 获取某个剧目下的音频文件列表 */
+    /** 获取某个剧目下的音频文件 */
     suspend fun getAudioFiles(
         categoryName: String,
         operaName: String,
-        operaFolderId: Long
+        operaHref: String
     ): List<OperaAudioFile> = withContext(Dispatchers.IO) {
-        val resp = yunPanApi.listFiles(
-            shareKey = YunPanConfig.SHARE_KEY,
-            sharePassword = sharePassword,
-            parentId = operaFolderId
-        )
-        if (resp.code != 0) throw Exception(resp.message ?: "API错误:${resp.code}")
-        (resp.data?.list ?: emptyList())
-            .filter { !it.isFolder }
+        val decoded = URLDecoder.decode(operaHref, "UTF-8")
+        val files = webDavClient.listFiles(decoded)
+        files.filter { !it.isFolder }
             .map {
                 OperaAudioFile(
-                    fileId = it.fileId,
-                    name = it.fileName,
-                    size = it.fileSize,
+                    fileId = it.href.hashCode().toLong(),
+                    name = it.displayName,
+                    size = it.size,
                     categoryName = categoryName,
                     operaName = operaName,
-                    etag = it.etag,
-                    s3KeyFlag = it.s3KeyFlag
+                    downloadUrl = webDavClient.getFileUrl(it.href)
                 )
             }
     }
 
-    /** 获取文件的下载直链 */
-    suspend fun getDownloadUrl(
-        fileId: Long,
-        etag: String? = null,
-        s3KeyFlag: String? = null,
-        size: Long = 0
-    ): String? = withContext(Dispatchers.IO) {
-        val body = mutableMapOf<String, Any>(
-            "shareKey" to YunPanConfig.SHARE_KEY,
-            "SharePwd" to sharePassword,
-            "fileId" to fileId
-        )
-        if (etag != null) body["etag"] = etag
-        if (s3KeyFlag != null) body["s3keyFlag"] = s3KeyFlag
-        if (size > 0) body["size"] = size
-
-        val authHeader = if (authToken.isNotEmpty()) "Bearer $authToken" else null
-        val resp = yunPanApi.getDownloadInfo(body, authHeader)
-        if (resp.code != 0) throw Exception(resp.message ?: "下载API错误:${resp.code}")
-        resp.data?.downloadUrl
+    /** 搜索文件 */
+    suspend fun searchFiles(query: String): List<OperaAudioFile> = withContext(Dispatchers.IO) {
+        val results = webDavClient.searchFiles(query)
+        results.map {
+            // 从路径中推断分类和剧目名
+            val pathParts = it.href.trim('/').split("/")
+            val categoryName = if (pathParts.size > 1) pathParts[pathParts.size - 3] else ""
+            val operaName = if (pathParts.size > 2) pathParts[pathParts.size - 2] else ""
+            OperaAudioFile(
+                fileId = it.href.hashCode().toLong(),
+                name = it.displayName,
+                size = it.size,
+                categoryName = categoryName,
+                operaName = operaName,
+                downloadUrl = webDavClient.getFileUrl(it.href)
+            )
+        }
     }
 
     // ========== 本地下载 ==========
@@ -127,12 +128,7 @@ class OperaRepository @Inject constructor(
         onProgress: (Int) -> Unit = {}
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val downloadUrl = getDownloadUrl(
-                audioFile.fileId,
-                etag = audioFile.etag,
-                s3KeyFlag = audioFile.s3KeyFlag,
-                size = audioFile.size
-            )
+            val downloadUrl = audioFile.downloadUrl
                 ?: return@withContext Result.failure(Exception("获取下载地址失败"))
 
             val safeName = audioFile.name.replace(Regex("[/\\\\:*?\"<>|]"), "_")
@@ -140,6 +136,7 @@ class OperaRepository @Inject constructor(
 
             val request = Request.Builder().url(downloadUrl)
                 .header("User-Agent", "Mozilla/5.0 (Linux; Android 14)")
+                .header("Authorization", webDavClient.authHeader())
                 .build()
 
             client.newCall(request).execute().use { response ->

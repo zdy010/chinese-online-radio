@@ -1,17 +1,19 @@
 package com.radio.chinese.service
 
 /**
- * 123云盘分享配置
- * 分享链接: https://1855080734.share.123865.com/123pan/TxSWvd-pUauv
- * 河南戏曲音频-按类型分类
+ * 123云盘内置配置
+ * 授权码用于解锁访问，WebDAV凭证用于连接网盘
  */
 object YunPanConfig {
-    /** 123云盘分享Key (从分享链接提取) */
-    const val SHARE_KEY = "TxSWvd-pUauv"
+    /** 授权码（用户必须输入正确后才能使用） */
+    const val AUTH_CODE = "xxxx"
 
-    /** 分享链接 */
-    const val SHARE_URL = "https://1855080734.share.123865.com/123pan/TxSWvd-pUauv"
+    /** WebDAV 服务器地址 */
+    const val WEBDAV_SERVER_URL = "xxx/webdav"
 
-    /** 根目录ID (0=分享目录根) */
-    const val ROOT_PARENT_ID = 0L
+    /** WebDAV 用户名 */
+    const val WEBDAV_USERNAME = "xxx"
+
+    /** WebDAV 密码 */
+    const val WEBDAV_PASSWORD = "xxx"
 }
