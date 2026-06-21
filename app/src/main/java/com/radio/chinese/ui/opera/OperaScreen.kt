@@ -1,8 +1,5 @@
 package com.radio.chinese.ui.opera
 
-import android.annotation.SuppressLint
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,13 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.DownloadedOpera
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.OperaCategory
 import com.radio.chinese.domain.model.OperaItem
-import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,28 +33,13 @@ fun OperaScreen(
             TopAppBar(
                 title = { Text("戏曲") },
                 navigationIcon = {
-                    if (uiState.level != com.radio.chinese.ui.opera.BrowseLevel.CATEGORIES || uiState.tabIndex == 1) {
-                        IconButton(onClick = {
-                            if (uiState.tabIndex == 1) viewModel.switchTab(0)
-                            else viewModel.goBack()
-                        }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    } else {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    }
-                },
-                actions = {
-                    if (!uiState.needPassword) {
-                        IconButton(onClick = {
-                            if (uiState.isLoggedIn) viewModel.logout() else viewModel.showLogin()
-                        }) {
-                            Icon(
-                                if (uiState.isLoggedIn) Icons.Default.AccountCircle else Icons.Default.Login,
-                                contentDescription = if (uiState.isLoggedIn) "退出登录" else "登录"
-                            )
+                    if (!uiState.needAuth) {
+                        val canBack = uiState.level != BrowseLevel.CATEGORIES || uiState.tabIndex == 1
+                        if (canBack) {
+                            IconButton(onClick = {
+                                if (uiState.tabIndex == 1) viewModel.switchTab(0)
+                                else viewModel.goBack()
+                            }) { Icon(Icons.Default.ArrowBack, contentDescription = "返回") }
                         }
                     }
                 }
@@ -67,115 +47,69 @@ fun OperaScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            if (uiState.needPassword) {
-                // 提取码输入界面
-                PasswordInputContent(onSubmit = { viewModel.submitPassword(it) })
+            if (uiState.needAuth) {
+                AuthCodeContent(
+                    error = uiState.authError,
+                    isConnecting = uiState.isConnecting,
+                    onSubmit = viewModel::submitAuthCode
+                )
             } else {
-                // Tab Row
                 TabRow(selectedTabIndex = uiState.tabIndex) {
-                    Tab(
-                        selected = uiState.tabIndex == 0,
-                        onClick = { viewModel.switchTab(0) },
-                        text = { Text("在线浏览") }
-                    )
-                    Tab(
-                        selected = uiState.tabIndex == 1,
-                        onClick = { viewModel.switchTab(1) },
-                        text = { Text("已下载 (${uiState.localDownloads.size})") }
-                    )
+                    Tab(selected = uiState.tabIndex == 0, onClick = { viewModel.switchTab(0) }, text = { Text("在线浏览") })
+                    Tab(selected = uiState.tabIndex == 1, onClick = { viewModel.switchTab(1) }, text = { Text("已下载 (${uiState.localDownloads.size})") })
                 }
-
                 when (uiState.tabIndex) {
-                    0 -> OnlineBrowseContent(uiState = uiState, viewModel = viewModel)
-                    1 -> DownloadedContent(
-                        downloads = uiState.localDownloads,
-                        onPlay = { viewModel.playFile(
-                            OperaAudioFile(it.fileId, it.fileName, it.fileSize, it.categoryName, it.operaName),
-                            it.localPath
-                        ) },
-                        onDelete = { viewModel.deleteDownloaded(it.fileId) }
-                    )
+                    0 -> OnlineBrowseContent(uiState, viewModel)
+                    1 -> DownloadedContent(uiState.localDownloads,
+                        onPlay = { viewModel.playFile(OperaAudioFile(it.fileId, it.fileName, it.fileSize, it.categoryName, it.operaName), it.localPath) },
+                        onDelete = { viewModel.deleteDownloaded(it.fileId) })
                 }
             }
 
-            // Mini player bar
             if (uiState.currentFile != null) {
-                MiniOperaPlayer(
-                    file = uiState.currentFile!!,
-                    isPlaying = uiState.isPlaying,
-                    error = uiState.playError,
-                    positionMs = uiState.positionMs,
-                    durationMs = uiState.durationMs,
-                    onPlayPause = { viewModel.togglePlayPause() },
-                    onClose = { viewModel.stopPlayback() },
-                    onSeek = { viewModel.seekTo(it) },
-                    onSeekForward = { viewModel.seekForward() },
-                    onSeekBackward = { viewModel.seekBackward() },
-                    onRetry = { viewModel.retryPlayback() }
-                )
+                MiniOperaPlayer(uiState.currentFile!!, uiState.isPlaying, uiState.playError,
+                    uiState.positionMs, uiState.durationMs,
+                    onPlayPause = { viewModel.togglePlayPause() }, onClose = { viewModel.stopPlayback() },
+                    onSeek = { viewModel.seekTo(it) }, onSeekForward = { viewModel.seekForward() },
+                    onSeekBackward = { viewModel.seekBackward() }, onRetry = { viewModel.retryPlayback() })
             }
         }
-    }
-
-    // 123云盘登录弹窗
-    if (uiState.showLoginDialog) {
-        LoginWebViewDialog(
-            onTokenObtained = { viewModel.setAuthToken(it) },
-            onDismiss = { viewModel.dismissLogin() }
-        )
     }
 }
 
 @Composable
-private fun PasswordInputContent(
-    onSubmit: (String) -> Unit
-) {
-    var password by remember { mutableStateOf("") }
+private fun AuthCodeContent(error: String?, isConnecting: Boolean, onSubmit: (String) -> Unit) {
+    var code by remember { mutableStateOf("") }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(32.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "河南戏曲音频",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "请输入分享提取码",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Card(modifier = Modifier.fillMaxWidth().padding(32.dp), shape = RoundedCornerShape(16.dp)) {
+            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("戏曲", style = MaterialTheme.typography.titleMedium)
+                Text("请输入授权码", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(20.dp))
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("提取码") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    value = code, onValueChange = { code = it },
+                    label = { Text("授权码") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isConnecting
                 )
+                if (error != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { onSubmit(password) },
-                    enabled = password.isNotBlank(),
+                    onClick = { onSubmit(code) },
+                    enabled = code.isNotBlank() && !isConnecting,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("确认")
+                    if (isConnecting) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(if (isConnecting) "连接中..." else "确认")
                 }
             }
         }
@@ -183,134 +117,80 @@ private fun PasswordInputContent(
 }
 
 @Composable
-private fun OnlineBrowseContent(
-    uiState: OperaUiState,
-    viewModel: OperaViewModel
-) {
+private fun OnlineBrowseContent(uiState: OperaUiState, viewModel: OperaViewModel) {
     Column {
-        // Breadcrumb
-        if (uiState.selectedCategory != null) {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = buildString {
-                        append(uiState.selectedCategory.name)
-                        if (uiState.selectedOpera != null) append(" / ${uiState.selectedOpera.name}")
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                )
+        OutlinedTextField(
+            value = uiState.searchQuery, onValueChange = viewModel::updateSearchQuery,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+            placeholder = { Text("搜索戏曲文件") }, leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = { if (uiState.searchQuery.isNotEmpty()) IconButton(onClick = { viewModel.updateSearchQuery("") }) { Icon(Icons.Default.Clear, contentDescription = "清除") } },
+            singleLine = true, shape = RoundedCornerShape(28.dp)
+        )
+
+        if (uiState.selectedCategory != null && uiState.level != BrowseLevel.SEARCH_RESULTS) {
+            Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
+                Text(text = buildString { append(uiState.selectedCategory.name); if (uiState.selectedOpera != null) append(" / ${uiState.selectedOpera.name}") },
+                    style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
             }
         }
 
         when {
-            uiState.isLoading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+            uiState.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            uiState.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { viewModel.loadCategories() }) { Text("重试") }
                 }
             }
-            uiState.error != null -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { viewModel.loadCategories() }) { Text("重试") }
-                    }
+            uiState.level == BrowseLevel.CATEGORIES -> {
+                if (uiState.categories.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("暂无戏曲分类") }
+                else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(uiState.categories) { CategoryCard(it) { viewModel.selectCategory(it) } }
                 }
             }
-            uiState.level == com.radio.chinese.ui.opera.BrowseLevel.CATEGORIES -> {
-                if (uiState.categories.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("暂无戏曲分类，请确认123云盘分享Key已配置",
-                            style = MaterialTheme.typography.bodyLarge)
-                    }
-                } else {
-                    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(uiState.categories) { cat ->
-                            CategoryCard(cat, onClick = { viewModel.selectCategory(cat) })
-                        }
-                    }
+            uiState.level == BrowseLevel.OPERAS -> {
+                if (uiState.operas.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该分类下暂无剧目") }
+                else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(uiState.operas) { OperaCard(it) { uiState.selectedCategory?.let { cat -> viewModel.selectOpera(cat, it) } } }
                 }
             }
-            uiState.level == com.radio.chinese.ui.opera.BrowseLevel.OPERAS -> {
-                if (uiState.operas.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("该分类下暂无剧目")
-                    }
-                } else {
-                    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(uiState.operas) { opera ->
-                            OperaCard(opera, onClick = {
-                                uiState.selectedCategory?.let { cat ->
-                                    viewModel.selectOpera(cat, opera)
-                                }
-                            })
-                        }
-                    }
+            uiState.level == BrowseLevel.FILES -> {
+                if (uiState.audioFiles.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("该剧目下暂无音频文件") }
+                else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(uiState.audioFiles) { AudioFileCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
+                        onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
                 }
             }
-            uiState.level == com.radio.chinese.ui.opera.BrowseLevel.FILES -> {
-                if (uiState.audioFiles.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("该剧目下暂无音频文件")
-                    }
-                } else {
-                    LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(uiState.audioFiles) { file ->
-                            AudioFileCard(
-                                file = file,
-                                isDownloaded = uiState.downloadedIds.contains(file.fileId),
-                                downloadProgress = uiState.downloadProgress[file.fileId],
-                                onPlay = { viewModel.playFile(file) },
-                                onDownload = { viewModel.downloadFile(file) }
-                            )
-                        }
-                    }
+            uiState.level == BrowseLevel.SEARCH_RESULTS -> {
+                if (uiState.searchResults.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(if (uiState.searchQuery.length < 2) "输入至少2个字符搜索" else "未找到匹配结果")
+                } else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(uiState.searchResults) { SearchResultCard(it, uiState.downloadedIds.contains(it.fileId), uiState.downloadProgress[it.fileId],
+                        onPlay = { viewModel.playFile(it) }, onDownload = { viewModel.downloadFile(it) }) }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun CategoryCard(category: OperaCategory, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Folder, contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+// ========== 列表组件 ==========
+
+@Composable private fun CategoryCard(cat: OperaCategory, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(12.dp)) {
+        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
             Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(category.name, style = MaterialTheme.typography.titleMedium)
-                if (category.itemCount > 0) {
-                    Text("${category.itemCount} 个剧目", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+            Text(cat.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             Icon(Icons.Default.ChevronRight, contentDescription = null)
         }
     }
 }
 
-@Composable
-private fun OperaCard(opera: OperaItem, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.MusicNote, contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary)
+@Composable private fun OperaCard(opera: OperaItem, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(10.dp)) {
+        Row(modifier = Modifier.padding(14.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
             Spacer(modifier = Modifier.width(10.dp))
             Text(opera.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Icon(Icons.Default.ChevronRight, contentDescription = null)
@@ -319,274 +199,116 @@ private fun OperaCard(opera: OperaItem, onClick: () -> Unit) {
 }
 
 @Composable
-private fun AudioFileCard(
-    file: OperaAudioFile,
-    isDownloaded: Boolean,
-    downloadProgress: Int?,
-    onPlay: () -> Unit,
-    onDownload: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.AudioFile, contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary)
+private fun AudioFileCard(file: OperaAudioFile, isDownloaded: Boolean, downloadProgress: Int?, onPlay: () -> Unit, onDownload: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
-                Text(formatSize(file.size), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(formatSize(file.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (downloadProgress != null) {
-                CircularProgressIndicator(progress = { downloadProgress / 100f },
-                    modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
-            } else {
-                IconButton(onClick = onPlay) {
-                    Icon(Icons.Default.PlayCircle, contentDescription = "播放",
-                        tint = MaterialTheme.colorScheme.primary)
-                }
-                if (isDownloaded) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = "已下载",
-                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                } else {
-                    IconButton(onClick = onDownload) {
-                        Icon(Icons.Default.Download, contentDescription = "下载")
-                    }
-                }
+            if (downloadProgress != null) CircularProgressIndicator(progress = { downloadProgress / 100f }, modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
+            else {
+                IconButton(onClick = onPlay) { Icon(Icons.Default.PlayCircle, contentDescription = "播放", tint = MaterialTheme.colorScheme.primary) }
+                if (isDownloaded) Icon(Icons.Default.CheckCircle, contentDescription = "已下载", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                else IconButton(onClick = onDownload) { Icon(Icons.Default.Download, contentDescription = "下载") }
             }
         }
     }
 }
 
 @Composable
-private fun DownloadedContent(
-    downloads: List<DownloadedOpera>,
-    onPlay: (DownloadedOpera) -> Unit,
-    onDelete: (DownloadedOpera) -> Unit
-) {
-    if (downloads.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.Download, contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("暂无已下载戏曲", style = MaterialTheme.typography.bodyLarge)
+private fun SearchResultCard(file: OperaAudioFile, isDownloaded: Boolean, downloadProgress: Int?, onPlay: () -> Unit, onDownload: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("${file.categoryName} / ${file.operaName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatSize(file.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        }
-    } else {
-        LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(downloads, key = { it.fileId }) { item ->
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
-                    Row(
-                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.AudioFile, contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(item.fileName, style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${item.categoryName} / ${item.operaName}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        IconButton(onClick = { onPlay(item) }) {
-                            Icon(Icons.Default.PlayCircle, contentDescription = "播放",
-                                tint = MaterialTheme.colorScheme.primary)
-                        }
-                        IconButton(onClick = { onDelete(item) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "删除",
-                                tint = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                }
+            if (downloadProgress != null) CircularProgressIndicator(progress = { downloadProgress / 100f }, modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
+            else {
+                IconButton(onClick = onPlay) { Icon(Icons.Default.PlayCircle, contentDescription = "播放", tint = MaterialTheme.colorScheme.primary) }
+                if (!isDownloaded) IconButton(onClick = onDownload) { Icon(Icons.Default.Download, contentDescription = "下载") }
             }
         }
     }
 }
 
 @Composable
-private fun MiniOperaPlayer(
-    file: OperaAudioFile,
-    isPlaying: Boolean,
-    error: String?,
-    positionMs: Long,
-    durationMs: Long,
-    onPlayPause: () -> Unit,
-    onClose: () -> Unit,
-    onSeek: (Long) -> Unit,
-    onSeekForward: () -> Unit,
-    onSeekBackward: () -> Unit,
-    onRetry: () -> Unit
-) {
-    Surface(
-        tonalElevation = 4.dp,
-        shadowElevation = 12.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+private fun DownloadedContent(downloads: List<DownloadedOpera>, onPlay: (DownloadedOpera) -> Unit, onDelete: (DownloadedOpera) -> Unit) {
+    if (downloads.isEmpty()) Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(8.dp)); Text("暂无已下载戏曲", style = MaterialTheme.typography.bodyLarge)
+        }
+    } else LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        items(downloads, key = { it.fileId }) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp)) {
+                Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(it.fileName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text("${it.categoryName} / ${it.operaName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = { onPlay(it) }) { Icon(Icons.Default.PlayCircle, contentDescription = "播放", tint = MaterialTheme.colorScheme.primary) }
+                    IconButton(onClick = { onDelete(it) }) { Icon(Icons.Default.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.error) }
+                }
+            }
+        }
+    }
+}
+
+// ========== Mini Player ==========
+
+@Composable
+private fun MiniOperaPlayer(file: OperaAudioFile, isPlaying: Boolean, error: String?, positionMs: Long, durationMs: Long,
+    onPlayPause: () -> Unit, onClose: () -> Unit, onSeek: (Long) -> Unit, onSeekForward: () -> Unit, onSeekBackward: () -> Unit, onRetry: () -> Unit) {
+    Surface(tonalElevation = 4.dp, shadowElevation = 12.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // 文件名 + 关闭按钮
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.AudioFile, contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.AudioFile, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(file.name, style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f))
-                IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = "关闭",
-                        modifier = Modifier.size(18.dp))
-                }
+                Text(file.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, contentDescription = "关闭", modifier = Modifier.size(18.dp)) }
             }
-
             Spacer(modifier = Modifier.height(4.dp))
-
-            // 进度条
             if (durationMs > 0) {
-                Slider(
-                    value = positionMs.toFloat(),
-                    onValueChange = { onSeek(it.toLong()) },
-                    valueRange = 0f..durationMs.toFloat(),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                // 时间显示
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(formatTime(positionMs), style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(formatTime(durationMs), style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Slider(value = positionMs.toFloat(), onValueChange = { onSeek(it.toLong()) }, valueRange = 0f..durationMs.toFloat(), modifier = Modifier.fillMaxWidth())
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(formatTime(positionMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(formatTime(durationMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-
-            // 控制按钮
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onSeekBackward) {
-                    Icon(Icons.Default.Replay10, contentDescription = "后退15秒",
-                        modifier = Modifier.size(32.dp))
-                }
-                FilledIconButton(onClick = onPlayPause) {
-                    Icon(
-                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                IconButton(onClick = onSeekForward) {
-                    Icon(Icons.Default.Forward10, contentDescription = "快进15秒",
-                        modifier = Modifier.size(32.dp))
-                }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onSeekBackward) { Icon(Icons.Default.Replay10, contentDescription = "后退15秒", modifier = Modifier.size(32.dp)) }
+                FilledIconButton(onClick = onPlayPause) { Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(32.dp)) }
+                IconButton(onClick = onSeekForward) { Icon(Icons.Default.Forward10, contentDescription = "快进15秒", modifier = Modifier.size(32.dp)) }
             }
-
-            // 错误信息 + 重试
             if (error != null) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(error, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f))
-                    TextButton(onClick = onRetry,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)) {
-                        Text("重试", style = MaterialTheme.typography.labelSmall)
-                    }
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Text(error, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    TextButton(onClick = onRetry, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)) { Text("重试", style = MaterialTheme.typography.labelSmall) }
                 }
             }
         }
     }
 }
 
+// ========== 工具 ==========
+
 private fun formatTime(ms: Long): String {
-    val totalSec = ms / 1000
-    val hours = totalSec / 3600
-    val minutes = (totalSec % 3600) / 60
-    val seconds = totalSec % 60
-    return if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes, seconds)
-    } else {
-        String.format("%d:%02d", minutes, seconds)
-    }
+    val s = ms / 1000; val h = s / 3600; val m = (s % 3600) / 60; val sec = s % 60
+    return if (h > 0) String.format("%d:%02d:%02d", h, m, sec) else String.format("%d:%02d", m, sec)
 }
 
-private fun formatSize(bytes: Long): String {
-    return when {
-        bytes < 1024 -> "$bytes B"
-        bytes < 1024 * 1024 -> "${bytes / 1024} KB"
-        else -> String.format("%.1f MB", bytes / (1024.0 * 1024.0))
-    }
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-private fun LoginWebViewDialog(
-    onTokenObtained: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var isTokenCaptured by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("登录123云盘") },
-        text = {
-            Box(modifier = Modifier.height(480.dp)) {
-                AndroidView(
-                    factory = { ctx ->
-                        android.webkit.WebView(ctx).apply {
-                            settings.javaScriptEnabled = true
-                            settings.domStorageEnabled = true
-                            settings.allowFileAccess = false
-                            webViewClient = object : WebViewClient() {
-                                override fun onPageFinished(view: WebView, url: String) {
-                                    super.onPageFinished(view, url)
-                                    if (isTokenCaptured) return
-                                    // 只在非登录页URL尝试提取token
-                                    if (!url.contains("yun.123pan.cn") && !url.contains("user.123pan.cn")) return
-                                    view.evaluateJavascript(
-                                        "(function() { return localStorage.getItem('authorToken') })()"
-                                    ) { value ->
-                                        if (value != null && value != "null" && value.isNotEmpty()) {
-                                            val token = value.trim('"')
-                                            if (token.isNotEmpty()) {
-                                                isTokenCaptured = true
-                                                onTokenObtained(token)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            loadUrl("https://yun.123pan.cn/Login")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        }
-    )
+private fun formatSize(bytes: Long): String = when {
+    bytes < 1024 -> "$bytes B"
+    bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+    else -> String.format("%.1f MB", bytes / (1024.0 * 1024.0))
 }
