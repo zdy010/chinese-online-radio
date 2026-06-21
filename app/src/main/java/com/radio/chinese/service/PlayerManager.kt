@@ -325,7 +325,14 @@ class PlayerManager @Inject constructor(
 
     // ========== 戏曲播放 ==========
 
-    /** 播放戏曲文件，自动停止电台 */
+    /** 已下载文件的本地路径映射：fileId → localPath，供上下切歌时使用 */
+    private val downloadedPaths = java.util.concurrent.ConcurrentHashMap<Long, String>()
+
+    /** 播放戏曲文件，自动停止电台
+     *  @param file 要播放的文件
+     *  @param playlist 播放列表（用于上下切歌）
+     *  @param localPath 本地路径（已下载文件），null 表示从远程播放
+     */
     fun playOperaFile(file: OperaAudioFile, playlist: List<OperaAudioFile>, localPath: String? = null) {
         // 互斥：停止电台
         _currentStation.value = null
@@ -336,10 +343,14 @@ class PlayerManager @Inject constructor(
         _operaIndex.value = index
         _operaFile.value = file
 
+        // 记录本地路径供上下切歌使用
+        if (localPath != null) downloadedPaths[file.fileId] = localPath
+
         val ctrl = controller
         if (ctrl != null) {
             startOperaOnController(ctrl, file, localPath)
         } else {
+
             pendingOpera = file
             pendingOperaPlaylist = playlist
             pendingOperaLocalPath = localPath
@@ -397,8 +408,8 @@ class PlayerManager @Inject constructor(
         }
         saveOperaPosition()
         val next = playlist[idx + 1]
-        val local = next.downloadUrl?.let { null } // remote only for now; maybe cached
-        playOperaFile(next, playlist)
+        val local = downloadedPaths[next.fileId]
+        playOperaFile(next, playlist, local)
     }
 
     fun playOperaPrevious() {
@@ -407,7 +418,8 @@ class PlayerManager @Inject constructor(
         if (playlist.isEmpty() || idx <= 0) return
         saveOperaPosition()
         val prev = playlist[idx - 1]
-        playOperaFile(prev, playlist)
+        val local = downloadedPaths[prev.fileId]
+        playOperaFile(prev, playlist, local)
     }
 
     fun seekOperaTo(posMs: Long) {
