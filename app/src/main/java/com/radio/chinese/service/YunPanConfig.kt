@@ -9,7 +9,7 @@ object YunPanConfig {
     const val AUTH_CODE = "xxxx"
 
     /** WebDAV 服务器地址 */
-    const val WEBDAV_SERVER_URL = "xxx/webdav"
+    const val WEBDAV_SERVER_URL = "xxx"
 
     /** WebDAV 用户名 */
     const val WEBDAV_USERNAME = "xxx"
