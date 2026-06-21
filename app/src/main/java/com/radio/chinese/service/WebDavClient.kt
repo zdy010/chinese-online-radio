@@ -18,6 +18,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.URLDecoder
 import java.security.SecureRandom
+import java.io.StringReader
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -47,8 +48,17 @@ class WebDavClient @Inject constructor() {
 
     /** WebDAV 连接凭证 */
     var serverUrl: String = ""
+        set(value) { field = value; clearCache() }
     var username: String = ""
+        set(value) { field = value; clearCache() }
     var password: String = ""
+        set(value) { field = value; clearCache() }
+
+    /** 目录列表缓存 */
+    private val listFilesCache = mutableMapOf<String, List<WebDavFile>>()
+
+    /** 清除缓存（凭证变化时调用） */
+    fun clearCache() { listFilesCache.clear() }
 
     /** 当前搜索请求的 Call，用于取消 */
     private var currentSearchCall: Call? = null
@@ -145,6 +155,9 @@ class WebDavClient @Inject constructor() {
 
     /** 列出目录下的文件和文件夹 */
     suspend fun listFiles(path: String = "/"): List<WebDavFile> = withContext(Dispatchers.IO) {
+        // 先查缓存
+        listFilesCache[path]?.let { return@withContext it }
+
         val url = normalizeUrl(path)
         val request = Request.Builder()
             .url(url)
@@ -165,7 +178,10 @@ class WebDavClient @Inject constructor() {
         if (responseBlockCount < 6) {
             Log.w(TAG, "listFiles: 解析到的response块数较少($responseBlockCount)，原始响应前2000字符: ${body.take(2000)}")
         }
-        parsePropfindResponse(body, url)
+        val files = parsePropfindResponse(body, url)
+        // 存入缓存
+        listFilesCache[path] = files
+        files
     }
 
     /** 搜索文件（列出所有文件后过滤），支持取消 */

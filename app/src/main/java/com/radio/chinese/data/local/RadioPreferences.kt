@@ -159,6 +159,19 @@ class RadioPreferences @Inject constructor(
         }
     }
 
+    // ========== 戏曲授权码验证状态 ==========
+
+    /** 授权码是否已验证通过 */
+    val operaAuthVerified: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_OPERA_AUTH_VERIFIED] ?: false
+    }
+
+    suspend fun setOperaAuthVerified(verified: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_OPERA_AUTH_VERIFIED] = verified
+        }
+    }
+
     // ========== WebDAV 凭证 ==========
 
     val webDavServerUrl: Flow<String> = dataStore.data.map { prefs ->
@@ -198,6 +211,7 @@ class RadioPreferences @Inject constructor(
         private val KEY_OPERA_PLAY_POSITIONS = stringPreferencesKey("opera_play_positions")
         private val KEY_LAST_OPERA_FILE_ID = longPreferencesKey("last_opera_file_id")
         private val KEY_OPERA_SHARE_PASSWORD = stringPreferencesKey("opera_share_password")
+        private val KEY_OPERA_AUTH_VERIFIED = booleanPreferencesKey("opera_auth_verified")
         private val KEY_PAN123_AUTH_TOKEN = stringPreferencesKey("pan123_auth_token")
         private val KEY_WEBDAV_SERVER_URL = stringPreferencesKey("webdav_server_url")
         private val KEY_WEBDAV_USERNAME = stringPreferencesKey("webdav_username")
