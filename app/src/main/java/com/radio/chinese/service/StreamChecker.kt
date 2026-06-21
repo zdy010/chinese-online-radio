@@ -23,13 +23,12 @@ data class StreamCheckResult(
 )
 
 @Singleton
-class StreamChecker @Inject constructor() {
-
-    private val client = OkHttpClient.Builder()
+class StreamChecker @Inject constructor(
+    baseClient: OkHttpClient
+) {
+    private val client = baseClient.newBuilder()
         .connectTimeout(8, TimeUnit.SECONDS)
         .readTimeout(12, TimeUnit.SECONDS)
-        .followRedirects(true)
-        .followSslRedirects(true)
         .build()
 
     suspend fun checkStream(url: String, stationId: String): StreamCheckResult =

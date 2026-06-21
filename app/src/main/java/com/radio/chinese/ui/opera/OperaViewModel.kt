@@ -307,7 +307,6 @@ class OperaViewModel @Inject constructor(
     /** 取消正在进行的搜索 */
     fun cancelSearch() {
         searchJob?.cancel()
-        webDavClient.cancelSearch()
         _uiState.update { it.copy(isLoading = false) }
     }
 

@@ -55,16 +55,10 @@ class WebDavClient @Inject constructor() {
         set(value) { if (field != value) { field = value; clearCache() } }
 
     /** 目录列表缓存 */
-    private val listFilesCache = mutableMapOf<String, List<WebDavFile>>()
+    private val listFilesCache = java.util.concurrent.ConcurrentHashMap<String, List<WebDavFile>>()
 
     /** 清除缓存（凭证变化时调用） */
     fun clearCache() { listFilesCache.clear() }
-
-    /** 当前搜索请求的 Call，用于取消 */
-    private var currentSearchCall: Call? = null
-
-    /** 取消正在进行的搜索 */
-    fun cancelSearch() { currentSearchCall?.cancel() }
 
     private val client by lazy {
         // 创建信任所有证书的TrustManager（用于开发测试，生产环境应该使用正式的证书验证）
@@ -182,37 +176,6 @@ class WebDavClient @Inject constructor() {
         // 存入缓存
         listFilesCache[path] = files
         files
-    }
-
-    /** 搜索文件（列出所有文件后过滤），支持取消 */
-    suspend fun searchFiles(query: String): List<WebDavFile> = withContext(Dispatchers.IO) {
-        // 取消上一次搜索
-        currentSearchCall?.cancel()
-        val url = normalizeUrl("/")
-        val request = Request.Builder()
-            .url(url)
-            .method("PROPFIND", propfindBody)
-            .header("Authorization", authHeader())
-            .header("Depth", "infinity")
-            .header("User-Agent", "Mozilla/5.0 (Linux; Android 14)")
-            .build()
-        val call = client.newCall(request)
-        currentSearchCall = call
-
-        // 在 IO 调度器上执行阻塞调用，支持协程取消时中断
-        val response = try {
-            call.execute()
-        } catch (e: Exception) {
-            // 如果是取消导致的异常，转换为 CancellationException
-            if (call.isCanceled()) throw kotlinx.coroutines.CancellationException("搜索已取消")
-            throw e
-        }
-        if (!response.isSuccessful) {
-            throw Exception("搜索失败: HTTP ${response.code}")
-        }
-        val body = response.body?.string() ?: throw Exception("响应为空")
-        val allFiles = parsePropfindResponse(body, url)
-        allFiles.filter { !it.isFolder && it.displayName.contains(query, ignoreCase = true) }
     }
 
     /** 获取文件的下载/流媒体URL */
