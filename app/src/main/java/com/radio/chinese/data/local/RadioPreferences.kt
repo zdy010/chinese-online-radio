@@ -216,5 +216,33 @@ class RadioPreferences @Inject constructor(
         private val KEY_WEBDAV_SERVER_URL = stringPreferencesKey("webdav_server_url")
         private val KEY_WEBDAV_USERNAME = stringPreferencesKey("webdav_username")
         private val KEY_WEBDAV_PASSWORD = stringPreferencesKey("webdav_password")
+        // 戏曲收藏：收藏的分类名集合
+        private val KEY_OPERA_FAV_CATEGORIES = stringSetPreferencesKey("opera_fav_categories")
+        // 戏曲收藏：收藏的文件ID集合
+        private val KEY_OPERA_FAV_FILES = stringSetPreferencesKey("opera_fav_files")
+    }
+
+    // ========== 戏曲收藏 ==========
+
+    /** 收藏的分类名集合 */
+    val operaFavoriteCategories: Flow<Set<String>> = dataStore.data.map { prefs ->
+        prefs[KEY_OPERA_FAV_CATEGORIES] ?: emptySet()
+    }
+
+    /** 收藏的文件ID集合 */
+    val operaFavoriteFiles: Flow<Set<Long>> = dataStore.data.map { prefs ->
+        prefs[KEY_OPERA_FAV_FILES]?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet()
+    }
+
+    suspend fun setOperaFavoriteCategories(categories: Set<String>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_OPERA_FAV_CATEGORIES] = categories
+        }
+    }
+
+    suspend fun setOperaFavoriteFiles(fileIds: Set<Long>) {
+        dataStore.edit { prefs ->
+            prefs[KEY_OPERA_FAV_FILES] = fileIds.map { it.toString() }.toSet()
+        }
     }
 }
