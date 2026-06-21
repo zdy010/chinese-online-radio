@@ -18,6 +18,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.net.URLDecoder
 import java.security.SecureRandom
+import android.util.Xml
+import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
@@ -205,76 +207,70 @@ class WebDavClient @Inject constructor() {
 
     private fun parsePropfindResponse(xml: String, basePath: String): List<WebDavFile> {
         val files = mutableListOf<WebDavFile>()
-        var responseCount = 0
+        val parser = Xml.newPullParser()
+        parser.setInput(StringReader(xml))
+        var event = parser.eventType
 
-        try {
-            // 用正则找所有 <D:response ...> 块（支持带属性的标签，如 <D:response xmlns:D="DAV:">）
-            val startTagPattern = "<D:response[^>]*>".toRegex()
-            val endTag = "</D:response>"
+        var currentHref: String? = null
+        var currentName: String? = null
+        var isFolder = false
+        var contentLength = 0L
 
-            var searchStart = 0
-            while (true) {
-                val match = startTagPattern.find(xml, searchStart) ?: break
-                val tagEnd = xml.indexOf(">", match.range.start)
-                if (tagEnd < 0) break
+        val baseRef = try {
+            java.net.URI(basePath).path.trimEnd('/')
+        } catch (_: Exception) {
+            basePath.trimEnd('/')
+        }
 
-                val respEnd = xml.indexOf(endTag, tagEnd)
-                if (respEnd < 0) break
-
-                // block = 从 <D:response> 结束到 </D:response> 开始之间的内容
-                val block = xml.substring(tagEnd + 1, respEnd)
-                searchStart = respEnd + endTag.length
-                responseCount++
-
-                // 提取 href
-                val hrefBegin = block.indexOf("<D:href>")
-                if (hrefBegin < 0) continue
-                val hrefClose = block.indexOf("</D:href>", hrefBegin)
-                if (hrefClose < 0) continue
-                val href = block.substring(hrefBegin + 8, hrefClose)
-
-                // 提取 displayname
-                val name = extractTagContent(block, "D:displayname")
-                    ?: try { URLDecoder.decode(href, "UTF-8") }
-                    catch (_: Exception) { href }
-                        .trimEnd('/').substringAfterLast('/')
-
-                // 检查是否是目录
-                val isFolder = block.contains("<D:collection")
-
-                // 提取文件大小
-                val size = if (isFolder) 0L else {
-                    extractTagContent(block, "D:getcontentlength")
-                        ?.toLongOrNull() ?: 0L
+        while (event != XmlPullParser.END_DOCUMENT) {
+            when (event) {
+                XmlPullParser.START_TAG -> {
+                    val name = parser.name?.lowercase()
+                    val ns = parser.namespace?.lowercase().orEmpty()
+                    val isDav = ns == "dav:" || ns.isBlank()
+                    when {
+                        name == "response" && isDav -> {
+                            currentHref = null; currentName = null; isFolder = false; contentLength = 0L
+                        }
+                        name == "href" && isDav && currentHref == null -> {
+                            currentHref = parser.nextText()
+                        }
+                        name == "displayname" && isDav -> {
+                            currentName = parser.nextText()
+                        }
+                        name == "collection" && isDav -> {
+                            isFolder = true
+                        }
+                        name == "getcontentlength" && isDav -> {
+                            contentLength = parser.nextText().trim().toLongOrNull() ?: 0L
+                        }
+                    }
                 }
-
-                // 忽略根目录自身
-                val baseRef = try { java.net.URI(basePath).path.trimEnd('/') }
-                catch (_: Exception) { basePath.trimEnd('/') }
-                val hrefPath = try { java.net.URI(href).path.trimEnd('/') }
-                catch (_: Exception) { href.trimEnd('/') }
-
-                if (hrefPath != baseRef) {
-                    files.add(WebDavFile(href = href, displayName = name, isFolder = isFolder, contentLength = size))
+                XmlPullParser.END_TAG -> {
+                    if (parser.name?.lowercase() == "response") {
+                        val href = currentHref
+                        if (href != null) {
+                            val hrefPath = try {
+                                java.net.URI(href).path.trimEnd('/')
+                            } catch (_: Exception) {
+                                href.trimEnd('/')
+                            }
+                            if (hrefPath != baseRef) {
+                                val name = currentName?.takeIf { it.isNotBlank() }
+                                    ?: try {
+                                        URLDecoder.decode(href, "UTF-8")
+                                    } catch (_: Exception) { href }
+                                        .trimEnd('/').substringAfterLast('/')
+                                files.add(WebDavFile(href, name, isFolder, contentLength))
+                            }
+                        }
+                    }
                 }
             }
-        } catch (e: Exception) {
-            throw Exception("解析WebDAV响应失败: ${e.message}")
+            event = parser.next()
         }
-        Log.d("WebDavClient", "解析完成: 找到 $responseCount 个response块, 解析出 ${files.size} 个条目")
+        Log.d("WebDavClient", "XmlPullParser: 解析出 ${files.size} 个条目")
         return files
-    }
-
-    /** 从block中提取标签内容，如 <D:displayname>xxx</D:displayname> */
-    private fun extractTagContent(block: String, tag: String): String? {
-        val startTag = "<$tag>"
-        val endTag = "</$tag>"
-        val start = block.indexOf(startTag)
-        if (start < 0) return null
-        val end = block.indexOf(endTag, start)
-        if (end < 0) return null
-        val content = block.substring(start + startTag.length, end)
-        return content.ifEmpty { null }
     }
 
     /** 将 WebDavFile 列表按目录结构转换为 OperaCategory / OperaItem / OperaAudioFile */

@@ -230,51 +230,79 @@ class OperaRepository @Inject constructor(
         dao.getAllDownloadedIds().toSet()
     }
 
+    /** 活跃下载，fileId → Call，用于取消 */
+    private val activeDownloads = java.util.concurrent.ConcurrentHashMap<Long, okhttp3.Call>()
+
+    /** 取消指定文件的下载 */
+    fun cancelDownload(fileId: Long) {
+        activeDownloads[fileId]?.cancel()
+        activeDownloads.remove(fileId)
+    }
+
     suspend fun downloadFile(
         audioFile: OperaAudioFile,
         saveDir: File,
         onProgress: (Int) -> Unit = {}
     ): Result<String> = withContext(Dispatchers.IO) {
+        val downloadUrl = audioFile.downloadUrl
+            ?: return@withContext Result.failure(Exception("获取下载地址失败"))
+
+        val safeName = audioFile.name.replace(Regex("[/\\\\:*?\"<>|]"), "_")
+        val targetFile = File(saveDir, safeName)
+        val tmpFile = File(saveDir, "$safeName.part")
+        val existing = if (tmpFile.exists()) tmpFile.length() else 0L
+
         try {
-            val downloadUrl = audioFile.downloadUrl
-                ?: return@withContext Result.failure(Exception("获取下载地址失败"))
-
-            val safeName = audioFile.name.replace(Regex("[/\\\\:*?\"<>|]"), "_")
-            val targetFile = File(saveDir, safeName)
-
-            val request = Request.Builder().url(downloadUrl)
+            val requestBuilder = Request.Builder()
+                .url(downloadUrl)
                 .header("User-Agent", "Mozilla/5.0 (Linux; Android 14)")
                 .header("Authorization", webDavClient.authHeader())
-                .build()
+            if (existing > 0) {
+                requestBuilder.header("Range", "bytes=$existing-")
+            }
+            val call = client.newCall(requestBuilder.build())
+            activeDownloads[audioFile.fileId] = call
 
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
+            call.execute().use { response ->
+                val supported = existing > 0 && response.code == 206
+                val appending = supported
+                if (response.code != 200 && response.code != 206) {
                     return@withContext Result.failure(Exception("HTTP ${response.code}"))
                 }
 
                 val body = response.body ?: return@withContext Result.failure(Exception("响应为空"))
-                val totalBytes = body.contentLength()
-                val inputStream = body.byteStream()
-                val outputStream = FileOutputStream(targetFile)
-                val buffer = ByteArray(8192)
-                var bytesRead: Int
-                var totalRead = 0L
-                var lastProgress = -1
+                val serverContentLength = body.contentLength().coerceAtLeast(0)
+                val totalBytes = if (supported) existing + serverContentLength else serverContentLength
 
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
-                    totalRead += bytesRead
-                    if (totalBytes > 0) {
-                        val pct = ((totalRead * 100) / totalBytes).toInt()
-                        if (pct != lastProgress) {
-                            lastProgress = pct
-                            onProgress(pct)
+                body.byteStream().use { input ->
+                    FileOutputStream(tmpFile, appending).use { output ->
+                        val buffer = ByteArray(8192)
+                        var read: Int
+                        var total = existing
+                        var lastPct = if (total > 0 && totalBytes > 0) ((total * 100) / totalBytes).toInt() else -1
+
+                        while (input.read(buffer).also { read = it } != -1) {
+                            output.write(buffer, 0, read)
+                            total += read
+                            if (totalBytes > 0) {
+                                val pct = ((total * 100) / totalBytes).toInt()
+                                if (pct != lastPct) {
+                                    lastPct = pct
+                                    onProgress(pct)
+                                }
+                            }
                         }
+                        output.flush()
                     }
                 }
-                outputStream.flush()
-                outputStream.close()
-                inputStream.close()
+            }
+
+            activeDownloads.remove(audioFile.fileId)
+
+            // 原子重命名：.part → 正式文件
+            if (!tmpFile.renameTo(targetFile)) {
+                tmpFile.copyTo(targetFile, overwrite = true)
+                tmpFile.delete()
             }
 
             dao.insert(
@@ -284,13 +312,24 @@ class OperaRepository @Inject constructor(
                     operaName = audioFile.operaName,
                     fileName = audioFile.name,
                     localPath = targetFile.absolutePath,
-                    fileSize = audioFile.size,
+                    fileSize = targetFile.length(),
                     downloadTime = System.currentTimeMillis()
                 )
             )
 
             Result.success(targetFile.absolutePath)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程取消 → 保留 .part 供续传
+            activeDownloads.remove(audioFile.fileId)
+            Result.failure(e)
         } catch (e: Exception) {
+            activeDownloads.remove(audioFile.fileId)
+            if (e is java.io.IOException && activeDownloads.containsKey(audioFile.fileId).not()) {
+                // 用户主动取消 → 保留 .part
+            } else {
+                // 真错误 → 删除 .part
+                try { tmpFile.delete() } catch (_: Exception) {}
+            }
             Result.failure(e)
         }
     }
