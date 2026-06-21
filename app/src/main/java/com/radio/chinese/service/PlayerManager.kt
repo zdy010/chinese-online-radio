@@ -131,7 +131,11 @@ class PlayerManager @Inject constructor(
                         _error.value = null
                         if (_isOperaMode.value) {
                             _operaDuration.value = controller?.duration?.coerceAtLeast(0) ?: 0L
-                            _operaBitrate.value = 0
+                            val br = try {
+                                controller?.currentTracks?.groups?.firstOrNull { it.type == androidx.media3.common.C.TRACK_TYPE_AUDIO }
+                                    ?.getTrackFormat(0)?.bitrate ?: 0
+                            } catch (_: Exception) { 0 }
+                            _operaBitrate.value = br
                         } else {
                             onPlaybackSuccess()
                         }

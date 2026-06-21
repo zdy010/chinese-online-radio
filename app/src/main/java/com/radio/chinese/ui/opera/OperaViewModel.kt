@@ -1,12 +1,14 @@
 package com.radio.chinese.ui.opera
 
 import android.content.Context
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.domain.model.*
 import com.radio.chinese.service.OperaRepository
 import com.radio.chinese.service.PlayerManager
+import com.radio.chinese.service.RadioService
 import com.radio.chinese.service.WebDavClient
 import com.radio.chinese.service.YunPanConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -123,6 +125,13 @@ class OperaViewModel @Inject constructor(
         }
     }
 
+    /** 重启 RadioService 使其加载新的 WebDAV Auth header */
+    private fun restartRadioService() {
+        try {
+            context.stopService(Intent(context, RadioService::class.java))
+        } catch (_: Exception) {}
+    }
+
     /** 使用已保存的凭证自动连接 */
     private fun autoConnect() {
         viewModelScope.launch {
@@ -141,6 +150,8 @@ class OperaViewModel @Inject constructor(
                     YunPanConfig.WEBDAV_PASSWORD
                 )
             }
+            // 凭证已更新，重启 RadioService 使其使用新的 Auth header
+            restartRadioService()
             val result = operaRepository.verifyConnection()
             result.fold(
                 onSuccess = {
@@ -183,6 +194,8 @@ class OperaViewModel @Inject constructor(
                 YunPanConfig.WEBDAV_USERNAME,
                 YunPanConfig.WEBDAV_PASSWORD
             )
+            // 凭证已更新，重启 RadioService 使其使用新的 Auth header
+            restartRadioService()
             val result = operaRepository.verifyConnection()
             result.fold(
                 onSuccess = {
@@ -276,13 +289,31 @@ class OperaViewModel @Inject constructor(
 
     fun goBack() {
         val current = uiState.value.level
-        _baseState.update {
-            when (current) {
-                BrowseLevel.FILES -> it.copy(level = BrowseLevel.OPERAS, audioFiles = emptyList())
-                BrowseLevel.OPERAS -> it.copy(level = BrowseLevel.CATEGORIES, operas = emptyList(), selectedCategory = null)
-                BrowseLevel.SEARCH_RESULTS -> it.copy(level = BrowseLevel.CATEGORIES, searchResults = emptyList(), searchQuery = "")
-                else -> it
+        when (current) {
+            BrowseLevel.FILES -> {
+                // 返回剧目列表
+                _baseState.update { it.copy(level = BrowseLevel.OPERAS, audioFiles = emptyList()) }
+                val cat = uiState.value.selectedCategory
+                if (cat != null) {
+                    viewModelScope.launch {
+                        try {
+                            val operas = operaRepository.getOperas(cat)
+                            _baseState.update { it.copy(operas = operas, isLoading = false) }
+                        } catch (e: Exception) {
+                            _baseState.update { it.copy(isLoading = false, error = e.message ?: "加载失败") }
+                        }
+                    }
+                }
             }
+            BrowseLevel.OPERAS -> {
+                _baseState.update { it.copy(level = BrowseLevel.CATEGORIES, operas = emptyList(), selectedCategory = null) }
+                loadCategories()
+            }
+            BrowseLevel.SEARCH_RESULTS -> {
+                _baseState.update { it.copy(level = BrowseLevel.CATEGORIES, searchResults = emptyList(), searchQuery = "") }
+                loadCategories()
+            }
+            else -> {}
         }
     }
 
