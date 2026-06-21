@@ -118,7 +118,7 @@ class OperaViewModel @Inject constructor(
                 },
                 onFailure = { e ->
                     _uiState.update {
-                        it.copy(isConnecting = false, authError = "WebDAV连接失败: ${e.message?.take(60)}")
+                        it.copy(isConnecting = false, authError = "WebDAV连接失败: ${e.message ?: "未知错误"}")
                     }
                 }
             )
