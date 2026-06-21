@@ -18,17 +18,18 @@ import javax.inject.Singleton
 @Singleton
 class OperaRepository @Inject constructor(
     private val webDavClient: WebDavClient,
-    private val operaDatabase: OperaDatabase
+    private val operaDatabase: OperaDatabase,
+    httpClient: OkHttpClient
 ) {
     private val dao = operaDatabase.downloadedOperaDao()
-    private val client = OkHttpClient.Builder()
+    private val client = httpClient.newBuilder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .followRedirects(true)
         .build()
 
     // 本地文件缓存：key = 分类名，value = 该分类下所有文件（含剧目子目录）
-    private val fileCache = mutableMapOf<String, List<OperaAudioFile>>()
+    private val fileCache = java.util.concurrent.ConcurrentHashMap<String, List<OperaAudioFile>>()
     private var cacheInitialized = false
 
     /** 设置 WebDAV 连接凭证 */
@@ -172,30 +173,35 @@ class OperaRepository @Inject constructor(
         results
     }
 
-    /** 实时搜索（递归 PROPFIND，慢） */
+    /** 实时搜索（遍历分类目录分层加载，避免 Depth:infinity） */
     private suspend fun searchFilesRealtime(query: String): List<OperaAudioFile> {
-        val results = webDavClient.searchFiles(query)
-        val serverUrl = webDavClient.serverUrl
-        val basePath = try { java.net.URI(serverUrl).path.trimEnd('/') } catch (_: Exception) { "" }
-        return results.map {
-            val hrefPath = try {
-                val uri = java.net.URI(it.href)
-                if (uri.scheme != null) uri.path else it.href
-            } catch (_: Exception) { it.href }
-            val relativePath = hrefPath.trimEnd('/').removePrefix(basePath).trimStart('/')
-            val pathParts = relativePath.split("/").filter { it.isNotBlank() }
-            // pathParts = [分类, 文件名] 或 [分类, 剧目, 文件名]
-            val categoryName = if (pathParts.size >= 2) pathParts[0] else ""
-            val operaName = if (pathParts.size >= 3) pathParts[1] else ""
-            OperaAudioFile(
-                fileId = it.href.hashCode().toLong(),
-                name = it.displayName,
-                size = it.size,
-                categoryName = categoryName,
-                operaName = operaName,
-                downloadUrl = webDavClient.getFileUrl(it.href)
-            )
+        val results = mutableListOf<OperaAudioFile>()
+        try {
+            val categories = getCategories()
+            Log.d("OperaRepo", "Realtime search '$query': found ${categories.size} categories")
+            for (cat in categories) {
+                try {
+                    val files = loadAllFilesInCategory(cat)
+                    files.forEach { f ->
+                        if (f.name.lowercase().contains(query) ||
+                            f.operaName.lowercase().contains(query)) {
+                            results.add(f)
+                        }
+                    }
+                    // 顺便填缓存
+                    if (!fileCache.containsKey(cat.name)) {
+                        fileCache[cat.name] = files
+                    }
+                } catch (e: Exception) {
+                    Log.w("OperaRepo", "Realtime search skip ${cat.name}: ${e.message}")
+                }
+            }
+            cacheInitialized = true
+        } catch (e: Exception) {
+            Log.e("OperaRepo", "Realtime search failed: ${e.message}")
         }
+        Log.d("OperaRepo", "Realtime search '$query' returned ${results.size} results")
+        return results
     }
 
     /** 刷新缓存（后台调用） */

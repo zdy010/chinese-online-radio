@@ -7,6 +7,16 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+val gitCommitCount: Int by lazy {
+    try {
+        val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+            .directory(rootProject.projectDir)
+            .redirectErrorStream(true)
+            .start()
+        process.inputStream.bufferedReader().readText().trim().toIntOrNull() ?: 1
+    } catch (_: Exception) { 1 }
+}
+
 android {
     namespace = "com.radio.chinese"
     compileSdk = 35
@@ -15,8 +25,8 @@ android {
         applicationId = "com.radio.chinese"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = gitCommitCount
+        versionName = "1.0.$gitCommitCount"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         setProperty("archivesBaseName", "chinese-online-radio")
     }

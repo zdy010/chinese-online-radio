@@ -16,7 +16,9 @@ import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -30,7 +32,7 @@ class PlayerManager @Inject constructor(
     private val preferences: RadioPreferences,
     private val stationRepository: StationRepository
 ) {
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
 
@@ -272,6 +274,7 @@ class PlayerManager @Inject constructor(
     }
 
     fun disconnect() {
+        scope.coroutineContext[Job]?.cancelChildren()
         controllerFuture?.let {
             MediaController.releaseFuture(it)
         }
