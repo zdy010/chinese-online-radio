@@ -1,5 +1,6 @@
 package com.radio.chinese.ui.opera
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,12 @@ fun OperaScreen(
     viewModel: OperaViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // 拦截系统返回键，优先在戏曲内部层级回退
+    BackHandler(enabled = !uiState.needAuth && (uiState.level != BrowseLevel.CATEGORIES || uiState.tabIndex == 1)) {
+        if (uiState.tabIndex == 1) viewModel.switchTab(0)
+        else viewModel.goBack()
+    }
 
     Scaffold(
         topBar = {

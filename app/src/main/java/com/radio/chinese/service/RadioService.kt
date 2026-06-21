@@ -10,6 +10,8 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.radio.chinese.data.local.RadioPreferences
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -17,6 +19,9 @@ class RadioService : MediaSessionService() {
 
     @Inject
     lateinit var preferences: RadioPreferences
+
+    @Inject
+    lateinit var webDavClient: WebDavClient
 
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
@@ -32,9 +37,20 @@ class RadioService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
+        // 使用带 WebDAV Auth 的 DataSource（公共电台流不受影响，多一个无害 Auth header）
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setDefaultRequestProperties(
+                mapOf("Authorization" to webDavClient.authHeader())
+            )
+        val dataSourceFactory = DefaultDataSource.Factory(this, httpFactory)
+
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, true)
             .setHandleAudioBecomingNoisy(true)
+            .setMediaSourceFactory(
+                androidx.media3.exoplayer.source.DefaultMediaSourceFactory(this)
+                    .setDataSourceFactory(dataSourceFactory)
+            )
             .build()
 
         exoPlayer = player
