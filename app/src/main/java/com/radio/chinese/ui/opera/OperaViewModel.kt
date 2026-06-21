@@ -1,13 +1,8 @@
 package com.radio.chinese.ui.opera
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.domain.model.*
 import com.radio.chinese.service.OperaRepository
@@ -73,40 +68,52 @@ class OperaViewModel @Inject constructor(
     private val _downloadedFlow = operaRepository.allDownloaded
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val uiState: StateFlow<OperaUiState> = combine(_baseState, _downloadedFlow) { base, downloaded ->
+    // 将 PlayerManager 播放状态合并为一个 data class
+    private data class PlayerState(
+        val isOpera: Boolean = false,
+        val operaFile: OperaAudioFile? = null,
+        val playlist: List<OperaAudioFile> = emptyList(),
+        val index: Int = -1,
+        val position: Long = 0L,
+        val duration: Long = 0L,
+        val bitrate: Int = 0,
+        val playing: Boolean = false,
+        val error: String? = null
+    )
+
+    private val _playerState = MutableStateFlow(PlayerState())
+
+    val uiState: StateFlow<OperaUiState> = combine(
+        _baseState, _downloadedFlow, _playerState
+    ) { base, downloaded, ps ->
         base.copy(
             localDownloads = downloaded,
-            downloadedIds = downloaded.map { it.fileId }.toSet()
+            downloadedIds = downloaded.map { it.fileId }.toSet(),
+            currentFile = if (ps.isOpera) ps.operaFile else null,
+            currentPlaylist = if (ps.isOpera) ps.playlist else base.currentPlaylist,
+            currentIndex = if (ps.isOpera) ps.index else -1,
+            positionMs = if (ps.isOpera) ps.position else 0L,
+            durationMs = if (ps.isOpera) ps.duration else 0L,
+            bitrate = if (ps.isOpera) ps.bitrate else 0,
+            isPlaying = ps.playing && ps.isOpera,
+            playError = if (ps.isOpera) ps.error else null
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), OperaUiState())
 
-    private var exoPlayer: ExoPlayer? = null
-    private val handler = Handler(Looper.getMainLooper())
-    private val positionUpdater = object : Runnable {
-        override fun run() {
-            val player = exoPlayer ?: return
-            if (player.isPlaying) {
-                _baseState.update {
-                    it.copy(
-                        positionMs = player.currentPosition,
-                        durationMs = player.duration.coerceAtLeast(0)
-                    )
-                }
-                val file = uiState.value.currentFile
-                if (file != null) {
-                    viewModelScope.launch {
-                        preferences.saveOperaPlayPosition(file.fileId, player.currentPosition)
-                    }
-                }
-            }
-            handler.postDelayed(this, 500)
-        }
-    }
     private var searchJob: Job? = null
 
     init {
-        initPlayer()
-        handler.post(positionUpdater)
+        // 订阅 PlayerManager 的播放状态
+        viewModelScope.launch { playerManager.isOperaMode.collect { v -> _playerState.update { it.copy(isOpera = v) } } }
+        viewModelScope.launch { playerManager.operaFile.collect { v -> _playerState.update { it.copy(operaFile = v) } } }
+        viewModelScope.launch { playerManager.operaPlaylist.collect { v -> _playerState.update { it.copy(playlist = v) } } }
+        viewModelScope.launch { playerManager.operaIndex.collect { v -> _playerState.update { it.copy(index = v) } } }
+        viewModelScope.launch { playerManager.operaPosition.collect { v -> _playerState.update { it.copy(position = v) } } }
+        viewModelScope.launch { playerManager.operaDuration.collect { v -> _playerState.update { it.copy(duration = v) } } }
+        viewModelScope.launch { playerManager.operaBitrate.collect { v -> _playerState.update { it.copy(bitrate = v) } } }
+        viewModelScope.launch { playerManager.isPlaying.collect { v -> _playerState.update { it.copy(playing = v) } } }
+        viewModelScope.launch { playerManager.error.collect { v -> _playerState.update { it.copy(error = v) } } }
+
         // 启动时检查是否已验证过授权码
         viewModelScope.launch {
             val verified = preferences.operaAuthVerified.first()
@@ -134,8 +141,6 @@ class OperaViewModel @Inject constructor(
                     YunPanConfig.WEBDAV_PASSWORD
                 )
             }
-            exoPlayer?.release()
-            initPlayer()
             val result = operaRepository.verifyConnection()
             result.fold(
                 onSuccess = {
@@ -178,9 +183,6 @@ class OperaViewModel @Inject constructor(
                 YunPanConfig.WEBDAV_USERNAME,
                 YunPanConfig.WEBDAV_PASSWORD
             )
-            // 重新初始化ExoPlayer以使用新的auth header
-            exoPlayer?.release()
-            initPlayer()
             val result = operaRepository.verifyConnection()
             result.fold(
                 onSuccess = {
@@ -317,147 +319,38 @@ class OperaViewModel @Inject constructor(
         _baseState.update { it.copy(isLoading = false) }
     }
 
-    // ========== 播放 ==========
-
-    private fun initPlayer() {
-        // DefaultDataSource.Factory 同时支持 file:// 和 http://，
-        // 远程请求走带 Auth 的 HttpDataSource，本地文件走默认 FileDataSource
-        val httpFactory = androidx.media3.datasource.DefaultHttpDataSource.Factory()
-            .setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
-        val dataSourceFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
-        exoPlayer = ExoPlayer.Builder(context)
-            .setMediaSourceFactory(androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context).setDataSourceFactory(dataSourceFactory))
-            .build().apply {
-            addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(playing: Boolean) {
-                    _baseState.update { it.copy(isPlaying = playing) }
-                }
-                override fun onPlaybackStateChanged(state: Int) {
-                    when (state) {
-                        Player.STATE_READY -> {
-                            // 尝试多种方式获取码率
-                            val br = try {
-                                // 方法1: 从 audioFormat 获取
-                                val format = audioFormat
-                                if (format != null && format.bitrate > 0) {
-                                    format.bitrate
-                                } else {
-                                    // 方法2: 从当前媒体项的元数据获取（如果有的话）
-                                    0
-                                }
-                            } catch (e: Exception) { 0 }
-                            _baseState.update { it.copy(playError = null, durationMs = duration.coerceAtLeast(0), bitrate = br) }
-                            // 添加日志
-                            android.util.Log.d("OperaViewModel", "Playback STATE_READY, bitrate=$br, audioFormat=$audioFormat")
-                        }
-                        Player.STATE_ENDED -> {
-                            _baseState.update { it.copy(isPlaying = false, positionMs = 0L) }
-                            playNext()
-                        }
-                    }
-                }
-                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    val code = error.errorCode
-                    val msg = error.localizedMessage ?: "未知错误"
-                    _baseState.update { it.copy(playError = "播放失败(code=$code): $msg") }
-                }
-            })
-        }
-    }
+    // ========== 播放（委托给 PlayerManager）==========
 
     fun playFile(file: OperaAudioFile, localPath: String? = null) {
-        // 先停止收音机播放
-        playerManager.stop()
-        val player = exoPlayer ?: return
-        val currentState = uiState.value
-        val index = currentState.currentPlaylist.indexOfFirst { it.fileId == file.fileId }
-        viewModelScope.launch {
-            _baseState.update { it.copy(currentFile = file, playError = null, currentIndex = index) }
-            val uri = if (localPath != null) {
-                android.net.Uri.fromFile(File(localPath))
-            } else {
-                val url = file.downloadUrl
-                if (url == null) { _baseState.update { it.copy(playError = "获取播放地址失败") }; return@launch }
-                android.net.Uri.parse(url)
-            }
-            val savedPosition = preferences.getOperaPlayPosition(file.fileId)
-            val mediaItem = MediaItem.fromUri(uri)
-            player.stop(); player.clearMediaItems(); player.setMediaItem(mediaItem)
-            if (savedPosition > 0) player.seekTo(savedPosition)
-            player.prepare(); player.play()
-        }
+        val playlist = uiState.value.currentPlaylist.ifEmpty { listOf(file) }
+        playerManager.playOperaFile(file, playlist, localPath)
     }
 
-    /** 播放已下载的文件，同时设置播放列表为所有已下载文件 */
+    /** 播放已下载的文件，播放列表设为所有已下载文件 */
     fun playDownloadedFile(downloaded: DownloadedOpera) {
-        val currentState = uiState.value
-        val playlist = currentState.localDownloads.map {
+        val playlist = uiState.value.localDownloads.map {
             OperaAudioFile(it.fileId, it.fileName, it.fileSize, it.categoryName, it.operaName, downloadUrl = null)
         }
-        val index = playlist.indexOfFirst { it.fileId == downloaded.fileId }
-
-        // 检查本地文件是否存在
         val localFile = java.io.File(downloaded.localPath)
         if (!localFile.exists() || localFile.length() == 0L) {
-            _baseState.update { it.copy(currentPlaylist = playlist, currentIndex = index, playError = "下载文件不存在或已损坏，请重新下载") }
+            _baseState.update { it.copy(playError = "下载文件不存在或已损坏，请重新下载") }
             return
         }
-
         val file = OperaAudioFile(downloaded.fileId, downloaded.fileName, downloaded.fileSize,
             downloaded.categoryName, downloaded.operaName, downloadUrl = null)
-        _baseState.update { it.copy(currentPlaylist = playlist, currentIndex = index) }
-        playFile(file, downloaded.localPath)
+        playerManager.playOperaFile(file, playlist, downloaded.localPath)
     }
 
-    fun playNext() {
-        val currentState = uiState.value
-        val playlist = currentState.currentPlaylist
-        val idx = currentState.currentIndex
-        if (playlist.isEmpty() || idx < 0 || idx >= playlist.size - 1) return
-        val next = playlist[idx + 1]
-        // 检查是否已下载
-        val local = if (currentState.downloadedIds.contains(next.fileId)) {
-            val downloads = currentState.localDownloads
-            downloads.find { it.fileId == next.fileId }?.localPath
-        } else null
-        playFile(next, local)
-    }
-
-    fun playPrevious() {
-        val currentState = uiState.value
-        val playlist = currentState.currentPlaylist
-        val idx = currentState.currentIndex
-        if (playlist.isEmpty() || idx <= 0) return
-        val prev = playlist[idx - 1]
-        val local = if (currentState.downloadedIds.contains(prev.fileId)) {
-            currentState.localDownloads.find { it.fileId == prev.fileId }?.localPath
-        } else null
-        playFile(prev, local)
-    }
-
-    fun togglePlayPause() {
-        val player = exoPlayer ?: return
-        if (player.isPlaying) { player.pause()
-            uiState.value.currentFile?.let {
-                viewModelScope.launch { preferences.saveOperaPlayPosition(it.fileId, player.currentPosition) }
-            }
-        } else player.play()
-    }
-
-    fun seekTo(positionMs: Long) { exoPlayer?.seekTo(positionMs); _baseState.update { it.copy(positionMs = positionMs) } }
-    fun seekForward(seconds: Long = 15) { exoPlayer?.let { it.seekTo((it.currentPosition + seconds * 1000).coerceAtMost(it.duration)) } }
-    fun seekBackward(seconds: Long = 15) { exoPlayer?.let { it.seekTo((it.currentPosition - seconds * 1000).coerceAtLeast(0)) } }
-
-    fun retryPlayback() { uiState.value.currentFile?.let { playFile(it) } }
+    fun playNext() { playerManager.playOperaNext() }
+    fun playPrevious() { playerManager.playOperaPrevious() }
+    fun togglePlayPause() { playerManager.togglePlayPause() }
+    fun seekTo(positionMs: Long) { playerManager.seekOperaTo(positionMs) }
+    fun seekForward(seconds: Long = 15) { playerManager.seekOperaForward(seconds) }
+    fun seekBackward(seconds: Long = 15) { playerManager.seekOperaBackward(seconds) }
+    fun retryPlayback() { playerManager.playOperaFile(uiState.value.currentFile ?: return, uiState.value.currentPlaylist) }
 
     fun stopPlayback() {
-        exoPlayer?.let { player ->
-            uiState.value.currentFile?.let {
-                viewModelScope.launch { preferences.saveOperaPlayPosition(it.fileId, player.currentPosition) }
-            }
-            player.stop()
-        }
-        _baseState.update { it.copy(currentFile = null, isPlaying = false, positionMs = 0L, durationMs = 0L) }
+        playerManager.stopOpera()
     }
 
     // ========== 下载 ==========
@@ -491,11 +384,5 @@ class OperaViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        handler.removeCallbacks(positionUpdater)
-        exoPlayer?.let { p ->
-            uiState.value.currentFile?.let { viewModelScope.launch { preferences.saveOperaPlayPosition(it.fileId, p.currentPosition) } }
-            p.release()
-        }
-        exoPlayer = null
     }
 }

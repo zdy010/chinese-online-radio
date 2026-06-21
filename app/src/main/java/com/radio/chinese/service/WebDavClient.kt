@@ -180,11 +180,15 @@ class WebDavClient @Inject constructor() {
         files
     }
 
-    /** 获取文件的下载/流媒体URL */
+    /** 获取文件的下载/流媒体URL（含 Basic Auth 凭证，ExoPlayer 自动提取） */
     fun getFileUrl(path: String): String {
         val url = normalizeUrl(path)
-        Log.d(TAG, "getFileUrl: path=$path, url=$url")
-        return url
+        return if (username.isNotBlank()) {
+            try {
+                val uri = java.net.URI(url)
+                java.net.URI(uri.scheme, "${username}:${password}", uri.host, uri.port, uri.path, uri.query, uri.fragment).toString()
+            } catch (_: Exception) { url }
+        } else url
     }
 
     // ========== 工具方法 ==========
