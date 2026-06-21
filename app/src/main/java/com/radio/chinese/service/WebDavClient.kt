@@ -91,7 +91,7 @@ class WebDavClient @Inject constructor() {
 
     fun authHeader(): String = Credentials.basic(username, password)
 
-    /** 验证连接是否有效 */
+    /** 验证连接是否有效 - 返回详细错误信息 */
     suspend fun verifyConnection(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
@@ -103,19 +103,32 @@ class WebDavClient @Inject constructor() {
                 .build()
             Log.d(TAG, "verifyConnection: ${serverUrl}")
             val response = client.newCall(request).execute()
-            Log.d(TAG, "verifyConnection result: ${response.code}")
-            Log.d(TAG, "verifyConnection body: ${response.body?.string()?.take(500)}")
+            val bodyString = response.body?.string() ?: ""
+            Log.d(TAG, "verifyConnection response code: ${response.code}, body length: ${bodyString.length}")
+            Log.d(TAG, "verifyConnection body preview: ${bodyString.take(500)}")
             if (response.isSuccessful) {
                 Log.d(TAG, "verifyConnection OK")
                 Result.success(Unit)
             } else {
-                val err = "连接失败: HTTP ${response.code}"
+                // 从响应body中提取有用信息（如WebDAV multi-status中的status）
+                val detail = try {
+                    // 尝试提取 HTTP 状态码（WebDAV响应中可能包含多个status）
+                    val statusMatch = "HTTP/[0-9.]+ ([0-9]+)".toRegex().find(bodyString)
+                    val statusCode = statusMatch?.groupValues?.get(1)
+                    if (statusCode != null && statusCode != "${response.code}") {
+                        "WebDAV status: $statusCode | body: ${bodyString.take(200)}"
+                    } else {
+                        bodyString.take(300)
+                    }
+                } catch (_: Exception) { bodyString.take(300) }
+                val err = "连接失败: HTTP ${response.code} | URL: ${serverUrl} | detail: ${detail}"
                 Log.e(TAG, err)
                 Result.failure(Exception(err))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "verifyConnection exception: ${e.message}")
-            Result.failure(e)
+            val err = "连接异常: ${e.javaClass.simpleName}: ${e.message} | URL: ${serverUrl}"
+            Log.e(TAG, err)
+            Result.failure(Exception(err))
         }
     }
 
@@ -131,7 +144,8 @@ class WebDavClient @Inject constructor() {
             .build()
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
-            throw Exception("列出目录失败: HTTP ${response.code}")
+            val bodyString = try { response.body?.string()?.take(300) } catch (_: Exception) { "" }
+            throw Exception("列出目录失败: HTTP ${response.code} | URL: ${url} | detail: ${bodyString}")
         }
         val body = response.body?.string() ?: throw Exception("响应为空")
         Log.d(TAG, "listFiles body length: ${body.length}, first 500: ${body.take(500)}")
