@@ -56,12 +56,14 @@ data class YunPanDownloadData(
 data class OperaCategory(
     val name: String,
     val folderId: Long,
+    val path: String = "",  // WebDAV路径，用于导航
     val itemCount: Int = 0
 )
 
 data class OperaItem(
     val name: String,
-    val folderId: Long
+    val folderId: Long,
+    val path: String = ""  // WebDAV路径，用于导航
 )
 
 data class OperaAudioFile(

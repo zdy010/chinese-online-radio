@@ -63,21 +63,18 @@ class OperaRepository @Inject constructor(
     }
 
     /** 获取某个分类下的剧目 */
-    suspend fun getOperas(categoryName: String, categoryHref: String): List<OperaItem> = withContext(Dispatchers.IO) {
-        val decoded = URLDecoder.decode(categoryHref, "UTF-8")
-        val files = webDavClient.listFiles(decoded)
+    suspend fun getOperas(category: OperaCategory): List<OperaItem> = withContext(Dispatchers.IO) {
+        val files = webDavClient.listFiles(category.path)
         files.filter { it.isFolder }
-            .map { OperaItem(name = it.displayName, folderId = it.href.hashCode().toLong()) }
+            .map { OperaItem(name = it.displayName, folderId = it.href.hashCode().toLong(), path = it.href) }
     }
 
     /** 获取某个剧目下的音频文件 */
     suspend fun getAudioFiles(
         categoryName: String,
-        operaName: String,
-        operaHref: String
+        opera: OperaItem,
     ): List<OperaAudioFile> = withContext(Dispatchers.IO) {
-        val decoded = URLDecoder.decode(operaHref, "UTF-8")
-        val files = webDavClient.listFiles(decoded)
+        val files = webDavClient.listFiles(opera.path)
         files.filter { !it.isFolder }
             .map {
                 OperaAudioFile(
@@ -85,7 +82,7 @@ class OperaRepository @Inject constructor(
                     name = it.displayName,
                     size = it.size,
                     categoryName = categoryName,
-                    operaName = operaName,
+                    operaName = opera.name,
                     downloadUrl = webDavClient.getFileUrl(it.href)
                 )
             }
