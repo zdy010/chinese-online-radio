@@ -142,8 +142,19 @@ class OperaViewModel @Inject constructor(
     }
 
     fun selectCategory(category: OperaCategory) {
+        val currentState = _uiState.value
+        // 防止重复点击
+        if (currentState.isLoading) return
+        
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, selectedCategory = category, error = null) }
+            // 先进入加载状态，保持当前level不变，只显示loading
+            _uiState.update { 
+                it.copy(
+                    isLoading = true, 
+                    error = null,
+                    // 不在这里改变 level 或 selectedCategory，避免触发错误的UI重组
+                ) 
+            }
             try {
                 val operas = operaRepository.getOperas(category)
                 
@@ -151,30 +162,79 @@ class OperaViewModel @Inject constructor(
                 if (operas.isEmpty()) {
                     val files = operaRepository.getAudioFiles(category.name, OperaItem(name = "", folderId = 0, path = category.path))
                     val downloaded = operaRepository.getAllDownloadedIds()
+                    // 一次性原子化更新所有相关状态
                     _uiState.update {
-                        it.copy(audioFiles = files, downloadedIds = downloaded, level = BrowseLevel.FILES, isLoading = false)
+                        it.copy(
+                            selectedCategory = category,
+                            selectedOpera = null,
+                            audioFiles = files, 
+                            downloadedIds = downloaded, 
+                            level = BrowseLevel.FILES, 
+                            isLoading = false,
+                            operas = emptyList()
+                        )
                     }
                 } else {
-                    _uiState.update { it.copy(operas = operas, level = BrowseLevel.OPERAS, isLoading = false) }
+                    // 一次性原子化更新所有相关状态
+                    _uiState.update { 
+                        it.copy(
+                            selectedCategory = category,
+                            selectedOpera = null,
+                            operas = operas, 
+                            level = BrowseLevel.OPERAS, 
+                            isLoading = false,
+                            audioFiles = emptyList()
+                        ) 
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message ?: "加载失败") }
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        error = e.message ?: "加载失败"
+                        // 保持原来的level不变
+                    ) 
+                }
             }
         }
     }
 
     fun selectOpera(opera: OperaItem) {
+        val currentState = _uiState.value
+        // 防止重复点击
+        if (currentState.isLoading) return
+        
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, selectedOpera = opera, error = null) }
+            // 先进入加载状态，不改变level或selectedOpera
+            _uiState.update { 
+                it.copy(
+                    isLoading = true, 
+                    error = null
+                ) 
+            }
             try {
-                val categoryName = _uiState.value.selectedCategory?.name ?: ""
+                val categoryName = currentState.selectedCategory?.name ?: ""
                 val files = operaRepository.getAudioFiles(categoryName, opera)
                 val downloaded = operaRepository.getAllDownloadedIds()
+                // 一次性原子化更新所有相关状态
                 _uiState.update {
-                    it.copy(audioFiles = files, downloadedIds = downloaded, level = BrowseLevel.FILES, isLoading = false)
+                    it.copy(
+                        selectedOpera = opera,
+                        audioFiles = files, 
+                        downloadedIds = downloaded, 
+                        level = BrowseLevel.FILES, 
+                        isLoading = false,
+                        operas = emptyList()
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message ?: "加载音频失败") }
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        error = e.message ?: "加载音频失败"
+                        // 保持原来的level不变
+                    ) 
+                }
             }
         }
     }
