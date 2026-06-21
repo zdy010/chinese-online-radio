@@ -171,6 +171,8 @@ class WebDavClient @Inject constructor() {
 
     private fun normalizeUrl(path: String): String {
         val base = serverUrl.trimEnd('/')
+        // 如果path是根路径"/"，直接返回base URL（避免URI.resolve替换掉已有的path部分）
+        if (path == "/" || path.isEmpty()) return base
         val p = if (path.startsWith("/")) path else "/$path"
         // 使用URI来正确处理URL编码
         return try {
