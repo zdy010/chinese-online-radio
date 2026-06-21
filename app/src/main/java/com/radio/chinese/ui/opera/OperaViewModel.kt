@@ -291,18 +291,25 @@ class OperaViewModel @Inject constructor(
         val current = uiState.value.level
         when (current) {
             BrowseLevel.FILES -> {
-                // 返回剧目列表
-                _baseState.update { it.copy(level = BrowseLevel.OPERAS, audioFiles = emptyList()) }
-                val cat = uiState.value.selectedCategory
-                if (cat != null) {
-                    viewModelScope.launch {
-                        try {
-                            val operas = operaRepository.getOperas(cat)
-                            _baseState.update { it.copy(operas = operas, isLoading = false) }
-                        } catch (e: Exception) {
-                            _baseState.update { it.copy(isLoading = false, error = e.message ?: "加载失败") }
+                val selectedOpera = uiState.value.selectedOpera
+                if (selectedOpera != null) {
+                    // 从剧目进入的文件列表 → 返回剧目列表
+                    _baseState.update { it.copy(level = BrowseLevel.OPERAS, audioFiles = emptyList(), selectedOpera = null, isLoading = true) }
+                    val cat = uiState.value.selectedCategory
+                    if (cat != null) {
+                        viewModelScope.launch {
+                            try {
+                                val operas = operaRepository.getOperas(cat)
+                                _baseState.update { it.copy(operas = operas, isLoading = false) }
+                            } catch (e: Exception) {
+                                _baseState.update { it.copy(isLoading = false, error = e.message ?: "加载失败") }
+                            }
                         }
                     }
+                } else {
+                    // 从分类直接进入的文件列表（无子目录）→ 返回分类列表
+                    _baseState.update { it.copy(level = BrowseLevel.CATEGORIES, audioFiles = emptyList(), selectedCategory = null) }
+                    loadCategories()
                 }
             }
             BrowseLevel.OPERAS -> {
