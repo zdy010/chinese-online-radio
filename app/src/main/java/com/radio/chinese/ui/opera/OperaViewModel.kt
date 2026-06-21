@@ -132,6 +132,16 @@ class OperaViewModel @Inject constructor(
         } catch (_: Exception) {}
     }
 
+    /** 后台预加载所有分类的文件缓存，加速首次浏览 */
+    private fun preloadCache() {
+        viewModelScope.launch {
+            // 等分类列表加载完成后再预加载
+            uiState.first { it.categories.isNotEmpty() }
+            val cats = uiState.value.categories
+            operaRepository.refreshCache(cats)
+        }
+    }
+
     /** 使用已保存的凭证自动连接 */
     private fun autoConnect() {
         viewModelScope.launch {
@@ -157,6 +167,8 @@ class OperaViewModel @Inject constructor(
                 onSuccess = {
                     _baseState.update { it.copy(isConnecting = false, needAuth = false, isConnected = true) }
                     loadCategories()
+                    // 后台预加载所有分类缓存，加快后续浏览
+                    preloadCache()
                 },
                 onFailure = { e ->
                     // 连接失败，清除验证状态，重新显示授权码输入
@@ -203,6 +215,7 @@ class OperaViewModel @Inject constructor(
                     preferences.setOperaAuthVerified(true)
                     _baseState.update { it.copy(isConnecting = false, needAuth = false, isConnected = true) }
                     loadCategories()
+                    preloadCache()
                 },
                 onFailure = { e ->
                     _baseState.update {
