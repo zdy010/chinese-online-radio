@@ -1,44 +1,40 @@
-# Built application files
-*.apk
-*.ap_
-*.aab
-
-# Files for the ART/Dalvik VM
-*.dex
-
-# Java class files
-*.class
-
-# Generated files
-bin/
-gen/
-out/
-build/
-
-# Gradle files
+# Android / Gradle
 .gradle/
-.gradle
-
-# Local configuration file (sdk path, etc)
+build/
 local.properties
-
-# Android Studio
 *.iml
 .idea/
-.navigation/
-captures/
 
-# Keystore files
-*.jks
-*.keystore
-
-# External native build folder generated in Android Studio 2.2 and later
-.externalNativeBuild/
-.cxx/
-
-# OS-specific files
+# OS
 .DS_Store
 Thumbs.db
 
-# Log files
+# Screenshots / debug dumps
+s1.png
+s2.png
+s3.png
+s4.png
+s5.png
+s6.png
+s7.png
+s_*.png
+screenshot_*.png
+screen_home.png
+player.png
+player.xml
+nul
+ui*.xml
+webdav_response.xml
+webdav_subdir.xml
+u1.xml
+u2.xml
+u3.xml
+ui.xml
+ui3.xml
+*.py
+*.json
+verify_*.py
+test_*.py
+expected_*.py
+expected_*.json
 *.log
