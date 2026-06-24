@@ -26,7 +26,7 @@ import com.radio.chinese.ui.favorites.FavoritesScreen
 import com.radio.chinese.ui.home.HomeScreen
 import com.radio.chinese.ui.manage.ManageScreen
 import com.radio.chinese.ui.navigation.Screen
-import com.radio.chinese.ui.opera.OperaScreen
+import com.radio.chinese.ui.library.AudioLibraryScreen
 import com.radio.chinese.ui.player.PlayerScreen
 import com.radio.chinese.ui.settings.SettingsScreen
 
@@ -111,7 +111,7 @@ fun RadioNavGraph(
         }
 
         composable(Screen.Opera.route) {
-            OperaScreen(
+            AudioLibraryScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -130,7 +130,7 @@ fun MainScreen(
 
     val bottomNavItems = listOf(
         BottomNavItem(Screen.Home, "首页", Icons.Default.Home, Icons.Outlined.Home),
-        BottomNavItem(Screen.Opera, "戏曲", Icons.Default.Radio, Icons.Default.Radio),
+        BottomNavItem(Screen.Opera, "音频库", Icons.Default.Radio, Icons.Default.Radio),
         BottomNavItem(Screen.Category, "分类", Icons.Default.Category, Icons.Outlined.Category),
         BottomNavItem(Screen.Favorites, "收藏", Icons.Default.Favorite, Icons.Outlined.FavoriteBorder),
     )
