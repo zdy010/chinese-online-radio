@@ -25,9 +25,9 @@ fun AddSourceDialog(
 
     val types = listOf(
         SourceType.WEBDAV to "WebDAV",
-        SourceType.LOCAL to "本地存储（暂未开放）",
-        SourceType.M3U to "M3U 播放列表（暂未开放）",
-        SourceType.HTTP to "HTTP 直链（暂未开放）"
+        SourceType.LOCAL to "本地存储",
+        SourceType.M3U to "M3U 播放列表",
+        SourceType.HTTP to "HTTP 直链"
     )
 
     AlertDialog(
@@ -48,11 +48,7 @@ fun AddSourceDialog(
                         types.forEach { (type, label) ->
                             DropdownMenuItem(
                                 text = { Text(label) },
-                                onClick = {
-                                    selectedType = type
-                                    showTypeMenu = false
-                                },
-                                enabled = type == SourceType.WEBDAV
+                                onClick = { selectedType = type; showTypeMenu = false }
                             )
                         }
                     }

@@ -5,13 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.repository.AudioLibraryRepository
 import com.radio.chinese.domain.*
-import com.radio.chinese.domain.browser.WebDavBrowser
+import com.radio.chinese.domain.browser.*
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.service.WebDavClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 data class LibraryUiState(
@@ -39,6 +40,7 @@ class AudioLibraryViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: AudioLibraryRepository,
     private val webDavClient: WebDavClient,
+    private val okHttpClient: OkHttpClient,
     private val playerManager: PlayerManager
 ) : ViewModel() {
 
@@ -193,7 +195,9 @@ class AudioLibraryViewModel @Inject constructor(
     private fun createBrowser(name: String, type: SourceType, url: String, username: String, password: String): AudioBrowser {
         return when (type) {
             SourceType.WEBDAV -> WebDavBrowser(webDavClient, url, username, password)
-            else -> throw IllegalArgumentException("暂不支持: $type")
+            SourceType.LOCAL -> LocalBrowser(context)
+            SourceType.M3U -> M3uBrowser(okHttpClient)
+            SourceType.HTTP -> HttpBrowser(okHttpClient)
         }
     }
 }
