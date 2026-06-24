@@ -132,4 +132,7 @@ dependencies {
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // Security (encrypted credential storage)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }
