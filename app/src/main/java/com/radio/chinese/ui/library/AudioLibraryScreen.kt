@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.radio.chinese.data.entity.AudioFavoriteEntity
+import com.radio.chinese.data.entity.AudioRecentEntity
 import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.SourceType
 
@@ -64,7 +66,11 @@ fun AudioLibraryScreen(
                         else viewModel.playTrack(item)
                     },
                     onBack = { viewModel.browseBack() },
-                    onRefresh = { viewModel.refreshBrowse() }
+                    onRefresh = { viewModel.refreshBrowse() },
+                    onToggleFavorite = { item ->
+                        viewModel.toggleFavorite(item.path, item.name, uiState.browsingSource?.name ?: "")
+                    },
+                    isFavorited = { path -> viewModel.isFavorited(path) }
                 )
             } else if (uiState.sources.isEmpty() && !uiState.isLoading) {
                 // 空状态
@@ -87,14 +93,42 @@ fun AudioLibraryScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            } else if (uiState.showFavorites) {
+                FavoritesList(
+                    favorites = uiState.favorites,
+                    onPlay = { fav -> viewModel.playFavorite(fav) },
+                    onRemove = { path -> viewModel.toggleFavorite(path, "", "") }
+                )
             } else {
                 LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // 收藏快捷入口
+                    if (uiState.favorites.isNotEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth().clickable { viewModel.showFavorites() },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(Modifier.width(12.dp))
+                                    Text("收藏 (${uiState.favorites.size})", style = MaterialTheme.typography.titleSmall)
+                                }
+                            }
+                        }
+                    }
+                    // 最近播放
+                    if (uiState.recentPlays.isNotEmpty()) {
+                        item { Text("最近播放", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp)) }
+                        items(uiState.recentPlays.take(5)) { recent ->
+                            RecentPlayItem(recent = recent, onPlay = { viewModel.playRecent(recent) })
+                        }
+                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+                    }
+                    // 音频库列表
+                    item { Text("音频库", style = MaterialTheme.typography.titleSmall) }
                     items(uiState.sources) { source ->
-                        SourceCard(
-                            source = source,
-                            onClick = { viewModel.browseSource(source) },
-                            onDelete = { viewModel.deleteSource(source.id) }
-                        )
+                        SourceCard(source = source, onClick = { viewModel.browseSource(source) }, onDelete = { viewModel.deleteSource(source.id) })
                     }
                 }
             }
@@ -171,5 +205,41 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text("取消") }
             }
         )
+    }
+}
+
+@Composable
+fun FavoritesList(favorites: List<AudioFavoriteEntity>, onPlay: (AudioFavoriteEntity) -> Unit, onRemove: (String) -> Unit) {
+    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(favorites) { fav ->
+            Card(modifier = Modifier.fillMaxWidth().clickable { onPlay(fav) }, shape = RoundedCornerShape(12.dp)) {
+                Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(fav.trackName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(fav.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = { onRemove(fav.trackPath) }) {
+                        Icon(Icons.Default.Delete, "取消收藏", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecentPlayItem(recent: AudioRecentEntity, onPlay: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onPlay).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(recent.trackName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(recent.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
