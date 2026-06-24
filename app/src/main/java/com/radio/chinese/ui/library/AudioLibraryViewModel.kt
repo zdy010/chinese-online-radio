@@ -3,6 +3,8 @@ package com.radio.chinese.ui.library
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.radio.chinese.data.entity.AudioFavoriteEntity
+import com.radio.chinese.data.entity.AudioRecentEntity
 import com.radio.chinese.data.repository.AudioLibraryRepository
 import com.radio.chinese.domain.*
 import com.radio.chinese.domain.browser.*
@@ -32,7 +34,12 @@ data class LibraryUiState(
     val isPlaying: Boolean = false,
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
-    val playError: String? = null
+    val playError: String? = null,
+
+    // Favorites & Recent
+    val favorites: List<AudioFavoriteEntity> = emptyList(),
+    val recentPlays: List<AudioRecentEntity> = emptyList(),
+    val showFavorites: Boolean = false
 )
 
 @HiltViewModel
@@ -57,6 +64,9 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch { playerManager.operaPosition.collect { v -> _state.update { it.copy(positionMs = v) } } }
         viewModelScope.launch { playerManager.operaDuration.collect { v -> _state.update { it.copy(durationMs = v) } } }
         viewModelScope.launch { playerManager.error.collect { v -> _state.update { it.copy(playError = v) } } }
+        // 订阅收藏与最近播放
+        viewModelScope.launch { repository.favorites.collect { favs -> _state.update { s -> s.copy(favorites = favs) } } }
+        viewModelScope.launch { repository.recentPlays.collect { recents -> _state.update { s -> s.copy(recentPlays = recents) } } }
     }
 
     // ========== 音频源管理 ==========
@@ -178,9 +188,63 @@ class AudioLibraryViewModel @Inject constructor(
             operaName = track.parentPath.substringAfterLast("/"),
             downloadUrl = uri
         )
-        // 直接用现有 PlayerManager 的 opera 播放能力
         playerManager.playOperaFile(file, emptyList())
         _state.update { it.copy(currentTrack = track) }
+        // 记录最近播放
+        viewModelScope.launch {
+            repository.recordPlay(source.id, track.path, track.name, source.name)
+        }
+    }
+
+    fun toggleFavorite(trackPath: String, trackName: String, sourceName: String) {
+        val source = _state.value.browsingSource ?: return
+        viewModelScope.launch {
+            repository.toggleFavorite(source.id, trackPath, trackName, sourceName)
+        }
+    }
+
+    fun isFavorited(trackPath: String): Boolean {
+        return _state.value.favorites.any { it.trackPath == trackPath }
+    }
+
+    fun showFavorites() = _state.update { it.copy(showFavorites = true) }
+    fun hideFavorites() = _state.update { it.copy(showFavorites = false) }
+
+    fun playFavorite(fav: AudioFavoriteEntity) {
+        viewModelScope.launch {
+            val source = repository.getSource(fav.sourceId) ?: return@launch
+            val track = AudioTrack(
+                id = fav.trackPath.hashCode().toString(), name = fav.trackName,
+                path = fav.trackPath, sourceId = fav.sourceId
+            )
+            playTrackWithSource(track, source)
+        }
+    }
+
+    fun playRecent(recent: AudioRecentEntity) {
+        viewModelScope.launch {
+            val source = repository.getSource(recent.sourceId) ?: return@launch
+            val track = AudioTrack(
+                id = recent.trackPath.hashCode().toString(), name = recent.trackName,
+                path = recent.trackPath, sourceId = recent.sourceId
+            )
+            playTrackWithSource(track, source)
+        }
+    }
+
+    private fun playTrackWithSource(track: AudioTrack, source: AudioSource) {
+        val browser = createBrowser(source)
+        val uri = browser.resolveUri(track)
+        playerManager.playOperaFile(
+            com.radio.chinese.domain.model.OperaAudioFile(
+                fileId = track.path.hashCode().toLong(), name = track.name, size = 0,
+                categoryName = source.name, operaName = "", downloadUrl = uri
+            ), emptyList()
+        )
+        _state.update { it.copy(currentTrack = track, browsingSource = source) }
+        viewModelScope.launch {
+            repository.recordPlay(source.id, track.path, track.name, source.name)
+        }
     }
 
     fun togglePlayPause() = playerManager.togglePlayPause()

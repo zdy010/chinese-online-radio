@@ -24,7 +24,9 @@ fun BrowseScreen(
     canGoBack: Boolean,
     onItemClick: (AudioTrack) -> Unit,
     onBack: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onToggleFavorite: (AudioTrack) -> Unit = {},
+    isFavorited: (String) -> Boolean = { false }
 ) {
     Scaffold(
         topBar = {
@@ -56,7 +58,7 @@ fun BrowseScreen(
             } else {
                 LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp)) {
                     items(items) { item ->
-                        BrowseItem(item = item, onClick = { onItemClick(item) })
+                        BrowseItem(item = item, onClick = { onItemClick(item) }, isFav = isFavorited(item.path), onToggleFav = { onToggleFavorite(item) })
                         HorizontalDivider()
                     }
                 }
@@ -79,7 +81,7 @@ fun BrowseScreen(
 }
 
 @Composable
-private fun BrowseItem(item: AudioTrack, onClick: () -> Unit) {
+private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, onToggleFav: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -98,6 +100,15 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit) {
             }
             if (item.isHlsStream) {
                 Text("HLS 直播流", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+            }
+        }
+        if (!item.isFolder) {
+            IconButton(onClick = onToggleFav) {
+                Icon(
+                    if (isFav) Icons.Default.Star else Icons.Default.StarOutline,
+                    contentDescription = if (isFav) "取消收藏" else "收藏",
+                    tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
         if (item.isFolder) {
