@@ -2,6 +2,8 @@ package com.radio.chinese.di
 
 import android.content.Context
 import androidx.room.Room
+import com.radio.chinese.data.dao.*
+import com.radio.chinese.data.local.AudioLibraryDatabase
 import com.radio.chinese.data.local.DownloadedOperaDao
 import com.radio.chinese.data.local.OperaDatabase
 import com.radio.chinese.data.local.RadioDatabase
@@ -62,4 +64,29 @@ object AppModule {
     fun provideDownloadedOperaDao(database: OperaDatabase): DownloadedOperaDao {
         return database.downloadedOperaDao()
     }
+
+    // ========== Audio Library ==========
+
+    @Provides
+    @Singleton
+    fun provideAudioLibraryDatabase(@ApplicationContext context: Context): AudioLibraryDatabase {
+        return Room.databaseBuilder(
+            context,
+            AudioLibraryDatabase::class.java,
+            "audio_library_database"
+        ).fallbackToDestructiveMigration()
+         .build()
+    }
+
+    @Provides
+    fun provideAudioSourceDao(db: AudioLibraryDatabase): AudioSourceDao = db.audioSourceDao()
+
+    @Provides
+    fun provideAudioCacheDao(db: AudioLibraryDatabase): AudioCacheDao = db.audioCacheDao()
+
+    @Provides
+    fun provideAudioFavoriteDao(db: AudioLibraryDatabase): AudioFavoriteDao = db.audioFavoriteDao()
+
+    @Provides
+    fun provideAudioRecentDao(db: AudioLibraryDatabase): AudioRecentDao = db.audioRecentDao()
 }
