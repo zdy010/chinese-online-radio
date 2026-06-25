@@ -6,6 +6,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -169,6 +171,7 @@ fun AudioLibraryScreen(
                     isPlaying = uiState.isPlaying,
                     positionMs = uiState.positionMs,
                     durationMs = uiState.durationMs,
+                    bitrateBps = uiState.bitrateBps,
                     onTogglePlayPause = { viewModel.togglePlayPause() },
                     onStop = { viewModel.stopPlayback() },
                     modifier = Modifier.align(Alignment.BottomCenter)
@@ -189,12 +192,16 @@ fun AudioLibraryScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().combinedClickable(
+            onClick = onClick,
+            onLongClick = { showDeleteConfirm = true }
+        ),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -216,9 +223,6 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 MarqueeText(source.name, style = MaterialTheme.typography.titleSmall, enabled = false, modifier = Modifier.fillMaxWidth())
                 Text(source.url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            IconButton(onClick = { showDeleteConfirm = true }) {
-                Icon(Icons.Default.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -280,6 +284,7 @@ fun MiniPlayerBar(
     isPlaying: Boolean,
     positionMs: Long,
     durationMs: Long,
+    bitrateBps: Int,
     onTogglePlayPause: () -> Unit,
     onStop: () -> Unit,
     modifier: Modifier = Modifier
@@ -294,7 +299,8 @@ fun MiniPlayerBar(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 MarqueeText(track.name, style = MaterialTheme.typography.titleSmall, enabled = true, modifier = Modifier.fillMaxWidth())
-                Text(formatPlaybackTime(positionMs, durationMs), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val brStr = if (bitrateBps > 0) " | ${bitrateBps / 1000}kbps" else ""
+                Text(formatPlaybackTime(positionMs, durationMs) + brStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (durationMs > 0) {
                     LinearProgressIndicator(
                         progress = { if (durationMs > 0) positionMs.toFloat() / durationMs else 0f },

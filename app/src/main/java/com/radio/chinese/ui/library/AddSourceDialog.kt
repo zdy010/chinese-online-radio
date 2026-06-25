@@ -93,7 +93,7 @@ fun AddSourceDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(name, selectedType, url, username, password) },
-                enabled = name.isNotBlank() && (selectedType == SourceType.LOCAL || url.isNotBlank()) && !isLoading
+                enabled = (selectedType == SourceType.LOCAL || url.isNotBlank()) && !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
