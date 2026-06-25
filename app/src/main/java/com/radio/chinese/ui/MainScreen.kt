@@ -141,9 +141,19 @@ fun MainScreen(
         Screen.Favorites.route
     )
 
-    // 拦截系统返回键：在底部 tab 页面上不弹出导航栈，仅各 tab 内部自行处理
+    // 拦截系统返回键：在底部 tab 页面上不弹出导航栈，双击返回退出
+    var lastBackPressMs by remember { mutableLongStateOf(0L) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     BackHandler(enabled = showBottomBar) {
-        // 什么也不做——仅在 tab 内逐级返回，不跳出当前 tab
+        val now = System.currentTimeMillis()
+        if (now - lastBackPressMs < 2000L) {
+            // 第二次返回，退出 app
+            (context as? android.app.Activity)?.finish()
+        } else {
+            lastBackPressMs = now
+            // 显示 Toast 提示
+            android.widget.Toast.makeText(context, "再按一次退出", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     Scaffold(

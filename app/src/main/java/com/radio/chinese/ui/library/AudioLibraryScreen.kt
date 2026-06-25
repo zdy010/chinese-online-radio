@@ -48,7 +48,7 @@ fun AudioLibraryScreen(
     }
 
     // 拦截系统返回键：只在音频库内部回退，不跳出 tab
-    BackHandler(enabled = uiState.browsingSource != null || uiState.showFavorites) {
+    BackHandler(enabled = uiState.showBrowseContent || uiState.showFavorites) {
         if (uiState.showFavorites) {
             viewModel.hideFavorites()
         } else {
@@ -91,7 +91,7 @@ fun AudioLibraryScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (uiState.browsingSource != null) {
+            if (uiState.showBrowseContent) {
                 BrowseScreen(
                     items = uiState.browseItems,
                     isLoading = uiState.isLoading,
@@ -307,44 +307,44 @@ fun MiniPlayerBar(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
-            // 进度条
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp).fillMaxWidth()) {
+            // 第1块：曲目名称（独占一行）
+            MarqueeText(track.name, style = MaterialTheme.typography.titleMedium.copy(fontSize = androidx.compose.ui.unit.TextUnit(16f, androidx.compose.ui.unit.TextUnitType.Sp)), enabled = true, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
+
+            // 第2块：进度条 + 时间/码率
             Slider(
                 value = if (isDragging) sliderPos else positionMs.toFloat(),
                 onValueChange = { sliderPos = it; isDragging = true },
                 onValueChangeFinished = { onSeek(sliderPos.toLong()); isDragging = false },
                 valueRange = 0f..durationMs.toFloat().coerceAtLeast(1f),
-                modifier = Modifier.fillMaxWidth().height(20.dp)
+                modifier = Modifier.fillMaxWidth().height(24.dp)
             )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatPlaybackTime(positionMs, durationMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (bitrateBps > 0) Text("${bitrateBps / 1000}kbps", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+            }
 
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                // 曲目信息
-                Column(Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                    MarqueeText(track.name, style = MaterialTheme.typography.titleSmall, enabled = true, modifier = Modifier.fillMaxWidth())
-                    val brStr = if (bitrateBps > 0) " | ${bitrateBps / 1000}kbps" else ""
-                    Text(formatPlaybackTime(positionMs, durationMs) + brStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-
-                // 控制按钮
+            // 第3块：功能按钮（居中）
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onCycleRepeat) {
                     Icon(
                         when (repeatMode) {
                             RepeatMode.OFF -> Icons.Default.Repeat
                             RepeatMode.ALL -> Icons.Default.Repeat
-                            RepeatMode.ONE -> Icons.Default.RepeatOne
+                            RepeatMode.ONE -> Icons.Default.Repeat
                         },
-                        contentDescription = "循环模式",
+                        contentDescription = "循环",
                         tint = if (repeatMode == RepeatMode.OFF) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = onPrevious) {
-                    Icon(Icons.Default.SkipPrevious, "上一首")
+                    Icon(Icons.Default.SkipPrevious, "上一首", modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = onTogglePlayPause) {
-                    Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = if (isPlaying) "暂停" else "播放")
+                    Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, modifier = Modifier.size(36.dp))
                 }
                 IconButton(onClick = onNext) {
-                    Icon(Icons.Default.SkipNext, "下一首")
+                    Icon(Icons.Default.SkipNext, "下一首", modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = onStop) {
                     Icon(Icons.Default.Close, "停止")
