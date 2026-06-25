@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.domain.AudioTrack
+import com.radio.chinese.ui.common.MarqueeText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +95,7 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, on
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            MarqueeText(item.name, style = MaterialTheme.typography.bodyLarge, enabled = false, modifier = Modifier.fillMaxWidth())
             if (!item.isFolder && item.size > 0) {
                 Text(formatSize(item.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
