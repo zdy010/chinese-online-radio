@@ -10,72 +10,52 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.domain.AudioTrack
 import com.radio.chinese.ui.common.MarqueeText
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowseScreen(
-    sourceName: String,
     items: List<AudioTrack>,
     isLoading: Boolean,
     error: String?,
-    canGoBack: Boolean,
     onItemClick: (AudioTrack) -> Unit,
-    onBack: () -> Unit,
     onRefresh: () -> Unit,
     onToggleFavorite: (AudioTrack) -> Unit = {},
     isFavorited: (String) -> Boolean = { false }
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(sourceName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    if (canGoBack) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "刷新")
-                    }
-                }
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (items.isEmpty() && !isLoading) {
+            Text(
+                "该目录下暂无内容",
+                modifier = Modifier.align(Alignment.Center),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        } else {
+            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+                items(items) { item ->
+                    BrowseItem(
+                        item = item,
+                        onClick = { onItemClick(item) },
+                        isFav = isFavorited(item.path),
+                        onToggleFav = { onToggleFavorite(item) }
+                    )
+                    HorizontalDivider()
+                }
+            }
         }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (items.isEmpty() && !isLoading) {
-                Text(
-                    "该目录下暂无内容",
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp)) {
-                    items(items) { item ->
-                        BrowseItem(item = item, onClick = { onItemClick(item) }, isFav = isFavorited(item.path), onToggleFav = { onToggleFavorite(item) })
-                        HorizontalDivider()
-                    }
-                }
-            }
 
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
 
-            if (error != null) {
-                Snackbar(
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                    action = { TextButton(onClick = onRefresh) { Text("重试") } }
-                ) {
-                    Text(error)
-                }
+        if (error != null) {
+            Snackbar(
+                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                action = { TextButton(onClick = onRefresh) { Text("重试") } }
+            ) {
+                Text(error)
             }
         }
     }

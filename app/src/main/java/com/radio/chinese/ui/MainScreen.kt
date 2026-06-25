@@ -1,5 +1,6 @@
 package com.radio.chinese.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
@@ -111,9 +112,7 @@ fun RadioNavGraph(
         }
 
         composable(Screen.Opera.route) {
-            AudioLibraryScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            AudioLibraryScreen()
         }
     }
 }
@@ -135,13 +134,17 @@ fun MainScreen(
         BottomNavItem(Screen.Favorites, "收藏", Icons.Default.Favorite, Icons.Outlined.FavoriteBorder),
     )
 
-    // Show bottom bar only on main screens
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
         Screen.Opera.route,
         Screen.Category.route,
         Screen.Favorites.route
     )
+
+    // 拦截系统返回键：在底部 tab 页面上不弹出导航栈，仅各 tab 内部自行处理
+    BackHandler(enabled = showBottomBar) {
+        // 什么也不做——仅在 tab 内逐级返回，不跳出当前 tab
+    }
 
     Scaffold(
         bottomBar = {
