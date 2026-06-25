@@ -132,6 +132,7 @@ fun RadioNavGraph(
         }
 
         composable(Screen.Opera.route) {
+            TabBackHandler()
             AudioLibraryScreen()
         }
     }
