@@ -122,8 +122,8 @@ class AudioLibraryViewModel @Inject constructor(
     private fun resolveShortcut(name: String, type: SourceType, url: String, username: String, password: String): ShortcutRes {
         if (type != SourceType.WEBDAV) return ShortcutRes(name, type, url, username, password)
         return when (url.trim()) {
-            "138265275541" -> ShortcutRes("123云盘·豫剧", SourceType.WEBDAV, "https://webdav.123pan.cn/webdav", "13826527554", "a5vp9lqi")
-            "138265275542" -> ShortcutRes("123云盘", SourceType.WEBDAV, "https://webdav.123pan.cn/webdav", "13826527554", "gw7ym269")
+            "xxx1" -> ShortcutRes("123云盘·豫剧", SourceType.WEBDAV, "xxx://xxx.xxx.cn/xxx", "xxx", "xxx")
+            "xxx2" -> ShortcutRes("123云盘", SourceType.WEBDAV, "xxx://xxx.xxx.cn/xxx", "xxx", "xxx")
             else -> ShortcutRes(name, type, url, username, password)
         }
     }
