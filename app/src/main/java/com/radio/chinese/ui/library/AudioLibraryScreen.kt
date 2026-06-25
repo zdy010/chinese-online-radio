@@ -1,5 +1,6 @@
 package com.radio.chinese.ui.library
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,20 +24,37 @@ import com.radio.chinese.ui.common.MarqueeText
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioLibraryScreen(
-    onNavigateBack: () -> Unit,
     viewModel: AudioLibraryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // 拦截系统返回键：只在音频库内部回退，不跳出 tab
+    BackHandler(enabled = uiState.browsingSource != null || uiState.showFavorites) {
+        if (uiState.showFavorites) {
+            viewModel.hideFavorites()
+        } else {
+            viewModel.browseBack()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (uiState.browsingSource != null) uiState.browsingSource!!.name else "我的音频库") },
+                title = {
+                    when {
+                        uiState.showFavorites -> Text("收藏")
+                        uiState.browsingSource != null -> Text(uiState.browsingSource!!.name)
+                        else -> Text("我的音频库")
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (uiState.browsingSource != null) viewModel.browseBack() else onNavigateBack()
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                    if (uiState.browsingSource != null || uiState.showFavorites) {
+                        IconButton(onClick = {
+                            if (uiState.showFavorites) viewModel.hideFavorites()
+                            else viewModel.browseBack()
+                        }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        }
                     }
                 },
                 actions = {
@@ -44,7 +62,7 @@ fun AudioLibraryScreen(
                         IconButton(onClick = { viewModel.refreshBrowse() }) {
                             Icon(Icons.Default.Refresh, contentDescription = "刷新")
                         }
-                    } else {
+                    } else if (!uiState.showFavorites) {
                         IconButton(onClick = { viewModel.showAddDialog() }) {
                             Icon(Icons.Default.Add, contentDescription = "添加")
                         }
@@ -55,55 +73,48 @@ fun AudioLibraryScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (uiState.browsingSource != null) {
-                // 浏览模式
                 BrowseScreen(
-                    sourceName = uiState.browsingSource!!.name,
                     items = uiState.browseItems,
                     isLoading = uiState.isLoading,
                     error = uiState.error,
-                    canGoBack = uiState.browseHistory.isNotEmpty(),
                     onItemClick = { item ->
                         if (item.isFolder) viewModel.browseFolder(item.path)
                         else viewModel.playTrack(item)
                     },
-                    onBack = { viewModel.browseBack() },
                     onRefresh = { viewModel.refreshBrowse() },
                     onToggleFavorite = { item ->
                         viewModel.toggleFavorite(item.path, item.name, uiState.browsingSource?.name ?: "")
                     },
                     isFavorited = { path -> viewModel.isFavorited(path) }
                 )
-            } else if (uiState.sources.isEmpty() && !uiState.isLoading) {
-                // 空状态
-                Column(
-                    modifier = Modifier.align(Alignment.Center).padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Default.LibraryMusic,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("暂无音频库", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "点击右上角 + 添加音频来源\n支持本地、WebDAV、M3U 播放列表",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             } else if (uiState.showFavorites) {
                 FavoritesList(
                     favorites = uiState.favorites,
                     onPlay = { fav -> viewModel.playFavorite(fav) },
                     onRemove = { path -> viewModel.toggleFavorite(path, "", "") }
                 )
+            } else if (uiState.sources.isEmpty() && !uiState.isLoading) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center).padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(Icons.Default.LibraryMusic, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("暂无音频库", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("点击右上角 + 添加音频来源\n支持本地、WebDAV、M3U 播放列表", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             } else {
                 LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // 音频库列表（在上面）
+                    items(uiState.sources) { source ->
+                        SourceCard(source = source, onClick = { viewModel.browseSource(source) }, onDelete = { viewModel.deleteSource(source.id) })
+                    }
+
                     // 收藏快捷入口
                     if (uiState.favorites.isNotEmpty()) {
+                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+                        item { Text("收藏", style = MaterialTheme.typography.titleSmall) }
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth().clickable { viewModel.showFavorites() },
@@ -113,23 +124,19 @@ fun AudioLibraryScreen(
                                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
                                     Spacer(Modifier.width(12.dp))
-                                    Text("收藏 (${uiState.favorites.size})", style = MaterialTheme.typography.titleSmall)
+                                    Text("查看全部 (${uiState.favorites.size})", style = MaterialTheme.typography.titleSmall)
                                 }
                             }
                         }
                     }
-                    // 最近播放
+
+                    // 最近播放（在最下面）
                     if (uiState.recentPlays.isNotEmpty()) {
-                        item { Text("最近播放", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp)) }
+                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+                        item { Text("最近播放", style = MaterialTheme.typography.titleSmall) }
                         items(uiState.recentPlays.take(5)) { recent ->
                             RecentPlayItem(recent = recent, onPlay = { viewModel.playRecent(recent) })
                         }
-                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-                    }
-                    // 音频库列表
-                    item { Text("音频库", style = MaterialTheme.typography.titleSmall) }
-                    items(uiState.sources) { source ->
-                        SourceCard(source = source, onClick = { viewModel.browseSource(source) }, onDelete = { viewModel.deleteSource(source.id) })
                     }
                 }
             }
@@ -138,8 +145,8 @@ fun AudioLibraryScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            // MiniPlayer 播放条
-            if (uiState.isPlaying && uiState.currentTrack != null) {
+            // MiniPlayer 播放条 — 只要有 currentTrack 就显示
+            if (uiState.currentTrack != null) {
                 MiniPlayerBar(
                     track = uiState.currentTrack!!,
                     isPlaying = uiState.isPlaying,
@@ -153,7 +160,6 @@ fun AudioLibraryScreen(
         }
     }
 
-    // 添加弹窗
     if (uiState.showAddDialog) {
         AddSourceDialog(
             isLoading = uiState.isLoading,
@@ -193,11 +199,6 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 MarqueeText(source.name, style = MaterialTheme.typography.titleSmall, enabled = false, modifier = Modifier.fillMaxWidth())
                 Text(source.url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
-                    source.type.name,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
             }
             IconButton(onClick = { showDeleteConfirm = true }) {
                 Icon(Icons.Default.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.error)
@@ -271,19 +272,12 @@ fun MiniPlayerBar(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Audiotrack, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 MarqueeText(track.name, style = MaterialTheme.typography.titleSmall, enabled = true, modifier = Modifier.fillMaxWidth())
-                Text(
-                    formatPlaybackTime(positionMs, durationMs),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(formatPlaybackTime(positionMs, durationMs), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (durationMs > 0) {
                     LinearProgressIndicator(
                         progress = { if (durationMs > 0) positionMs.toFloat() / durationMs else 0f },
@@ -292,10 +286,7 @@ fun MiniPlayerBar(
                 }
             }
             IconButton(onClick = onTogglePlayPause) {
-                Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "暂停" else "播放"
-                )
+                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = if (isPlaying) "暂停" else "播放")
             }
             IconButton(onClick = onStop) {
                 Icon(Icons.Default.Close, "停止")
