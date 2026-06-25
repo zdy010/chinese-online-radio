@@ -134,8 +134,19 @@ fun AudioLibraryScreen(
             }
 
             if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+
+            // MiniPlayer 播放条
+            if (uiState.isPlaying && uiState.currentTrack != null) {
+                MiniPlayerBar(
+                    track = uiState.currentTrack!!,
+                    isPlaying = uiState.isPlaying,
+                    positionMs = uiState.positionMs,
+                    durationMs = uiState.durationMs,
+                    onTogglePlayPause = { viewModel.togglePlayPause() },
+                    onStop = { viewModel.stopPlayback() },
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
         }
@@ -242,4 +253,59 @@ fun RecentPlayItem(recent: AudioRecentEntity, onPlay: () -> Unit) {
             Text(recent.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+}
+
+@Composable
+fun MiniPlayerBar(
+    track: com.radio.chinese.domain.AudioTrack,
+    isPlaying: Boolean,
+    positionMs: Long,
+    durationMs: Long,
+    onTogglePlayPause: () -> Unit,
+    onStop: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth().padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Audiotrack, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(track.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    formatPlaybackTime(positionMs, durationMs),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (durationMs > 0) {
+                    LinearProgressIndicator(
+                        progress = { if (durationMs > 0) positionMs.toFloat() / durationMs else 0f },
+                        modifier = Modifier.fillMaxWidth().height(3.dp).padding(top = 4.dp),
+                    )
+                }
+            }
+            IconButton(onClick = onTogglePlayPause) {
+                Icon(
+                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "暂停" else "播放"
+                )
+            }
+            IconButton(onClick = onStop) {
+                Icon(Icons.Default.Close, "停止")
+            }
+        }
+    }
+}
+
+private fun formatPlaybackTime(posMs: Long, durMs: Long): String {
+    val pos = posMs / 1000
+    val dur = durMs / 1000
+    if (dur > 0) return "${pos / 60}:${(pos % 60).toString().padStart(2, '0')} / ${dur / 60}:${(dur % 60).toString().padStart(2, '0')}"
+    return "${pos / 60}:${(pos % 60).toString().padStart(2, '0')}"
 }
