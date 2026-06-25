@@ -174,6 +174,11 @@ fun AudioLibraryScreen(
                     bitrateBps = uiState.bitrateBps,
                     onTogglePlayPause = { viewModel.togglePlayPause() },
                     onStop = { viewModel.stopPlayback() },
+                    onSeek = { viewModel.seekTo(it) },
+                    onNext = { viewModel.playNext() },
+                    onPrevious = { viewModel.playPrevious() },
+                    onCycleRepeat = { viewModel.cycleRepeatMode() },
+                    repeatMode = uiState.repeatMode,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
@@ -287,32 +292,63 @@ fun MiniPlayerBar(
     bitrateBps: Int,
     onTogglePlayPause: () -> Unit,
     onStop: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    repeatMode: com.radio.chinese.ui.library.RepeatMode,
     modifier: Modifier = Modifier
 ) {
+    var sliderPos by remember(positionMs) { mutableFloatStateOf(positionMs.toFloat()) }
+    var isDragging by remember { mutableStateOf(false) }
+
     Card(
         modifier = modifier.fillMaxWidth().padding(8.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(modifier = Modifier.padding(12.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Audiotrack, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                MarqueeText(track.name, style = MaterialTheme.typography.titleSmall, enabled = true, modifier = Modifier.fillMaxWidth())
-                val brStr = if (bitrateBps > 0) " | ${bitrateBps / 1000}kbps" else ""
-                Text(formatPlaybackTime(positionMs, durationMs) + brStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (durationMs > 0) {
-                    LinearProgressIndicator(
-                        progress = { if (durationMs > 0) positionMs.toFloat() / durationMs else 0f },
-                        modifier = Modifier.fillMaxWidth().height(3.dp).padding(top = 4.dp),
+        Column(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
+            // 进度条
+            Slider(
+                value = if (isDragging) sliderPos else positionMs.toFloat(),
+                onValueChange = { sliderPos = it; isDragging = true },
+                onValueChangeFinished = { onSeek(sliderPos.toLong()); isDragging = false },
+                valueRange = 0f..durationMs.toFloat().coerceAtLeast(1f),
+                modifier = Modifier.fillMaxWidth().height(20.dp)
+            )
+
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                // 曲目信息
+                Column(Modifier.weight(1f).padding(horizontal = 4.dp)) {
+                    MarqueeText(track.name, style = MaterialTheme.typography.titleSmall, enabled = true, modifier = Modifier.fillMaxWidth())
+                    val brStr = if (bitrateBps > 0) " | ${bitrateBps / 1000}kbps" else ""
+                    Text(formatPlaybackTime(positionMs, durationMs) + brStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                // 控制按钮
+                IconButton(onClick = onCycleRepeat) {
+                    Icon(
+                        when (repeatMode) {
+                            RepeatMode.OFF -> Icons.Default.Repeat
+                            RepeatMode.ALL -> Icons.Default.Repeat
+                            RepeatMode.ONE -> Icons.Default.RepeatOne
+                        },
+                        contentDescription = "循环模式",
+                        tint = if (repeatMode == RepeatMode.OFF) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-            IconButton(onClick = onTogglePlayPause) {
-                Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = if (isPlaying) "暂停" else "播放")
-            }
-            IconButton(onClick = onStop) {
-                Icon(Icons.Default.Close, "停止")
+                IconButton(onClick = onPrevious) {
+                    Icon(Icons.Default.SkipPrevious, "上一首")
+                }
+                IconButton(onClick = onTogglePlayPause) {
+                    Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = if (isPlaying) "暂停" else "播放")
+                }
+                IconButton(onClick = onNext) {
+                    Icon(Icons.Default.SkipNext, "下一首")
+                }
+                IconButton(onClick = onStop) {
+                    Icon(Icons.Default.Close, "停止")
+                }
             }
         }
     }
