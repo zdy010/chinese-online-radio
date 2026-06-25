@@ -63,6 +63,10 @@ fun BrowseScreen(
 
 @Composable
 private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, onToggleFav: () -> Unit) {
+    var favState by remember { mutableStateOf(isFav) }
+    // 外部状态变化时同步进来
+    LaunchedEffect(isFav) { favState = isFav }
+
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -84,9 +88,9 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, on
             }
         }
         if (!item.isFolder) {
-            IconButton(onClick = onToggleFav) {
+            IconButton(onClick = { favState = !favState; onToggleFav() }) {
                 Icon(
-                    if (isFav) Icons.Default.Star else Icons.Default.StarOutline,
+                    if (favState) Icons.Default.Star else Icons.Default.StarOutline,
                     contentDescription = if (isFav) "取消收藏" else "收藏",
                     tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
