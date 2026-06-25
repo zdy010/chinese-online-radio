@@ -108,6 +108,7 @@ fun RadioNavGraph(
         }
 
         composable(Screen.Favorites.route) {
+            TabBackHandler()
             FavoritesScreen(
                 onNavigateToPlayer = { stationId ->
                     navController.navigate(Screen.Player.createRoute(stationId))
