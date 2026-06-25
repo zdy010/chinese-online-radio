@@ -45,11 +45,29 @@ fun RadioNavGraph(
     themeMode: Int,
     onThemeChanged: (Int) -> Unit
 ) {
+    // 双击退出状态
+    var lastBackMs by remember { mutableLongStateOf(0L) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+
+    @Composable
+    fun TabBackHandler() {
+        BackHandler {
+            val now = System.currentTimeMillis()
+            if (now - lastBackMs < 2000L) {
+                (ctx as? android.app.Activity)?.finish()
+            } else {
+                lastBackMs = now
+                android.widget.Toast.makeText(ctx, "再按一次退出", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route
     ) {
         composable(Screen.Home.route) {
+            TabBackHandler()
             HomeScreen(
                 onNavigateToPlayer = { stationId ->
                     navController.navigate(Screen.Player.createRoute(stationId))
@@ -80,6 +98,7 @@ fun RadioNavGraph(
         }
 
         composable(Screen.Category.route) {
+            TabBackHandler()
             CategoryScreen(
                 onNavigateToPlayer = { stationId ->
                     navController.navigate(Screen.Player.createRoute(stationId))
@@ -140,21 +159,6 @@ fun MainScreen(
         Screen.Category.route,
         Screen.Favorites.route
     )
-
-    // 拦截系统返回键：在底部 tab 页面上不弹出导航栈，双击返回退出
-    var lastBackPressMs by remember { mutableLongStateOf(0L) }
-    val context = androidx.compose.ui.platform.LocalContext.current
-    BackHandler(enabled = showBottomBar) {
-        val now = System.currentTimeMillis()
-        if (now - lastBackPressMs < 2000L) {
-            // 第二次返回，退出 app
-            (context as? android.app.Activity)?.finish()
-        } else {
-            lastBackPressMs = now
-            // 显示 Toast 提示
-            android.widget.Toast.makeText(context, "再按一次退出", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
 
     Scaffold(
         bottomBar = {
