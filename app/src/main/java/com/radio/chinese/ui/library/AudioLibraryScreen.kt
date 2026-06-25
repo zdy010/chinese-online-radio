@@ -327,14 +327,14 @@ fun MiniPlayerBar(
             // 第3块：功能按钮（居中）
             Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onCycleRepeat) {
-                    Icon(
+                    Text(
                         when (repeatMode) {
-                            RepeatMode.OFF -> Icons.Default.Repeat
-                            RepeatMode.ALL -> Icons.Default.Repeat
-                            RepeatMode.ONE -> Icons.Default.Repeat
+                            RepeatMode.ALL -> "全部"
+                            RepeatMode.ONE -> "单曲"
+                            RepeatMode.RANDOM -> "随机"
                         },
-                        contentDescription = "循环",
-                        tint = if (repeatMode == RepeatMode.OFF) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = onPrevious) {
