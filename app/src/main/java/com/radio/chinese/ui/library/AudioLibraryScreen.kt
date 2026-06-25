@@ -1,6 +1,10 @@
 package com.radio.chinese.ui.library
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +31,19 @@ fun AudioLibraryScreen(
     viewModel: AudioLibraryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // 本地音频权限请求
+    val audioPermission = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
+    val audioPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
+    LaunchedEffect(Unit) {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, audioPermission)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            audioPermLauncher.launch(audioPermission)
+        }
+    }
 
     // 拦截系统返回键：只在音频库内部回退，不跳出 tab
     BackHandler(enabled = uiState.browsingSource != null || uiState.showFavorites) {

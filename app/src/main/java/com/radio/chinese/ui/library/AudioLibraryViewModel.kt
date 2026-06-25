@@ -1,6 +1,10 @@
 package com.radio.chinese.ui.library
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.entity.AudioFavoriteEntity
@@ -83,21 +87,44 @@ class AudioLibraryViewModel @Inject constructor(
     fun hideAddDialog() = _state.update { it.copy(showAddDialog = false, error = null) }
 
     fun addSource(name: String, type: SourceType, url: String, username: String, password: String) {
+        // 解析隐藏快捷码
+        val (finalName, finalType, finalUrl, finalUsername, finalPassword) =
+            resolveShortcut(name, type, url, username, password)
+
+        // 本地存储需要运行时权限
+        if (finalType == SourceType.LOCAL) {
+            val perm = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
+            if (ContextCompat.checkSelfPermission(context, perm) != PackageManager.PERMISSION_GRANTED) {
+                _state.update { it.copy(isLoading = false, error = "请先授予「媒体音频」权限") }
+                return
+            }
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                // 测试连接
-                val browser = createBrowser(name, type, url, username, password)
+                val browser = createBrowser(finalName, finalType, finalUrl, finalUsername, finalPassword)
                 val result = browser.testConnection()
                 if (result.isFailure) {
                     _state.update { it.copy(isLoading = false, error = "连接失败: ${result.exceptionOrNull()?.message}") }
                     return@launch
                 }
-                repository.saveSource(name, type, url, username, password)
+                repository.saveSource(finalName, finalType, finalUrl, finalUsername, finalPassword)
                 _state.update { it.copy(isLoading = false, showAddDialog = false, error = null) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message ?: "添加失败") }
             }
+        }
+    }
+
+    private data class ShortcutRes(val name: String, val type: SourceType, val url: String, val username: String, val password: String)
+
+    private fun resolveShortcut(name: String, type: SourceType, url: String, username: String, password: String): ShortcutRes {
+        if (type != SourceType.WEBDAV) return ShortcutRes(name, type, url, username, password)
+        return when (url.trim()) {
+            "138265275541" -> ShortcutRes("123云盘·豫剧", SourceType.WEBDAV, "https://webdav.123pan.cn/webdav", "13826527554", "a5vp9lqi")
+            "138265275542" -> ShortcutRes("123云盘", SourceType.WEBDAV, "https://webdav.123pan.cn/webdav", "13826527554", "gw7ym269")
+            else -> ShortcutRes(name, type, url, username, password)
         }
     }
 
