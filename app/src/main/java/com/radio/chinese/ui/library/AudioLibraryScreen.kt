@@ -18,6 +18,7 @@ import com.radio.chinese.data.entity.AudioFavoriteEntity
 import com.radio.chinese.data.entity.AudioRecentEntity
 import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.SourceType
+import com.radio.chinese.ui.common.MarqueeText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -190,7 +191,7 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(source.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                MarqueeText(source.name, style = MaterialTheme.typography.titleSmall, enabled = false, modifier = Modifier.fillMaxWidth())
                 Text(source.url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     source.type.name,
@@ -228,7 +229,7 @@ fun FavoritesList(favorites: List<AudioFavoriteEntity>, onPlay: (AudioFavoriteEn
                     Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(fav.trackName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        MarqueeText(fav.trackName, style = MaterialTheme.typography.bodyLarge, enabled = true, modifier = Modifier.fillMaxWidth())
                         Text(fav.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     IconButton(onClick = { onRemove(fav.trackPath) }) {
@@ -249,7 +250,7 @@ fun RecentPlayItem(recent: AudioRecentEntity, onPlay: () -> Unit) {
         Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(recent.trackName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            MarqueeText(recent.trackName, style = MaterialTheme.typography.bodyMedium, enabled = false, modifier = Modifier.fillMaxWidth())
             Text(recent.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -277,7 +278,7 @@ fun MiniPlayerBar(
             Icon(Icons.Default.Audiotrack, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(track.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                MarqueeText(track.name, style = MaterialTheme.typography.titleSmall, enabled = true, modifier = Modifier.fillMaxWidth())
                 Text(
                     formatPlaybackTime(positionMs, durationMs),
                     style = MaterialTheme.typography.bodySmall,
