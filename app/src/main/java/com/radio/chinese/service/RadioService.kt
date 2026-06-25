@@ -38,13 +38,14 @@ class RadioService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        // 动态 Auth：每次 ExoPlayer 加载媒体时实时读取 webDavClient 的最新凭证
-        // 解决"凭证在 Service 启动后才更新"的问题
+        // 动态 Auth：仅在 WebDAV 凭据已设置时添加，避免干扰 HTTP/M3U 等公开资源
         val dataSourceFactory = DataSource.Factory {
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(30000)
+            if (webDavClient.username.isNotEmpty()) {
+                httpFactory.setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
+            }
             DefaultDataSource.Factory(this, httpFactory).createDataSource()
         }
 
