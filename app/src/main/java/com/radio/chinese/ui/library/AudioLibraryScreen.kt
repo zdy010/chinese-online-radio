@@ -129,37 +129,8 @@ fun AudioLibraryScreen(
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // 音频库列表（在上面）
                     items(uiState.sources) { source ->
                         SourceCard(source = source, onClick = { viewModel.browseSource(source) }, onDelete = { viewModel.deleteSource(source.id) })
-                    }
-
-                    // 收藏快捷入口
-                    if (uiState.favorites.isNotEmpty()) {
-                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-                        item { Text("收藏", style = MaterialTheme.typography.titleSmall) }
-                        item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth().clickable { viewModel.showFavorites() },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                            ) {
-                                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(Modifier.width(12.dp))
-                                    Text("查看全部 (${uiState.favorites.size})", style = MaterialTheme.typography.titleSmall)
-                                }
-                            }
-                        }
-                    }
-
-                    // 最近播放（在最下面）
-                    if (uiState.recentPlays.isNotEmpty()) {
-                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
-                        item { Text("最近播放", style = MaterialTheme.typography.titleSmall) }
-                        items(uiState.recentPlays.take(5)) { recent ->
-                            RecentPlayItem(recent = recent, onPlay = { viewModel.playRecent(recent) })
-                        }
                     }
                 }
             }

@@ -26,7 +26,7 @@ fun AudioRecentTab(viewModel: AudioLibraryViewModel) {
         return
     }
 
-    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
+    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp)) {
         items(state.recentPlays) { recent ->
             Row(
                 modifier = Modifier.fillMaxWidth().clickable { viewModel.playRecent(recent) }.padding(vertical = 6.dp),
