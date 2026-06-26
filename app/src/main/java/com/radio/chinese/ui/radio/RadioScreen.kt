@@ -73,16 +73,19 @@ fun RadioScreen(
             ) { page ->
                 when (page) {
                     0 -> HomeScreen(
+                        showTopBar = false,
                         onNavigateToPlayer = onNavigateToPlayer,
                         onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(1) } },
                         onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(2) } },
                         onNavigateToSettings = onNavigateToSettings
                     )
                     1 -> CategoryScreen(
+                        showTopBar = false,
                         onNavigateToPlayer = onNavigateToPlayer,
                         onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } }
                     )
                     2 -> FavoritesScreen(
+                        showTopBar = false,
                         onNavigateToPlayer = onNavigateToPlayer,
                         onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } }
                     )

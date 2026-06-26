@@ -68,7 +68,7 @@ fun AudioMainScreen(
             ) { page ->
                 when (page) {
                     0 -> AudioLocalTab()
-                    1 -> AudioLibraryScreen(viewModel = viewModel)
+                    1 -> AudioLibraryScreen(viewModel = viewModel, showTopBar = false)
                     2 -> AudioFavoritesTab(viewModel = viewModel)
                     3 -> AudioRecentTab(viewModel = viewModel)
                 }
