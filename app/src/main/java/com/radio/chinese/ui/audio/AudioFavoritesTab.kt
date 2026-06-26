@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.radio.chinese.data.entity.AudioFavoriteEntity
 import com.radio.chinese.ui.library.AudioLibraryViewModel
 
 @Composable
@@ -27,7 +26,7 @@ fun AudioFavoritesTab(viewModel: AudioLibraryViewModel) {
     }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(state.favorites) { fav ->
+        items(state.favorites, key = { it.trackPath }) { fav ->
             Card(
                 modifier = Modifier.fillMaxWidth().clickable { viewModel.playFavorite(fav) },
                 shape = RoundedCornerShape(12.dp)
@@ -39,6 +38,7 @@ fun AudioFavoritesTab(viewModel: AudioLibraryViewModel) {
                         Text(fav.trackName, style = MaterialTheme.typography.bodyLarge)
                         Text(fav.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                    // 直接调用乐观更新删除
                     IconButton(onClick = { viewModel.toggleFavorite(fav.trackPath, fav.trackName, fav.sourceName) }) {
                         Icon(Icons.Default.Delete, "取消收藏", tint = MaterialTheme.colorScheme.error)
                     }
