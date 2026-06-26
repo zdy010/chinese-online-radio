@@ -54,7 +54,7 @@ fun AudioMainScreen(
             value = searchQuery, onValueChange = { searchQuery = it },
             placeholder = { Text("搜索音频...") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.67f).padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.fillMaxWidth(0.5f).padding(horizontal = 12.dp, vertical = 4.dp),
             trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
         )
 

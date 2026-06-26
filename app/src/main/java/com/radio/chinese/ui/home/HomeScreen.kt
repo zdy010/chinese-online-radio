@@ -59,7 +59,7 @@ fun HomeScreen(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = if (showTopBar) Modifier.padding(padding) else Modifier) {
             // Category Chips (无空行)
             CategoryChipsRow(
                 categories = uiState.categories,

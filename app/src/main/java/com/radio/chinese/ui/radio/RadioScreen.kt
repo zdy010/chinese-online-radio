@@ -46,7 +46,7 @@ fun RadioScreen(
                 value = searchQuery, onValueChange = { searchQuery = it },
                 placeholder = { Text("搜索电台...") },
                 singleLine = true,
-                modifier = Modifier.weight(0.67f),
+                modifier = Modifier.weight(0.5f),
                 trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
             )
             if (pagerState.currentPage == 0) {
