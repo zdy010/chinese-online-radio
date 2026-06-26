@@ -26,7 +26,7 @@ fun AudioFavoritesTab(viewModel: AudioLibraryViewModel) {
         return
     }
 
-    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
+    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp)) {
         items(state.favorites, key = { it.trackPath }) { fav ->
             Row(
                 modifier = Modifier.fillMaxWidth().clickable { viewModel.playFavorite(fav) }.padding(vertical = 6.dp),

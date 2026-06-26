@@ -41,7 +41,7 @@ fun RadioScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         // 搜索栏 + 设置
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 2.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             OutlinedTextField(
                 value = searchQuery, onValueChange = { searchQuery = it },
                 placeholder = { Text("搜索电台...") },
@@ -61,7 +61,7 @@ fun RadioScreen(
             }
         }
 
-        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
+        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).padding(top = 0.dp)) { page ->
             when (page) {
                 0 -> HomeScreen(showTopBar = false, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(1) } },
