@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 fun AudioMainScreen(
     playerManager: PlayerManager
 ) {
-    val tabs = listOf("本地", "网络")
+    val tabs = listOf("本地", "网络", "收藏", "最近")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     val viewModel: AudioLibraryViewModel = hiltViewModel()
@@ -74,6 +74,8 @@ fun AudioMainScreen(
                 when (page) {
                     0 -> AudioLocalTab(playerManager = playerManager)
                     1 -> AudioLibraryScreen(viewModel = viewModel, showTopBar = false)
+                    2 -> AudioFavoritesTab(viewModel = viewModel)
+                    3 -> AudioRecentTab(viewModel = viewModel)
                 }
             }
 
