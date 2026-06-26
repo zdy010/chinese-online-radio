@@ -96,24 +96,15 @@ fun FavoritesScreen(
             }
         }
     ) { padding ->
+        val m = if (showTopBar) Modifier.padding(padding) else Modifier
         when {
             uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = m.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             uiState.favoriteStations.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = m.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Default.Favorite,
@@ -138,7 +129,7 @@ fun FavoritesScreen(
             }
             else -> {
                 LazyColumn(
-                    modifier = Modifier.padding(padding),
+                    modifier = m,
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

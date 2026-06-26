@@ -96,14 +96,18 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager) {
                                 currentFolder = item.path
                                 reload()
                             } else {
-                                // 播放本地文件
-                                val file = com.radio.chinese.domain.model.OperaAudioFile(
-                                    fileId = item.path.hashCode().toLong(),
-                                    name = item.name, size = item.size,
-                                    categoryName = "本地", operaName = "",
-                                    downloadUrl = item.path
-                                )
-                                playerManager.playOperaFile(file, emptyList())
+                                // 播放本地文件，构建播放列表
+                                val audioItems = items.filter { !it.isFolder }
+                                val playlist = audioItems.map { ai ->
+                                    com.radio.chinese.domain.model.OperaAudioFile(
+                                        fileId = ai.path.hashCode().toLong(),
+                                        name = ai.name, size = ai.size,
+                                        categoryName = "本地", operaName = "",
+                                        downloadUrl = ai.path
+                                    )
+                                }
+                                val index = audioItems.indexOfFirst { it.path == item.path }.coerceAtLeast(0)
+                                playerManager.playOperaFile(playlist[index], playlist)
                             }
                         }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically

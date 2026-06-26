@@ -51,11 +51,12 @@ fun CategoryScreen(
             }
         }
     ) { padding ->
+        val m = if (showTopBar) Modifier.padding(padding) else Modifier
         if (selectedCategory == null) {
             // Category Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                modifier = Modifier.padding(padding),
+                modifier = m,
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -75,7 +76,7 @@ fun CategoryScreen(
             val currentStation by viewModel.playerManager.currentStation.collectAsState()
             val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
 
-            Column(modifier = Modifier.padding(padding)) {
+            Column(modifier = m) {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
