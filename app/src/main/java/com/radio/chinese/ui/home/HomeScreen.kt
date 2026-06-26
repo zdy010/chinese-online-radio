@@ -33,7 +33,8 @@ fun HomeScreen(
     onNavigateToCategory: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
@@ -42,14 +43,9 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("时光收音机") },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "设置")
-                    }
-                }
-            )
+            if (showTopBar) {
+            TopAppBar( title = { Text("时光收音机") }, actions = { IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, contentDescription = "设置") } } )
+            }
         },
         bottomBar = {
             if (currentStation != null) {

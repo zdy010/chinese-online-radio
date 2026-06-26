@@ -75,7 +75,8 @@ class FavoritesViewModel @Inject constructor(
 fun FavoritesScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: FavoritesViewModel = hiltViewModel()
+    viewModel: FavoritesViewModel = hiltViewModel(),
+    showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
@@ -83,6 +84,7 @@ fun FavoritesScreen(
 
     Scaffold(
         topBar = {
+            if (showTopBar) {
             TopAppBar(
                 title = { Text("我的收藏") },
                 navigationIcon = {
@@ -91,6 +93,7 @@ fun FavoritesScreen(
                     }
                 }
             )
+            }
         }
     ) { padding ->
         when {

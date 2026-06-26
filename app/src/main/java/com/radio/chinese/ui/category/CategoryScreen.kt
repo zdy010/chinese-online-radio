@@ -25,13 +25,15 @@ import com.radio.chinese.ui.home.StationListItem
 fun CategoryScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
+            if (showTopBar) {
             TopAppBar(
                 title = { Text(if (selectedCategory != null) getCategoryName(selectedCategory!!) else "分类浏览") },
                 navigationIcon = {
@@ -46,6 +48,7 @@ fun CategoryScreen(
                     }
                 }
             )
+            }
         }
     ) { padding ->
         if (selectedCategory == null) {

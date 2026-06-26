@@ -30,7 +30,8 @@ import com.radio.chinese.ui.common.MarqueeText
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioLibraryScreen(
-    viewModel: AudioLibraryViewModel = hiltViewModel()
+    viewModel: AudioLibraryViewModel = hiltViewModel(),
+    showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -58,6 +59,7 @@ fun AudioLibraryScreen(
 
     Scaffold(
         topBar = {
+            if (showTopBar) {
             TopAppBar(
                 title = {
                     when {
@@ -88,6 +90,7 @@ fun AudioLibraryScreen(
                     }
                 }
             )
+            }
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
