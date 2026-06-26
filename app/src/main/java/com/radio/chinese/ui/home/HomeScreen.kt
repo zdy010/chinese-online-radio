@@ -60,14 +60,7 @@ fun HomeScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Search Bar
-            SearchBar(
-                query = uiState.searchQuery,
-                onQueryChange = viewModel::updateSearchQuery,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
-            // Category Chips
+            // Category Chips (无空行)
             CategoryChipsRow(
                 categories = uiState.categories,
                 selectedCategory = uiState.selectedCategory,

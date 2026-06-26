@@ -31,7 +31,8 @@ import com.radio.chinese.ui.common.MarqueeText
 @Composable
 fun AudioLibraryScreen(
     viewModel: AudioLibraryViewModel = hiltViewModel(),
-    showTopBar: Boolean = true
+    showTopBar: Boolean = true,
+    showMiniPlayer: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -167,8 +168,8 @@ fun AudioLibraryScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            // MiniPlayer 播放条 — 只要有 currentTrack 就显示
-            if (uiState.currentTrack != null) {
+            // MiniPlayer 播放条 — 只要有 currentTrack 就显示（外层已接管时隐藏）
+            if (uiState.currentTrack != null && showMiniPlayer) {
                 MiniPlayerBar(
                     track = uiState.currentTrack!!,
                     isPlaying = uiState.isPlaying,
