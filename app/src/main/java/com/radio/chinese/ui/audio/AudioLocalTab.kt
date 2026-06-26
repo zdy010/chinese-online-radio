@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AudioLocalTab() {
+fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var items by remember { mutableStateOf<List<AudioTrack>>(emptyList()) }
@@ -95,6 +95,15 @@ fun AudioLocalTab() {
                                 folderStack = folderStack + currentFolder
                                 currentFolder = item.path
                                 reload()
+                            } else {
+                                // 播放本地文件
+                                val file = com.radio.chinese.domain.model.OperaAudioFile(
+                                    fileId = item.path.hashCode().toLong(),
+                                    name = item.name, size = item.size,
+                                    categoryName = "本地", operaName = "",
+                                    downloadUrl = item.path
+                                )
+                                playerManager.playOperaFile(file, emptyList())
                             }
                         }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
