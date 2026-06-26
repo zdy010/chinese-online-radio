@@ -39,6 +39,7 @@ class HomeViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
+    private val _recentIds = MutableStateFlow<List<String>>(emptyList())
 
     val uiState: StateFlow<HomeUiState> = combine(
         combine(_stations, _favoriteIds) { a, b -> Pair(a, b) },
@@ -57,6 +58,10 @@ class HomeViewModel @Inject constructor(
             error = error
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
+
+    val recentStations: StateFlow<List<RadioStation>> = combine(_recentIds, _stations) { ids, all ->
+        ids.mapNotNull { id -> all.find { it.id == id } }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         loadData()
@@ -95,6 +100,8 @@ class HomeViewModel @Inject constructor(
 
     fun playStation(station: RadioStation) {
         playerManager.playStation(station)
+        // 记录最近播放
+        _recentIds.value = (listOf(station.id) + _recentIds.value.filter { it != station.id }).take(20)
     }
 
     fun toggleFavorite(stationId: String) {

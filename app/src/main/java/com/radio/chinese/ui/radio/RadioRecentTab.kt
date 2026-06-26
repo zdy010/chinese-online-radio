@@ -4,47 +4,56 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.radio.chinese.service.PlayerManager
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.radio.chinese.ui.home.HomeViewModel
 
 @Composable
 fun RadioRecentTab(
-    playerManager: PlayerManager,
-    onNavigateToPlayer: (String) -> Unit
+    onNavigateToPlayer: (String) -> Unit,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
-    // 从 PlayerManager 获取播放历史中的电台
-    val stations by playerManager.currentStation.collectAsState()
-    val allStations = remember { mutableListOf<com.radio.chinese.domain.model.RadioStation>() }
+    val stations by viewModel.recentStations.collectAsState()
 
-    if (allStations.isEmpty()) {
+    if (stations.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("暂无最近播放", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-    } else {
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(allStations.toList()) { station ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().clickable { onNavigateToPlayer(station.id) },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Radio, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(station.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(station.category ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
+        return
+    }
+
+    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
+        items(stations) { station ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { onNavigateToPlayer(station.id) }.padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(station.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(station.category?.let { getCategoryName(it) } ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
     }
+}
+
+private fun getCategoryName(cat: String) = when (cat) {
+    "news" -> "新闻"
+    "music" -> "音乐"
+    "traffic" -> "交通"
+    "arts" -> "文艺"
+    "sports" -> "体育"
+    "finance" -> "财经"
+    "opera" -> "戏曲"
+    "tv_audio" -> "电视伴音"
+    else -> cat
 }

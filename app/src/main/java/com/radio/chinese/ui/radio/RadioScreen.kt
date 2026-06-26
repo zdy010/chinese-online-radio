@@ -46,7 +46,7 @@ fun RadioScreen(
                 value = searchQuery, onValueChange = { searchQuery = it },
                 placeholder = { Text("搜索电台...") },
                 singleLine = true,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(0.67f),
                 trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
             )
             if (pagerState.currentPage == 0) {
@@ -71,7 +71,7 @@ fun RadioScreen(
                     onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
                 2 -> FavoritesScreen(showTopBar = false, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
-                3 -> RadioRecentTab(playerManager = playerManager, onNavigateToPlayer = onNavigateToPlayer)
+                3 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer)
             }
         }
     }
