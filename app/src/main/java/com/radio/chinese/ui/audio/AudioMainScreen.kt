@@ -81,6 +81,15 @@ fun AudioMainScreen(
             }
         }
 
+        // 浏览时显示库名称
+        if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
+            uiState.browsingSource?.let { src ->
+                Text(src.name, style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
         Box(modifier = Modifier.weight(1f)) {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 when (page) {
