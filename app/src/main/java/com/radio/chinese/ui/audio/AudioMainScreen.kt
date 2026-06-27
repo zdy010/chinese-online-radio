@@ -54,7 +54,7 @@ fun AudioMainScreen(
             value = searchQuery, onValueChange = { searchQuery = it },
             placeholder = { Text("搜索音频...") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.5f).padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth(0.8f).padding(horizontal = 12.dp, vertical = 4.dp),
             trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
         )
 
@@ -69,8 +69,8 @@ fun AudioMainScreen(
             }
         }
 
-        // 网络 tab 的添加按钮（放在 tab 下方）
-        if (pagerState.currentPage == 1) {
+        // 网络 tab 的添加按钮（仅源列表页显示，进入浏览后隐藏）
+        if (pagerState.currentPage == 1 && !uiState.showBrowseContent) {
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.End) {
                 FilledTonalButton(onClick = { viewModel.showAddDialog() }) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
