@@ -74,11 +74,11 @@ fun RadioScreen(
                     onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(1) } },
                     onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(2) } },
                     onNavigateToSettings = onNavigateToSettings)
-                1 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
+                1 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
-                2 -> FavoritesScreen(showTopBar = false, onNavigateToPlayer = onNavigateToPlayer,
+                2 -> FavoritesScreen(showTopBar = false, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
-                3 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer)
+                3 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer, searchQuery = searchQuery)
             }
         }
     }

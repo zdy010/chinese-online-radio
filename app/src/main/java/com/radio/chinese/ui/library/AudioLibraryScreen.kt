@@ -99,6 +99,12 @@ fun AudioLibraryScreen(
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (uiState.showBrowseContent) {
+                // 库名称
+                uiState.browsingSource?.let { src ->
+                    Text(src.name, style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.primary)
+                }
                 BrowseScreen(
                     items = filteredBrowseItems,
                     isLoading = uiState.isLoading,
