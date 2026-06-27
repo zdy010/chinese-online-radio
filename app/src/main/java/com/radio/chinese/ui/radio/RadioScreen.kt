@@ -11,10 +11,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.category.CategoryScreen
 import com.radio.chinese.ui.favorites.FavoritesScreen
 import com.radio.chinese.ui.home.HomeScreen
+import com.radio.chinese.ui.home.HomeViewModel
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +33,10 @@ fun RadioScreen(
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
+    val homeViewModel: HomeViewModel = hiltViewModel()
+
+    // 搜索联动 HomeViewModel
+    LaunchedEffect(searchQuery) { homeViewModel.updateSearchQuery(searchQuery) }
 
     var lastBackMs by remember { mutableLongStateOf(0L) }
     val ctx = LocalContext.current
