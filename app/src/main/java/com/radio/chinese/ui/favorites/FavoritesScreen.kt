@@ -76,9 +76,11 @@ fun FavoritesScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: FavoritesViewModel = hiltViewModel(),
-    showTopBar: Boolean = true
+    showTopBar: Boolean = true,
+    searchQuery: String = ""
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val filteredStations = uiState.favoriteStations.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
 
@@ -103,7 +105,7 @@ fun FavoritesScreen(
                     CircularProgressIndicator()
                 }
             }
-            uiState.favoriteStations.isEmpty() -> {
+            filteredStations.isEmpty() -> {
                 Box(modifier = m.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
@@ -133,7 +135,7 @@ fun FavoritesScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(uiState.favoriteStations, key = { it.id }) { station ->
+                    items(filteredStations, key = { it.id }) { station ->
                         StationListItem(
                             station = station,
                             isPlaying = currentStation?.id == station.id && isPlaying,

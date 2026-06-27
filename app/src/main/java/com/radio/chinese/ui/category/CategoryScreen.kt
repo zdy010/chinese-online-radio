@@ -26,7 +26,8 @@ fun CategoryScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
-    showTopBar: Boolean = true
+    showTopBar: Boolean = true,
+    searchQuery: String = ""
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedCategory by remember { mutableStateOf<String?>(null) }
@@ -72,7 +73,7 @@ fun CategoryScreen(
             }
         } else {
             // Stations in selected category
-            val stations = uiState.stations.filter { it.category == selectedCategory }
+            val stations = uiState.stations.filter { it.category == selectedCategory && (searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true)) }
             val currentStation by viewModel.playerManager.currentStation.collectAsState()
             val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
 

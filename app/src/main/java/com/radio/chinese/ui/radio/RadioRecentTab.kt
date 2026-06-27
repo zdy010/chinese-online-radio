@@ -18,11 +18,13 @@ import com.radio.chinese.ui.home.HomeViewModel
 @Composable
 fun RadioRecentTab(
     onNavigateToPlayer: (String) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    searchQuery: String = ""
 ) {
     val stations by viewModel.recentStations.collectAsState()
+    val filtered = stations.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
 
-    if (stations.isEmpty()) {
+    if (filtered.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("暂无最近播放", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -33,7 +35,7 @@ fun RadioRecentTab(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp)
     ) {
-        items(stations) { station ->
+        items(filtered) { station ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
