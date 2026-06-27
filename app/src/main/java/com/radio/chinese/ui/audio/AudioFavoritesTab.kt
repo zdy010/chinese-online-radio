@@ -16,10 +16,11 @@ import androidx.compose.ui.unit.dp
 import com.radio.chinese.ui.library.AudioLibraryViewModel
 
 @Composable
-fun AudioFavoritesTab(viewModel: AudioLibraryViewModel) {
+fun AudioFavoritesTab(viewModel: AudioLibraryViewModel, searchQuery: String = "") {
     val state by viewModel.uiState.collectAsState()
+    val filtered = state.favorites.filter { searchQuery.isBlank() || it.trackName.contains(searchQuery, ignoreCase = true) }
 
-    if (state.favorites.isEmpty()) {
+    if (filtered.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("暂无收藏", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -30,7 +31,7 @@ fun AudioFavoritesTab(viewModel: AudioLibraryViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp)
     ) {
-        items(state.favorites, key = { it.trackPath }) { fav ->
+        items(filtered, key = { it.trackPath }) { fav ->
             Row(
                 modifier = Modifier.fillMaxWidth().clickable { viewModel.playFavorite(fav) }.padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically

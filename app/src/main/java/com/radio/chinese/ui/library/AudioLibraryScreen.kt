@@ -32,9 +32,11 @@ import com.radio.chinese.ui.common.MarqueeText
 fun AudioLibraryScreen(
     viewModel: AudioLibraryViewModel = hiltViewModel(),
     showTopBar: Boolean = true,
-    showMiniPlayer: Boolean = true
+    showMiniPlayer: Boolean = true,
+    searchQuery: String = ""
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val filteredSources = uiState.sources.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
     // 本地音频权限请求
@@ -116,7 +118,7 @@ fun AudioLibraryScreen(
                     onPlay = { fav -> viewModel.playFavorite(fav) },
                     onRemove = { path -> viewModel.toggleFavorite(path, "", "") }
                 )
-            } else if (uiState.sources.isEmpty() && !uiState.isLoading) {
+            } else if (filteredSources.isEmpty() && !uiState.isLoading) {
                 Column(
                     modifier = Modifier.align(Alignment.Center).padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -129,7 +131,7 @@ fun AudioLibraryScreen(
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(uiState.sources) { source ->
+                    items(filteredSources) { source ->
                         SourceCard(source = source, onClick = { viewModel.browseSource(source) }, onDelete = { viewModel.deleteSource(source.id) })
                     }
                 }

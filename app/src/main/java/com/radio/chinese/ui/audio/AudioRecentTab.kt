@@ -16,10 +16,11 @@ import com.radio.chinese.data.entity.AudioRecentEntity
 import com.radio.chinese.ui.library.AudioLibraryViewModel
 
 @Composable
-fun AudioRecentTab(viewModel: AudioLibraryViewModel) {
+fun AudioRecentTab(viewModel: AudioLibraryViewModel, searchQuery: String = "") {
     val state by viewModel.uiState.collectAsState()
+    val filtered = state.recentPlays.filter { searchQuery.isBlank() || it.trackName.contains(searchQuery, ignoreCase = true) }
 
-    if (state.recentPlays.isEmpty()) {
+    if (filtered.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("暂无最近播放", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -30,7 +31,7 @@ fun AudioRecentTab(viewModel: AudioLibraryViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp)
     ) {
-        items(state.recentPlays) { recent ->
+        items(filtered) { recent ->
             Row(
                 modifier = Modifier.fillMaxWidth().clickable { viewModel.playRecent(recent) }.padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically

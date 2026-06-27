@@ -85,9 +85,9 @@ fun AudioMainScreen(
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 when (page) {
                     0 -> AudioLocalTab(playerManager = playerManager)
-                    1 -> AudioLibraryScreen(viewModel = viewModel, showTopBar = false, showMiniPlayer = false)
-                    2 -> AudioFavoritesTab(viewModel = viewModel)
-                    3 -> AudioRecentTab(viewModel = viewModel)
+                    1 -> AudioLibraryScreen(viewModel = viewModel, showTopBar = false, showMiniPlayer = false, searchQuery = searchQuery)
+                    2 -> AudioFavoritesTab(viewModel = viewModel, searchQuery = searchQuery)
+                    3 -> AudioRecentTab(viewModel = viewModel, searchQuery = searchQuery)
                 }
             }
 

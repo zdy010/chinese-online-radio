@@ -70,11 +70,11 @@ fun RadioScreen(
 
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).padding(top = 0.dp)) { page ->
             when (page) {
-                0 -> HomeScreen(showTopBar = false, onNavigateToPlayer = onNavigateToPlayer,
+                0 -> HomeScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(1) } },
                     onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(2) } },
                     onNavigateToSettings = onNavigateToSettings)
-                1 -> CategoryScreen(showTopBar = false, onNavigateToPlayer = onNavigateToPlayer,
+                1 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
                 2 -> FavoritesScreen(showTopBar = false, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
