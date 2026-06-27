@@ -55,7 +55,7 @@ fun AudioMainScreen(
             value = searchQuery, onValueChange = { searchQuery = it },
             placeholder = { Text("搜索音频...") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.5f).padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth(0.8f).padding(horizontal = 12.dp, vertical = 4.dp),
             trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
         )
 
@@ -84,7 +84,7 @@ fun AudioMainScreen(
         Box(modifier = Modifier.weight(1f)) {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 when (page) {
-                    0 -> AudioLocalTab(playerManager = playerManager)
+                    0 -> AudioLocalTab(playerManager = playerManager, searchQuery = searchQuery)
                     1 -> AudioLibraryScreen(viewModel = viewModel, showTopBar = false, showMiniPlayer = false, searchQuery = searchQuery)
                     2 -> AudioFavoritesTab(viewModel = viewModel, searchQuery = searchQuery)
                     3 -> AudioRecentTab(viewModel = viewModel, searchQuery = searchQuery)

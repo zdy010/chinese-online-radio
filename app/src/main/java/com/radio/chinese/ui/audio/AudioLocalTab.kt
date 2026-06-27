@@ -25,10 +25,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager) {
+fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager, searchQuery: String = "") {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var items by remember { mutableStateOf<List<AudioTrack>>(emptyList()) }
+    val filteredItems = items.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
     var isLoading by remember { mutableStateOf(true) }
     var currentFolder by remember { mutableStateOf("") }
     var folderStack by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -82,13 +83,13 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager) {
 
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        } else if (items.isEmpty()) {
+        } else if (filteredItems.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("未找到音频文件", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                items(items) { item ->
+                items(filteredItems) { item ->
                     Row(
                         modifier = Modifier.fillMaxWidth().clickable {
                             if (item.isFolder) {
