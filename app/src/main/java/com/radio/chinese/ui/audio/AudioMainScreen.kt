@@ -85,7 +85,7 @@ fun AudioMainScreen(
         if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
             uiState.browsingSource?.let { src ->
                 Text(src.name, style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
                     color = MaterialTheme.colorScheme.primary)
             }
         }

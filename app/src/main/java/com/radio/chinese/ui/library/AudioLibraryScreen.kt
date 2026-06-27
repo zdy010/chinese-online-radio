@@ -97,7 +97,7 @@ fun AudioLibraryScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(modifier = Modifier.fillMaxSize().let { if (showTopBar) it.padding(padding) else it }) {
             if (uiState.showBrowseContent) {
                 BrowseScreen(
                     items = filteredBrowseItems,
