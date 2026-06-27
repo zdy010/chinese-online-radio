@@ -47,6 +47,7 @@ fun AudioMainScreen(
 
     // 搜索
     var searchQuery by remember { mutableStateOf("") }
+    LaunchedEffect(searchQuery) { viewModel.updateSearchQuery(searchQuery) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         // 搜索栏（缩小）
@@ -92,24 +93,29 @@ fun AudioMainScreen(
 
             // MiniPlayer：优先用 ViewModel 状态，否则用 PlayerManager 直接状态
             val hasPlayer = uiState.currentTrack != null || operaFile != null
+            val isLocalPlayback = uiState.currentTrack == null && operaFile != null
+            var localRepeatMode by remember { mutableIntStateOf(0) } // 0=ALL 1=ONE 2=RANDOM
             if (hasPlayer) {
                 val track = uiState.currentTrack ?: com.radio.chinese.domain.AudioTrack(
                     id = operaFile?.fileId?.toString() ?: "", name = operaFile?.name ?: "",
                     path = "", parentPath = "", isFolder = false, size = 0
                 )
+                val repeatDisplay = if (isLocalPlayback) {
+                    com.radio.chinese.ui.library.RepeatMode.entries[localRepeatMode % 3]
+                } else uiState.repeatMode
                 MiniPlayerBar(
                     track = track,
-                    isPlaying = if (uiState.currentTrack != null) uiState.isPlaying else operaPlaying,
-                    positionMs = if (uiState.currentTrack != null) uiState.positionMs else operaPos,
-                    durationMs = if (uiState.currentTrack != null) uiState.durationMs else operaDur,
-                    bitrateBps = if (uiState.currentTrack != null) uiState.bitrateBps else operaBr,
-                    onTogglePlayPause = { viewModel.togglePlayPause() },
-                    onStop = { viewModel.stopPlayback() },
-                    onSeek = { viewModel.seekTo(it) },
-                    onNext = { viewModel.playNext() },
-                    onPrevious = { viewModel.playPrevious() },
-                    onCycleRepeat = { viewModel.cycleRepeatMode() },
-                    repeatMode = uiState.repeatMode,
+                    isPlaying = if (!isLocalPlayback) uiState.isPlaying else operaPlaying,
+                    positionMs = if (!isLocalPlayback) uiState.positionMs else operaPos,
+                    durationMs = if (!isLocalPlayback) uiState.durationMs else operaDur,
+                    bitrateBps = if (!isLocalPlayback) uiState.bitrateBps else operaBr,
+                    onTogglePlayPause = { if (isLocalPlayback) playerManager.togglePlayPause() else viewModel.togglePlayPause() },
+                    onStop = { if (isLocalPlayback) playerManager.stopOpera() else viewModel.stopPlayback() },
+                    onSeek = { if (isLocalPlayback) playerManager.seekOperaTo(it) else viewModel.seekTo(it) },
+                    onNext = { if (isLocalPlayback) playerManager.playOperaNext() else viewModel.playNext() },
+                    onPrevious = { if (isLocalPlayback) playerManager.playOperaPrevious() else viewModel.playPrevious() },
+                    onCycleRepeat = { if (isLocalPlayback) localRepeatMode = (localRepeatMode + 1) % 3 else viewModel.cycleRepeatMode() },
+                    repeatMode = repeatDisplay,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
