@@ -29,10 +29,16 @@ fun RadioRecentTab(
         return
     }
 
-    LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp)
+    ) {
         items(stations) { station ->
             Row(
-                modifier = Modifier.fillMaxWidth().clickable { onNavigateToPlayer(station.id) }.padding(vertical = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToPlayer(station.id) }
+                    .padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
