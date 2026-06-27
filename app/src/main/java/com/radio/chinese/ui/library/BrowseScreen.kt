@@ -33,7 +33,7 @@ fun BrowseScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
-            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp)) {
                 items(items) { item ->
                     BrowseItem(
                         item = item,
