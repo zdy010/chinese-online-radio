@@ -37,6 +37,7 @@ fun AudioLibraryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val filteredSources = uiState.sources.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
+    val filteredBrowseItems = uiState.browseItems.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
     // 本地音频权限请求
@@ -99,7 +100,7 @@ fun AudioLibraryScreen(
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (uiState.showBrowseContent) {
                 BrowseScreen(
-                    items = uiState.browseItems,
+                    items = filteredBrowseItems,
                     isLoading = uiState.isLoading,
                     error = uiState.error,
                     onItemClick = { item ->
