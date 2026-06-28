@@ -44,3 +44,6 @@ test_*.py
 expected_*.py
 expected_*.json
 *.log
+
+# Local private config (easter egg trigger, etc.)
+app/src/main/java/com/radio/chinese/config/EasterEggConfig.kt
