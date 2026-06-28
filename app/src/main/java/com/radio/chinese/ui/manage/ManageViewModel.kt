@@ -151,7 +151,7 @@ class ManageViewModel @Inject constructor(
     /** 检测是否为彩蛋触发码 */
     private fun isEasterEgg(streamUrl: String): Boolean {
         val trimmed = streamUrl.trim()
-        return trimmed == com.radio.chinese.config.EasterEggConfig.TRIGGER_CODE || trimmed == "xxx"
+        return trimmed == com.radio.chinese.config.EasterEggConfig.RADIO_EASTER_EGG || trimmed == "xxx"
     }
 
     fun removeCustomStation(stationId: String) {
