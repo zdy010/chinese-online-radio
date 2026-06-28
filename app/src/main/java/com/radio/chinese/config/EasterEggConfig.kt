@@ -19,7 +19,8 @@ object EasterEggConfig {
     // ── 音频库快捷码 ───────────────────────────────────────
     /** 快捷码 → WebDAV 源配置映射（url 输入快捷码即可） */
     val QUICK_CODES: Map<String, QuickCodeEntry> = mapOf(
-        "xxx" to QuickCodeEntry("示例源", SourceType.WEBDAV, "https://example.com/dav", "user", "pass")
+        "xxx" to QuickCodeEntry("123云盘·豫剧·按类型", SourceType.WEBDAV, "https://webdav.example.com", "username", "password"),
+        "xxx2" to QuickCodeEntry("123云盘·豫剧·按演唱者", SourceType.WEBDAV, "https://webdav.example.com", "username", "password")
     )
 }
 
