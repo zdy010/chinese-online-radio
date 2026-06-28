@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -15,6 +17,13 @@ val gitCommitCount: Int by lazy {
             .start()
         process.inputStream.bufferedReader().readText().trim().toIntOrNull() ?: 1
     } catch (_: Exception) { 1 }
+}
+
+// Load keystore properties for release signing
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
@@ -43,10 +52,21 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            if (keystorePropertiesFile.exists()) {
+                // Use release signing config from keystore.properties
+                // Note: STORE_FILE is relative to rootProject
+                storeFile = rootProject.file(keystoreProperties["STORE_FILE"] as String)
+                storePassword = keystoreProperties["STORE_PASSWORD"] as String
+                keyAlias = keystoreProperties["KEY_ALIAS"] as String
+                keyPassword = keystoreProperties["KEY_PASSWORD"] as String
+            } else {
+                // Fall back to debug keystore for development
+                println("Warning: keystore.properties not found, using debug keystore for release build!")
+                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
     }
 
@@ -70,12 +90,24 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    buildFeatures {
+        buildConfig = true
+        compose = true
     }
 
-    buildFeatures {
-        compose = true
+    defaultConfig {
+        // Enable easter egg for local builds (controlled by local.properties)
+        val localPropsFile = rootProject.file("local.properties")
+        val localProps = Properties()
+        if (localPropsFile.exists()) {
+            localProps.load(localPropsFile.inputStream())
+        }
+        val enableEasterEgg = localProps.getProperty("enableEasterEgg", "false").toBoolean()
+        buildConfigField("boolean", "ENABLE_EASTER_EGG", enableEasterEgg.toString())
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 
