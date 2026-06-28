@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.StreamStatus
+import kotlinx.coroutines.launch
 
 private val CATEGORIES = listOf(
     "news" to "新闻", "music" to "音乐", "traffic" to "交通",
@@ -31,6 +32,18 @@ fun ManageScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var actionStation by remember { mutableStateOf<RadioStation?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Show easter egg message
+    LaunchedEffect(uiState.easterEggMessage) {
+        uiState.easterEggMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearEasterEggMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -53,7 +66,8 @@ fun ManageScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // Checking progress

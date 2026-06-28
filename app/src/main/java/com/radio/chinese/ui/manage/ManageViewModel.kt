@@ -2,6 +2,7 @@ package com.radio.chinese.ui.manage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.radio.chinese.BuildConfig
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.StreamCheckResult
@@ -26,7 +27,8 @@ data class ManageUiState(
     val isChecking: Boolean = false,
     val checkedCount: Int = 0,
     val totalCount: Int = 0,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val easterEggMessage: String? = null
 )
 
 @HiltViewModel
@@ -121,6 +123,16 @@ class ManageViewModel @Inject constructor(
         frequency: String,
         description: String
     ) {
+        // 检测彩蛋
+        if (BuildConfig.ENABLE_EASTER_EGG && isEasterEgg(streamUrl)) {
+            viewModelScope.launch {
+                repository.loadDefaultStationsToCustom()
+                loadData()
+                _uiState.update { it.copy(easterEggMessage = "🎉 默认电台已加载！可在列表中查看和管理") }
+            }
+            return
+        }
+
         viewModelScope.launch {
             val id = "custom_${System.currentTimeMillis()}"
             val station = RadioStation(
@@ -136,11 +148,21 @@ class ManageViewModel @Inject constructor(
         }
     }
 
+    /** 检测是否为彩蛋触发码 */
+    private fun isEasterEgg(streamUrl: String): Boolean {
+        val trimmed = streamUrl.trim()
+        return trimmed == "xxx"
+    }
+
     fun removeCustomStation(stationId: String) {
         viewModelScope.launch {
             repository.removeCustomStation(stationId)
             repository.markValid(stationId)
             loadData()
         }
+    }
+
+    fun clearEasterEggMessage() {
+        _uiState.update { it.copy(easterEggMessage = null) }
     }
 }

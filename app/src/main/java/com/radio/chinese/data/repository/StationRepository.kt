@@ -180,4 +180,22 @@ class StationRepository @Inject constructor(
         current.remove(stationId)
         preferences.setInvalidStationIds(current)
     }
+
+    // ---- 彩蛋：加载默认电台到自定义列表 ----
+
+    /** 将内置电台加载到自定义电台列表中（彩蛋功能） */
+    suspend fun loadDefaultStationsToCustom() {
+        val builtIn = loadBuiltInStations()
+        val current = getCustomStations().toMutableList()
+        val existingIds = current.map { it.id }.toSet()
+
+        builtIn.forEach { station ->
+            val customId = "default_${station.id}"
+            if (customId !in existingIds) {
+                current.add(station.copy(id = customId))
+            }
+        }
+
+        preferences.setCustomStationsJson(json.encodeToString(current))
+    }
 }
