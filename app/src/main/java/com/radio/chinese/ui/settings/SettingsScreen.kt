@@ -24,6 +24,14 @@ data class SettingsUiState(
     val themeMode: Int = 0
 )
 
+/**
+ * 工信部 App 备案号。
+ * 拿到备案号后填入（如 "粤ICP备2026XXXXXX号-1A"），关于区域将自动展示并支持跳转核验。
+ * 为空字符串时不显示。
+ */
+const val ICP_FILING_NUMBER = ""
+const val ICP_QUERY_URL = "https://beian.miit.gov.cn"
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferences: RadioPreferences
@@ -117,6 +125,30 @@ fun SettingsScreen(
             )
 
             HorizontalDivider()
+
+            // ICP filing number (shown once available; tap to verify on MIIT site)
+            if (ICP_FILING_NUMBER.isNotBlank()) {
+                val context = LocalContext.current
+                ListItem(
+                    headlineContent = { Text("App 备案号") },
+                    supportingContent = { Text("$ICP_FILING_NUMBER（点击查询核验）") },
+                    leadingContent = {
+                        Icon(Icons.Default.Verified, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        runCatching {
+                            context.startActivity(
+                                android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    android.net.Uri.parse(ICP_QUERY_URL)
+                                )
+                            )
+                        }
+                    }
+                )
+
+                HorizontalDivider()
+            }
 
             // Version info at bottom
             Spacer(modifier = Modifier.weight(1f))
