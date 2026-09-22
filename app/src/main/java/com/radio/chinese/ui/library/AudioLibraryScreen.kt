@@ -1,104 +1,89 @@
 package com.radio.chinese.ui.library
 
-import android.Manifest
-import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.radio.chinese.data.entity.AudioFavoriteEntity
-import com.radio.chinese.data.entity.AudioRecentEntity
 import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.SourceType
-import com.radio.chinese.ui.common.MarqueeText
+import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.ErrorState
+import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.theme.Dimens
 
+/**
+ * 音频库内容区。
+ *
+ * 播放条不再在这里画：宿主 AudioMainScreen 用 Scaffold.bottomBar 统一承载，
+ * 否则它会以 overlay 压在列表上，列表最后一项永远点不到。
+ * 顶栏也交给宿主：此前 4 个页面各写一段 if (showTopBar) TopAppBar，
+ * 而调用方一律传 false，于是整段是永不渲染的死代码，刷新按钮因此拿不到。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioLibraryScreen(
     viewModel: AudioLibraryViewModel = hiltViewModel(),
-    showTopBar: Boolean = true,
-    showMiniPlayer: Boolean = true,
     searchQuery: String = ""
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val filteredSources = uiState.sources.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
-    val filteredBrowseItems = uiState.browseItems.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    // 本地音频权限请求
-    val audioPermission = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
-    val audioPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
-
-    LaunchedEffect(Unit) {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(context, audioPermission)
-            != android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-            audioPermLauncher.launch(audioPermission)
-        }
+    val filteredSources = uiState.sources.filter {
+        searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true)
+    }
+    val filteredBrowseItems = uiState.browseItems.filter {
+        searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true)
     }
 
-    // 拦截系统返回键：只在音频库内部回退，不跳出 tab
-    BackHandler(enabled = uiState.showBrowseContent || uiState.showFavorites) {
-        if (uiState.showFavorites) {
-            viewModel.hideFavorites()
-        } else {
-            viewModel.browseBack()
-        }
+    BackHandler(enabled = uiState.showBrowseContent) {
+        viewModel.browseBack()
     }
 
-    Scaffold(
-        topBar = {
-            if (showTopBar) {
-            TopAppBar(
-                title = {
-                    when {
-                        uiState.showFavorites -> Text("收藏")
-                        uiState.browsingSource != null -> Text(uiState.browsingSource!!.name)
-                        else -> Text("我的音频库")
-                    }
-                },
-                navigationIcon = {
-                    if (uiState.browsingSource != null || uiState.showFavorites) {
-                        IconButton(onClick = {
-                            if (uiState.showFavorites) viewModel.hideFavorites()
-                            else viewModel.browseBack()
-                        }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-                        }
-                    }
-                },
-                actions = {
-                    if (uiState.browsingSource != null) {
-                        IconButton(onClick = { viewModel.refreshBrowse() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "刷新")
-                        }
-                    } else if (!uiState.showFavorites) {
-                        IconButton(onClick = { viewModel.showAddDialog() }) {
-                            Icon(Icons.Default.Add, contentDescription = "添加")
-                        }
-                    }
-                }
-            )
-            }
-        }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().let { if (showTopBar) it.padding(padding) else it }) {
-            if (uiState.showBrowseContent) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.showBrowseContent -> {
                 BrowseScreen(
                     items = filteredBrowseItems,
                     isLoading = uiState.isLoading,
@@ -109,86 +94,83 @@ fun AudioLibraryScreen(
                     },
                     onRefresh = { viewModel.refreshBrowse() },
                     onToggleFavorite = { item ->
-                        viewModel.toggleFavorite(item.path, item.name, uiState.browsingSource?.name ?: "")
+                        val source = uiState.browsingSource
+                        if (source != null) {
+                            viewModel.toggleFavorite(source.id, item.path, item.name, source.name)
+                        }
                     },
                     isFavorited = { path -> viewModel.isFavorited(path) }
                 )
-            } else if (uiState.showFavorites) {
-                FavoritesList(
-                    favorites = uiState.favorites,
-                    onPlay = { fav -> viewModel.playFavorite(fav) },
-                    onRemove = { path -> viewModel.toggleFavorite(path, "", "") }
+            }
+
+            uiState.isLoading && uiState.sources.isEmpty() -> {
+                LoadingState(text = "正在读取音频库…")
+            }
+
+            uiState.error != null && !uiState.isLoading -> {
+                ErrorState(
+                    message = uiState.error!!,
+                    hint = "如果刚改过网络或网盘授权，重新加载试试",
+                    onRetry = { viewModel.loadSources() }
                 )
-            } else if (filteredSources.isEmpty() && !uiState.isLoading) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center).padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            }
+
+            filteredSources.isEmpty() -> {
+                EmptyState(
+                    icon = Icons.Default.LibraryMusic,
+                    title = if (searchQuery.isBlank()) "还没有音频库" else "没有匹配「$searchQuery」的音频库",
+                    hint = if (searchQuery.isBlank()) {
+                        "支持本地目录、WebDAV、M3U 播放列表"
+                    } else {
+                        "换个关键字试试"
+                    },
+                    actionLabel = if (searchQuery.isBlank()) "添加来源" else null,
+                    onAction = if (searchQuery.isBlank()) { { viewModel.showAddDialog() } } else null
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    contentPadding = PaddingValues(Dimens.ScreenPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.ListGap)
                 ) {
-                    Icon(Icons.Default.LibraryMusic, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("暂无音频库", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("点击右上角 + 添加音频来源\n支持本地、WebDAV、M3U 播放列表", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            } else {
-                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(filteredSources) { source ->
-                        SourceCard(source = source, onClick = { viewModel.browseSource(source) }, onDelete = { viewModel.deleteSource(source.id) })
+                    items(filteredSources, key = { it.id }) { source ->
+                        SourceCard(
+                            source = source,
+                            onClick = { viewModel.browseSource(source) },
+                            onDelete = { viewModel.deleteSource(source.id) }
+                        )
                     }
                 }
-            }
-
-            if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-
-            // MiniPlayer 播放条 — 只要有 currentTrack 就显示（外层已接管时隐藏）
-            if (uiState.currentTrack != null && showMiniPlayer) {
-                MiniPlayerBar(
-                    track = uiState.currentTrack!!,
-                    isPlaying = uiState.isPlaying,
-                    positionMs = uiState.positionMs,
-                    durationMs = uiState.durationMs,
-                    bitrateBps = uiState.bitrateBps,
-                    onTogglePlayPause = { viewModel.togglePlayPause() },
-                    onStop = { viewModel.stopPlayback() },
-                    onSeek = { viewModel.seekTo(it) },
-                    onNext = { viewModel.playNext() },
-                    onPrevious = { viewModel.playPrevious() },
-                    onCycleRepeat = { viewModel.cycleRepeatMode() },
-                    repeatMode = uiState.repeatMode,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
             }
         }
     }
 
-    if (uiState.showAddDialog) {
-        AddSourceDialog(
-            isLoading = uiState.isLoading,
-            error = uiState.error,
-            onDismiss = { viewModel.hideAddDialog() },
-            onConfirm = { name, type, url, username, password ->
-                viewModel.addSource(name, type, url, username, password)
-            }
-        )
-    }
+    // 添加来源对话框由宿主 AudioMainScreen 渲染：此前它只在本页（网络 Tab）合成，
+    // 而右上角的“+”在四个 Tab 上都可见，在本地/收藏/最近里按它只会把 showAddDialog 置 true
+    // 但什么也不会发生，而且这个标志会一直挂着，等用户切到网络 Tab 时突然弹框。
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().combinedClickable(
-            onClick = onClick,
-            onLongClick = { showDeleteConfirm = true }
-        ),
-        shape = RoundedCornerShape(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showDeleteConfirm = true }
+            ),
+        shape = MaterialTheme.shapes.medium
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(Dimens.CardPadding)
+                .fillMaxWidth()
+                .heightIn(min = Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -200,12 +182,48 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
                 },
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(Dimens.IconLarge)
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Dimens.GapLarge))
             Column(modifier = Modifier.weight(1f)) {
-                MarqueeText(source.name, style = MaterialTheme.typography.titleSmall, enabled = false, modifier = Modifier.fillMaxWidth())
-                Text(source.url, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = source.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = source.url,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            // 删除原先只挂在长按上，界面上没有任何提示，中老年用户发现不了
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "${source.name}的更多操作"
+                    )
+                }
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text("打开") },
+                        onClick = {
+                            showMenu = false
+                            onClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        onClick = {
+                            showMenu = false
+                            showDeleteConfirm = true
+                        }
+                    )
+                }
             }
         }
     }
@@ -214,127 +232,15 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("删除音频库") },
-            text = { Text("确定要删除「${source.name}」吗？") },
+            text = { Text("确定要删除「${source.name}」吗？已缓存的内容会一并清理。") },
             confirmButton = {
-                TextButton(onClick = { onDelete(); showDeleteConfirm = false }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { onDelete(); showDeleteConfirm = false }) {
+                    Text("删除", color = MaterialTheme.colorScheme.error)
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text("取消") }
             }
         )
     }
-}
-
-@Composable
-fun FavoritesList(favorites: List<AudioFavoriteEntity>, onPlay: (AudioFavoriteEntity) -> Unit, onRemove: (String) -> Unit) {
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(favorites) { fav ->
-            Card(modifier = Modifier.fillMaxWidth().clickable { onPlay(fav) }, shape = RoundedCornerShape(12.dp)) {
-                Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        MarqueeText(fav.trackName, style = MaterialTheme.typography.bodyLarge, enabled = true, modifier = Modifier.fillMaxWidth())
-                        Text(fav.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    IconButton(onClick = { onRemove(fav.trackPath) }) {
-                        Icon(Icons.Default.Delete, "取消收藏", tint = MaterialTheme.colorScheme.error)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun RecentPlayItem(recent: AudioRecentEntity, onPlay: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onPlay).padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            MarqueeText(recent.trackName, style = MaterialTheme.typography.bodyMedium, enabled = false, modifier = Modifier.fillMaxWidth())
-            Text(recent.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-fun MiniPlayerBar(
-    track: com.radio.chinese.domain.AudioTrack,
-    isPlaying: Boolean,
-    positionMs: Long,
-    durationMs: Long,
-    bitrateBps: Int,
-    onTogglePlayPause: () -> Unit,
-    onStop: () -> Unit,
-    onSeek: (Long) -> Unit,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit,
-    onCycleRepeat: () -> Unit,
-    repeatMode: com.radio.chinese.ui.library.RepeatMode,
-    modifier: Modifier = Modifier
-) {
-    var sliderPos by remember(positionMs) { mutableFloatStateOf(positionMs.toFloat()) }
-    var isDragging by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = modifier.fillMaxWidth().padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp).fillMaxWidth()) {
-            // 第1块：曲目名称（独占一行）
-            MarqueeText(track.name, style = MaterialTheme.typography.titleMedium.copy(fontSize = androidx.compose.ui.unit.TextUnit(16f, androidx.compose.ui.unit.TextUnitType.Sp)), enabled = true, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
-
-            // 第2块：进度条 + 时间/码率
-            Slider(
-                value = if (isDragging) sliderPos else positionMs.toFloat(),
-                onValueChange = { sliderPos = it; isDragging = true },
-                onValueChangeFinished = { onSeek(sliderPos.toLong()); isDragging = false },
-                valueRange = 0f..durationMs.toFloat().coerceAtLeast(1f),
-                modifier = Modifier.fillMaxWidth().height(24.dp)
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatPlaybackTime(positionMs, durationMs), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (bitrateBps > 0) Text("${bitrateBps / 1000}kbps", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
-            }
-
-            // 第3块：功能按钮（居中）
-            Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onCycleRepeat) {
-                    Text(
-                        when (repeatMode) {
-                            RepeatMode.ALL -> "全部"
-                            RepeatMode.ONE -> "单曲"
-                            RepeatMode.RANDOM -> "随机"
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                IconButton(onClick = onPrevious) {
-                    Icon(Icons.Default.SkipPrevious, "上一首", modifier = Modifier.size(28.dp))
-                }
-                IconButton(onClick = onTogglePlayPause) {
-                    Icon(if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null, modifier = Modifier.size(36.dp))
-                }
-                IconButton(onClick = onNext) {
-                    Icon(Icons.Default.SkipNext, "下一首", modifier = Modifier.size(28.dp))
-                }
-                IconButton(onClick = onStop) {
-                    Icon(Icons.Default.Close, "停止")
-                }
-            }
-        }
-    }
-}
-
-private fun formatPlaybackTime(posMs: Long, durMs: Long): String {
-    val pos = posMs / 1000
-    val dur = durMs / 1000
-    if (dur > 0) return "${pos / 60}:${(pos % 60).toString().padStart(2, '0')} / ${dur / 60}:${(dur % 60).toString().padStart(2, '0')}"
-    return "${pos / 60}:${(pos % 60).toString().padStart(2, '0')}"
 }

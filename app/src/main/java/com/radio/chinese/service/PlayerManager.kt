@@ -58,6 +58,14 @@ class PlayerManager @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    /**
+     * 过渡性提示（如「正在尝试第 2 个节目源」）。
+     * 此前这类进度文字被塞进 error 通道，而 UI 用红底渲染 error，
+     * 导致每次正常起播都红框一闪；红色是本应用唯一的情绪信号，不能当进度用。
+     */
+    private val _status = MutableStateFlow<String?>(null)
+    val status: StateFlow<String?> = _status
+
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected
 
@@ -89,6 +97,10 @@ class PlayerManager @Inject constructor(
 
     private val _isOperaMode = MutableStateFlow(false)
     val isOperaMode: StateFlow<Boolean> = _isOperaMode
+
+    /** 戏曲循环模式由本类持有，UI 只读，避免「按钮文字变了但行为不变」 */
+    private val _operaRepeatMode = MutableStateFlow(OperaRepeatMode.ALL)
+    val operaRepeatMode: StateFlow<OperaRepeatMode> = _operaRepeatMode
 
     private var pendingOpera: OperaAudioFile? = null
     private var pendingOperaPlaylist: List<OperaAudioFile> = emptyList()
@@ -129,6 +141,7 @@ class PlayerManager @Inject constructor(
                     Player.STATE_READY -> {
                         _isPlaying.value = controller?.isPlaying == true
                         _error.value = null
+                        _status.value = null
                         if (_isOperaMode.value) {
                             _operaDuration.value = controller?.duration?.coerceAtLeast(0) ?: 0L
                             val br = try {
@@ -143,7 +156,20 @@ class PlayerManager @Inject constructor(
                     Player.STATE_ENDED -> {
                         _isPlaying.value = false
                         stopOperaPositionUpdater()
-                        if (_isOperaMode.value) playOperaNext()
+                        if (_isOperaMode.value) {
+                            when (_operaRepeatMode.value) {
+                                OperaRepeatMode.ONE -> {
+                                    clearSavedOperaPosition()
+                                    controller?.seekTo(0)
+                                    controller?.play()
+                                }
+                                OperaRepeatMode.RANDOM -> {
+                                    saveOperaPosition()
+                                    playOperaRandom()
+                                }
+                                OperaRepeatMode.ALL -> playOperaNext()
+                            }
+                        }
                     }
                     Player.STATE_BUFFERING -> {
                         _error.value = null
@@ -160,10 +186,10 @@ class PlayerManager @Inject constructor(
                     onSourceFailed()
                     when (error.errorCode) {
                         androidx.media3.common.PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW ->
-                            _error.value = "直播流超时，尝试其他源…"
+                            _status.value = "直播流超时，正在换下一个节目源…"
                         androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ->
-                            _error.value = "网络连接失败，尝试其他源…"
-                        else -> _error.value = "播放失败，尝试其他源…"
+                            _status.value = "网络连接失败，正在换下一个节目源…"
+                        else -> _status.value = "播放失败，正在换下一个节目源…"
                     }
                 }
             }
@@ -178,6 +204,7 @@ class PlayerManager @Inject constructor(
         stopOpera()
         _currentStation.value = station
         _error.value = null
+        _status.value = null
 
         // 加载该电台的排序节目源
         scope.launch {
@@ -208,6 +235,7 @@ class PlayerManager @Inject constructor(
     private fun tryPlaySource() {
         if (sourceQueueIndex >= sourceQueue.size) {
             // 所有源都失败了
+            _status.value = null
             _error.value = "所有节目源均无法播放"
             _playbackState.value = Player.STATE_IDLE
             return
@@ -216,7 +244,7 @@ class PlayerManager @Inject constructor(
         val source = sourceQueue[sourceQueueIndex]
         _currentSource.value = source
         _playbackState.value = Player.STATE_BUFFERING
-        _error.value = "尝试节目源 ${source.label.ifEmpty { "${sourceQueueIndex + 1}/${sourceQueue.size}" }}…"
+        _status.value = "正在尝试节目源 ${source.label.ifEmpty { "${sourceQueueIndex + 1}/${sourceQueue.size}" }}…"
 
         val ctrl = controller ?: return
         val station = _currentStation.value ?: return
@@ -261,6 +289,8 @@ class PlayerManager @Inject constructor(
             stationRepository.recordSourceSuccess(station.id, source.url, 0)
             // 刷新分数
             _sourceScores.value = stationRepository.getSourcesWithScore(station.id)
+            // 「最近播放」需要跨进程重启存活，此前只存在 ViewModel 内存里
+            preferences.addRecentStationId(station.id)
         }
     }
 
@@ -343,6 +373,7 @@ class PlayerManager @Inject constructor(
         _currentStation.value = null
         _isOperaMode.value = true
         _error.value = null
+        _status.value = null
         _operaPlaylist.value = playlist
         val index = playlist.indexOfFirst { it.fileId == file.fileId }
         _operaIndex.value = index
@@ -417,6 +448,33 @@ class PlayerManager @Inject constructor(
         playOperaFile(next, playlist, local)
     }
 
+    fun cycleOperaRepeatMode() {
+        _operaRepeatMode.value = when (_operaRepeatMode.value) {
+            OperaRepeatMode.ALL -> OperaRepeatMode.ONE
+            OperaRepeatMode.ONE -> OperaRepeatMode.RANDOM
+            OperaRepeatMode.RANDOM -> OperaRepeatMode.ALL
+        }
+    }
+
+    fun setOperaRepeatMode(mode: OperaRepeatMode) {
+        _operaRepeatMode.value = mode
+    }
+
+    /** 随机切歌：避开当前这首，避免「随机到同一首」看起来没反应 */
+    private fun playOperaRandom() {
+        val playlist = _operaPlaylist.value
+        if (playlist.isEmpty()) return
+        val currentId = _operaFile.value?.fileId
+        val candidates = playlist.filter { it.fileId != currentId }
+        if (candidates.isEmpty()) {
+            controller?.seekTo(0)
+            controller?.play()
+            return
+        }
+        val pick = candidates.random()
+        playOperaFile(pick, playlist, downloadedPaths[pick.fileId])
+    }
+
     fun playOperaPrevious() {
         val playlist = _operaPlaylist.value
         val idx = _operaIndex.value
@@ -444,8 +502,18 @@ class PlayerManager @Inject constructor(
 
     private fun saveOperaPosition() {
         val file = _operaFile.value ?: return
-        val pos = controller?.currentPosition ?: return
-        scope.launch { preferences.saveOperaPlayPosition(file.fileId, pos) }
+        val ctrl = controller ?: return
+        val pos = ctrl.currentPosition
+        val duration = ctrl.duration ?: 0L
+        // 播到结尾的歌不再记断点，否则下次一打开就是末尾、立刻触发自动切歌
+        val effective = if (duration > 0 && duration - pos <= 3_000L) 0L else pos
+        scope.launch { preferences.saveOperaPlayPosition(file.fileId, effective) }
+    }
+
+    /** 单曲循环重播前清掉末尾断点 */
+    private fun clearSavedOperaPosition() {
+        val file = _operaFile.value ?: return
+        scope.launch { preferences.saveOperaPlayPosition(file.fileId, 0L) }
     }
 
     private fun startOperaPositionUpdater() {
@@ -491,3 +559,6 @@ class PlayerManager @Inject constructor(
         _isOperaMode.value = false
     }
 }
+
+/** 戏曲播放循环模式。 */
+enum class OperaRepeatMode { ALL, ONE, RANDOM }

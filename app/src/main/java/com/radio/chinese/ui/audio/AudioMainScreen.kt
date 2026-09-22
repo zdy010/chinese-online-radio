@@ -1,22 +1,52 @@
 package com.radio.chinese.ui.audio
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
+import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.SearchBarRow
+import com.radio.chinese.ui.common.OperaMiniPlayerBar
+import com.radio.chinese.ui.common.bitrateText
+import com.radio.chinese.ui.common.mediaTimeText
+import com.radio.chinese.ui.library.AddSourceDialog
 import com.radio.chinese.ui.library.AudioLibraryScreen
 import com.radio.chinese.ui.library.AudioLibraryViewModel
-import com.radio.chinese.ui.library.MiniPlayerBar
+import com.radio.chinese.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,104 +60,128 @@ fun AudioMainScreen(
     val viewModel: AudioLibraryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    // 本地播放状态（绕开 ViewModel 直接读 PlayerManager）
+    // 播放状态统一读 PlayerManager：网络与本地最终都经由它播出，
+    // 此前同时读 ViewModel 和 PlayerManager 两份，切 Tab 时会出现进度不一致。
     val operaFile by playerManager.operaFile.collectAsState()
     val operaPlaying by playerManager.isPlaying.collectAsState()
     val operaPos by playerManager.operaPosition.collectAsState()
     val operaDur by playerManager.operaDuration.collectAsState()
     val operaBr by playerManager.operaBitrate.collectAsState()
+    val operaRepeat by playerManager.operaRepeatMode.collectAsState()
 
     var lastBackMs by remember { mutableLongStateOf(0L) }
     val ctx = LocalContext.current
     BackHandler {
         val now = System.currentTimeMillis()
         if (now - lastBackMs < 2000L) (ctx as? android.app.Activity)?.finish()
-        else { lastBackMs = now; android.widget.Toast.makeText(ctx, "再按一次退出", android.widget.Toast.LENGTH_SHORT).show() }
+        else {
+            lastBackMs = now
+            android.widget.Toast.makeText(ctx, "再按一次退出", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
-    // 搜索
     var searchQuery by remember { mutableStateOf("") }
     LaunchedEffect(searchQuery) { viewModel.updateSearchQuery(searchQuery) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // 搜索栏（缩小）
-        OutlinedTextField(
-            value = searchQuery, onValueChange = { searchQuery = it },
-            placeholder = { Text("搜索音频...") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-            trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
-        )
+    val trackTitle = uiState.currentTrack?.name ?: operaFile?.name ?: ""
+    val hasPlayer = trackTitle.isNotEmpty()
 
-        // Tab 栏
-        TabRow(selectedTabIndex = pagerState.currentPage) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                    text = { Text(title) }
+    // 用 Scaffold.bottomBar 承载播放条：内容区自动让位，
+    // 不再用 Box overlay 压在列表上（那样列表最后一项永远点不到）。
+    Scaffold(
+        contentWindowInsets = NestedWindowInsets,
+        bottomBar = {
+            if (hasPlayer) {
+                OperaMiniPlayerBar(
+                    title = trackTitle,
+                    timeText = mediaTimeText(operaPos, operaDur),
+                    bitrateText = bitrateText(operaBr),
+                    positionMs = operaPos,
+                    durationMs = operaDur,
+                    isPlaying = operaPlaying,
+                    repeatLabel = when (operaRepeat) {
+                        OperaRepeatMode.ALL -> "列表循环"
+                        OperaRepeatMode.ONE -> "单曲循环"
+                        OperaRepeatMode.RANDOM -> "随机播放"
+                    },
+                    onPlayPause = { playerManager.togglePlayPause() },
+                    onPrevious = { playerManager.playOperaPrevious() },
+                    onNext = { playerManager.playOperaNext() },
+                    onStop = { playerManager.stopOpera() },
+                    onCycleRepeat = { playerManager.cycleOperaRepeatMode() },
+                    onSeek = { playerManager.seekOperaTo(it) }
                 )
             }
         }
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            // 与电台页共用 SearchBarRow：搜索框同一宽度、同一纵向节奏，
+            // 动作按钮固定在右侧同一个 48dp 槽位里（原先是一整行 FilledTonalButton，把 TabRow 顶下去一段）
+            SearchBarRow(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = "搜索音频",
+                actions = {
+                    if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
+                        IconButton(onClick = { viewModel.refreshBrowse() }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "刷新目录")
+                        }
+                    } else {
+                        IconButton(onClick = { viewModel.showAddDialog() }) {
+                            Icon(Icons.Default.Add, contentDescription = "添加音频库来源")
+                        }
+                    }
+                }
+            )
 
-        // 网络 tab 的添加按钮（仅源列表页显示，进入浏览后隐藏）
-        if (pagerState.currentPage == 1 && !uiState.showBrowseContent) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.End) {
-                FilledTonalButton(onClick = { viewModel.showAddDialog() }) {
-                    Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("添加来源")
+            TabRow(selectedTabIndex = pagerState.currentPage) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                        text = { Text(title) }
+                    )
                 }
             }
-        }
 
-        // 浏览时显示库名称
-        if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
-            uiState.browsingSource?.let { src ->
-                Text(src.name, style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                    color = MaterialTheme.colorScheme.primary)
+            // 浏览时显示当前库名（刷新入口已上方到搜索行右侧）
+            if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
+                uiState.browsingSource?.let { src ->
+                    Text(
+                        text = src.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(
+                            horizontal = Dimens.ScreenPadding,
+                            vertical = Dimens.GapTiny
+                        )
+                    )
+                }
             }
-        }
 
-        Box(modifier = Modifier.weight(1f)) {
-            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
                 when (page) {
                     0 -> AudioLocalTab(playerManager = playerManager, searchQuery = searchQuery)
-                    1 -> AudioLibraryScreen(viewModel = viewModel, showTopBar = false, showMiniPlayer = false, searchQuery = searchQuery)
+                    1 -> AudioLibraryScreen(viewModel = viewModel, searchQuery = searchQuery)
                     2 -> AudioFavoritesTab(viewModel = viewModel, searchQuery = searchQuery)
                     3 -> AudioRecentTab(viewModel = viewModel, searchQuery = searchQuery)
                 }
             }
-
-            // MiniPlayer：优先用 ViewModel 状态，否则用 PlayerManager 直接状态
-            val hasPlayer = uiState.currentTrack != null || operaFile != null
-            val isLocalPlayback = uiState.currentTrack == null && operaFile != null
-            var localRepeatMode by remember { mutableIntStateOf(0) } // 0=ALL 1=ONE 2=RANDOM
-            if (hasPlayer) {
-                val track = uiState.currentTrack ?: com.radio.chinese.domain.AudioTrack(
-                    id = operaFile?.fileId?.toString() ?: "", name = operaFile?.name ?: "",
-                    path = "", parentPath = "", isFolder = false, size = 0
-                )
-                val repeatDisplay = if (isLocalPlayback) {
-                    com.radio.chinese.ui.library.RepeatMode.entries[localRepeatMode % 3]
-                } else uiState.repeatMode
-                MiniPlayerBar(
-                    track = track,
-                    isPlaying = if (!isLocalPlayback) uiState.isPlaying else operaPlaying,
-                    positionMs = if (!isLocalPlayback) uiState.positionMs else operaPos,
-                    durationMs = if (!isLocalPlayback) uiState.durationMs else operaDur,
-                    bitrateBps = if (!isLocalPlayback) uiState.bitrateBps else operaBr,
-                    onTogglePlayPause = { if (isLocalPlayback) playerManager.togglePlayPause() else viewModel.togglePlayPause() },
-                    onStop = { if (isLocalPlayback) playerManager.stopOpera() else viewModel.stopPlayback() },
-                    onSeek = { if (isLocalPlayback) playerManager.seekOperaTo(it) else viewModel.seekTo(it) },
-                    onNext = { if (isLocalPlayback) playerManager.playOperaNext() else viewModel.playNext() },
-                    onPrevious = { if (isLocalPlayback) playerManager.playOperaPrevious() else viewModel.playPrevious() },
-                    onCycleRepeat = { if (isLocalPlayback) localRepeatMode = (localRepeatMode + 1) % 3 else viewModel.cycleRepeatMode() },
-                    repeatMode = repeatDisplay,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
-            }
         }
+    }
+
+    // 添加来源对话框挂在宿主上：右上角的“+”在四个 Tab 都显示，
+    // 以前它只在「网络」Tab 内部合成，其他三个 Tab 按下去什么也不会弹。
+    if (uiState.showAddDialog) {
+        AddSourceDialog(
+            isLoading = uiState.isLoading,
+            error = uiState.error,
+            onDismiss = { viewModel.hideAddDialog() },
+            onConfirm = { name, type, url, username, password ->
+                viewModel.addSource(name, type, url, username, password)
+            }
+        )
     }
 }

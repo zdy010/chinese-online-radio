@@ -9,8 +9,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -20,9 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,10 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.radio.chinese.data.local.availabilityToColor
 import com.radio.chinese.domain.model.StationSource
+import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.StationCover
+import com.radio.chinese.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,8 +54,10 @@ fun PlayerScreen(
     }
 
     Scaffold(
+        contentWindowInsets = NestedWindowInsets,
         topBar = {
             TopAppBar(
+                windowInsets = NestedWindowInsets,
                 title = { Text("正在播放") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -58,6 +65,17 @@ fun PlayerScreen(
                     }
                 },
                 actions = {
+                    // 收藏放在顶栏：整页可滚动后，原先贴在正文末尾的收藏按钮
+                    // 在默认字号下就已经被挤到屏外，大字号/横屏彻底看不到。
+                    IconButton(onClick = { viewModel.toggleFavorite() }) {
+                        Icon(
+                            if (uiState.isFavorite) Icons.Default.Favorite
+                            else Icons.Outlined.FavoriteBorder,
+                            contentDescription = if (uiState.isFavorite) "取消收藏" else "收藏",
+                            tint = if (uiState.isFavorite) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                     IconButton(onClick = { showTimerDialog = true }) {
                         Icon(
                             Icons.Default.Timer,
@@ -79,43 +97,52 @@ fun PlayerScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                LoadingState(text = "正在打开电台…")
             }
         } else {
+            // 封面尺寸按视口高度收着给：原先 fillMaxWidth + aspectRatio(1f) 会让封面
+            // 跟着屏宽走，横屏时撑出 1000dp 高的圆，播放/暂停键被完全顶出屏幕。
+            // 横屏那一屏只有 390dp 高，连上下留白都要跟着收紧。
+            val viewportHeight = LocalConfiguration.current.screenHeightDp.dp
+            val shortViewport = viewportHeight < 500.dp
+            val coverSize = if (shortViewport) Dimens.CoverSmall
+            else minOf(Dimens.CoverLargeMax, viewportHeight * 0.30f)
+            val pageVerticalPadding = if (shortViewport) Dimens.GapMedium else Dimens.GapXLarge
+            val gapAfterCover = if (shortViewport) Dimens.GapSmall else Dimens.GapHuge
+            val gapBeforeControls = if (shortViewport) Dimens.GapSmall else Dimens.GapXLarge
+
+            // 可滚动：此前整页没有任何滚动容器，横屏或系统大字号下
+            // 多个节目源会把播放/暂停键顶出屏幕，用户连暂停都做不到。
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = Dimens.GapHuge, vertical = pageVerticalPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.weight(1f))
+                // 封面：只在真正播放时才跑脉冲动画，暂停后不再 60fps 空转
+                val pulseScale = if (uiState.isPlaying) {
+                    val transition = rememberInfiniteTransition(label = "pulse")
+                    transition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = 1.05f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1500, easing = LinearEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "pulse"
+                    ).value
+                } else 1f
 
-                // Station Logo with animation when playing
-                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-                val pulseScale by infiniteTransition.animateFloat(
-                    initialValue = 1f,
-                    targetValue = if (uiState.isPlaying) 1.05f else 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(1500, easing = LinearEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "pulse"
+                StationCover(
+                    url = station.logoUrl,
+                    size = coverSize,
+                    label = station.name,
+                    modifier = Modifier.scale(pulseScale)
                 )
 
-                AsyncImage(
-                    model = station.logoUrl.ifEmpty { null },
-                    contentDescription = station.name,
-                    modifier = Modifier
-                        .size(200.dp)
-                        .scale(pulseScale)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentScale = ContentScale.Crop
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(gapAfterCover))
 
                 // Station Name
                 Text(
@@ -126,7 +153,7 @@ fun PlayerScreen(
 
                 // Frequency
                 if (station.frequency.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(Dimens.GapTiny))
                     Text(
                         text = station.frequency,
                         style = MaterialTheme.typography.titleMedium,
@@ -135,9 +162,10 @@ fun PlayerScreen(
                     )
                 }
 
-                // Description
-                if (station.description.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                // Description（横屏下让位给播放键：整页高度不够时，
+                // 宁可少一段可有可无的简介，也不能让暂停按不到）
+                if (station.description.isNotEmpty() && !shortViewport) {
+                    Spacer(modifier = Modifier.height(Dimens.GapSmall))
                     Text(
                         text = station.description,
                         style = MaterialTheme.typography.bodyMedium,
@@ -147,18 +175,19 @@ fun PlayerScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(Dimens.GapMedium))
 
                 // Playback Status Indicator
                 PlaybackStatusIndicator(
                     playbackState = uiState.playbackState,
                     isPlaying = uiState.isPlaying,
-                    error = uiState.error
+                    error = uiState.error,
+                    status = uiState.status
                 )
 
                 // Source Switching
                 if (uiState.sourceScores.size > 1) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(Dimens.GapMedium))
                     SourceSelector(
                         sources = uiState.sourceScores,
                         currentSource = uiState.currentSource,
@@ -166,7 +195,7 @@ fun PlayerScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(gapBeforeControls))
 
                 // Playback Controls
                 Row(
@@ -177,25 +206,25 @@ fun PlayerScreen(
                     // Previous
                     IconButton(
                         onClick = { viewModel.playPrevious() },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(Dimens.TouchMin)
                     ) {
                         Icon(
                             Icons.Default.SkipPrevious,
-                            contentDescription = "上一个",
-                            modifier = Modifier.size(32.dp)
+                            contentDescription = "上一个电台",
+                            modifier = Modifier.size(Dimens.IconLarge)
                         )
                     }
 
                     // Play/Pause
                     FilledIconButton(
                         onClick = { viewModel.togglePlayPause() },
-                        modifier = Modifier.size(72.dp),
+                        modifier = Modifier.size(Dimens.GapHuge * 2),
                         shape = CircleShape
                     ) {
                         Icon(
                             if (uiState.isPlaying) Icons.Default.Pause
                             else Icons.Default.PlayArrow,
-                            contentDescription = if (uiState.isPlaying) "暂停" else "播放",
+                            contentDescription = if (uiState.isPlaying) "暂停播放" else "继续播放",
                             modifier = Modifier.size(40.dp)
                         )
                     }
@@ -203,43 +232,21 @@ fun PlayerScreen(
                     // Next
                     IconButton(
                         onClick = { viewModel.playNext() },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(Dimens.TouchMin)
                     ) {
                         Icon(
                             Icons.Default.SkipNext,
-                            contentDescription = "下一个",
-                            modifier = Modifier.size(32.dp)
+                            contentDescription = "下一个电台",
+                            modifier = Modifier.size(Dimens.IconLarge)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Favorite and Info Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Favorite
-                    TextButton(
-                        onClick = { viewModel.toggleFavorite() }
-                    ) {
-                        Icon(
-                            if (uiState.isFavorite) Icons.Default.Favorite
-                            else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "收藏",
-                            tint = if (uiState.isFavorite) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (uiState.isFavorite) "已收藏" else "收藏")
-                    }
-                }
+                Spacer(modifier = Modifier.height(Dimens.GapLarge))
 
                 // Sleep Timer Indicator
                 if (timerActive) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Dimens.GapLarge))
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = MaterialTheme.colorScheme.primaryContainer
@@ -271,7 +278,7 @@ fun PlayerScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(Dimens.GapSmall))
             }
         }
     }
@@ -299,13 +306,18 @@ private fun SourceSelector(
     currentSource: StationSource?,
     onSwitch: (StationSource) -> Unit
 ) {
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = Dimens.SourceListMax)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text(
             text = "节目源切换",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(Dimens.GapSmall))
         sources.forEach { (source, score) ->
             val isActive = currentSource?.url == source.url
             val colorInt = availabilityToColor(score)
@@ -317,27 +329,28 @@ private fun SourceSelector(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 2.dp)
+                    .padding(vertical = Dimens.GapTiny)
                     .clickable(enabled = !isActive) { onSwitch(source) },
-                shape = RoundedCornerShape(8.dp),
-                color = if (isActive) color.copy(alpha = 0.15f)
+                shape = MaterialTheme.shapes.small,
+                // 不再用 color.copy(alpha = 0.15f)：透明堆叠在深色模式下会发灰、对比度不足
+                color = if (isActive) MaterialTheme.colorScheme.secondaryContainer
                 else MaterialTheme.colorScheme.surface,
                 border = if (isActive) CardDefaults.outlinedCardBorder().copy(
                     brush = androidx.compose.ui.graphics.SolidColor(color)
                 ) else null
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapSmall),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // 颜色指示圆点
                     Box(
                         modifier = Modifier
-                            .size(10.dp)
+                            .size(Dimens.GapSmall)
                             .clip(CircleShape)
                             .background(color)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.GapSmall))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = source.label.ifEmpty {
@@ -379,29 +392,30 @@ private fun SourceSelector(
 private fun PlaybackStatusIndicator(
     playbackState: Int,
     isPlaying: Boolean,
-    error: String?
+    error: String?,
+    status: String?
 ) {
-    // 显示错误（优先级最高）
+    // 显示错误（优先级最高）：现在只承载真正的失败，进度提示走 status 中性态
     if (error != null) {
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.errorContainer
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = Dimens.GapLarge, vertical = Dimens.GapSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     Icons.Default.ErrorOutline,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp)
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(Dimens.IconSmall)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.GapSmall))
                 Text(
                     text = error,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.onErrorContainer
                 )
             }
         }
@@ -409,55 +423,75 @@ private fun PlaybackStatusIndicator(
     }
 
     // 显示播放状态
-    val (text, icon, color) = when (playbackState) {
-        Player.STATE_BUFFERING -> Triple(
+    val (text, icon, container, content) = when {
+        !status.isNullOrEmpty() -> Quad(
+            status,
+            Icons.Default.HourglassEmpty,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        playbackState == Player.STATE_BUFFERING -> Quad(
             "缓冲中…",
             Icons.Default.HourglassEmpty,
-            MaterialTheme.colorScheme.tertiary
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer
         )
-        Player.STATE_READY -> if (isPlaying) Triple(
+        playbackState == Player.STATE_READY && isPlaying -> Quad(
             "正在播放",
             Icons.Default.PlayCircle,
-            MaterialTheme.colorScheme.primary
-        ) else Triple(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        playbackState == Player.STATE_READY -> Quad(
             "已暂停",
             Icons.Default.PauseCircle,
+            MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Player.STATE_IDLE -> Triple(
-            "连接中…",
+        playbackState == Player.STATE_IDLE -> Quad(
+            "准备中",
             Icons.Default.HourglassEmpty,
+            MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant
         )
-        else -> Triple("", null, MaterialTheme.colorScheme.onSurfaceVariant)
+        else -> Quad(
+            "",
+            null,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 
+    if (text.isEmpty()) return
+
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = color.copy(alpha = 0.1f)
+        shape = MaterialTheme.shapes.medium,
+        color = container
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = Dimens.GapLarge, vertical = Dimens.GapSmall),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
                 Icon(
                     icon,
                     contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(18.dp)
+                    tint = content,
+                    modifier = Modifier.size(Dimens.IconSmall)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(Dimens.GapSmall))
             }
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = color
+                color = content
             )
         }
     }
 }
+
+private data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
 @Composable
 private fun SleepTimerDialog(
@@ -472,14 +506,16 @@ private fun SleepTimerDialog(
         onDismissRequest = onDismiss,
         title = { Text("睡眠定时器") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 Text("选择定时关闭时间：")
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(Dimens.GapLarge))
                 options.forEach { minutes ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = Dimens.GapTiny),
                     ) {
                         OutlinedButton(
                             onClick = { onSelectMinutes(minutes) },

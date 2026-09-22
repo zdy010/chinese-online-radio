@@ -125,19 +125,8 @@ class StationRepository @Inject constructor(
         }
     }
 
-    fun getCategories(): List<Pair<String, String>> {
-        return listOf(
-            "news" to "新闻",
-            "music" to "音乐",
-            "traffic" to "交通",
-            "arts" to "文艺",
-            "sports" to "体育",
-            "finance" to "财经",
-            "opera" to "戏曲",
-            "tv_audio" to "电视伴音",
-            "general" to "综合"
-        )
-    }
+    fun getCategories(): List<Pair<String, String>> =
+        com.radio.chinese.domain.model.StationCategory.ordered()
 
     // ---- 自定义电台 ----
 
