@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,6 +22,7 @@ data class PlayerUiState(
     val isPlaying: Boolean = false,
     val playbackState: Int = Player.STATE_IDLE,
     val error: String? = null,
+    val status: String? = null,
     val isFavorite: Boolean = false,
     val allStations: List<RadioStation> = emptyList(),
     val currentSource: StationSource? = null,
@@ -38,48 +40,71 @@ class PlayerViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState
 
+    /** 全量电台列表只需一份，用于上下切歌；此前每次播放状态变化都重装配一次 */
+    private var allStations: List<RadioStation> = emptyList()
+
+    /** 收藏 Flow 的收集器，同一个 station 只保留一个，否则长期停留会线性累积 */
+    private var favoriteJob: Job? = null
+
     init {
+        viewModelScope.launch {
+            allStations = stationRepository.getAllStations()
+        }
         viewModelScope.launch {
             combine(
                 playerManager.currentStation,
                 combine(
                     playerManager.isPlaying,
                     playerManager.playbackState,
-                    playerManager.error
-                ) { isPlaying, state, err -> Triple(isPlaying, state, err) },
+                    playerManager.error,
+                    playerManager.status
+                ) { isPlaying, state, err, status -> Quartet(isPlaying, state, err, status) },
                 combine(
                     playerManager.currentSource,
                     playerManager.sourceScores
                 ) { source, scores -> Pair(source, scores) }
             ) { station, playInfo, sourceInfo ->
-                val (isPlaying, state, err) = playInfo
+                val (isPlaying, state, err, status) = playInfo
                 val (source, scores) = sourceInfo
                 PlayerUiState(
                     station = station,
                     isPlaying = isPlaying,
                     playbackState = state,
                     error = err,
+                    status = status,
+                    // 重建状态时回填收藏标记，否则心形图标会先闪灭再由收集器补回
+                    isFavorite = _uiState.value.isFavorite,
                     currentSource = source,
                     sourceScores = scores,
-                    allStations = stationRepository.getAllStations()
+                    allStations = allStations
                 )
             }.collect { state ->
                 _uiState.value = state
-                state.station?.let { checkFavorite(it.id) }
+                state.station?.let { observeFavorite(it.id) }
             }
         }
     }
 
-    private fun checkFavorite(stationId: String) {
-        viewModelScope.launch {
+    private data class Quartet<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+    private fun observeFavorite(stationId: String) {
+        if (stationId == observingFavoriteId) return
+        observingFavoriteId = stationId
+        favoriteJob?.cancel()
+        favoriteJob = viewModelScope.launch {
             favoriteRepository.isFavorite(stationId).collect { isFav ->
                 _uiState.value = _uiState.value.copy(isFavorite = isFav)
             }
         }
     }
 
+    private var observingFavoriteId: String? = null
+
     fun loadStation(stationId: String) {
         viewModelScope.launch {
+            // 列表项点击已经起播，这里再起播一次会让直播流握手时延翻倍；
+            // 同一个电台直接返回，只负责展示。
+            if (playerManager.currentStation.value?.id == stationId) return@launch
             val station = stationRepository.getStationById(stationId)
             if (station != null) {
                 playerManager.playStation(station)

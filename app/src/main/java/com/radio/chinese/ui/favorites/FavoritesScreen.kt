@@ -6,9 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,6 +18,9 @@ import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
+import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.home.StationListItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,9 +88,11 @@ fun FavoritesScreen(
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
 
     Scaffold(
+        contentWindowInsets = NestedWindowInsets,
         topBar = {
             if (showTopBar) {
             TopAppBar(
+                windowInsets = NestedWindowInsets,
                 title = { Text("我的收藏") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -101,32 +106,24 @@ fun FavoritesScreen(
         val m = if (showTopBar) Modifier.padding(padding) else Modifier
         when {
             uiState.isLoading -> {
-                Box(modifier = m.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                LoadingState(text = "正在加载收藏…", modifier = m)
             }
             filteredStations.isEmpty() -> {
-                Box(modifier = m.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "暂无收藏电台",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "浏览电台列表，点击心形图标收藏",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
+                // 搜索无结果与真的没收藏是两回事，文案不能混用
+                if (searchQuery.isNotBlank()) {
+                    EmptyState(
+                        icon = Icons.Default.Search,
+                        title = "收藏里没有找到“$searchQuery”",
+                        hint = "换个关键字，或清空搜索框看全部收藏",
+                        modifier = m
+                    )
+                } else {
+                    EmptyState(
+                        icon = Icons.Default.Favorite,
+                        title = "暂无收藏电台",
+                        hint = "浏览电台列表，点击心形图标收藏",
+                        modifier = m
+                    )
                 }
             }
             else -> {

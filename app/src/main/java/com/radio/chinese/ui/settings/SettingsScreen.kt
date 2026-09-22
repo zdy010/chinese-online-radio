@@ -14,6 +14,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.FontScaleOption
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +26,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val themeMode: Int = 0
+    val themeMode: Int = 0,
+    val fontScaleKey: String = FontScaleOption.STANDARD.key
 )
 
 /**
@@ -46,11 +52,22 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(themeMode = mode)
             }
         }
+        viewModelScope.launch {
+            preferences.fontScaleKey.collect { key ->
+                _uiState.value = _uiState.value.copy(fontScaleKey = key)
+            }
+        }
     }
 
     fun setThemeMode(mode: Int) {
         viewModelScope.launch {
             preferences.setThemeMode(mode)
+        }
+    }
+
+    fun setFontScaleKey(key: String) {
+        viewModelScope.launch {
+            preferences.setFontScaleKey(key)
         }
     }
 }
@@ -67,8 +84,10 @@ fun SettingsScreen(
     var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        contentWindowInsets = NestedWindowInsets,
         topBar = {
             TopAppBar(
+                windowInsets = NestedWindowInsets,
                 title = { Text("设置") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -82,6 +101,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
             // Theme Setting
             ListItem(
@@ -99,6 +119,27 @@ fun SettingsScreen(
                     Icon(Icons.Default.Palette, contentDescription = null)
                 },
                 modifier = Modifier.clickable { showThemeDialog = true }
+            )
+
+            HorizontalDivider()
+
+            // 字体大小：面向中老年用户的刚需，此前设置页只有主题 / 源管理 / 关于三项
+            ListItem(
+                headlineContent = { Text("字体大小") },
+                supportingContent = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ChipGap)) {
+                        FontScaleOption.entries.forEach { option ->
+                            FilterChip(
+                                selected = uiState.fontScaleKey == option.key,
+                                onClick = { viewModel.setFontScaleKey(option.key) },
+                                label = { Text(option.label) }
+                            )
+                        }
+                    }
+                },
+                leadingContent = {
+                    Icon(Icons.Default.FormatSize, contentDescription = null)
+                }
             )
 
             HorizontalDivider()
@@ -150,8 +191,8 @@ fun SettingsScreen(
                 HorizontalDivider()
             }
 
-            // Version info at bottom
-            Spacer(modifier = Modifier.weight(1f))
+            // 版本信息置底：在可滚动列里不能用 weight(1f)（高度约束无限），改用固定间距
+            Spacer(modifier = Modifier.height(Dimens.GapXLarge))
             Text(
                 text = "时光收音机 v${getVersionName()}\n基于公开广播流媒体地址",
                 style = MaterialTheme.typography.bodySmall,

@@ -10,9 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.domain.AudioTrack
-import com.radio.chinese.ui.common.MarqueeText
+import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.ErrorState
+import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.theme.Dimens
 
 @Composable
 fun BrowseScreen(
@@ -25,38 +29,51 @@ fun BrowseScreen(
     isFavorited: (String) -> Boolean = { false }
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        if (items.isEmpty() && !isLoading) {
-            Text(
-                "该目录下暂无内容",
-                modifier = Modifier.align(Alignment.Center),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
-            LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 2.dp)) {
-                items(items) { item ->
-                    BrowseItem(
-                        item = item,
-                        onClick = { onItemClick(item) },
-                        isFav = isFavorited(item.path),
-                        onToggleFav = { onToggleFavorite(item) }
-                    )
-                    HorizontalDivider()
+        when {
+            error != null && items.isEmpty() -> {
+                ErrorState(
+                    message = error,
+                    hint = "目录可能已移动，或网盘授权已过期",
+                    onRetry = onRefresh
+                )
+            }
+
+            items.isEmpty() && isLoading -> {
+                LoadingState(text = "正在读取目录…")
+            }
+
+            items.isEmpty() -> {
+                EmptyState(
+                    icon = Icons.Default.FolderOpen,
+                    title = "该目录下暂无内容",
+                    hint = "回到上一层看看，或点右上角刷新"
+                )
+            }
+
+            else -> {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.ListGap)
+                ) {
+                    // 必须给 key：BrowseItem 内部的收藏态是 remember 的，
+                    // 没 key 时列表重排会把星标状态串到别的行上。
+                    items(items, key = { it.path }) { item ->
+                        BrowseItem(
+                            item = item,
+                            onClick = { onItemClick(item) },
+                            isFav = isFavorited(item.path),
+                            onToggleFav = { onToggleFavorite(item) }
+                        )
+                    }
                 }
             }
         }
 
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        }
-
-        if (error != null) {
-            Snackbar(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                action = { TextButton(onClick = onRefresh) { Text("重试") } }
-            ) {
-                Text(error)
-            }
+        // 已有内容时再拉一次：用顶部细进度条而不是盖住列表的大转圈
+        if (isLoading && items.isNotEmpty()) {
+            LinearProgressIndicator(
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
+            )
         }
     }
 }
@@ -68,18 +85,28 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, on
     LaunchedEffect(isFav) { favState = isFav }
 
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .heightIn(min = Dimens.RowMinHeight)
+            .padding(vertical = Dimens.RowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = if (item.isFolder) Icons.Default.Folder else Icons.Default.Audiotrack,
             contentDescription = null,
             tint = if (item.isFolder) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(Dimens.IconLarge)
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(Dimens.GapLarge))
         Column(modifier = Modifier.weight(1f)) {
-            MarqueeText(item.name, style = MaterialTheme.typography.bodyLarge, enabled = false, modifier = Modifier.fillMaxWidth())
+            // 不再用 MarqueeText(enabled = false)：拿不到滚动收益却仍付两次 subcompose
+            Text(
+                text = item.name,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             if (!item.isFolder && item.size > 0) {
                 Text(formatSize(item.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -91,13 +118,13 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, on
             IconButton(onClick = { favState = !favState; onToggleFav() }) {
                 Icon(
                     if (favState) Icons.Default.Star else Icons.Default.StarOutline,
-                    contentDescription = if (isFav) "取消收藏" else "收藏",
-                    tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    contentDescription = if (favState) "取消收藏" else "收藏这一曲",
+                    tint = if (favState) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
         if (item.isFolder) {
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Default.ChevronRight, contentDescription = "进入目录", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

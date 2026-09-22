@@ -45,6 +45,31 @@ class RadioPreferences @Inject constructor(
         prefs[KEY_SLEEP_TIMER] ?: 0
     }
 
+    // 电台最近播放：用分隔串而不是 stringSet，因为 stringSet 无序，会丢掉「最近」的顺序
+    val radioRecentStationIds: Flow<List<String>> = dataStore.data.map { prefs ->
+        prefs[KEY_RECENT_STATIONS]?.split(SEPARATOR)?.filter { it.isNotBlank() } ?: emptyList()
+    }
+
+    /** 记录一次播放：置顶去重，最多留 50 条 */
+    suspend fun addRecentStationId(stationId: String) {
+        dataStore.edit { prefs ->
+            val current = prefs[KEY_RECENT_STATIONS]?.split(SEPARATOR)?.filter { it.isNotBlank() }.orEmpty()
+            val updated = (listOf(stationId) + current.filter { it != stationId }).take(50)
+            prefs[KEY_RECENT_STATIONS] = updated.joinToString(SEPARATOR)
+        }
+    }
+
+    // 字号档位：standard / large / extra_large
+    val fontScaleKey: Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_FONT_SCALE] ?: "standard"
+    }
+
+    suspend fun setFontScaleKey(key: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_FONT_SCALE] = key
+        }
+    }
+
     suspend fun setThemeMode(mode: Int) {
         dataStore.edit { prefs ->
             prefs[KEY_THEME_MODE] = mode
@@ -206,6 +231,8 @@ class RadioPreferences @Inject constructor(
         private val KEY_THEME_MODE = intPreferencesKey("theme_mode")
         private val KEY_LAST_STATION = stringPreferencesKey("last_played_station")
         private val KEY_SLEEP_TIMER = intPreferencesKey("sleep_timer_minutes")
+        private val KEY_RECENT_STATIONS = stringPreferencesKey("radio_recent_station_ids")
+        private val KEY_FONT_SCALE = stringPreferencesKey("font_scale")
         private val KEY_INVALID_STATIONS = stringSetPreferencesKey("invalid_station_ids")
         private val KEY_CUSTOM_STATIONS = stringPreferencesKey("custom_stations_json")
         private val KEY_OPERA_PLAY_POSITIONS = stringPreferencesKey("opera_play_positions")
@@ -220,6 +247,9 @@ class RadioPreferences @Inject constructor(
         private val KEY_OPERA_FAV_CATEGORIES = stringSetPreferencesKey("opera_fav_categories")
         // 戏曲收藏：收藏的文件ID集合
         private val KEY_OPERA_FAV_FILES = stringSetPreferencesKey("opera_fav_files")
+
+        /** radioRecentStationIds 的分隔符 */
+        private const val SEPARATOR = ","
     }
 
     // ========== 戏曲收藏 ==========

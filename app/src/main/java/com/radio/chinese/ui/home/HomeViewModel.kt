@@ -2,6 +2,7 @@ package com.radio.chinese.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
@@ -30,6 +31,7 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val stationRepository: StationRepository,
     private val favoriteRepository: FavoriteRepository,
+    private val preferences: RadioPreferences,
     val playerManager: PlayerManager
 ) : ViewModel() {
 
@@ -47,11 +49,16 @@ class HomeViewModel @Inject constructor(
         combine(_isLoading, _error) { a, b -> Pair(a, b) }
     ) { (stations, favIds), (category, query), (loading, error) ->
         val filtered = filterStations(stations, category, query)
+        // 分类条/分类网格只列“真的有电台”的分类：全量枚举会把一个都不存在的
+        // 分类（如未加载全球源时的世界/成人）也摆上去，点进去只能看到一个空列表。
+        val usedCategories = stationRepository.getCategories().filter { (id, _) ->
+            stations.any { it.category == id }
+        }
         HomeUiState(
             stations = stations,
             filteredStations = filtered,
             favoriteIds = favIds,
-            categories = stationRepository.getCategories(),
+            categories = usedCategories,
             selectedCategory = category,
             searchQuery = query,
             isLoading = loading,
@@ -66,6 +73,12 @@ class HomeViewModel @Inject constructor(
     init {
         loadData()
         observeFavorites()
+        observeRecentStations()
+    }
+
+    /** 失败态的「重新加载」入口，供列表错误页调用。 */
+    fun retry() {
+        loadData()
     }
 
     private fun loadData() {
@@ -90,6 +103,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /** 最近播过的电台从 DataStore 读，不再只存活于内存（重启后仍能看到）。 */
+    private fun observeRecentStations() {
+        viewModelScope.launch {
+            preferences.radioRecentStationIds.collect { ids ->
+                _recentIds.value = ids
+            }
+        }
+    }
+
     fun selectCategory(category: String?) {
         _selectedCategory.value = category
     }
@@ -99,9 +121,9 @@ class HomeViewModel @Inject constructor(
     }
 
     fun playStation(station: RadioStation) {
+        // 最近播放由 PlayerManager 在真正确认起播成功后写入 DataStore，
+        // 此处不再维护第二份内存列表，避免两个写入源互相覆盖。
         playerManager.playStation(station)
-        // 记录最近播放
-        _recentIds.value = (listOf(station.id) + _recentIds.value.filter { it != station.id }).take(20)
     }
 
     fun toggleFavorite(stationId: String) {

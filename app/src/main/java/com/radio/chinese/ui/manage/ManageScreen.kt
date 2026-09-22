@@ -4,7 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -14,14 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.service.StreamStatus
+import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.StatusChip
+import com.radio.chinese.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
-private val CATEGORIES = listOf(
-    "news" to "新闻", "music" to "音乐", "traffic" to "交通",
-    "arts" to "文艺", "sports" to "体育", "finance" to "财经",
-    "opera" to "戏曲", "general" to "综合"
-)
+// 分类表单一来源：以前这里手写一份且漏了 tv_audio，导致同一电台在不同页显示不同分类名
+private val CATEGORIES = StationCategory.ordered()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,8 +49,10 @@ fun ManageScreen(
     }
 
     Scaffold(
+        contentWindowInsets = NestedWindowInsets,
         topBar = {
             TopAppBar(
+                windowInsets = NestedWindowInsets,
                 title = { Text("节目源管理") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -80,11 +85,25 @@ fun ManageScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text(
-                    text = "正在检测... ${uiState.checkedCount}/${uiState.totalCount}",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Dimens.ScreenPadding),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "正在检测… ${uiState.checkedCount}/${uiState.totalCount}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    // 全量检测要跑几十秒，不给个取消入口就只能干等或退页
+                    TextButton(
+                        onClick = { viewModel.cancelCheckAll() },
+                        contentPadding = PaddingValues(horizontal = Dimens.GapSmall)
+                    ) {
+                        Text("取消检测", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
             }
 
             // Summary
@@ -226,19 +245,19 @@ private fun StationManageItem(
                         maxLines = 1
                     )
                     if (isCustom) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text("自定义", style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.height(20.dp)
+                        Spacer(modifier = Modifier.width(Dimens.GapSmall))
+                        StatusChip(
+                            text = "自定义",
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                     if (isInvalid) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text("已标记无效", style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.height(20.dp)
+                        Spacer(modifier = Modifier.width(Dimens.GapSmall))
+                        StatusChip(
+                            text = "已标记无效",
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }
@@ -365,7 +384,11 @@ private fun AddStationDialog(
         onDismissRequest = onDismiss,
         title = { Text("添加自定义电台") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // 可滚动：五个输入框 + 分类菜单，键盘弹起或大字号下“添加”会不可达
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },

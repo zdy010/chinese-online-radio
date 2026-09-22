@@ -25,6 +25,13 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
+import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.ErrorState
+import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.RadioMiniPlayerBar
+import com.radio.chinese.ui.common.StationCover
+import com.radio.chinese.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,17 +49,24 @@ fun HomeScreen(
     val playbackState by viewModel.playerManager.playbackState.collectAsState()
 
     Scaffold(
+        contentWindowInsets = NestedWindowInsets,
         topBar = {
             if (showTopBar) {
-            TopAppBar( title = { Text("时光收音机") }, actions = { IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, contentDescription = "设置") } } )
+            TopAppBar(windowInsets = NestedWindowInsets, title = { Text("时光收音机") }, actions = { IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, contentDescription = "设置") } } )
             }
         },
         bottomBar = {
             if (currentStation != null) {
-                MiniPlayerBar(
-                    station = currentStation!!,
+                val statusText = when {
+                    playbackState == Player.STATE_BUFFERING -> "缓冲中…"
+                    isPlaying -> "正在播放"
+                    else -> "已暂停"
+                }
+                RadioMiniPlayerBar(
+                    title = currentStation!!.name,
+                    subtitle = statusText,
+                    coverUrl = currentStation!!.logoUrl,
                     isPlaying = isPlaying,
-                    playbackState = playbackState,
                     onPlayPause = { viewModel.playerManager.togglePlayPause() },
                     onClick = { onNavigateToPlayer(currentStation!!.id) }
                 )
@@ -71,39 +85,31 @@ fun HomeScreen(
             // Station List
             when {
                 uiState.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    LoadingState(text = "正在加载电台…")
                 }
                 uiState.error != null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(uiState.error!!, style = MaterialTheme.typography.bodyLarge)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { /* reload */ }) {
-                                Text("重试")
-                            }
-                        }
-                    }
+                    ErrorState(
+                        message = uiState.error!!,
+                        hint = "检查网络后重试，也可以先听已缓存的节目",
+                        onRetry = viewModel::retry
+                    )
                 }
                 uiState.filteredStations.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("没有找到相关电台", style = MaterialTheme.typography.bodyLarge)
-                    }
+                    EmptyState(
+                        icon = Icons.Default.Search,
+                        title = "没有找到相关电台",
+                        hint = "换个关键字，或点上方分类标签看看其它电台"
+                    )
                 }
                 else -> {
                     LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(
+                            start = Dimens.ScreenPadding,
+                            end = Dimens.ScreenPadding,
+                            top = Dimens.GapTiny,
+                            bottom = if (currentStation != null) Dimens.MiniPlayerHeight else Dimens.GapTiny
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.ListGap)
                     ) {
                         items(uiState.filteredStations, key = { it.id }) { station ->
                             StationListItem(
@@ -117,40 +123,11 @@ fun HomeScreen(
                                 onFavoriteClick = { viewModel.toggleFavorite(station.id) }
                             )
                         }
-                        // Add extra padding at bottom when mini player is shown
-                        if (currentStation != null) {
-                            item { Spacer(modifier = Modifier.height(72.dp)) }
-                        }
                     }
                 }
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier.fillMaxWidth(),
-        placeholder = { Text("搜索电台名称或频率") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Clear, contentDescription = "清除")
-                }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(28.dp)
-    )
 }
 
 @Composable
@@ -162,8 +139,8 @@ private fun CategoryChipsRow(
 ) {
     LazyRow(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.ChipGap)
     ) {
         item {
             FilterChip(
@@ -172,7 +149,7 @@ private fun CategoryChipsRow(
                 label = { Text("全部") }
             )
         }
-        items(categories) { (id, name) ->
+        items(categories, key = { "chip-${it.first}" }) { (id, name) ->
             FilterChip(
                 selected = selectedCategory == id,
                 onClick = {
@@ -197,25 +174,24 @@ fun StationListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
         Row(
             modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
+                .padding(Dimens.CardPadding)
+                .fillMaxWidth()
+                .heightIn(min = Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Station Logo
-            AsyncImage(
-                model = station.logoUrl.ifEmpty { null },
-                contentDescription = station.name,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
+            // Station Logo：缺 logo 时不再是一片空白，而是有底色的收音机图标
+            StationCover(
+                url = station.logoUrl,
+                size = Dimens.CoverSmall,
+                label = station.name,
+                contentDescription = station.name
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.GapMedium))
 
             // Station Info
             Column(modifier = Modifier.weight(1f)) {
@@ -227,12 +203,12 @@ fun StationListItem(
                         overflow = TextOverflow.Ellipsis
                     )
                     if (isPlaying) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(Dimens.GapSmall))
                         Icon(
                             Icons.Default.GraphicEq,
                             contentDescription = "正在播放",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(Dimens.GapLarge)
                         )
                     }
                 }
@@ -252,69 +228,6 @@ fun StationListItem(
                     contentDescription = if (isFavorite) "取消收藏" else "收藏",
                     tint = if (isFavorite) MaterialTheme.colorScheme.error
                     else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun MiniPlayerBar(
-    station: RadioStation,
-    isPlaying: Boolean,
-    playbackState: Int,
-    onPlayPause: () -> Unit,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val statusText = when {
-        playbackState == Player.STATE_BUFFERING -> "缓冲中…"
-        isPlaying -> "正在播放"
-        else -> "已暂停"
-    }
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        tonalElevation = 3.dp,
-        shadowElevation = 8.dp,
-        onClick = onClick
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth()
-                .height(56.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = station.logoUrl.ifEmpty { null },
-                contentDescription = null,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = station.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            IconButton(onClick = onPlayPause) {
-                Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "暂停" else "播放"
                 )
             }
         }

@@ -11,9 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.radio.chinese.data.entity.AudioRecentEntity
+import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.library.AudioLibraryViewModel
+import com.radio.chinese.ui.theme.Dimens
 
 @Composable
 fun AudioRecentTab(viewModel: AudioLibraryViewModel, searchQuery: String = "") {
@@ -21,26 +22,47 @@ fun AudioRecentTab(viewModel: AudioLibraryViewModel, searchQuery: String = "") {
     val filtered = state.recentPlays.filter { searchQuery.isBlank() || it.trackName.contains(searchQuery, ignoreCase = true) }
 
     if (filtered.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("暂无最近播放", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // 搜索无结果与真的没听过是两回事，裸灰字也看不出下一步做什么
+        if (searchQuery.isNotBlank()) {
+            EmptyState(
+                icon = Icons.Default.Search,
+                title = "最近播放里没有找到“$searchQuery”",
+                hint = "换个关键字，或清空搜索框看全部记录"
+            )
+        } else {
+            EmptyState(
+                icon = Icons.Default.History,
+                title = "暂无最近播放",
+                hint = "在「网络」列表里点一首唱段，听过就会出现在这里"
+            )
         }
         return
     }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 12.dp)
+        contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.ListGap)
     ) {
-        items(filtered) { recent ->
+        items(filtered, key = { it.id }) { recent ->
             Row(
-                modifier = Modifier.fillMaxWidth().clickable { viewModel.playRecent(recent) }.padding(vertical = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.playRecent(recent) }
+                    .heightIn(min = Dimens.RowMinHeight)
+                    .padding(vertical = Dimens.RowVerticalPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
+                Icon(
+                    Icons.Default.History,
+                    null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(Dimens.IconMedium)
+                )
+                Spacer(Modifier.width(Dimens.GapMedium))
                 Column(Modifier.weight(1f)) {
-                    Text(recent.trackName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(recent.sourceName, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(recent.trackName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(recent.sourceName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

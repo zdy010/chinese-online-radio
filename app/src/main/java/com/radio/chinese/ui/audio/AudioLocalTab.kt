@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.radio.chinese.domain.AudioTrack
 import com.radio.chinese.domain.browser.LocalBrowser
+import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.LoadingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,10 +37,13 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager, search
     var folderStack by remember { mutableStateOf<List<String>>(emptyList()) }
 
     val perm = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
+    // hasPerm 必须是状态：它以前是一个普通局部 val，用户弹框里点“允许”后
+    // 根本不会重算，屏幕永远停在“需要媒体音频权限”那一屏（实测已授权但依旧不列文件）。
+    var hasPerm by remember { mutableStateOf(ContextCompat.checkSelfPermission(context, perm) == PackageManager.PERMISSION_GRANTED) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        hasPerm = granted
         if (granted) scope.launch { loadItems(context, currentFolder) { r -> items = r.getOrDefault(emptyList()); isLoading = false } }
     }
-    val hasPerm = ContextCompat.checkSelfPermission(context, perm) == PackageManager.PERMISSION_GRANTED
 
     fun reload() {
         isLoading = true
@@ -82,10 +87,21 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager, search
         }
 
         if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            LoadingState(text = "正在扫描本地音频…")
         } else if (filteredItems.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("未找到音频文件", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // 以前这里只有一行居中的灰字，既没说为什么空，也没告诉用户下一步做什么
+            if (searchQuery.isNotBlank()) {
+                EmptyState(
+                    icon = Icons.Default.Search,
+                    title = "本地音频里没有找到“$searchQuery”",
+                    hint = "换个关键字，或清空搜索框看全部文件"
+                )
+            } else {
+                EmptyState(
+                    icon = Icons.Default.FolderOpen,
+                    title = "未找到音频文件",
+                    hint = "当前目录没有可播放的音频，可点右上角“添加音频库来源”接入 WebDAV 或本地目录"
+                )
             }
         } else {
             LazyColumn(contentPadding = PaddingValues(16.dp)) {

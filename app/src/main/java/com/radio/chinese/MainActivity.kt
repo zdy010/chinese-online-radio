@@ -14,6 +14,7 @@ import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.MainScreen
 import com.radio.chinese.ui.theme.ChineseRadioTheme
+import com.radio.chinese.ui.theme.FontScaleOption
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -38,13 +39,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val themeMode by preferences.themeMode.collectAsState(initial = 0)
+            val fontScaleKey by preferences.fontScaleKey.collectAsState(initial = FontScaleOption.STANDARD.key)
             var currentThemeMode by remember { mutableIntStateOf(themeMode) }
 
             LaunchedEffect(themeMode) {
                 currentThemeMode = themeMode
             }
 
-            ChineseRadioTheme(themeMode = currentThemeMode) {
+            ChineseRadioTheme(
+                themeMode = currentThemeMode,
+                fontScale = FontScaleOption.fromKey(fontScaleKey).factor
+            ) {
                 MainScreen(
                     playerManager = playerManager,
                     themeMode = currentThemeMode,

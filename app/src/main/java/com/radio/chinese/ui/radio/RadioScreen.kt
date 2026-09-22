@@ -9,14 +9,17 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.category.CategoryScreen
+import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.favorites.FavoritesScreen
 import com.radio.chinese.ui.home.HomeScreen
 import com.radio.chinese.ui.home.HomeViewModel
+import com.radio.chinese.ui.theme.Dimens
 import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.launch
 
@@ -29,7 +32,10 @@ fun RadioScreen(
     themeMode: Int,
     onThemeChanged: (Int) -> Unit
 ) {
-    val tabs = listOf("分类", "地区", "收藏", "最近")
+    // 页签名字必须对得上内容：原先第二个页签叫「地区」，但电台数据里根本没有地区/省份字段，
+    // 实际展示的是分类网格，用户点进去看到的是与标签无关的内容。第一个页签是全部电台+分类筛选条，
+    // 改名「全部」后两个页签各自名副其实。
+    val tabs = listOf("全部", "分类", "收藏", "最近")
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
@@ -47,19 +53,17 @@ fun RadioScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // 搜索栏 + 设置
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 2.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = searchQuery, onValueChange = { searchQuery = it },
-                placeholder = { Text("搜索电台...") },
-                singleLine = true,
-                modifier = Modifier.weight(0.5f),
-                trailingIcon = { if (searchQuery.isNotEmpty()) TextButton(onClick = { searchQuery = "" }) { Text("清除") } }
-            )
-            if (pagerState.currentPage == 0) {
-                IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, "设置") }
+        // 搜索栏 + 设置：与音频库页共用 SearchBarRow，两屏顶部排版对齐
+        SearchBarRow(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = "搜索电台名称或频率",
+            actions = {
+                IconButton(onClick = onNavigateToSettings) {
+                    Icon(Icons.Default.Settings, contentDescription = "设置")
+                }
             }
-        }
+        )
 
         // Tab
         TabRow(selectedTabIndex = pagerState.currentPage) {
@@ -68,7 +72,7 @@ fun RadioScreen(
             }
         }
 
-        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).padding(top = 0.dp)) { page ->
+        HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
             when (page) {
                 0 -> HomeScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(1) } },

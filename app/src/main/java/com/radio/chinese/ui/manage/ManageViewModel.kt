@@ -71,7 +71,11 @@ class ManageViewModel @Inject constructor(
 
             val results = stations.map { station ->
                 async {
-                    streamChecker.checkStream(station.primaryUrl, station.id)
+                    val result = streamChecker.checkStream(station.primaryUrl, station.id)
+                    // 逐项上报：以前这个计数只在开头置 0、结尾置满，
+                    // 349 个电台检测的 20 多秒里进度条一直是 0/349，看起来像死机。
+                    _uiState.update { it.copy(checkedCount = it.checkedCount + 1) }
+                    result
                 }
             }.awaitAll()
 
@@ -84,6 +88,13 @@ class ManageViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /** 取消全量检测：保留已出结果的部分，不把页面卡在“检测中”。 */
+    fun cancelCheckAll() {
+        checkJob?.cancel()
+        checkJob = null
+        _uiState.update { it.copy(isChecking = false) }
     }
 
     fun checkSingleStation(station: RadioStation) {
