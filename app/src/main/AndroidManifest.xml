@@ -53,6 +53,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- 开机恢复播放会话（受设置里的「开机自启」控制，默认关） -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
