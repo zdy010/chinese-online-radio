@@ -26,16 +26,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.radio.chinese.data.local.availabilityToColor
+import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,16 +61,25 @@ fun PlayerScreen(
         topBar = {
             TopAppBar(
                 windowInsets = NestedWindowInsets,
+                // 顶栏默认 64dp 高，不把顶栏本身抬到 88dp，里面的按钮就只能拿到 64dp 短边
+                modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
                 title = { Text("正在播放") },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                    ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
                     // 收藏放在顶栏：整页可滚动后，原先贴在正文末尾的收藏按钮
                     // 在默认字号下就已经被挤到屏外，大字号/横屏彻底看不到。
-                    IconButton(onClick = { viewModel.toggleFavorite() }) {
+                    val actionSize = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                    IconButton(
+                        onClick = { viewModel.toggleFavorite() },
+                        modifier = actionSize
+                    ) {
                         Icon(
                             if (uiState.isFavorite) Icons.Default.Favorite
                             else Icons.Outlined.FavoriteBorder,
@@ -76,7 +88,10 @@ fun PlayerScreen(
                             else MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    IconButton(onClick = { showTimerDialog = true }) {
+                    IconButton(
+                        onClick = { showTimerDialog = true },
+                        modifier = actionSize
+                    ) {
                         Icon(
                             Icons.Default.Timer,
                             contentDescription = "睡眠定时器",
@@ -121,57 +136,48 @@ fun PlayerScreen(
                     .padding(horizontal = Dimens.GapHuge, vertical = pageVerticalPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 封面：只在真正播放时才跑脉冲动画，暂停后不再 60fps 空转
-                val pulseScale = if (uiState.isPlaying) {
-                    val transition = rememberInfiniteTransition(label = "pulse")
-                    transition.animateFloat(
-                        initialValue = 1f,
-                        targetValue = 1.05f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1500, easing = LinearEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "pulse"
-                    ).value
-                } else 1f
-
-                StationCover(
-                    url = station.logoUrl,
-                    size = coverSize,
-                    label = station.name,
-                    modifier = Modifier.scale(pulseScale)
-                )
-
-                Spacer(modifier = Modifier.height(gapAfterCover))
-
-                // Station Name
-                Text(
-                    text = station.name,
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center
-                )
-
-                // Frequency
-                if (station.frequency.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(Dimens.GapTiny))
-                    Text(
-                        text = station.frequency,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                // 车机横屏：封面与台名/频率/简介左右并排，把竖向空间留给下面的播控；
+                // 手机档仍按原来的顺序铺开，间距与取值一字不改。
+                if (isCarSurface()) {
+                    Row(
+                        // 超宽屏上不让内容从左拉到右；Column 已居中对齐，限宽后即居中
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = Dimens.CarContentMaxWidth),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.GapXLarge),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 封面包在居中容器里：直接把 weight 传给 StationCover 会把它
+                        // 里的 .size() 撑成一条胶囊（weight 定宽不可被内部缩小）
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CoverBlock(
+                                url = station.logoUrl,
+                                name = station.name,
+                                isPlaying = uiState.isPlaying,
+                                size = coverSize
+                            )
+                        }
+                        StationInfoBlock(
+                            station = station,
+                            showDescription = !shortViewport,
+                            modifier = Modifier.weight(1.2f)
+                        )
+                    }
+                } else {
+                    CoverBlock(
+                        url = station.logoUrl,
+                        name = station.name,
+                        isPlaying = uiState.isPlaying,
+                        size = coverSize
                     )
-                }
-
-                // Description（横屏下让位给播放键：整页高度不够时，
-                // 宁可少一段可有可无的简介，也不能让暂停按不到）
-                if (station.description.isNotEmpty() && !shortViewport) {
-                    Spacer(modifier = Modifier.height(Dimens.GapSmall))
-                    Text(
-                        text = station.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2
+                    Spacer(modifier = Modifier.height(gapAfterCover))
+                    StationInfoBlock(
+                        station = station,
+                        showDescription = !shortViewport,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -199,7 +205,12 @@ fun PlayerScreen(
 
                 // Playback Controls
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (isCarSurface()) Modifier.widthIn(max = Dimens.CarContentMaxWidth)
+                            else Modifier
+                        ),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -218,14 +229,14 @@ fun PlayerScreen(
                     // Play/Pause
                     FilledIconButton(
                         onClick = { viewModel.togglePlayPause() },
-                        modifier = Modifier.size(Dimens.GapHuge * 2),
+                        modifier = Modifier.size(Dimens.PlayButtonSize),
                         shape = CircleShape
                     ) {
                         Icon(
                             if (uiState.isPlaying) Icons.Default.Pause
                             else Icons.Default.PlayArrow,
                             contentDescription = if (uiState.isPlaying) "暂停播放" else "继续播放",
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(Dimens.PlayIconSize)
                         )
                     }
 
@@ -297,6 +308,72 @@ fun PlayerScreen(
                 showTimerDialog = false
             }
         )
+    }
+}
+
+@Composable
+private fun CoverBlock(
+    url: String,
+    name: String,
+    isPlaying: Boolean,
+    size: Dp,
+    modifier: Modifier = Modifier
+) {
+    // 只在真正播放时才跑脉冲动画，暂停后不再 60fps 空转
+    val pulseScale = if (isPlaying) {
+        val transition = rememberInfiniteTransition(label = "pulse")
+        transition.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.05f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1500, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "pulse"
+        ).value
+    } else 1f
+
+    StationCover(
+        url = url,
+        size = size,
+        label = name,
+        modifier = modifier.scale(pulseScale)
+    )
+}
+
+/** 台名 / 频率 / 简介。车机档放在封面右侧，手机档放在封面下方。 */
+@Composable
+private fun StationInfoBlock(
+    station: RadioStation,
+    showDescription: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = station.name,
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center
+        )
+        if (station.frequency.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.GapTiny))
+            Text(
+                text = station.frequency,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+        // 视口不够高时让位给播放键：宁可少一段可有可无的简介，也不能让暂停按不到
+        if (showDescription && station.description.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.GapSmall))
+            Text(
+                text = station.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
+        }
     }
 }
 
