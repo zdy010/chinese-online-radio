@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,6 +35,7 @@ import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,26 +106,38 @@ fun HomeScreen(
                     )
                 }
                 else -> {
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            start = Dimens.ScreenPadding,
-                            end = Dimens.ScreenPadding,
-                            top = Dimens.GapTiny,
-                            bottom = if (currentStation != null) Dimens.MiniPlayerHeight else Dimens.GapTiny
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.ListGap)
-                    ) {
-                        items(uiState.filteredStations, key = { it.id }) { station ->
-                            StationListItem(
-                                station = station,
-                                isPlaying = currentStation?.id == station.id && isPlaying,
-                                isFavorite = uiState.favoriteIds.contains(station.id),
-                                onClick = {
-                                    viewModel.playStation(station)
-                                    onNavigateToPlayer(station.id)
-                                },
-                                onFavoriteClick = { viewModel.toggleFavorite(station.id) }
-                            )
+                    val padding = PaddingValues(
+                        start = Dimens.ScreenPadding,
+                        end = Dimens.ScreenPadding,
+                        top = Dimens.GapTiny,
+                        bottom = if (currentStation != null) Dimens.MiniPlayerHeight else Dimens.GapTiny
+                    )
+                    val gap = Arrangement.spacedBy(Dimens.ListGap)
+                    val cell: @Composable (RadioStation) -> Unit = { station ->
+                        StationListItem(
+                            station = station,
+                            isPlaying = currentStation?.id == station.id && isPlaying,
+                            isFavorite = uiState.favoriteIds.contains(station.id),
+                            onClick = {
+                                viewModel.playStation(station)
+                                onNavigateToPlayer(station.id)
+                            },
+                            onFavoriteClick = { viewModel.toggleFavorite(station.id) }
+                        )
+                    }
+                    if (isCarSurface()) {
+                        // 横屏单列会把一半宽度浪费掉；Adaptive 让列数跟着分辨率与 density 自适配
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 300.dp),
+                            contentPadding = padding,
+                            horizontalArrangement = gap,
+                            verticalArrangement = gap
+                        ) {
+                            gridItems(uiState.filteredStations, key = { it.id }) { station -> cell(station) }
+                        }
+                    } else {
+                        LazyColumn(contentPadding = padding, verticalArrangement = gap) {
+                            items(uiState.filteredStations, key = { it.id }) { station -> cell(station) }
                         }
                     }
                 }
@@ -137,6 +153,10 @@ private fun CategoryChipsRow(
     onCategorySelected: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // 车机档把筛选条凑到 88dp 短边；手机档不加约束，避免连 46.9dp 这种现存微差异都被动到
+    val chipMin = if (isCarSurface())
+        Modifier.widthIn(min = Dimens.TouchMin).heightIn(min = Dimens.TouchMin)
+    else Modifier
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
@@ -146,7 +166,8 @@ private fun CategoryChipsRow(
             FilterChip(
                 selected = selectedCategory == null,
                 onClick = { onCategorySelected(null) },
-                label = { Text("全部") }
+                label = { Text("全部") },
+                modifier = chipMin
             )
         }
         items(categories, key = { "chip-${it.first}" }) { (id, name) ->
@@ -155,7 +176,8 @@ private fun CategoryChipsRow(
                 onClick = {
                     onCategorySelected(if (selectedCategory == id) null else id)
                 },
-                label = { Text(name) }
+                label = { Text(name) },
+                modifier = chipMin
             )
         }
     }
@@ -222,7 +244,10 @@ fun StationListItem(
             }
 
             // Favorite Button
-            IconButton(onClick = onFavoriteClick) {
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+            ) {
                 Icon(
                     if (isFavorite) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = if (isFavorite) "取消收藏" else "收藏",

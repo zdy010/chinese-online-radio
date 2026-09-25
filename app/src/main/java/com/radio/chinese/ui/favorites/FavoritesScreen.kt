@@ -3,6 +3,9 @@ package com.radio.chinese.ui.favorites
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -22,6 +25,8 @@ import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.home.StationListItem
+import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -127,22 +132,33 @@ fun FavoritesScreen(
                 }
             }
             else -> {
-                LazyColumn(
-                    modifier = m,
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(filteredStations, key = { it.id }) { station ->
-                        StationListItem(
-                            station = station,
-                            isPlaying = currentStation?.id == station.id && isPlaying,
-                            isFavorite = true,
-                            onClick = {
-                                viewModel.playStation(station)
-                                onNavigateToPlayer(station.id)
-                            },
-                            onFavoriteClick = { viewModel.removeFavorite(station.id) }
-                        )
+                val padding = PaddingValues(Dimens.ScreenPadding)
+                val gap = Arrangement.spacedBy(Dimens.ListGap)
+                val cell: @Composable (RadioStation) -> Unit = { station ->
+                    StationListItem(
+                        station = station,
+                        isPlaying = currentStation?.id == station.id && isPlaying,
+                        isFavorite = true,
+                        onClick = {
+                            viewModel.playStation(station)
+                            onNavigateToPlayer(station.id)
+                        },
+                        onFavoriteClick = { viewModel.removeFavorite(station.id) }
+                    )
+                }
+                if (isCarSurface()) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 300.dp),
+                        modifier = m,
+                        contentPadding = padding,
+                        horizontalArrangement = gap,
+                        verticalArrangement = gap
+                    ) {
+                        gridItems(filteredStations, key = { it.id }) { station -> cell(station) }
+                    }
+                } else {
+                    LazyColumn(modifier = m, contentPadding = padding, verticalArrangement = gap) {
+                        items(filteredStations, key = { it.id }) { station -> cell(station) }
                     }
                 }
             }

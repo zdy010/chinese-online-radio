@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -65,7 +66,6 @@ fun AppSearchField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
         placeholder = { Text(placeholder) },
         leadingIcon = {
             Icon(Icons.Default.Search, contentDescription = null)
@@ -79,7 +79,11 @@ fun AppSearchField(
         },
         singleLine = true,
         shape = MaterialTheme.shapes.extraLarge,
-        textStyle = MaterialTheme.typography.bodyMedium
+        textStyle = MaterialTheme.typography.bodyMedium,
+        // 手机档 TouchMin=48dp 小于输入框自然高度，此约束不改变手机档；车机档抬到 88dp
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = Dimens.TouchMin)
     )
 }
 
