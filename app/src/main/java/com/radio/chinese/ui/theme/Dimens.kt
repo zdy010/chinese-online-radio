@@ -62,6 +62,9 @@ object Dimens {
     val RailWidth: Dp
         @Composable get() = if (car) 120.dp else 80.dp
 
+    // 车机档正文限宽：超宽屏上不让内容从屏幕左拉到右，眼睛要横着找控件
+    val CarContentMaxWidth: Dp = 1000.dp
+
     // 播放主控件：替换原先的 GapHuge * 2 与 40.dp 裸值
     val PlayButtonSize: Dp
         @Composable get() = if (car) 96.dp else 64.dp
