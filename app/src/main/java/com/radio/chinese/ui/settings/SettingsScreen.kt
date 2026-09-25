@@ -27,7 +27,8 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val themeMode: Int = 0,
-    val fontScaleKey: String = FontScaleOption.STANDARD.key
+    val fontScaleKey: String = FontScaleOption.STANDARD.key,
+    val uiMode: Int = 0
 )
 
 /**
@@ -57,6 +58,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(fontScaleKey = key)
             }
         }
+        viewModelScope.launch {
+            preferences.uiMode.collect { mode ->
+                _uiState.value = _uiState.value.copy(uiMode = mode)
+            }
+        }
     }
 
     fun setThemeMode(mode: Int) {
@@ -68,6 +74,12 @@ class SettingsViewModel @Inject constructor(
     fun setFontScaleKey(key: String) {
         viewModelScope.launch {
             preferences.setFontScaleKey(key)
+        }
+    }
+
+    fun setUiMode(mode: Int) {
+        viewModelScope.launch {
+            preferences.setUiMode(mode)
         }
     }
 }
@@ -139,6 +151,31 @@ fun SettingsScreen(
                 },
                 leadingContent = {
                     Icon(Icons.Default.FormatSize, contentDescription = null)
+                }
+            )
+
+            HorizontalDivider()
+
+            // 界面形态：加装车机上报的 density 不可控，自动判定必须能被推翻
+            ListItem(
+                headlineContent = { Text("界面模式") },
+                supportingContent = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.ChipGap)) {
+                        listOf(
+                            0 to "自动",
+                            1 to "手机",
+                            2 to "车机"
+                        ).forEach { (mode, label) ->
+                            FilterChip(
+                                selected = uiState.uiMode == mode,
+                                onClick = { viewModel.setUiMode(mode) },
+                                label = { Text(label) }
+                            )
+                        }
+                    }
+                },
+                leadingContent = {
+                    Icon(Icons.Default.Tablet, contentDescription = null)
                 }
             )
 
