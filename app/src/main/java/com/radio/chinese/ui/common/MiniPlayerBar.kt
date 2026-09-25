@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.MiniPlayerShape
+import com.radio.chinese.ui.theme.isCarSurface
 
 /**
  * 统一的迷你播放条。
@@ -133,7 +136,10 @@ fun RadioMiniPlayerBar(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            IconButton(onClick = onPlayPause) {
+            IconButton(
+                onClick = onPlayPause,
+                modifier = Modifier.size(Dimens.TouchMin)
+            ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = if (isPlaying) "暂停播放" else "开始播放"
@@ -165,13 +171,18 @@ fun OperaMiniPlayerBar(
     onStop: () -> Unit,
     onCycleRepeat: () -> Unit,
     onSeek: (Long) -> Unit,
+    onSeekForward: () -> Unit,
+    onSeekBackward: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val canSeek = durationMs > 0L
     var isDragging by remember { mutableStateOf(false) }
     var dragPositionMs by remember { mutableLongStateOf(0L) }
+    val car = isCarSurface()
 
     MiniPlayerShell(modifier = modifier) {
+        // canSeek 为假（直播流 / 时长未知）时滑条与 ±15 秒都不出现，
+        // 避免把进度当成 0 拖回去。
         if (canSeek) {
             Slider(
                 value = (if (isDragging) dragPositionMs else positionMs).toFloat(),
@@ -186,7 +197,8 @@ fun OperaMiniPlayerBar(
                 valueRange = 0f..durationMs.toFloat(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = Dimens.GapHuge)
+                    // 手机档保持原来的 32dp 下限，车机档抬到 88dp 命中区
+                    .heightIn(min = if (car) Dimens.TouchMin else Dimens.GapHuge)
                     .padding(horizontal = Dimens.GapMedium),
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
@@ -258,26 +270,49 @@ fun OperaMiniPlayerBar(
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = onPrevious) {
+            // ±15 秒：行车中拖细滑条不现实，这两个按钮是主要纠偏手段。
+            // 只加不减——滑条依旧在，不拿走任何既有能力。
+            if (car) {
+                IconButton(onClick = onSeekBackward, modifier = Modifier.size(Dimens.TouchMin)) {
+                    Icon(
+                        Icons.Default.Replay10,
+                        contentDescription = "后退 15 秒",
+                        modifier = Modifier.size(Dimens.IconLarge)
+                    )
+                }
+            }
+            IconButton(onClick = onPrevious, modifier = if (car) Modifier.size(Dimens.TouchMin) else Modifier) {
                 Icon(
                     imageVector = Icons.Default.SkipPrevious,
                     contentDescription = "上一段",
                     modifier = Modifier.size(Dimens.IconMedium)
                 )
             }
-            IconButton(onClick = onPlayPause) {
+            IconButton(
+                onClick = onPlayPause,
+                modifier = if (car) Modifier.size(Dimens.TouchMin) else Modifier
+            ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = if (isPlaying) "暂停播放" else "继续播放",
                     modifier = Modifier.size(Dimens.IconLarge)
                 )
             }
-            IconButton(onClick = onNext) {
+            IconButton(onClick = onNext, modifier = if (car) Modifier.size(Dimens.TouchMin) else Modifier) {
                 Icon(
                     imageVector = Icons.Default.SkipNext,
                     contentDescription = "下一段",
                     modifier = Modifier.size(Dimens.IconMedium)
                 )
+            }
+            if (car) {
+                IconButton(onClick = onSeekForward, modifier = Modifier.size(Dimens.TouchMin)) {
+                    Icon(
+                        Icons.Default.Forward10,
+                        contentDescription = "前进 15 秒",
+                        modifier = Modifier.size(Dimens.IconLarge)
+                    )
+                }
             }
             Spacer(modifier = Modifier.weight(1f))
         }
