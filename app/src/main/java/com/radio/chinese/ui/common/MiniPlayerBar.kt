@@ -138,7 +138,7 @@ fun RadioMiniPlayerBar(
             }
             IconButton(
                 onClick = onPlayPause,
-                modifier = Modifier.size(Dimens.TouchMin)
+                modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
             ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -197,8 +197,8 @@ fun OperaMiniPlayerBar(
                 valueRange = 0f..durationMs.toFloat(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    // 手机档保持原来的 32dp 下限，车机档抬到 88dp 命中区
-                    .heightIn(min = if (car) Dimens.TouchMin else Dimens.GapHuge)
+                    // 手机档保持原来的 32dp 下限，车机档抬到 64dp 命中区
+                    .heightIn(min = Dimens.SliderTouchHeight)
                     .padding(horizontal = Dimens.GapMedium),
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
@@ -270,13 +270,15 @@ fun OperaMiniPlayerBar(
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            // ±15 秒：行车中拖细滑条不现实，这两个按钮是主要纠偏手段。
+            // ±10 秒：行车中拖细滑条不现实，这两个按钮是主要纠偏手段。
             // 只加不减——滑条依旧在，不拿走任何既有能力。
-            if (car) {
+            // 必须同时限定 canSeek：时长未知时 seekTo 会把整段弹回开头（进度条此时又看不见）。
+            // 步长与图标上的「10」对齐，不让图标写 10、行为跑 15。
+            if (car && canSeek) {
                 IconButton(onClick = onSeekBackward, modifier = Modifier.size(Dimens.TouchMin)) {
                     Icon(
                         Icons.Default.Replay10,
-                        contentDescription = "后退 15 秒",
+                        contentDescription = "后退 10 秒",
                         modifier = Modifier.size(Dimens.IconLarge)
                     )
                 }
@@ -305,11 +307,11 @@ fun OperaMiniPlayerBar(
                     modifier = Modifier.size(Dimens.IconMedium)
                 )
             }
-            if (car) {
+            if (car && canSeek) {
                 IconButton(onClick = onSeekForward, modifier = Modifier.size(Dimens.TouchMin)) {
                     Icon(
                         Icons.Default.Forward10,
-                        contentDescription = "前进 15 秒",
+                        contentDescription = "前进 10 秒",
                         modifier = Modifier.size(Dimens.IconLarge)
                     )
                 }

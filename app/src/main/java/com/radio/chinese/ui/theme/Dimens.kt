@@ -43,9 +43,12 @@ object Dimens {
     val IconLarge: Dp = 32.dp
     val MiniPlayerHeight: Dp
         @Composable get() = if (car) 104.dp else 72.dp
-    val OperaMiniPlayerHeight: Dp
-        @Composable get() = if (car) 144.dp else 104.dp
     val MiniPlayerProgress: Dp = 2.dp
+
+    // 进度滑条的命中区高度：手机档沿用原来的 32dp；车机档用 64dp——
+    // 再往上抬会把三行迷你条撑到 270dp，把列表挤得只剩三行
+    val SliderTouchHeight: Dp
+        @Composable get() = if (car) 64.dp else 32.dp
 
     // 封面/图标位
     val CoverTiny: Dp = 40.dp
@@ -54,9 +57,9 @@ object Dimens {
     val CoverLargeMax: Dp
         @Composable get() = if (car) 320.dp else 220.dp
 
-    // 局部滚动上限
-    val SourceListMax: Dp
-        @Composable get() = if (car) 280.dp else 160.dp
+    // 局部滚动上限：车机档不能比手机档更高——迷你条/节目源/播控要抢同一屏高度，
+    // 把源列表放大到 280dp 会把播放键顶出首屏
+    val SourceListMax: Dp = 160.dp
 
     // 车机档左侧导航栏宽度（手机档不用导航栏，取 Material3 默认值）
     val RailWidth: Dp

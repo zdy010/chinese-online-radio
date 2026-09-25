@@ -54,6 +54,7 @@ import com.radio.chinese.ui.library.AudioLibraryScreen
 import com.radio.chinese.ui.library.AudioLibraryViewModel
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
+import com.radio.chinese.ui.theme.usesRailNavigation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -123,9 +124,10 @@ fun AudioMainScreen(
                     onStop = { playerManager.stopOpera() },
                     onCycleRepeat = { playerManager.cycleOperaRepeatMode() },
                     onSeek = { playerManager.seekOperaTo(it) },
-                    // 这两个方法早就在 PlayerManager 里，只是从未被任何界面调用
-                    onSeekForward = { playerManager.seekOperaForward() },
-                    onSeekBackward = { playerManager.seekOperaBackward() }
+                    // 这两个方法早就在 PlayerManager 里，只是从未被任何界面调用；
+                    // 步长显式传 10，与图标上的「10」一致
+                    onSeekForward = { playerManager.seekOperaForward(10) },
+                    onSeekBackward = { playerManager.seekOperaBackward(10) }
                 )
             }
         }
@@ -155,7 +157,8 @@ fun AudioMainScreen(
             val headerVisible = pagerState.currentPage == 1 && uiState.showBrowseContent
             val headerName = uiState.browsingSource?.name ?: ""
 
-            if (isCarSurface()) {
+            val railNav = usesRailNavigation()
+            if (railNav) {
                 // 横屏：页签改左侧栏，内容区拿到整屏高度
                 Row(modifier = Modifier.weight(1f)) {
                     SurfaceTabBar(
@@ -171,7 +174,9 @@ fun AudioMainScreen(
                             playerManager = playerManager,
                             viewModel = viewModel,
                             searchQuery = searchQuery,
-                            modifier = Modifier.fillMaxSize()
+                            // 必须是 weight 不能是 fillMaxSize：同列里还有顶部库名行，
+                            // fillMaxSize 会让总高超出父容器，溢出的列表项会盖住下方播放条并抢点击
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }

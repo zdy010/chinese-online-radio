@@ -49,14 +49,18 @@ class RadioService : MediaSessionService() {
      * 新系统上降级成“什么也没发生”，而不是开机崩溃循环。
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (exoPlayer?.isPlaying != true) {
+        // 只对开机自启这一种来源挂「已就绪」前台通知。本服务 exported 且带 media3 的
+        // intent-filter，方控媒体键与外部 controller 也会走 onStartCommand；
+        // 在那里无条件 startForeground（失败还 stopSelf）会把用户按方向盘播放键吞掉。
+        if (intent?.action == ACTION_PREPARE_SESSION && exoPlayer?.isPlaying != true) {
             try {
                 ServiceCompat.startForeground(
                     this, READY_NOTIFICATION_ID, buildReadyNotification(),
                     android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
                 )
-            } catch (_: Exception) {
-                // 不给前台能力就直接收摊；stopSelf 同时避开“没调 startForeground”的超时异常
+            } catch (e: Exception) {
+                // 安卓 14+ 禁从 BOOT_COMPLETED 起 mediaPlayback：降级成“无事发生”，但留痕迹
+                android.util.Log.w(TAG, "开机就绪通知未能建起，本次开机自启作废", e)
                 stopSelf()
             }
         }
@@ -151,6 +155,11 @@ class RadioService : MediaSessionService() {
     }
 
     companion object {
+        /** 开机自启专用 action，由 BootReceiver 发出 */
+        const val ACTION_PREPARE_SESSION = "com.radio.chinese.action.PREPARE_SESSION"
+
+        private const val TAG = "RadioService"
+
         /** 1002 避开 Media3 自己用的 1001 */
         private const val READY_NOTIFICATION_ID = 1002
     }

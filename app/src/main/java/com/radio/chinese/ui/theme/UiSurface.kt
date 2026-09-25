@@ -3,9 +3,7 @@ package com.radio.chinese.ui.theme
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 
 /**
@@ -45,3 +43,14 @@ fun rememberUiSurface(mode: Int): UiSurface {
 
 @Composable
 fun isCarSurface(): Boolean = LocalUiSurface.current == UiSurface.Car
+
+/**
+ * 车机档下页签栏是否用左侧 NavigationRail。
+ *
+ * rail 是竖向排列的，4 个条目要占 ≈400dp 高；density 报 240 的车机横屏只有 480dp，
+ * 再减掉搜索栏就只装得下三个，“收藏/最近”直接不可达。视口不够高时退回顶部横条，
+ * 页签数量多时横着排反而放得下。
+ */
+@Composable
+fun usesRailNavigation(): Boolean =
+    isCarSurface() && LocalConfiguration.current.screenHeightDp >= 560

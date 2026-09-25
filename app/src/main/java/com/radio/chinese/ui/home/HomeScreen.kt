@@ -34,6 +34,7 @@ import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.StationCover
+import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 
@@ -106,7 +107,7 @@ fun HomeScreen(
                     )
                 }
                 else -> {
-                    val padding = PaddingValues(
+                    val listPadding = PaddingValues(
                         start = Dimens.ScreenPadding,
                         end = Dimens.ScreenPadding,
                         top = Dimens.GapTiny,
@@ -129,14 +130,14 @@ fun HomeScreen(
                         // 横屏单列会把一半宽度浪费掉；Adaptive 让列数跟着分辨率与 density 自适配
                         LazyVerticalGrid(
                             columns = GridCells.Adaptive(minSize = 300.dp),
-                            contentPadding = padding,
+                            contentPadding = listPadding,
                             horizontalArrangement = gap,
                             verticalArrangement = gap
                         ) {
                             gridItems(uiState.filteredStations, key = { it.id }) { station -> cell(station) }
                         }
                     } else {
-                        LazyColumn(contentPadding = padding, verticalArrangement = gap) {
+                        LazyColumn(contentPadding = listPadding, verticalArrangement = gap) {
                             items(uiState.filteredStations, key = { it.id }) { station -> cell(station) }
                         }
                     }
@@ -154,9 +155,6 @@ private fun CategoryChipsRow(
     modifier: Modifier = Modifier
 ) {
     // 车机档把筛选条凑到 88dp 短边；手机档不加约束，避免连 46.9dp 这种现存微差异都被动到
-    val chipMin = if (isCarSurface())
-        Modifier.widthIn(min = Dimens.TouchMin).heightIn(min = Dimens.TouchMin)
-    else Modifier
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
@@ -167,7 +165,7 @@ private fun CategoryChipsRow(
                 selected = selectedCategory == null,
                 onClick = { onCategorySelected(null) },
                 label = { Text("全部") },
-                modifier = chipMin
+                modifier = Modifier.carTouchTarget()
             )
         }
         items(categories, key = { "chip-${it.first}" }) { (id, name) ->
@@ -177,7 +175,7 @@ private fun CategoryChipsRow(
                     onCategorySelected(if (selectedCategory == id) null else id)
                 },
                 label = { Text(name) },
-                modifier = chipMin
+                modifier = Modifier.carTouchTarget()
             )
         }
     }

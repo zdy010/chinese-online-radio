@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.radio.chinese.ui.theme.Dimens
-import com.radio.chinese.ui.theme.isCarSurface
+import com.radio.chinese.ui.theme.usesRailNavigation
 
 /** 一个页签：文案 + 图标。图标只在车机档的左侧导航栏上用得到。 */
 data class SurfaceTab(val label: String, val icon: ImageVector)
@@ -34,7 +34,7 @@ fun SurfaceTabBar(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (isCarSurface()) {
+    if (usesRailNavigation()) {
         NavigationRail(modifier = modifier.fillMaxHeight()) {
             tabs.forEachIndexed { index, tab ->
                 NavigationRailItem(
