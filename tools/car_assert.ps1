@@ -55,3 +55,27 @@ if ($viol.Count -eq 0) {
   "VIOLATIONS ($($viol.Count)) 阈值 $minDp dp @ density $density"
   $viol | ForEach-Object { "  $_" }
 }
+
+# 第 2 项断言：可点控件必须落在屏幕内。被裁到屏外的节点在 dump 里仍然带完整尺寸，
+# 只看尺寸会漏判“rail 第四项装不下”这类错。
+$root = $doc.DocumentElement.FirstChild
+$rm = [regex]::Match($root.GetAttribute("bounds"), '\[(\d+),(\d+)\]\[(\d+),(\d+)\]')
+if ($rm.Success) {
+  $rr = [int]$rm.Groups[3].Value; $rb = [int]$rm.Groups[4].Value
+  $off = New-Object System.Collections.Generic.List[string]
+  function WalkOff($nodes) {
+    foreach ($c in $nodes) {
+      if ($c.GetAttribute("clickable") -eq "true") {
+        $m = [regex]::Match($c.GetAttribute("bounds"), '\[(\d+),(\d+)\]\[(\d+),(\d+)\]')
+        if ($m.Success -and ([int]$m.Groups[3].Value -gt $rr + 2 -or [int]$m.Groups[4].Value -gt $rb + 2)) {
+          $lab = $c.GetAttribute("content-desc"); if (-not $lab) { $lab = $c.GetAttribute("text") }
+          $off.Add("'$lab' $($m.Value) 超出可视区 [$rr,$rb]")
+        }
+      }
+      if ($c.FirstChild) { WalkOff $c.ChildNodes }
+    }
+  }
+  WalkOff $doc.DocumentElement.ChildNodes
+  if ($off.Count -eq 0) { "OK: 可点控件均在可视区内" }
+  else { "OFFSCREEN ($($off.Count))"; $off | ForEach-Object { "  $_" } }
+}

@@ -27,6 +27,7 @@ import com.radio.chinese.ui.home.HomeScreen
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
+import com.radio.chinese.ui.theme.usesRailNavigation
 import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -82,8 +83,9 @@ fun RadioScreen(
         )
 
         val onSelectTab: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
+        val railNav = usesRailNavigation()
 
-        if (isCarSurface()) {
+        if (railNav) {
             // 横屏上顶部横条既占高度又浪费宽度，改成左侧栏后内容区拿到整屏高度
             Row(modifier = Modifier.weight(1f)) {
                 SurfaceTabBar(

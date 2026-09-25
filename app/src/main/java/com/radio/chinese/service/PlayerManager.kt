@@ -492,11 +492,17 @@ class PlayerManager @Inject constructor(
 
     fun seekOperaForward(seconds: Long = 15) {
         val ctrl = controller ?: return
-        ctrl.seekTo((ctrl.currentPosition + seconds * 1000).coerceAtMost(ctrl.duration))
+        val dur = ctrl.duration
+        // 时长未知（未就绪 / 直播）时不能猜：coerceAtMost(0) 会把整段弹回开头，
+        // coerceAtMost(-1) 等于 TIME_UNSET，行为未定义
+        if (dur == null || dur <= 0L) return
+        ctrl.seekTo((ctrl.currentPosition + seconds * 1000).coerceAtMost(dur))
     }
 
     fun seekOperaBackward(seconds: Long = 15) {
         val ctrl = controller ?: return
+        val dur = ctrl.duration
+        if (dur == null || dur <= 0L) return
         ctrl.seekTo((ctrl.currentPosition - seconds * 1000).coerceAtLeast(0))
     }
 

@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
@@ -21,6 +20,7 @@ import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.service.StreamStatus
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StatusChip
+import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.launch
@@ -84,7 +84,10 @@ fun ManageScreen(
         Column(
             modifier = Modifier
                 // 顺序不能反：fillMaxWidth 在前会把宽度钉成屏宽，后面的 widthIn 缩不回来
-                .widthIn(max = if (isCarSurface()) Dimens.CarContentMaxWidth else Dp.Infinity)
+                .then(
+                    if (isCarSurface()) Modifier.widthIn(max = Dimens.CarContentMaxWidth)
+                    else Modifier
+                )
                 .fillMaxWidth()
         ) {
             // Checking progress
@@ -111,7 +114,8 @@ fun ManageScreen(
                     // 全量检测要跑几十秒，不给个取消入口就只能干等或退页
                     TextButton(
                         onClick = { viewModel.cancelCheckAll() },
-                        contentPadding = PaddingValues(horizontal = Dimens.GapSmall)
+                        contentPadding = PaddingValues(horizontal = Dimens.GapSmall),
+                        modifier = Modifier.carTouchTarget()
                     ) {
                         Text("取消检测", style = MaterialTheme.typography.labelLarge)
                     }

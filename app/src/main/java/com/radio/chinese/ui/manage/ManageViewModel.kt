@@ -74,7 +74,13 @@ class ManageViewModel @Inject constructor(
                     val result = streamChecker.checkStream(station.primaryUrl, station.id)
                     // 逐项上报：以前这个计数只在开头置 0、结尾置满，
                     // 349 个电台检测的 20 多秒里进度条一直是 0/349，看起来像死机。
-                    _uiState.update { it.copy(checkedCount = it.checkedCount + 1) }
+                    // 结果也逐项落盘：否则中途取消会把已测出的几百条全丢掉。
+                    _uiState.update {
+                        it.copy(
+                            checkedCount = it.checkedCount + 1,
+                            checkResults = it.checkResults + (station.id to result)
+                        )
+                    }
                     result
                 }
             }.awaitAll()

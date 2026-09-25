@@ -9,13 +9,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.FontScaleOption
 import com.radio.chinese.ui.theme.isCarSurface
@@ -134,7 +134,10 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 // 顺序不能反：fillMaxWidth 在前会把宽度钉成屏宽，后面的 widthIn 缩不回来
-                .widthIn(max = if (isCarSurface()) Dimens.CarContentMaxWidth else Dp.Infinity)
+                .then(
+                    if (isCarSurface()) Modifier.widthIn(max = Dimens.CarContentMaxWidth)
+                    else Modifier
+                )
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
@@ -192,7 +195,9 @@ fun SettingsScreen(
                             FilterChip(
                                 selected = uiState.uiMode == mode,
                                 onClick = { viewModel.setUiMode(mode) },
-                                label = { Text(label) }
+                                label = { Text(label) },
+                                // 形态误判时这三枚胶囊是唯一的自救入口，命中区不能是最小的
+                                modifier = Modifier.carTouchTarget()
                             )
                         }
                     }
@@ -207,7 +212,7 @@ fun SettingsScreen(
             // 开机自启：只拉起会话不出声；能不能起来取决于车机 ROM 放不放行
             ListItem(
                 headlineContent = { Text("开机自启") },
-                supportingContent = { Text("开机后恢复上次电台（不自动播放），需车机允许本应用自启") },
+                supportingContent = { Text("开机后在后台准备好收音机服务（不自动播放、不恢复电台），需车机允许本应用自启") },
                 leadingContent = {
                     Icon(Icons.Default.Power, contentDescription = null)
                 },
@@ -217,9 +222,11 @@ fun SettingsScreen(
                         onCheckedChange = { viewModel.setBootAutoStart(it) }
                     )
                 },
-                modifier = Modifier.clickable {
-                    viewModel.setBootAutoStart(!uiState.bootAutoStart)
-                }
+                modifier = Modifier
+                    .carTouchTarget()
+                    .clickable {
+                        viewModel.setBootAutoStart(!uiState.bootAutoStart)
+                    }
             )
 
             HorizontalDivider()

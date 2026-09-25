@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -22,6 +23,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
+
+/**
+ * 车机档下把控件命中区抬到 [Dimens.TouchMin]；手机档原样返回。
+ *
+ * 必须这样包：手机档已有一些小于 48dp 的现存控件（比如窄分类 chip），
+ * 无条件加约束会破坏「手机端逐像素零回退」。
+ */
+@Composable
+fun Modifier.carTouchTarget(): Modifier =
+    if (isCarSurface()) {
+        this.heightIn(min = Dimens.TouchMin).widthIn(min = Dimens.TouchMin)
+    } else {
+        this
+    }
 
 /**
  * 纯装饰性状态标签。
