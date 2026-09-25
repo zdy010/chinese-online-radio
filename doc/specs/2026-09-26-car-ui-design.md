@@ -32,6 +32,9 @@ val LocalUiSurface = compositionLocalOf { UiSurface.Phone }
 
 自动判定：`smallestScreenWidthDp >= 600 && orientation == LANDSCAPE` → Car。
 
+**车机恒为横屏（车主已确认）**：不设计“车机 + 竖屏”布局。`orientation == LANDSCAPE` 这个条件的作用不是适配车机方
+向，而是排除竖屏平板 / 折叠屏内屏被误判成车机档。
+
 **必须有手动覆盖**，因为加装车机的 density 配置极随意：1280x720@160dpi 是 sw720dp（判对），但 1920x1200@480dpi 只有 sw400dp（误判成手机）、800x480@160dpi 是 sw480dp（误判）。
 
 - 偏好存储：`RadioPreferences` 新增 `KEY_UI_MODE = intPreferencesKey("ui_mode")`，`uiMode: Flow<Int>`（0=自动 / 1=手机 / 2=车机）+ `setUiMode(Int)`
@@ -83,10 +86,10 @@ object Dimens {
 | FavoritesScreen / RadioRecentTab | 单列 | 同 Home 的 Adaptive grid | 复用同一分支写法 |
 | PlayerScreen | 单列纵向 | **左右分栏**：左=封面+台名+频率+简介，右=状态+节目源+播放控件 | `Row { Column(weight(1f)); Column(weight(1.2f)) }` 作为 `verticalScroll` 容器的子项（Row 内 weight 是横向，与纵向滚动不冲突）；播放键 `PlayButtonSize`；收藏/定时器保持顶栏。现存的 `shortViewport`（视口 <500dp 时隐简介 + 缩封面）降级策略**保留**，仅用于 800x480 这类矮屏 |
 | RadioMiniPlayerBar | 72dp 单行 | 104dp，图标与文字随 token 放大 | 高度已由 `MiniPlayerHeight` 驱动，改 token 即生效 |
-| OperaMiniPlayerBar | Slider + 两行控件 | Slider **保留可拖动**，命中区抬高到 64dp；**新增 ±15 秒两个大按钮**；行高由 `OperaMiniPlayerHeight` 放大 | Slider 外层 `heightIn(min = 64.dp)`；新增 `PlayerManager.seekOperaBy(deltaMs: Long)`，内部 `seekOperaTo((pos + delta).coerceIn(0, duration))` |
+| OperaMiniPlayerBar | Slider + 两行控件 | Slider **保留可拖动**，命中区抬高到 64dp；**新增 ±10 秒两个大按钮**（仅车机档且 duration>0） | 行高由三行自然叠出（≈240dp）；`PlayerManager.seekOperaForward/Backward` **早已存在但全项目 0 处调用**，本次直接接线，不新增 API；两个方法已补 `duration<=0 直接 return` 兜底 |
 | AudioLibraryScreen / BrowseScreen / AudioFavoritesTab / AudioRecentTab | 单列 | 行高 `RowMinHeight`（自动 88dp）+ 列表项文字升 `bodyLarge` | 行高与字号已经引用 §3 的 token，换档后自动生效，不新增机制 |
-| SettingsScreen | 单列 | 单列 + **居中限宽 720dp**；新增三项见 §5 | 不做双列（YAGNI） |
-| ManageScreen / AddStationDialog / AddSourceDialog / SleepTimerDialog | 现有布局 | 对话框 `widthIn(max = 720.dp)` 居中，控件随 token 放大 | `ExposedDropdownMenu` 方案不变（上轮已验证在对话框内可用） |
+| SettingsScreen | 单列 | 单列 + **居中限宽 1000dp**（`Dimens.CarContentMaxWidth`，与播放页/源管理共用一个 token）；新增两项见 §5 | 不做双列（YAGNI） |
+| ManageScreen / 各对话框 | 现有布局 | 页面内容限宽居中；控件随 token 放大。**对话框不加宽度约束** —— M3 AlertDialog 自身已将宽锁在 280~560dp | `ExposedDropdownMenu` 方案不变（上轮已验证在对话框内可用） |
 | StateViews（Loading/Empty/Error） | 图标 `CoverSmall*2` | 自动变大（走 token） | 无需改动 |
 
 **明确不改**：`SearchBarRow` 的位置与行为（车机档只是变宽变大，不引入新的选台弹层）；页面导航结构；任何既有交互入口（依"UI 重构禁止擅自移除交互控件"规范）。
@@ -149,7 +152,8 @@ object Dimens {
 
 1. 包形态：**单 APK 自适应**（非独立 flavor），保留将来按 `UiSurface` 接口拆 flavor 的可能
 2. 功能范围：**全功能放大版**——音频库/WebDAV/授权码等都上车机档，不做精简
-3. 戏曲进度条：**保留可拖动 Slider**（命中区抬高到 64dp）+ **新增 ±15 秒按钮**，不砍既有能力
+3. 戏曲进度条：**保留可拖动 Slider**（命中区抬高到 64dp）+ **新增步进按钮**，不砍既有能力
+   —— 实现时定为 **±10 秒**：本项目 icons 版本没有 Replay15/Forward15，而图标上的数字必须与行为一致，所以统一用 10 秒
 4. 车机档字号：**下限 1.15（=「大」档），不叠乘**，用户仍可升到 1.3
 5. 硬件收音本期不做，等 FYT 探测结果另立 spec
 
