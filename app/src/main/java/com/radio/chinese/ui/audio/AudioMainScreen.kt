@@ -122,7 +122,10 @@ fun AudioMainScreen(
                     onNext = { playerManager.playOperaNext() },
                     onStop = { playerManager.stopOpera() },
                     onCycleRepeat = { playerManager.cycleOperaRepeatMode() },
-                    onSeek = { playerManager.seekOperaTo(it) }
+                    onSeek = { playerManager.seekOperaTo(it) },
+                    // 这两个方法早就在 PlayerManager 里，只是从未被任何界面调用
+                    onSeekForward = { playerManager.seekOperaForward() },
+                    onSeekBackward = { playerManager.seekOperaBackward() }
                 )
             }
         }
