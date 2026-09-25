@@ -81,6 +81,17 @@ class RadioPreferences @Inject constructor(
         }
     }
 
+    /** 开机后是否恢复播放会话（默认关：只挂“已就绪”通知，不出声） */
+    val bootAutoStart: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[KEY_BOOT_AUTOSTART] ?: false
+    }
+
+    suspend fun setBootAutoStart(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_BOOT_AUTOSTART] = enabled
+        }
+    }
+
     suspend fun setThemeMode(mode: Int) {
         dataStore.edit { prefs ->
             prefs[KEY_THEME_MODE] = mode
@@ -245,6 +256,7 @@ class RadioPreferences @Inject constructor(
         private val KEY_RECENT_STATIONS = stringPreferencesKey("radio_recent_station_ids")
         private val KEY_FONT_SCALE = stringPreferencesKey("font_scale")
         private val KEY_UI_MODE = intPreferencesKey("ui_mode")
+        private val KEY_BOOT_AUTOSTART = booleanPreferencesKey("boot_auto_start")
         private val KEY_INVALID_STATIONS = stringSetPreferencesKey("invalid_station_ids")
         private val KEY_CUSTOM_STATIONS = stringPreferencesKey("custom_stations_json")
         private val KEY_OPERA_PLAY_POSITIONS = stringPreferencesKey("opera_play_positions")

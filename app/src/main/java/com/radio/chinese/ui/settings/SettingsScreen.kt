@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -28,7 +29,8 @@ import javax.inject.Inject
 data class SettingsUiState(
     val themeMode: Int = 0,
     val fontScaleKey: String = FontScaleOption.STANDARD.key,
-    val uiMode: Int = 0
+    val uiMode: Int = 0,
+    val bootAutoStart: Boolean = false
 )
 
 /**
@@ -63,6 +65,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(uiMode = mode)
             }
         }
+        viewModelScope.launch {
+            preferences.bootAutoStart.collect { enabled ->
+                _uiState.value = _uiState.value.copy(bootAutoStart = enabled)
+            }
+        }
     }
 
     fun setThemeMode(mode: Int) {
@@ -80,6 +87,12 @@ class SettingsViewModel @Inject constructor(
     fun setUiMode(mode: Int) {
         viewModelScope.launch {
             preferences.setUiMode(mode)
+        }
+    }
+
+    fun setBootAutoStart(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.setBootAutoStart(enabled)
         }
     }
 }
@@ -113,6 +126,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .widthIn(max = if (isCarSurface()) Dimens.CarContentMaxWidth else Dp.Infinity)
                 .verticalScroll(rememberScrollState())
         ) {
             // Theme Setting
@@ -176,6 +190,26 @@ fun SettingsScreen(
                 },
                 leadingContent = {
                     Icon(Icons.Default.Tablet, contentDescription = null)
+                }
+            )
+
+            HorizontalDivider()
+
+            // 开机自启：只拉起会话不出声；能不能起来取决于车机 ROM 放不放行
+            ListItem(
+                headlineContent = { Text("开机自启") },
+                supportingContent = { Text("开机后恢复上次电台（不自动播放），需车机允许本应用自启") },
+                leadingContent = {
+                    Icon(Icons.Default.Power, contentDescription = null)
+                },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.bootAutoStart,
+                        onCheckedChange = { viewModel.setBootAutoStart(it) }
+                    )
+                },
+                modifier = Modifier.clickable {
+                    viewModel.setBootAutoStart(!uiState.bootAutoStart)
                 }
             )
 
