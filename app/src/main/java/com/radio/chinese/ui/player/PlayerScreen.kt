@@ -140,10 +140,10 @@ fun PlayerScreen(
                 // 手机档仍按原来的顺序铺开，间距与取值一字不改。
                 if (isCarSurface()) {
                     Row(
-                        // 超宽屏上不让内容从左拉到右；Column 已居中对齐，限宽后即居中
+                        // 超宽屏上不让内容从左拉到右；widthIn 必须在 fillMaxWidth 之前
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .widthIn(max = Dimens.CarContentMaxWidth),
+                            .widthIn(max = Dimens.CarContentMaxWidth)
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Dimens.GapXLarge),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -206,11 +206,11 @@ fun PlayerScreen(
                 // Playback Controls
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .then(
                             if (isCarSurface()) Modifier.widthIn(max = Dimens.CarContentMaxWidth)
                             else Modifier
-                        ),
+                        )
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

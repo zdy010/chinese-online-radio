@@ -18,6 +18,7 @@ import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.FontScaleOption
+import com.radio.chinese.ui.theme.isCarSurface
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -122,11 +123,19 @@ fun SettingsScreen(
             )
         }
     ) { padding ->
+        // 车机档限宽居中：1280dp 宽屏上 ListItem 拉满整行会让点击目标相距过远，
+        // 拇指要探出去按。手机档这一层 Box 不改变任何尺寸。
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
+        ) {
         Column(
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
+                // 顺序不能反：fillMaxWidth 在前会把宽度钉成屏宽，后面的 widthIn 缩不回来
                 .widthIn(max = if (isCarSurface()) Dimens.CarContentMaxWidth else Dp.Infinity)
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
             // Theme Setting
@@ -272,6 +281,7 @@ fun SettingsScreen(
                     .align(Alignment.CenterHorizontally)
                     .padding(16.dp)
             )
+        }
         }
     }
 

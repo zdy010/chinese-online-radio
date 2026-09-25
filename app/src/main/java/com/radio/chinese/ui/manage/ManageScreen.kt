@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
@@ -21,6 +22,7 @@ import com.radio.chinese.service.StreamStatus
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StatusChip
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.launch
 
 // 分类表单一来源：以前这里手写一份且漏了 tv_audio，导致同一电台在不同页显示不同分类名
@@ -74,7 +76,17 @@ fun ManageScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        // 车机档限宽居中，手机档这层 Box 不改变任何尺寸
+        Box(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentAlignment = Alignment.TopCenter
+        ) {
+        Column(
+            modifier = Modifier
+                // 顺序不能反：fillMaxWidth 在前会把宽度钉成屏宽，后面的 widthIn 缩不回来
+                .widthIn(max = if (isCarSurface()) Dimens.CarContentMaxWidth else Dp.Infinity)
+                .fillMaxWidth()
+        ) {
             // Checking progress
             if (uiState.isChecking) {
                 LinearProgressIndicator(
@@ -142,6 +154,7 @@ fun ManageScreen(
                     }
                 }
             }
+        }
         }
     }
 
@@ -214,7 +227,8 @@ private fun StationManageItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .heightIn(min = Dimens.RowMinHeight)
+                .padding(Dimens.CardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Status icon
