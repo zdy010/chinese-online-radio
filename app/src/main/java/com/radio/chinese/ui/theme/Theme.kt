@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
@@ -49,8 +50,14 @@ private val DarkColorScheme = darkColorScheme(
 fun ChineseRadioTheme(
     themeMode: Int = 0, // 0 = system, 1 = light, 2 = dark
     fontScale: Float = 1f,
+    uiMode: Int = 0,    // 0 = 自动, 1 = 手机, 2 = 车机
     content: @Composable () -> Unit
 ) {
+    val surface = rememberUiSurface(uiMode)
+    // 车机档取字号“下限”而不是叠乘：标准档在车机上按「大」渲染，
+    // 用户仍可选超大(1.3)，不会出现 1.3×1.15 那种失控放大。
+    val effectiveScale = if (surface == UiSurface.Car) maxOf(fontScale, 1.15f) else fontScale
+
     val darkTheme = when (themeMode) {
         1 -> false
         2 -> true
@@ -61,10 +68,12 @@ fun ChineseRadioTheme(
     // 导致同一个 App 在不同壁纸下长得不一样、应用市场截图与真机不一致。
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = appTypography(fontScale),
-        shapes = AppShapes,
-        content = content
-    )
+    CompositionLocalProvider(LocalUiSurface provides surface) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = appTypography(effectiveScale),
+            shapes = AppShapes,
+            content = content
+        )
+    }
 }

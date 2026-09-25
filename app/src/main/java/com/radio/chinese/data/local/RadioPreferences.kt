@@ -70,6 +70,17 @@ class RadioPreferences @Inject constructor(
         }
     }
 
+    /** 界面形态：0 = 自动判定，1 = 强制手机布局，2 = 强制车机布局 */
+    val uiMode: Flow<Int> = dataStore.data.map { prefs ->
+        prefs[KEY_UI_MODE] ?: 0
+    }
+
+    suspend fun setUiMode(mode: Int) {
+        dataStore.edit { prefs ->
+            prefs[KEY_UI_MODE] = mode
+        }
+    }
+
     suspend fun setThemeMode(mode: Int) {
         dataStore.edit { prefs ->
             prefs[KEY_THEME_MODE] = mode
@@ -233,6 +244,7 @@ class RadioPreferences @Inject constructor(
         private val KEY_SLEEP_TIMER = intPreferencesKey("sleep_timer_minutes")
         private val KEY_RECENT_STATIONS = stringPreferencesKey("radio_recent_station_ids")
         private val KEY_FONT_SCALE = stringPreferencesKey("font_scale")
+        private val KEY_UI_MODE = intPreferencesKey("ui_mode")
         private val KEY_INVALID_STATIONS = stringSetPreferencesKey("invalid_station_ids")
         private val KEY_CUSTOM_STATIONS = stringPreferencesKey("custom_stations_json")
         private val KEY_OPERA_PLAY_POSITIONS = stringPreferencesKey("opera_play_positions")

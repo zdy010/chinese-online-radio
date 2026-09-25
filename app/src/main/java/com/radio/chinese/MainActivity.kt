@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeMode by preferences.themeMode.collectAsState(initial = 0)
             val fontScaleKey by preferences.fontScaleKey.collectAsState(initial = FontScaleOption.STANDARD.key)
+            val uiMode by preferences.uiMode.collectAsState(initial = 0)
             var currentThemeMode by remember { mutableIntStateOf(themeMode) }
 
             LaunchedEffect(themeMode) {
@@ -48,7 +49,8 @@ class MainActivity : ComponentActivity() {
 
             ChineseRadioTheme(
                 themeMode = currentThemeMode,
-                fontScale = FontScaleOption.fromKey(fontScaleKey).factor
+                fontScale = FontScaleOption.fromKey(fontScaleKey).factor,
+                uiMode = uiMode
             ) {
                 MainScreen(
                     playerManager = playerManager,
