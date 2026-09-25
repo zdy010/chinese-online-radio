@@ -8,19 +8,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,12 +45,16 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.OperaMiniPlayerBar
+import com.radio.chinese.ui.common.SurfaceTab
+import com.radio.chinese.ui.common.SurfaceTabBar
 import com.radio.chinese.ui.common.bitrateText
 import com.radio.chinese.ui.common.mediaTimeText
 import com.radio.chinese.ui.library.AddSourceDialog
 import com.radio.chinese.ui.library.AudioLibraryScreen
 import com.radio.chinese.ui.library.AudioLibraryViewModel
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,7 +62,12 @@ import kotlinx.coroutines.launch
 fun AudioMainScreen(
     playerManager: PlayerManager
 ) {
-    val tabs = listOf("本地", "网络", "收藏", "最近")
+    val tabs = listOf(
+        SurfaceTab("本地", Icons.Default.Folder),
+        SurfaceTab("网络", Icons.Default.Cloud),
+        SurfaceTab("收藏", Icons.Default.Star),
+        SurfaceTab("最近", Icons.Default.History),
+    )
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     val viewModel: AudioLibraryViewModel = hiltViewModel()
@@ -122,52 +135,57 @@ fun AudioMainScreen(
                 onValueChange = { searchQuery = it },
                 placeholder = "搜索音频",
                 actions = {
+                    val actionSize = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
                     if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
-                        IconButton(onClick = { viewModel.refreshBrowse() }) {
+                        IconButton(onClick = { viewModel.refreshBrowse() }, modifier = actionSize) {
                             Icon(Icons.Default.Refresh, contentDescription = "刷新目录")
                         }
                     } else {
-                        IconButton(onClick = { viewModel.showAddDialog() }) {
+                        IconButton(onClick = { viewModel.showAddDialog() }, modifier = actionSize) {
                             Icon(Icons.Default.Add, contentDescription = "添加音频库来源")
                         }
                     }
                 }
             )
 
-            TabRow(selectedTabIndex = pagerState.currentPage) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                        text = { Text(title) }
-                    )
-                }
-            }
+            val onSelectTab: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
+            val headerVisible = pagerState.currentPage == 1 && uiState.showBrowseContent
+            val headerName = uiState.browsingSource?.name ?: ""
 
-            // 浏览时显示当前库名（刷新入口已上方到搜索行右侧）
-            if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
-                uiState.browsingSource?.let { src ->
-                    Text(
-                        text = src.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(
-                            horizontal = Dimens.ScreenPadding,
-                            vertical = Dimens.GapTiny
+            if (isCarSurface()) {
+                // 横屏：页签改左侧栏，内容区拿到整屏高度
+                Row(modifier = Modifier.weight(1f)) {
+                    SurfaceTabBar(
+                        tabs = tabs,
+                        currentPage = pagerState.currentPage,
+                        onSelect = onSelectTab,
+                        modifier = Modifier.width(Dimens.RailWidth)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        BrowseSourceHeader(visible = headerVisible, name = headerName)
+                        AudioPagerHost(
+                            pagerState = pagerState,
+                            playerManager = playerManager,
+                            viewModel = viewModel,
+                            searchQuery = searchQuery,
+                            modifier = Modifier.fillMaxSize()
                         )
-                    )
+                    }
                 }
-            }
-
-            HorizontalPager(state = pagerState, modifier = Modifier.weight(1f)) { page ->
-                when (page) {
-                    0 -> AudioLocalTab(playerManager = playerManager, searchQuery = searchQuery)
-                    1 -> AudioLibraryScreen(viewModel = viewModel, searchQuery = searchQuery)
-                    2 -> AudioFavoritesTab(viewModel = viewModel, searchQuery = searchQuery)
-                    3 -> AudioRecentTab(viewModel = viewModel, searchQuery = searchQuery)
-                }
+            } else {
+                SurfaceTabBar(
+                    tabs = tabs,
+                    currentPage = pagerState.currentPage,
+                    onSelect = onSelectTab
+                )
+                BrowseSourceHeader(visible = headerVisible, name = headerName)
+                AudioPagerHost(
+                    pagerState = pagerState,
+                    playerManager = playerManager,
+                    viewModel = viewModel,
+                    searchQuery = searchQuery,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -183,5 +201,41 @@ fun AudioMainScreen(
                 viewModel.addSource(name, type, url, username, password)
             }
         )
+    }
+}
+
+/** 浏览态下顶部显示当前音频库名（刷新入口在搜索行右侧）。 */
+@Composable
+private fun BrowseSourceHeader(visible: Boolean, name: String) {
+    if (!visible || name.isEmpty()) return
+    Text(
+        text = name,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.padding(
+            horizontal = Dimens.ScreenPadding,
+            vertical = Dimens.GapTiny
+        )
+    )
+}
+
+/** 四个页签的宿主，手机档与车机档共用。 */
+@Composable
+private fun AudioPagerHost(
+    pagerState: PagerState,
+    playerManager: PlayerManager,
+    viewModel: AudioLibraryViewModel,
+    searchQuery: String,
+    modifier: Modifier = Modifier
+) {
+    HorizontalPager(state = pagerState, modifier = modifier) { page ->
+        when (page) {
+            0 -> AudioLocalTab(playerManager = playerManager, searchQuery = searchQuery)
+            1 -> AudioLibraryScreen(viewModel = viewModel, searchQuery = searchQuery)
+            2 -> AudioFavoritesTab(viewModel = viewModel, searchQuery = searchQuery)
+            3 -> AudioRecentTab(viewModel = viewModel, searchQuery = searchQuery)
+        }
     }
 }

@@ -26,6 +26,7 @@ import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +82,8 @@ fun CategoryScreen(
 
                 else -> {
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
+                        columns = if (isCarSurface()) GridCells.Adaptive(minSize = 240.dp)
+                        else GridCells.Fixed(2),
                         modifier = m,
                         contentPadding = PaddingValues(Dimens.ScreenPadding),
                         horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
@@ -147,7 +149,7 @@ private fun CategoryCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp)
+        shape = MaterialTheme.shapes.large   // 16dp，与 AppShapes.large 同值，仅去裸字面量
     ) {
         Column(
             modifier = Modifier

@@ -11,12 +11,13 @@ $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 $out = Join-Path (Split-Path $PSScriptRoot -Parent) ".qtest"
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 if ($density -le 0) {
-  # 不显式传 density 时从设备读：手错一个系数会把 88dp 误判成合规或违规
+  # 不显式传 density 时从设备读：必须优先取 Override，`wm density` 先输出的是 Physical
   $d = ((& $adb shell wm density) -join " ")
-  $m = [regex]::Match($d, '(Override|Physical) density: (\d+)')
-  if ($m.Success -and $m.Groups[1].Value -eq "Override") { $dpi = [int]$m.Groups[2].Value }
-  elseif ($m.Success) { $dpi = [int]$m.Groups[2].Value }
-  else { $dpi = 160 }
+  $ov = [regex]::Match($d, 'Override density: (\d+)')
+  $ph = [regex]::Match($d, 'Physical density: (\d+)')
+  $dpi = if ($ov.Success) { [int]$ov.Groups[1].Value }
+    elseif ($ph.Success) { [int]$ph.Groups[1].Value }
+    else { 160 }
   $density = $dpi / 160.0
 }
 # dump 写到独立的 _assert 文件：以前直接写 <name>.xml，会把 cap.ps1 采的基线覆盖掉

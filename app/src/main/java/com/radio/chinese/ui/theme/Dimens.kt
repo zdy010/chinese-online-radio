@@ -58,6 +58,10 @@ object Dimens {
     val SourceListMax: Dp
         @Composable get() = if (car) 280.dp else 160.dp
 
+    // 车机档左侧导航栏宽度（手机档不用导航栏，取 Material3 默认值）
+    val RailWidth: Dp
+        @Composable get() = if (car) 120.dp else 80.dp
+
     // 播放主控件：替换原先的 GapHuge * 2 与 40.dp 裸值
     val PlayButtonSize: Dp
         @Composable get() = if (car) 96.dp else 64.dp
