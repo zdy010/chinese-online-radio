@@ -11,6 +11,10 @@ keystore.properties
 *.keystore
 *.jks
 
+# APK / AAB：构建产物与放在仓库根的交付副本都不入库（体积大、可由 git 提交号重新构建）
+*.apk
+*.aab
+
 # OS
 .DS_Store
 Thumbs.db
