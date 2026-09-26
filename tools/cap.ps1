@@ -4,11 +4,20 @@ $ErrorActionPreference = "SilentlyContinue"
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 $out = Join-Path (Split-Path $PSScriptRoot -Parent) ".qtest"
 New-Item -ItemType Directory -Force -Path $out | Out-Null
+$xmlPath = "$out\$name.xml"
+$txtPath = "$out\$name.txt"
+# 先删旧产物：设备掉线时 adb 只会报错，若不删旧 xml，下面会把上一次抓取重写成本次的“新鲜”清单，
+# 上层测试于是读到陈旧数据却报 PASS。宁可缺文件，让调用方看到失败。
+Remove-Item $xmlPath, $txtPath -Force -ErrorAction SilentlyContinue
 & $adb shell screencap -p /sdcard/shot.png | Out-Null
 & $adb pull /sdcard/shot.png "$out\$name.png" | Out-Null
 & $adb shell uiautomator dump /sdcard/ui.xml | Out-Null
-& $adb pull /sdcard/ui.xml "$out\$name.xml" | Out-Null
-[xml]$doc = Get-Content "$out\$name.xml" -Raw -Encoding UTF8
+& $adb pull /sdcard/ui.xml $xmlPath | Out-Null
+if (-not (Test-Path $xmlPath)) {
+  Write-Output "ERROR 未取到 ui.xml（设备掉线/未授权）: $name"
+  exit 1
+}
+[xml]$doc = Get-Content $xmlPath -Raw -Encoding UTF8
 $lines = New-Object System.Collections.Generic.List[string]
 function Walk($nodes, $depth) {
   foreach ($c in $nodes) {
@@ -27,5 +36,5 @@ function Walk($nodes, $depth) {
   }
 }
 Walk $doc.DocumentElement.ChildNodes 0
-Set-Content -Path "$out\$name.txt" -Value $lines -Encoding UTF8
+Set-Content -Path $txtPath -Value $lines -Encoding UTF8
 Write-Output "captured $name -> $($lines.Count) nodes"

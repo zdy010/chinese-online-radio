@@ -40,7 +40,7 @@ class PlayerViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState
 
-    /** 全量电台列表只需一份，用于上下切歌；此前每次播放状态变化都重装配一次 */
+    /** 切台用的电台列表只需一份；用活动列表，标记无效的电台不能被切到 */
     private var allStations: List<RadioStation> = emptyList()
 
     /** 收藏 Flow 的收集器，同一个 station 只保留一个，否则长期停留会线性累积 */
@@ -48,7 +48,7 @@ class PlayerViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            allStations = stationRepository.getAllStations()
+            allStations = stationRepository.getActiveStations()
         }
         viewModelScope.launch {
             combine(

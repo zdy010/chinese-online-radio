@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.audio.AudioMainScreen
+import com.radio.chinese.ui.diagnostics.DiagnosticsScreen
 import com.radio.chinese.ui.navigation.Screen
 import com.radio.chinese.ui.player.PlayerScreen
 import com.radio.chinese.ui.radio.RadioScreen
@@ -73,12 +74,17 @@ fun RadioNavGraph(
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToManage = { navController.navigate(Screen.Manage.route) },
+                onNavigateToDiagnostics = { navController.navigate(Screen.Diagnostics.route) },
                 onThemeChanged = onThemeChanged
             )
         }
 
         composable(Screen.Manage.route) {
             ManageScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.Diagnostics.route) {
+            DiagnosticsScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

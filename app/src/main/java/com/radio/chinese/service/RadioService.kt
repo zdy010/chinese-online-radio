@@ -3,14 +3,17 @@ package com.radio.chinese.service
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Intent
+import android.view.KeyEvent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.IntentCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionResult
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -28,6 +31,10 @@ class RadioService : MediaSessionService() {
 
     @Inject
     lateinit var webDavClient: WebDavClient
+
+    /** 方控/车机的上一曲/下一曲要落到应用自己的电台/曲目列表上 */
+    @Inject
+    lateinit var playerManager: PlayerManager
 
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
@@ -126,10 +133,67 @@ class RadioService : MediaSessionService() {
         val session = MediaSession.Builder(this, player)
             .apply {
                 sessionActivityPendingIntent?.let { setSessionActivity(it) }
+                setCallback(buildSessionCallback())
             }
             .build()
 
         mediaSession = session
+    }
+
+    /**
+     * 车机/方控的「上一曲/下一曲」在本应用里是切电台。
+     *
+     * 默认行为在单条直播流上不可用：NEXT 无动作、PREV 把直播位置 seek 回起点。
+     * 媒体按钮在 onMediaButtonEvent 层直接消费（不转成播放器命令）；系统媒体控件
+     * 走的命令层在 onPlayerCommandRequest 拦下并拒绝默认 seek。两处都转给
+     * PlayerManager.handleMediaSkip：戏曲模式跟随切曲目，电台模式切电台。
+     */
+    private fun buildSessionCallback(): MediaSession.Callback = object : MediaSession.Callback {
+
+        override fun onMediaButtonEvent(
+            session: MediaSession,
+            controllerInfo: MediaSession.ControllerInfo,
+            intent: Intent
+        ): Boolean {
+            val keyEvent = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+                ?: return false
+            val forward = when (keyEvent.keyCode) {
+                KeyEvent.KEYCODE_MEDIA_NEXT -> true
+                KeyEvent.KEYCODE_MEDIA_PREVIOUS -> false
+                else -> return false
+            }
+            // 滚轮/方控一格 = 一次 DOWN；长按产生的重复事件不连切多个台
+            if (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.repeatCount == 0) {
+                KeyDiagnostics.record("媒体键", "${KeyEvent.keyCodeToString(keyEvent.keyCode)}(${keyEvent.keyCode})")
+                playerManager.handleMediaSkip(forward)
+            }
+            // DOWN/UP 都消费：不让默认实现把直播流位置 seek 回起点
+            return true
+        }
+
+        override fun onPlayerCommandRequest(
+            session: MediaSession,
+            controllerInfo: MediaSession.ControllerInfo,
+            command: Int
+        ): Int {
+            val forward = when (command) {
+                Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> true
+                Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> false
+                else -> return SessionResult.RESULT_SUCCESS
+            }
+            KeyDiagnostics.record("会话命令", commandLabel(command))
+            playerManager.handleMediaSkip(forward)
+            // 媒体键已在按钮层消费；到这里的是系统媒体控件/外部 controller，拒绝默认 seek
+            return SessionResult.RESULT_ERROR_NOT_SUPPORTED
+        }
+    }
+
+    private fun commandLabel(command: Int): String = when (command) {
+        Player.COMMAND_SEEK_TO_NEXT -> "SEEK_TO_NEXT"
+        Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> "SEEK_TO_NEXT_MEDIA_ITEM"
+        Player.COMMAND_SEEK_TO_PREVIOUS -> "SEEK_TO_PREVIOUS"
+        Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> "SEEK_TO_PREVIOUS_MEDIA_ITEM"
+        else -> "COMMAND_$command"
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {

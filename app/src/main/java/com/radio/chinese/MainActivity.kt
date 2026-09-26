@@ -1,9 +1,11 @@
 package com.radio.chinese
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.service.KeyDiagnostics
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.MainScreen
 import com.radio.chinese.ui.theme.ChineseRadioTheme
@@ -61,6 +64,20 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    /** 按键诊断：车机/方控按键若走到 Activity 这一层，在这里留下线索（设置页连点「关于」7 次可看） */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            KeyDiagnostics.record("按键", "${KeyEvent.keyCodeToString(event.keyCode)}(${event.keyCode})")
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    /** 按键诊断：真被路由到 Activity 的 Intent（车机面板键的私有 action）也会留痕 */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.action?.let { KeyDiagnostics.record("Intent", it) }
     }
 
     override fun onStart() {
