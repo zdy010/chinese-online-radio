@@ -353,6 +353,29 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    /**
+     * 方控/车机媒体键的统一入口：戏曲模式跟随切曲目，电台模式切电台。
+     * 电台列表按需从仓库取；无内容播放时 playNext/playPrevious 自身不动作。
+     */
+    fun handleMediaSkip(forward: Boolean) {
+        if (_isOperaMode.value) {
+            if (forward) playOperaNext() else playOperaPrevious()
+            return
+        }
+        scope.launch {
+            // 用活动列表：节目源管理里标记无效的电台不参与切台
+            val stations = stationRepository.getActiveStations()
+            // 查询期间用户可能切进戏曲模式，落地前以最新状态为准
+            if (_isOperaMode.value) {
+                if (forward) playOperaNext() else playOperaPrevious()
+            } else if (forward) {
+                playNext(stations)
+            } else {
+                playPrevious(stations)
+            }
+        }
+    }
+
     // ========== 戏曲播放 ==========
 
     /** 已下载文件的本地路径映射：fileId → localPath，供上下切歌时使用 */

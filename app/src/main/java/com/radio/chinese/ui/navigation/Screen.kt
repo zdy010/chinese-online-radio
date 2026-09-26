@@ -8,4 +8,7 @@ sealed class Screen(val route: String) {
     }
     data object Settings : Screen("settings")
     data object Manage : Screen("manage")
+
+    /** 按键诊断（设置页连点「关于」7 次解锁的隐藏页） */
+    data object Diagnostics : Screen("diagnostics")
 }

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -15,6 +16,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.FontScaleOption
@@ -103,11 +105,14 @@ class SettingsViewModel @Inject constructor(
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToManage: () -> Unit,
+    onNavigateToDiagnostics: () -> Unit,
     onThemeChanged: (Int) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
+    // 隐藏入口：连点「关于」7 次解锁「按键诊断」（上车排查方控的后门，寻常使用碰不到）
+    var aboutTapCount by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -249,7 +254,38 @@ fun SettingsScreen(
                 supportingContent = { Text("时光收音机 v${getVersionName()}") },
                 leadingContent = {
                     Icon(Icons.Default.Info, contentDescription = null)
-                }
+                },
+                modifier = Modifier.clickable { aboutTapCount++ }
+            )
+
+            HorizontalDivider()
+
+            // 按键诊断入口：连点「关于」7 次才出现
+            if (aboutTapCount >= 7) {
+                ListItem(
+                    headlineContent = { Text("按键诊断") },
+                    supportingContent = { Text("查看方控/车机按键走到了哪条通道") },
+                    leadingContent = {
+                        Icon(Icons.Default.Build, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable(onClick = onNavigateToDiagnostics)
+                )
+
+                HorizontalDivider()
+            }
+
+            // 操作说明：把车机方控用法与隐藏诊断入口就近写清楚，省得用户去翻外部文档。
+            // 放在「关于」与诊断入口之后，不推动上方已验收的点击目标位置。
+            SectionHeader(title = "操作说明 v${getVersionName()}")
+            Text(
+                text =
+                    "· 首页点电台即可收听，播放页可换节目源、收藏、设定时关闭\n" +
+                    "· 方向盘或车机的「上一曲 / 下一曲」切换电台；播放戏曲时同样按键切换曲目\n" +
+                    "· 在节目源管理里标记为无效的电台，切台时会自动跳过\n" +
+                    "· 连点上方「关于」 7 次打开按键诊断页：上车按一遍按键，出现记录＝按键已送达应用，没有记录则说明该键没走标准通道；「清空」可逐键分辨",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Dimens.GapSmall)
             )
 
             HorizontalDivider()
