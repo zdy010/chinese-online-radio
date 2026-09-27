@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.audio.AudioMainScreen
 import com.radio.chinese.ui.diagnostics.DiagnosticsScreen
+import com.radio.chinese.ui.keysettings.KeySettingsScreen
 import com.radio.chinese.ui.navigation.Screen
 import com.radio.chinese.ui.player.PlayerScreen
 import com.radio.chinese.ui.radio.RadioScreen
@@ -74,6 +75,7 @@ fun RadioNavGraph(
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToManage = { navController.navigate(Screen.Manage.route) },
+                onNavigateToKeySettings = { navController.navigate(Screen.KeySettings.route) },
                 onNavigateToDiagnostics = { navController.navigate(Screen.Diagnostics.route) },
                 onThemeChanged = onThemeChanged
             )
@@ -85,6 +87,10 @@ fun RadioNavGraph(
 
         composable(Screen.Diagnostics.route) {
             DiagnosticsScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.KeySettings.route) {
+            KeySettingsScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

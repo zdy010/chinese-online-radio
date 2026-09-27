@@ -105,6 +105,7 @@ class SettingsViewModel @Inject constructor(
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToManage: () -> Unit,
+    onNavigateToKeySettings: () -> Unit,
     onNavigateToDiagnostics: () -> Unit,
     onThemeChanged: (Int) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
@@ -214,6 +215,18 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
+            // 车机按键映射：方向盘/面板上任何一个能送到应用的键，都能绑到这四个功能
+            ListItem(
+                headlineContent = { Text("按键设置") },
+                supportingContent = { Text("把方向盘或面板按键绑到上一电台、下一电台、播放暂停、返回") },
+                leadingContent = {
+                    Icon(Icons.Default.Keyboard, contentDescription = null)
+                },
+                modifier = Modifier.clickable(onClick = onNavigateToKeySettings)
+            )
+
+            HorizontalDivider()
+
             // 开机自启：只拉起会话不出声；能不能起来取决于车机 ROM 放不放行
             ListItem(
                 headlineContent = { Text("开机自启") },
@@ -281,6 +294,7 @@ fun SettingsScreen(
                 text =
                     "· 首页点电台即可收听，播放页可换节目源、收藏、设定时关闭\n" +
                     "· 方向盘或车机的「上一曲 / 下一曲」切换电台；播放戏曲时同样按键切换曲目\n" +
+                    "· 键名对不上？进「按键设置」点「录制」，把车上任意按键绑到这四个功能上；默认按键不会被顶掉\n" +
                     "· 在节目源管理里标记为无效的电台，切台时会自动跳过\n" +
                     "· 连点上方「关于」 7 次打开按键诊断页：上车按一遍按键，出现记录＝按键已送达应用，没有记录则说明该键没走标准通道；「清空」可逐键分辨",
                 style = MaterialTheme.typography.bodySmall,
