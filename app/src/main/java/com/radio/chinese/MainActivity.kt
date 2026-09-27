@@ -13,6 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.service.CarKeyAction
+import com.radio.chinese.service.KeyBindingStore
+import com.radio.chinese.service.KeyCapture
 import com.radio.chinese.service.KeyDiagnostics
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.MainScreen
@@ -29,6 +32,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var preferences: RadioPreferences
+
+    @Inject
+    lateinit var keyBindings: KeyBindingStore
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -70,8 +76,34 @@ class MainActivity : ComponentActivity() {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             KeyDiagnostics.record("按键", "${KeyEvent.keyCodeToString(event.keyCode)}(${event.keyCode})")
+            KeyCapture.offer(event.keyCode)
+            // 录制中只攒候选不执行，否则用户按一下就把自己刚绑的键触发了，界面会乱跳
+            if (!KeyCapture.listening.value && !isMediaKeyCode(event.keyCode)) {
+                keyBindings.actionFor(event.keyCode)?.let { action ->
+                    runCarKeyAction(action)
+                    return true
+                }
+            }
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    /** 自定义按键的四个动作都走已有能力，不另造一套播放控制 */
+    fun runCarKeyAction(action: CarKeyAction) {
+        when (action) {
+            CarKeyAction.PREV_STATION -> playerManager.handleMediaSkip(false)
+            CarKeyAction.NEXT_STATION -> playerManager.handleMediaSkip(true)
+            CarKeyAction.PLAY_PAUSE -> playerManager.togglePlayPause()
+            // 用 dispatcher 而不是 navController.popBackStack()：只有前者会尊重各页已有的 BackHandler
+            CarKeyAction.GO_BACK -> onBackPressedDispatcher.onBackPressed()
+        }
+    }
+
+    /** 媒体键由 RadioService 的会话回调负责，两处都执行会切两次台 */
+    private fun isMediaKeyCode(code: Int): Boolean = when (code) {
+        KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_MEDIA_PREVIOUS,
+        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> true
+        else -> false
     }
 
     /** 按键诊断：真被路由到 Activity 的 Intent（车机面板键的私有 action）也会留痕 */

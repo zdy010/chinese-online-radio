@@ -219,6 +219,26 @@ class RadioPreferences @Inject constructor(
         }
     }
 
+    // ========== 车机按键映射 ==========
+
+    /**
+     * 功能→绑定的 JSON 对象串，形如 {"next_station":"key:17"}。
+     * 用串而不是 stringSet，因为要保住「哪个功能绑了哪个键」的配对关系。
+     */
+    val keyBindingsJson: Flow<String?> = dataStore.data.map { prefs ->
+        prefs[KEY_KEY_BINDINGS]
+    }
+
+    suspend fun setKeyBindingsJson(json: String?) {
+        dataStore.edit { prefs ->
+            if (json != null) {
+                prefs[KEY_KEY_BINDINGS] = json
+            } else {
+                prefs.remove(KEY_KEY_BINDINGS)
+            }
+        }
+    }
+
     // ========== WebDAV 凭证 ==========
 
     val webDavServerUrl: Flow<String> = dataStore.data.map { prefs ->
@@ -267,6 +287,7 @@ class RadioPreferences @Inject constructor(
         private val KEY_WEBDAV_SERVER_URL = stringPreferencesKey("webdav_server_url")
         private val KEY_WEBDAV_USERNAME = stringPreferencesKey("webdav_username")
         private val KEY_WEBDAV_PASSWORD = stringPreferencesKey("webdav_password")
+        private val KEY_KEY_BINDINGS = stringPreferencesKey("car_key_bindings_json")
         // 戏曲收藏：收藏的分类名集合
         private val KEY_OPERA_FAV_CATEGORIES = stringSetPreferencesKey("opera_fav_categories")
         // 戏曲收藏：收藏的文件ID集合

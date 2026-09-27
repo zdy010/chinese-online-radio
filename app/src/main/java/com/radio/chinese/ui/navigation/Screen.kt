@@ -11,4 +11,7 @@ sealed class Screen(val route: String) {
 
     /** 按键诊断（设置页连点「关于」7 次解锁的隐藏页） */
     data object Diagnostics : Screen("diagnostics")
+
+    /** 车机按键映射 */
+    data object KeySettings : Screen("key_settings")
 }

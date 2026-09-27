@@ -36,6 +36,9 @@ class RadioService : MediaSessionService() {
     @Inject
     lateinit var playerManager: PlayerManager
 
+    @Inject
+    lateinit var keyBindings: KeyBindingStore
+
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
 
@@ -157,15 +160,37 @@ class RadioService : MediaSessionService() {
         ): Boolean {
             val keyEvent = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
                 ?: return false
-            val forward = when (keyEvent.keyCode) {
-                KeyEvent.KEYCODE_MEDIA_NEXT -> true
-                KeyEvent.KEYCODE_MEDIA_PREVIOUS -> false
-                else -> return false
+            if (keyEvent.keyCode != KeyEvent.KEYCODE_MEDIA_NEXT && keyEvent.keyCode != KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
+                return false
             }
+            // 媒体键通常只到会话、不到 Activity，录制态这里也得攒候选，否则用户这两个键绑不上
+            KeyCapture.offer(keyEvent.keyCode)
             // 滚轮/方控一格 = 一次 DOWN；长按产生的重复事件不连切多个台
             if (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.repeatCount == 0) {
-                KeyDiagnostics.record("媒体键", "${KeyEvent.keyCodeToString(keyEvent.keyCode)}(${keyEvent.keyCode})")
-                playerManager.handleMediaSkip(forward)
+                // GO_BACK 需要 Activity（页面栈在 UI 侧），会话这里当没绑定、回到默认切台，
+                // 免得用户绑完变成“按了没反应”
+                val bound = if (KeyCapture.listening.value) null
+                else keyBindings.actionFor(keyEvent.keyCode)?.takeIf { it != CarKeyAction.GO_BACK }
+                val name = "${KeyEvent.keyCodeToString(keyEvent.keyCode)}(${keyEvent.keyCode})"
+                when (bound) {
+                    null -> {
+                        KeyDiagnostics.record("媒体键", name)
+                        playerManager.handleMediaSkip(keyEvent.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT)
+                    }
+                    CarKeyAction.PLAY_PAUSE -> {
+                        KeyDiagnostics.record("媒体键·自定义", name)
+                        playerManager.togglePlayPause()
+                    }
+                    CarKeyAction.PREV_STATION -> {
+                        KeyDiagnostics.record("媒体键·自定义", name)
+                        playerManager.handleMediaSkip(false)
+                    }
+                    CarKeyAction.NEXT_STATION -> {
+                        KeyDiagnostics.record("媒体键·自定义", name)
+                        playerManager.handleMediaSkip(true)
+                    }
+                    CarKeyAction.GO_BACK -> Unit
+                }
             }
             // DOWN/UP 都消费：不让默认实现把直播流位置 seek 回起点
             return true
