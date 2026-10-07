@@ -22,14 +22,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.radio.chinese.service.HardwareRadioProbe
+import com.radio.chinese.service.HwLine
 import com.radio.chinese.service.KeyDiagnostics
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * 按键诊断页：列出方控/车机按键的实时记录与来源通道。
@@ -41,6 +52,14 @@ import com.radio.chinese.ui.theme.isCarSurface
 @Composable
 fun DiagnosticsScreen(onNavigateBack: () -> Unit) {
     val entries by KeyDiagnostics.entries.collectAsState()
+    val context = LocalContext.current
+    var hwLines by remember { mutableStateOf<List<HwLine>>(emptyList()) }
+    var probeToken by remember { mutableIntStateOf(0) }
+
+    // 探测含 exec getprop，放 IO 线程；进页跑一次，点「重新探测」让 token 变化再跑
+    LaunchedEffect(probeToken) {
+        hwLines = withContext(Dispatchers.IO) { HardwareRadioProbe.probe(context) }
+    }
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -103,6 +122,32 @@ fun DiagnosticsScreen(onNavigateBack: () -> Unit) {
                         HorizontalDivider()
                     }
                 }
+
+                // 硬件收音机能力：上车打开这一页就能判断，不需要 adb、不需要翻日志
+                SectionHeader(
+                    title = "硬件能力",
+                    actionLabel = "重新探测",
+                    onAction = { probeToken++ },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (hwLines.isEmpty()) {
+                    Text(
+                        text = "正在探测…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = Dimens.GapLarge)
+                    )
+                } else {
+                    hwLines.forEach { line ->
+                        Text(
+                            text = "${line.label}：${line.value}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = Dimens.GapSmall)
+                        )
+                    }
+                }
+                HorizontalDivider()
             }
         }
     }

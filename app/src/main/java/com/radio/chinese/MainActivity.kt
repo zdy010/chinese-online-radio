@@ -106,10 +106,16 @@ class MainActivity : ComponentActivity() {
         else -> false
     }
 
-    /** 按键诊断：真被路由到 Activity 的 Intent（车机面板键的私有 action）也会留痕 */
+    /**
+     * 按键诊断：真被路由到 Activity 的 Intent（车机面板键的私有 action）会在这里留痕。
+     *
+     * 但桌面重新拉起应用发的也是 ACTION_MAIN（MainActivity 为 singleTop），
+     * 光记成「Intent <action>」会让人以为某个物理键有信号——实车上 src/地址本 就被这样误读过。
+     * 所以明确标为「非按键」，同时把 action 写出来保留排查线索。
+     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent.action?.let { KeyDiagnostics.record("Intent", it) }
+        intent.action?.let { KeyDiagnostics.record("非按键", "应用被重新拉起 action=$it") }
     }
 
     override fun onStart() {
