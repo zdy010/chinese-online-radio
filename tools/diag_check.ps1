@@ -49,6 +49,9 @@ Start-Sleep -Seconds 6
 $set = Dump "dc_set"
 Assert "2-设置页可见「关于」" (($set -match "'关于'").Count -gt 0) "设置页有「关于」行"
 
+# 操作说明必须把绑定语义说准：同一个键一旦绑定就以绑定为准，“默认不会被顶掉”那种说法会让人以为两者共存
+Assert "2c-操作说明讲清绑定语义" (($set -match "以绑定为准").Count -gt 0) "操作说明应说明未绑的键照默认、绑过的键以绑定为准"
+
 # 操作说明就近写在设置页，标题带版本号（SectionHeader 为一个文本节点，形如 '操作说明 v1.0.89'）
 Assert "2b-设置页有操作说明+版本号" (($set -match "操作说明 v\d").Count -gt 0) "设置页应出现「操作说明 v版本号」标题"
 
@@ -65,6 +68,14 @@ Assert "5-进入诊断页" (Tap-Text $set2 "按键诊断") "点击「按键诊�
 Start-Sleep -Seconds 4
 $diag = Dump "dc_diag"
 Assert "6-诊断页就绪" (($diag -match "清空").Count -gt 0) "诊断页含「清空」按钮"
+
+# 从桌面重新拉起应用（singleTop 的 onNewIntent）发的是带 ACTION_MAIN 的 intent。
+# 注意必须带上 -a/-c：光用 -n 组件启动的 intent action 为 null，复现不出真实场景。
+# 要是记成「Intent android.intent.action.MAIN」就会让人以为某个物理键有信号（实车上误判过）
+& $adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$pkg/com.radio.chinese.MainActivity" | Out-Null
+Start-Sleep -Seconds 3
+$dRe = Dump "dc_relaunch"
+Assert "6b-重进应用记为非按键" ((($dRe -match "非按键").Count -gt 0) -and (($dRe -match "应用被重新拉起").Count -gt 0)) "onNewIntent 应记成「非按键·应用被重新拉起」，不与按键信号混为一谈"
 
 # 音量键：走 Activity.dispatchKeyEvent 这一层
 & $adb shell input keyevent 24 | Out-Null
