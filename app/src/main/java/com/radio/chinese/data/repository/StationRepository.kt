@@ -4,6 +4,8 @@ import android.content.Context
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.local.SourceAvailabilityStore
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.StationFilter
+import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -123,6 +125,16 @@ class StationRepository @Inject constructor(
         current.removeAll { it.id == stationId }
         preferences.setCustomStationsJson(json.encodeToString(current))
     }
+
+    // ---- 标签 ----
+
+    /** 某标签下的有效电台。 */
+    suspend fun getStationsByTag(tagKey: String): List<RadioStation> =
+        StationFilter.apply(getActiveStations(), null, "", tagKey)
+
+    /** 有电台的标签及其台数；词表外的 key 不会出现在这里。 */
+    suspend fun getUsedTagsWithCount(): List<Pair<StationTag, Int>> =
+        StationFilter.tagsWithCount(getActiveStations())
 
     // ---- 无效标记 ----
 
