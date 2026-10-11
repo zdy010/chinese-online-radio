@@ -6344,363 +6344,6 @@
       "sources": []
     },
     {
-      "id": "gl_gb_linnjazz",
-      "name": "Linn Jazz",
-      "category": "world",
-      "streamUrl": "http://radio.linn.co.uk:8000/autodj",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.linn.co.uk/linn-radio",
-      "sources": [
-        {
-          "url": "http://radio.linn.co.uk:8000/autodj",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_linnclassical",
-      "name": "Linn Classical",
-      "category": "world",
-      "streamUrl": "http://radio.linn.co.uk:8004/autodj",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.linn.co.uk/linn-radio",
-      "sources": [
-        {
-          "url": "http://radio.linn.co.uk:8004/autodj",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_truckersfm",
-      "name": "TruckersFM",
-      "category": "world",
-      "streamUrl": "http://radio.truckers.fm/",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://truckers.fm/",
-      "sources": [
-        {
-          "url": "http://radio.truckers.fm/",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_1mixradiotrance1",
-      "name": "1Mix Radio - Trance #1 (UK) 320kb mp3",
-      "category": "world",
-      "streamUrl": "http://fr2.1mix.co.uk:9000/320",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.1mix.co.uk/",
-      "sources": [
-        {
-          "url": "http://fr2.1mix.co.uk:9000/320",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_1mixradiohouseuk",
-      "name": "1Mix Radio - House (UK) 320kb mp3",
-      "category": "world",
-      "streamUrl": "http://fr2.1mix.co.uk:9000/320hb",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.1mix.co.uk/",
-      "sources": [
-        {
-          "url": "http://fr2.1mix.co.uk:9000/320hb",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_soulgrooveradio",
-      "name": "Soul Groove Radio",
-      "category": "world",
-      "streamUrl": "http://stream6.hippynet.co.uk:8023/automation",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "http://soulgrooveradio.co.uk/",
-      "sources": [
-        {
-          "url": "http://stream6.hippynet.co.uk:8023/automation",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_us_megarockradio320",
-      "name": "Megarock Radio 320k",
-      "category": "world",
-      "streamUrl": "https://stream3.megarockradio.net:80/",
-      "logoUrl": "",
-      "frequency": "美国 · 英语",
-      "description": "全球节目源 · 美国 · 综合",
-      "website": "https://megarockradio.net/",
-      "sources": [
-        {
-          "url": "https://stream3.megarockradio.net:80/",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_us_somafmheavyweigh",
-      "name": "SomaFM Heavyweight Reggae (256k MP3)",
-      "category": "world",
-      "streamUrl": "https://ice5.somafm.com/reggae-256-mp3",
-      "logoUrl": "",
-      "frequency": "美国 · 英语",
-      "description": "全球节目源 · 美国 · 综合",
-      "website": "https://somafm.com/reggae/",
-      "sources": [
-        {
-          "url": "https://ice5.somafm.com/reggae-256-mp3",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_us_my70sradio",
-      "name": "My70sRadio",
-      "category": "world",
-      "streamUrl": "http://usa14.fastcast4u.com:5132/stream",
-      "logoUrl": "",
-      "frequency": "美国 · 英语",
-      "description": "全球节目源 · 美国 · 综合",
-      "website": "http://my70sradio.com/",
-      "sources": [
-        {
-          "url": "http://usa14.fastcast4u.com:5132/stream",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_us_somafmbootliquor",
-      "name": "SomaFM Boot Liquor (320k MP3)",
-      "category": "world",
-      "streamUrl": "https://ice5.somafm.com/bootliquor-320-mp3",
-      "logoUrl": "",
-      "frequency": "美国 · 英语",
-      "description": "全球节目源 · 美国 · 综合",
-      "website": "https://somafm.com/bootliquor/",
-      "sources": [
-        {
-          "url": "https://ice5.somafm.com/bootliquor-320-mp3",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_au_discorhythm",
-      "name": "DiscoRhythm",
-      "category": "world",
-      "streamUrl": "http://c3.radioboss.fm:8018/stream",
-      "logoUrl": "",
-      "frequency": "澳大利亚 · 英语",
-      "description": "全球节目源 · 澳大利亚 · 综合",
-      "website": "http://www.discorhythm.com/",
-      "sources": [
-        {
-          "url": "http://c3.radioboss.fm:8018/stream",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_ca_amississippiblue",
-      "name": "A MISSISSIPPI BLUES",
-      "category": "world",
-      "streamUrl": "https://cast1.torontocast.com:4450/;?type=http&nocache=1745625391",
-      "logoUrl": "",
-      "frequency": "加拿大 · 英语",
-      "description": "全球节目源 · 加拿大 · 综合",
-      "website": "https://radiosuitenetwork.torontocast.stream/amississippiblues/",
-      "sources": [
-        {
-          "url": "https://cast1.torontocast.com:4450/;?type=http&nocache=1745625391",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_ca_sensualloungerad",
-      "name": "SENSUAL LOUNGE RADIO",
-      "category": "world",
-      "streamUrl": "https://kathy.torontocast.com:3590/;?type=http&nocache=1739707069",
-      "logoUrl": "",
-      "frequency": "加拿大 · 英语",
-      "description": "全球节目源 · 加拿大 · 综合",
-      "website": "https://radiosuitenetwork.torontocast.stream/sensual-lounge",
-      "sources": [
-        {
-          "url": "https://kathy.torontocast.com:3590/;?type=http&nocache=1739707069",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_ie_powerfmdublin320",
-      "name": "PowerFM Dublin 320Kbps MP3",
-      "category": "world",
-      "streamUrl": "https://www.powerfm.org:8443/powerfm.mp3",
-      "logoUrl": "",
-      "frequency": "爱尔兰 · 英语",
-      "description": "全球节目源 · 爱尔兰 · 综合",
-      "website": "https://www.powerfm.org/",
-      "sources": [
-        {
-          "url": "https://www.powerfm.org:8443/powerfm.mp3",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_ie_freefmireland",
-      "name": "Free FM Ireland",
-      "category": "world",
-      "streamUrl": "https://rocafmadrid.radioca.st/stream",
-      "logoUrl": "",
-      "frequency": "爱尔兰 · 英语",
-      "description": "全球节目源 · 爱尔兰 · 综合",
-      "website": "http://freefmradio.net/",
-      "sources": [
-        {
-          "url": "https://rocafmadrid.radioca.st/stream",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_happyhardcore",
-      "name": "Happy Hardcore",
-      "category": "world",
-      "streamUrl": "https://audio-edge-3mayu.fra.h.radiomast.io/73055724-1141-41e2-a69b-24a6ca96c8e7",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.happyhardcore.com/",
-      "sources": [
-        {
-          "url": "https://audio-edge-3mayu.fra.h.radiomast.io/73055724-1141-41e2-a69b-24a6ca96c8e7",
-          "label": "网络源",
-          "bitrate": 256
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_cruiseoneradio",
-      "name": "CruiseOne Radio",
-      "category": "world",
-      "streamUrl": "https://solid24.streamupsolutions.com/proxy/cmxicxxx?mp=/256kbps",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://cruiseoneradio.net/",
-      "sources": [
-        {
-          "url": "https://solid24.streamupsolutions.com/proxy/cmxicxxx?mp=/256kbps",
-          "label": "网络源",
-          "bitrate": 256
-        }
-      ]
-    },
-    {
-      "id": "gl_gb_radioessex",
-      "name": "Radio Essex",
-      "category": "world",
-      "streamUrl": "https://stream.aiir.com/ujzy590c3stvv",
-      "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.radioessex.com/",
-      "sources": [
-        {
-          "url": "https://stream.aiir.com/ujzy590c3stvv",
-          "label": "网络源",
-          "bitrate": 256
-        }
-      ]
-    },
-    {
-      "id": "gl_us_ambientmodern",
-      "name": "Ambient Modern",
-      "category": "world",
-      "streamUrl": "http://radio.stereoscenic.com/mod-h",
-      "logoUrl": "",
-      "frequency": "美国 · 英语",
-      "description": "全球节目源 · 美国 · 综合",
-      "website": "https://ambientmodern.com/",
-      "sources": [
-        {
-          "url": "http://radio.stereoscenic.com/mod-h",
-          "label": "网络源",
-          "bitrate": 256
-        }
-      ]
-    },
-    {
-      "id": "gl_au_systrumsistumssr",
-      "name": "Systrum Sistum - SSR2",
-      "category": "world",
-      "streamUrl": "https://systrum.net:8443/SSR2",
-      "logoUrl": "",
-      "frequency": "澳大利亚 · 英语",
-      "description": "全球节目源 · 澳大利亚 · 综合",
-      "website": "https://www.systrum.net/",
-      "sources": [
-        {
-          "url": "https://systrum.net:8443/SSR2",
-          "label": "网络源",
-          "bitrate": 256
-        }
-      ]
-    },
-    {
-      "id": "gl_ie_radiosiamsa",
-      "name": "Radio Siamsa",
-      "category": "world",
-      "streamUrl": "https://cast02.siamsa.ie/radio/8000/radio.mp3",
-      "logoUrl": "",
-      "frequency": "爱尔兰 · 英语",
-      "description": "全球节目源 · 爱尔兰 · 综合",
-      "website": "https://siamsa.ie/",
-      "sources": [
-        {
-          "url": "https://cast02.siamsa.ie/radio/8000/radio.mp3",
-          "label": "网络源",
-          "bitrate": 256
-        }
-      ]
-    },
-    {
       "id": "gl_hk_c70f34173",
       "name": "中央人民廣播電台 中國之聲",
       "category": "world",
@@ -6714,57 +6357,6 @@
           "url": "http://zbbf2.ahbztv.com/live/4f3.m3u8",
           "label": "网络源",
           "bitrate": 231
-        }
-      ]
-    },
-    {
-      "id": "gl_au_highway61interne",
-      "name": "Highway 61 Internet Radio - Hobart (MP3 320k)",
-      "category": "world",
-      "streamUrl": "http://usa19.fastcast4u.com:4610/;",
-      "logoUrl": "",
-      "frequency": "澳大利亚 · 英语",
-      "description": "全球节目源 · 澳大利亚 · 综合",
-      "website": "https://www.highway61internetradio.com/",
-      "sources": [
-        {
-          "url": "http://usa19.fastcast4u.com:4610/;",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_au_southernfm",
-      "name": "Southern FM",
-      "category": "world",
-      "streamUrl": "http://stream.swifthosting.com.au:8080/stream",
-      "logoUrl": "",
-      "frequency": "澳大利亚 · 英语",
-      "description": "全球节目源 · 澳大利亚 · 综合",
-      "website": "http://www.southernfm.com.au/",
-      "sources": [
-        {
-          "url": "http://stream.swifthosting.com.au:8080/stream",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ]
-    },
-    {
-      "id": "gl_nz_radioactivefm886",
-      "name": "Radioactive.FM 88.6",
-      "category": "world",
-      "streamUrl": "https://radio123-gecko.radioca.st/radioactivefm",
-      "logoUrl": "",
-      "frequency": "新西兰 · 英语",
-      "description": "全球节目源 · 新西兰 · 综合",
-      "website": "https://www.radioactive.fm/",
-      "sources": [
-        {
-          "url": "https://radio123-gecko.radioca.st/radioactivefm",
-          "label": "网络源",
-          "bitrate": 320
         }
       ]
     },
@@ -6803,121 +6395,818 @@
       ]
     },
     {
-      "id": "gl_gb_technofm",
-      "name": "Techno.FM",
+      "id": "gl_it_chinafmfm895",
+      "name": "华夏之声China FM·意大利罗马FM89.5",
       "category": "world",
-      "streamUrl": "http://stream.techno.fm/radio.mp3",
+      "streamUrl": "https://radioserver12.profesionalhosting.com/proxy/pkg152492/stream",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://techno.fm/",
+      "frequency": "意大利 · 华语",
+      "description": "全球节目源 · 意大利 · 综合",
+      "website": "https://chinafm.es/",
       "sources": [
         {
-          "url": "http://stream.techno.fm/radio.mp3",
+          "url": "https://radioserver12.profesionalhosting.com/proxy/pkg152492/stream",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 160
         }
       ]
     },
     {
-      "id": "gl_gb_1mixradiotrance",
-      "name": "1Mix Radio Trance",
+      "id": "gl_us_cba561ba9",
+      "name": "美国中文电台-西雅图",
       "category": "world",
-      "streamUrl": "http://fr2.1mix.co.uk:8060/192",
+      "streamUrl": "http://kxparadio.serverroom.us:5852/stream.mp3",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "http://www.1mix.co.uk/",
+      "frequency": "美国 · 华语",
+      "description": "全球节目源 · 美国 · 综合",
+      "website": "https://www.uschineseradio.com/",
       "sources": [
         {
-          "url": "http://fr2.1mix.co.uk:8060/192",
+          "url": "http://kxparadio.serverroom.us:5852/stream.mp3",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 128
         }
       ]
     },
     {
-      "id": "gl_gb_chilloutibizafm",
-      "name": "Chillout Ibiza FM",
+      "id": "gl_tw_c8b512980",
+      "name": "城市廣播網•台南知音",
       "category": "world",
-      "streamUrl": "https://edge3.peta.live365.net/b05055_128mp3",
+      "streamUrl": "http://fm971.cityfm.tw:8080/971.mp3",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "http://www.chilloutibizafm.com/",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://www.cityfm.tw/",
       "sources": [
         {
-          "url": "https://edge3.peta.live365.net/b05055_128mp3",
+          "url": "http://fm971.cityfm.tw:8080/971.mp3",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 128
         }
       ]
     },
     {
-      "id": "gl_gb_nonstopplaydance",
-      "name": "NonStopPlay Dance Radio",
+      "id": "gl_us_musicofchina",
+      "name": "Music of China 中国音乐",
       "category": "world",
-      "streamUrl": "http://stream.nonstopplay.co.uk/nsp-192k-mp3",
+      "streamUrl": "https://vip.wongsong.cn/proxy/wongsong/stream-mp3-WongSong",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "http://www.nonstopplay.com/",
+      "frequency": "美国 · 华语",
+      "description": "全球节目源 · 美国 · 综合",
+      "website": "https://wongsong.cn/",
       "sources": [
         {
-          "url": "http://stream.nonstopplay.co.uk/nsp-192k-mp3",
+          "url": "https://vip.wongsong.cn/proxy/wongsong/stream-mp3-WongSong",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 128
         }
       ]
     },
     {
-      "id": "gl_gb_resonancefm1044l",
-      "name": "Resonance FM 104.4 - London",
+      "id": "gl_nz_fm906radiochines",
+      "name": "新西兰中文广播电台 FM90.6 Radio Chinese",
       "category": "world",
-      "streamUrl": "http://stream.resonance.fm:8000/resonance",
+      "streamUrl": "https://s26.myradiostream.com:20274/listen.mp3",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://www.resonancefm.com/",
+      "frequency": "新西兰 · 华语",
+      "description": "全球节目源 · 新西兰 · 综合",
+      "website": "https://fm906.co.nz/",
       "sources": [
         {
-          "url": "http://stream.resonance.fm:8000/resonance",
+          "url": "https://s26.myradiostream.com:20274/listen.mp3",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 128
         }
       ]
     },
     {
-      "id": "gl_gb_divaradiofunkdis",
-      "name": "Diva Radio - Funk & Disco Music Paradise",
+      "id": "gl_tw_c5032e92d",
+      "name": "警察廣播電台 - 台北台",
       "category": "world",
-      "streamUrl": "https://stream.deevaradio.net:10443/divaradiofunk",
+      "streamUrl": "http://stream.pbs.gov.tw:1935/live/TPS/playlist.m3u8",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "https://deevaradio.net/",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://pbs.npa.gov.tw/ch/index#a4",
       "sources": [
         {
-          "url": "https://stream.deevaradio.net:10443/divaradiofunk",
+          "url": "http://stream.pbs.gov.tw:1935/live/TPS/playlist.m3u8",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 128
         }
       ]
     },
     {
-      "id": "gl_gb_redroadfm1024",
-      "name": "Redroad FM 102.4",
+      "id": "gl_tw_c8b174752",
+      "name": "台中城市廣播",
       "category": "world",
-      "streamUrl": "http://s45.myradiostream.com:13784/;",
+      "streamUrl": "http://fm901.cityfm.tw:8080/901.mp3",
       "logoUrl": "",
-      "frequency": "英国 · 英语",
-      "description": "全球节目源 · 英国 · 综合",
-      "website": "http://www.redroadfm.com/",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://www.cityfm.tw/",
       "sources": [
         {
-          "url": "http://s45.myradiostream.com:13784/;",
+          "url": "http://fm901.cityfm.tw:8080/901.mp3",
           "label": "网络源",
-          "bitrate": 192
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c7d07d2f4",
+      "name": "警察廣播電台 - 台中台",
+      "category": "world",
+      "streamUrl": "http://stream.pbs.gov.tw:1935/live/TCS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://pbs.npa.gov.tw/ch/index#a4",
+      "sources": [
+        {
+          "url": "http://stream.pbs.gov.tw:1935/live/TCS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm1049",
+      "name": "警察廣播電臺 - 全國治安交通網 FM 104.9",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/PBS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/PBS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_us_c9c2d6bcb",
+      "name": "星岛中文电台国语广播",
+      "category": "world",
+      "streamUrl": "http://nap.casthost.net:8759/;?icy=http",
+      "logoUrl": "",
+      "frequency": "美国 · 华语",
+      "description": "全球节目源 · 美国 · 综合",
+      "website": "http://www.chineseradio.com/main/#",
+      "sources": [
+        {
+          "url": "http://nap.casthost.net:8759/;?icy=http",
+          "label": "网络源",
+          "bitrate": 64
+        }
+      ]
+    },
+    {
+      "id": "gl_hk_cfe485780",
+      "name": "香港普通话台",
+      "category": "world",
+      "streamUrl": "https://rthkradiopth-live.akamaized.net/hls/live/2040082/radiopth/master.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 华语",
+      "description": "全球节目源 · 中国香港 · 综合",
+      "website": "https://www.rthk.hk/radio/pth",
+      "sources": [
+        {
+          "url": "https://rthkradiopth-live.akamaized.net/hls/live/2040082/radiopth/master.m3u8",
+          "label": "网络源",
+          "bitrate": 70
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c573323ee",
+      "name": "正聲廣播公司",
+      "category": "world",
+      "streamUrl": "https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.csbc.com.tw/",
+      "sources": [
+        {
+          "url": "https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 66
+        }
+      ]
+    },
+    {
+      "id": "gl_au_c377903bf",
+      "name": "全澳华语广播华厦之声",
+      "category": "world",
+      "streamUrl": "http://46.4.40.246:8059/stream",
+      "logoUrl": "",
+      "frequency": "澳大利亚 · 华语",
+      "description": "全球节目源 · 澳大利亚 · 综合",
+      "website": "http://www.huaxia.net.au/",
+      "sources": [
+        {
+          "url": "http://46.4.40.246:8059/stream",
+          "label": "网络源",
+          "bitrate": 64
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c1ad852c7",
+      "name": "佳音經典音樂網",
+      "category": "world",
+      "streamUrl": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/classic/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://www.goodnews.org.tw/forum.php?change_model=forum_detail&id=124",
+      "sources": [
+        {
+          "url": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/classic/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 66
+        }
+      ]
+    },
+    {
+      "id": "gl_us_radiomastchinese",
+      "name": "Radio Mast Chinese",
+      "category": "world",
+      "streamUrl": "https://streams.radiomast.io/ce298b32-8776-4192-9900-092f44b63e7f",
+      "logoUrl": "",
+      "frequency": "美国 · 华语",
+      "description": "全球节目源 · 美国 · 综合",
+      "website": "https://bbn1.bbnradio.org/",
+      "sources": [
+        {
+          "url": "https://streams.radiomast.io/ce298b32-8776-4192-9900-092f44b63e7f",
+          "label": "网络源",
+          "bitrate": 64
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_cf07acc6a",
+      "name": "佳音電台",
+      "category": "world",
+      "streamUrl": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm909/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://www.goodnews.org.tw/forum.php?change_model=forum_detail&id=124",
+      "sources": [
+        {
+          "url": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm909/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 65
+        }
+      ]
+    },
+    {
+      "id": "gl_ca_fm961",
+      "name": "加拿大中文电台FM.96.1",
+      "category": "world",
+      "streamUrl": "https://5b2959fe11444.streamlock.net/radio/fm961.stream/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "加拿大 · 华语",
+      "description": "全球节目源 · 加拿大 · 综合",
+      "website": "http://www.am1470.com/home_c.php?1634199366",
+      "sources": [
+        {
+          "url": "https://5b2959fe11444.streamlock.net/radio/fm961.stream/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 48
+        }
+      ]
+    },
+    {
+      "id": "gl_us_cf44f0ad1",
+      "name": "美国中文电台-旧金山",
+      "category": "world",
+      "streamUrl": "http://radiokest.serverroom.us:6670/;?type=http&nocache=3295",
+      "logoUrl": "",
+      "frequency": "美国 · 华语",
+      "description": "全球节目源 · 美国 · 综合",
+      "website": "https://www.uschineseradio.com/",
+      "sources": [
+        {
+          "url": "http://radiokest.serverroom.us:6670/;?type=http&nocache=3295",
+          "label": "网络源",
+          "bitrate": 48
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_1766",
+      "name": "1766線上電臺-百家知識",
+      "category": "world",
+      "streamUrl": "http://livestream.1766.today:1768/live1.mp3",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.1766.today/",
+      "sources": [
+        {
+          "url": "http://livestream.1766.today:1768/live1.mp3",
+          "label": "网络源",
+          "bitrate": 48
+        }
+      ]
+    },
+    {
+      "id": "gl_ca_fm947",
+      "name": "加拿大中文电台FM94.7",
+      "category": "world",
+      "streamUrl": "https://5b2959fe11444.streamlock.net/radio/fm947.stream/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "加拿大 · 华语",
+      "description": "全球节目源 · 加拿大 · 综合",
+      "website": "https://www.fm947.com/",
+      "sources": [
+        {
+          "url": "https://5b2959fe11444.streamlock.net/radio/fm947.stream/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 51
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c0c1dd390",
+      "name": "台灣廣播 台北一台",
+      "category": "world",
+      "streamUrl": "http://test.taiwan-radio.tw:8000/TP.AM1323",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.taiwanradio.com.tw/ec99/rwd1638/product.asp?prodid=tp01",
+      "sources": [
+        {
+          "url": "http://test.taiwan-radio.tw:8000/TP.AM1323",
+          "label": "网络源",
+          "bitrate": 48
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm943",
+      "name": "警察廣播電臺 - 臺北分臺 FM 94.3",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/TPS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/TPS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_bbradio",
+      "name": "B&B RADIO 幫幫廣播網",
+      "category": "world",
+      "streamUrl": "https://cdn280.ccdntech.com/live-http/_definst_/vod280_Live/bb/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://bbradio.pch.org.tw/",
+      "sources": [
+        {
+          "url": "https://cdn280.ccdntech.com/live-http/_definst_/vod280_Live/bb/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 134
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm931",
+      "name": "警察廣播電臺 - 高雄分臺 FM 93.1",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/KSS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/KSS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_1940sshanghaivin",
+      "name": "上海麗都廣播電台 1940's Shanghai Vintage Jazz Shidaiqu Radio",
+      "category": "world",
+      "streamUrl": "https://radio.nitro-server.uk/listen/1940sshanghaioldtimesmusicradio/radio.mp3",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://radio.nitro-server.uk/public/1940sshanghaioldtimesmusicradio",
+      "sources": [
+        {
+          "url": "https://radio.nitro-server.uk/listen/1940sshanghaioldtimesmusicradio/radio.mp3",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c03e34ba8",
+      "name": "警察廣播電台 - 花蓮台",
+      "category": "world",
+      "streamUrl": "http://stream.pbs.gov.tw:1935/live/HLS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "http://stream.pbs.gov.tw:1935/live/HLS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_mcbs",
+      "name": "MCBS 銘傳廣播電台",
+      "category": "world",
+      "streamUrl": "http://radio.mcu.edu.tw:8080/radio?1747274117052",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://radio.mcu.edu.tw/",
+      "sources": [
+        {
+          "url": "http://radio.mcu.edu.tw:8080/radio?1747274117052",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_cf03bcba5",
+      "name": "警察廣播電台 - 宜蘭台",
+      "category": "world",
+      "streamUrl": "http://stream.pbs.gov.tw:1935/live/ELS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "http://stream.pbs.gov.tw:1935/live/ELS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm945",
+      "name": "警察廣播電臺 - 臺中分臺 FM 94.5",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/TCS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/TCS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_am1512",
+      "name": "警察廣播電臺 - 新竹分臺 AM 1512",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/SCS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/SCS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_am1314",
+      "name": "警察廣播電臺 - 臺南分臺 AM 1314",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/TNS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/TNS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm943_2",
+      "name": "警察廣播電臺 - 臺東分臺 FM 94.3",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/TTS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/TTS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm943_3",
+      "name": "警察廣播電臺 - 花蓮分臺 FM 94.3",
+      "category": "world",
+      "streamUrl": "https://stream.pbs.gov.tw/live/HLS/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pbs.npa.gov.tw/",
+      "sources": [
+        {
+          "url": "https://stream.pbs.gov.tw/live/HLS/playlist.m3u8",
+          "label": "网络源",
+          "bitrate": 128
+        }
+      ]
+    },
+    {
+      "id": "gl_au_2ac",
+      "name": "2AC澳洲华人电台粤语广播",
+      "category": "world",
+      "streamUrl": "http://s1.voscast.com:10442/stream",
+      "logoUrl": "",
+      "frequency": "澳大利亚 · 华语",
+      "description": "全球节目源 · 澳大利亚 · 综合",
+      "website": "https://www.2ac.com.au/",
+      "sources": [
+        {
+          "url": "http://s1.voscast.com:10442/stream",
+          "label": "网络源",
+          "bitrate": 48
+        }
+      ]
+    },
+    {
+      "id": "gl_hk_c7ab7c7d7",
+      "name": "凤凰卫视中文台",
+      "category": "world",
+      "streamUrl": "http://playtv-live.ifeng.com/live/06OLEGEGM4G_audio.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 华语",
+      "description": "全球节目源 · 中国香港 · 综合",
+      "website": "https://www.ifeng.com/",
+      "sources": [
+        {
+          "url": "http://playtv-live.ifeng.com/live/06OLEGEGM4G_audio.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_hitfm",
+      "name": "Hit FM台北之音廣播",
+      "category": "world",
+      "streamUrl": "http://202.39.43.67:1935/live/RA000036/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.hitoradio.com/newweb/onair.php",
+      "sources": [
+        {
+          "url": "http://202.39.43.67:1935/live/RA000036/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm104",
+      "name": "正聲廣播電台FM104",
+      "category": "world",
+      "streamUrl": "https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/chunklist_w872521607.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.csbc.com.tw/",
+      "sources": [
+        {
+          "url": "https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/chunklist_w872521607.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c1b68c5a9",
+      "name": "台中廣播",
+      "category": "world",
+      "streamUrl": "http://211.20.119.101:8081/",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.fm1007lucky.com/",
+      "sources": [
+        {
+          "url": "http://211.20.119.101:8081/",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c5e040dd5",
+      "name": "台北流行音樂廣播",
+      "category": "world",
+      "streamUrl": "http://202.39.43.67:1935/live/RA000080/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.pop917.com/home.aspx",
+      "sources": [
+        {
+          "url": "http://202.39.43.67:1935/live/RA000080/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm1055",
+      "name": "台中歡喜之聲FM105.5",
+      "category": "world",
+      "streamUrl": "http://59.125.41.65:8081/",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.smileradio.com.tw/radio-info.asp?id=245",
+      "sources": [
+        {
+          "url": "http://59.125.41.65:8081/",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_cb492e0bd",
+      "name": "嘉義環球廣播",
+      "category": "world",
+      "streamUrl": "http://60.248.53.115:8081/",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.smileradio.com.tw/radio-info.asp?id=246",
+      "sources": [
+        {
+          "url": "http://60.248.53.115:8081/",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_2",
+      "name": "民本電台-2",
+      "category": "world",
+      "streamUrl": "https://streamak0134.akamaized.net/live0134lh-5gst/_definst_/am855/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://mingpen.com.tw/",
+      "sources": [
+        {
+          "url": "https://streamak0134.akamaized.net/live0134lh-5gst/_definst_/am855/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c2fea7f87",
+      "name": "漢聲調頻",
+      "category": "world",
+      "streamUrl": "http://202.39.43.67:1935/live/RA000076/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://audio.voh.com.tw/TW/Program/ugC_Program.aspx?Show=B",
+      "sources": [
+        {
+          "url": "http://202.39.43.67:1935/live/RA000076/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_gogo1043",
+      "name": "桃園GO GO104.3",
+      "category": "world",
+      "streamUrl": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm1043/chunklist_w1108784103.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm1043/chunklist_w1108784103.m3u8",
+      "sources": [
+        {
+          "url": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm1043/chunklist_w1108784103.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_fm989",
+      "name": "人人電台 好事聯播網FM98.9",
+      "category": "world",
+      "streamUrl": "http://202.39.43.67:1935/live/RA000013/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://www.bestradio.com.tw/",
+      "sources": [
+        {
+          "url": "http://202.39.43.67:1935/live/RA000013/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_c762b6625",
+      "name": "好事聯播網 高雄港都",
+      "category": "world",
+      "streamUrl": "http://202.39.43.67:1935/live/RA000012/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.apple-line.com/",
+      "sources": [
+        {
+          "url": "http://202.39.43.67:1935/live/RA000012/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_needsradio",
+      "name": "Needs Radio 全球華語廣播網",
+      "category": "world",
+      "streamUrl": "https://cdn280.ccdntech.com/live-http/_definst_/vod280_Live/needs/chunklist.m3u8",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "https://www.needsradio.org.tw/",
+      "sources": [
+        {
+          "url": "https://cdn280.ccdntech.com/live-http/_definst_/vod280_Live/needs/chunklist.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ]
+    },
+    {
+      "id": "gl_tw_ca9dc4fa1",
+      "name": "台海之聲",
+      "category": "world",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wxzhzs/playlist.m3u8?wsSession=c650605f64c6488d38b66982-174761774475052&wsIPSercert=270c8446fe14303f2433a2f164ccd9e5",
+      "logoUrl": "",
+      "frequency": "台湾 · 华语",
+      "description": "全球节目源 · 台湾 · 综合",
+      "website": "http://www.cnr.cn/",
+      "sources": [
+        {
+          "url": "https://satellitepull.cnr.cn/live/wxzhzs/playlist.m3u8?wsSession=c650605f64c6488d38b66982-174761774475052&wsIPSercert=270c8446fe14303f2433a2f164ccd9e5",
+          "label": "网络源",
+          "bitrate": 0
         }
       ]
     },
@@ -7051,28 +7340,6 @@
       "frequency": "",
       "description": "",
       "website": "http://www.hndt.com/",
-      "sources": []
-    },
-    {
-      "id": "st_休息音乐🎶",
-      "name": "休息音乐🎶",
-      "category": "music",
-      "streamUrl": "https://az1.mediacp.eu/listen/airport-lounge-radio/radio.mp3",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "",
-      "website": "http://mediacp.eu/",
-      "sources": []
-    },
-    {
-      "id": "st_郫都综合广播亚洲音乐965",
-      "name": "郫都综合广播亚洲音乐965",
-      "category": "music",
-      "streamUrl": "http://asiafm.vip:8000/fm965",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "",
-      "website": "http://www.asiafm.net/index.php#page1",
       "sources": []
     }
   ]

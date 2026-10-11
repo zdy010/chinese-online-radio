@@ -181,10 +181,12 @@ class TestCategoryGuard(unittest.TestCase):
 
 
 class TestPoolSafety(unittest.TestCase):
-    def test_adult_and_non_audio_are_droppable_but_listed(self):
-        """候选过滤要能解释：被丢的条目必须留下原因，不许静默消失。"""
-        dropped = fs.drop_reason({"name": "x", "tags": "adult", "url": "https://a/b.mp3"})
-        self.assertEqual(dropped, "adult")
+    def test_no_url_is_droppable_and_listed(self):
+        """淘汰必须可解释：被丢的条目要留下原因，不许静默消失。
+
+        成人不再是淘汰理由（改归 adult 分类），这里用无地址的条目验“可解释淘汰”。
+        """
+        self.assertEqual(fs.drop_reason({"name": "x", "tags": "porn", "url": ""}), "no-url")
 
     def test_blank_url_dropped(self):
         self.assertEqual(fs.drop_reason({"name": "x", "tags": "", "url": ""}), "no-url")
@@ -193,16 +195,36 @@ class TestPoolSafety(unittest.TestCase):
         self.assertIsNone(fs.drop_reason({"name": "河南戏曲广播", "tags": "chinese",
                                          "url": "https://a/b.m3u8"}))
 
-    def test_bare_ip_is_dropped(self):
-        """裸 IP 无法证明发布方身份，不收。"""
-        self.assertEqual(
-            fs.drop_reason({"name": "某广播", "tags": "", "url": "http://202.39.43.67:1935/live/a.m3u8",
-                            "host": "202.39.43.67:1935"}),
-            "bare-ip",
-        )
+    def test_bare_ip_is_kept(self):
+        """裸 IP 不再排除：实测被它挡掉了 Radio Caroline、台北 Hit FM、台中廣播等 47 个可用台。
 
-    def test_pirate_cdn_is_dropped(self):
-        """实测候选池里真实出现过的盗版转播特征（空白名 + vip1.fhbf9.com + 日期路径）。"""
+        小站长用 IP 托管 Shoutcast 是常态，可用就收。
+        """
+        self.assertIsNone(fs.drop_reason({"name": "某广播", "tags": "",
+                                          "url": "http://202.39.43.67:1935/live/a.m3u8",
+                                          "host": "202.39.43.67:1935"}))
+
+    def test_adult_music_format_is_not_treated_as_adult(self):
+        """实测坑：“adult contemporary / adult hits”是音乐格式，不是色情。
+
+        子串匹配曾误杀 Heart UK（3.4 万票）等 7 个主流台，却一条真成人内容也没拦住。
+        """
+        self.assertIsNone(fs.drop_reason({
+            "name": "Heart UK", "tags": "adult contemporary,pop,variety",
+            "host": "media-ice.musicradio.com", "url": "https://a/1.mp3", "bitrate": 128}))
+        self.assertFalse(fs.is_adult_tag({"tags": "hot adult contemporary"}))
+        self.assertFalse(fs.is_adult_tag({"tags": "adult hits"}))
+
+    def test_real_adult_markers_are_detected_but_not_dropped(self):
+        """真成人标记：不排除（项目规定全球源不过滤成人），但要归入 adult 分类。"""
+        for tags in ("porn,xxx", "18+", "erotic"):
+            self.assertTrue(fs.is_adult_tag({"tags": tags}), tags)
+        self.assertIsNone(fs.drop_reason({"name": "Sex Sound Radio", "tags": "porn",
+                                          "host": "a.com", "url": "https://a/2.mp3",
+                                          "bitrate": 128}))
+
+    def test_pirate_cdn_is_still_dropped(self):
+        """盗版转播仍然排除：这条跟裸IP/成人无关，是版权边界。"""
         self.assertEqual(
             fs.drop_reason({"name": "FHTV", "tags": "chinese",
                             "url": "https://vip1.fhbf9.com/20210705/eoQxrzxS/index.m3u8",
@@ -359,6 +381,20 @@ class TestBuildSelection(unittest.TestCase):
         self.assertEqual(len(new), 1, [e["name"] for e in new])
         urls = [u for e in new for u in fs.entry_urls(e)]
         self.assertEqual(len(urls), len(set(fs.norm_url(x) for x in urls)))
+
+    def test_mirror_groups_do_not_consume_new_quota(self):
+        """镜像不新增条目，不能占 max_new 名额。
+
+        实测坑：混在一起算名额时，109 个镜像组把 120 个位吃掉一大截，
+        导致台中廣播这类合格新台落选。
+        """
+        alive = [self._cand("河南戏曲广播", "https://mirror/b.m3u8"),
+                 self._cand("湖北之声", "https://x/1.m3u8"),
+                 self._cand("湖南经广", "https://x/2.m3u8"),
+                 self._cand("某综合广播", "https://x/3.m3u8")]
+        new, mirrors, _ = fs.build_selection(alive, self.STATIONS, max_new=2)
+        self.assertEqual(len(new), 2, [e["name"] for e in new])
+        self.assertIn("河南戏曲广播", mirrors)
 
 
 class TestRanking(unittest.TestCase):
@@ -529,6 +565,16 @@ class TestCategoryCap(unittest.TestCase):
         chosen = fs.pick_indices(ranked, 30)
         self.assertEqual(len(chosen), 30)
 
+    def test_adult_tagged_station_gets_adult_category(self):
+        """成人标记的台归入 StationCategory 已有的 adult，不混进 world/music。"""
+        alive = [{"name": "Red Light Central", "cc": "US", "url": "https://a/9.mp3",
+                  "url_resolved": "https://a/9.mp3", "host": "a.com", "bitrate": 128,
+                  "votes": 300, "country": "United States", "homepage": "",
+                  "tags": "porn,18+", "language": "english"}]
+        new, _, _ = fs.build_selection(alive, [])
+        self.assertEqual(len(new), 1)
+        self.assertEqual(new[0]["category"], "adult")
+
     def test_selection_end_to_end_respects_cap(self):
         """整条 selection 跑下来：电视伴音不能把名额吃干。"""
         alive = [{"name": "CCTV-%d综合伴音" % i, "cc": "CN", "url": "https://a/%d.m3u8" % i,
@@ -575,6 +621,17 @@ class TestChineseEvidence(unittest.TestCase):
         alive = [self._c("城市廣播網•台南知音", "TW", "https://a/3.mp3")]
         new, _, _ = fs.build_selection(alive, [])
         self.assertEqual(len(new), 1)
+
+    def test_chinese_world_outranks_english_world(self):
+        """华语台要优先于英语台占世界名额：实测不加这个加分时，
+        线到 138 分会把台中廣播(132) 挤出去，换成一批英国小台。"""
+        zh = fs.score_candidate("台中廣播", "TW", "world", "211.20.119.101:8081", 64, 714, "chinese")
+        en = fs.score_candidate("Heart Xmas", "GB", "world", "media-ssl.musicradio.com", 128, 500,
+                                "english")
+        self.assertGreater(zh, en)
+
+    def test_world_cap_allows_chinese_stations(self):
+        self.assertGreaterEqual(fs.CATEGORY_CAP["world"], 50)
 
 
 if __name__ == "__main__":

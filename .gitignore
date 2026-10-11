@@ -58,3 +58,4 @@ __pycache__/
 # fetch_stations.py / station_probe.py 及其测试全部不会出现在仓库里，
 # 下次扩充电台或回填标签只能重新人肉摸一遍。
 !tools/*.py
+!tools/*.json
