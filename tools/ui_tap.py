@@ -72,13 +72,18 @@ def node_bounds(xml, want):
         x1, y1, x2, y2 = (int(v) for v in bm.groups())
         if x2 <= x1 or y2 <= y1:
             continue
+        # 过滤掉被裁切/看不见的局促节点：实测过“设置说明”里一个 1080x6px 的文本节点
+        # 含“节目源管理”几个字，点上去什么也不会发生，于是结论变成“页面没反应”
+        if (x2 - x1) < 24 or (y2 - y1) < 24:
+            continue
         clickable = 'clickable="true"' in s
-        cand = (0 if clickable else 1, x1, y1, x2, y2, text or desc)
+        area = (x2 - x1) * (y2 - y1)
+        cand = (0 if clickable else 1, area, x1, y1, x2, y2, text or desc)
         if best is None or cand < best:
             best = cand
     if not best:
         return None
-    _, x1, y1, x2, y2, label = best
+    _, _, x1, y1, x2, y2, label = best
     return (x1 + x2) // 2, (y1 + y2) // 2, label, (x1, y1, x2, y2)
 
 

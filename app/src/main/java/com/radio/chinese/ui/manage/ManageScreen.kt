@@ -17,12 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationCategory
+import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.service.StreamStatus
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StatusChip
 import com.radio.chinese.ui.common.stationSubtitle
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.LocalUiSurface
 import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.launch
 
@@ -193,8 +195,8 @@ fun ManageScreen(
     if (showAddDialog) {
         AddStationDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, url, category, freq, desc ->
-                viewModel.addCustomStation(name, url, category, freq, desc)
+            onConfirm = { name, url, category, freq, desc, tags ->
+                viewModel.addCustomStation(name, url, category, freq, desc, tags)
                 showAddDialog = false
             }
         )
@@ -385,26 +387,33 @@ private fun StationActionDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AddStationDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, url: String, category: String, frequency: String, description: String) -> Unit
+    onConfirm: (name: String, url: String, category: String, frequency: String, description: String, tags: List<String>) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var streamUrl by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("general") }
     var frequency by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var pickedTags by remember { mutableStateOf(listOf<String>()) }
     var showCategoryMenu by remember { mutableStateOf(false) }
 
     val isValid = name.isNotBlank() && streamUrl.isNotBlank()
+    // AlertDialog 的内容是独立组合窗口，拿不到应用层提供的 LocalUiSurface，
+    // 对话框里 isCarSurface() 会永远得到默认的 Phone，Dimens 换档全部失效
+    // （车机档实测：加了 carTouchTarget 的 chip 仍是 70dp）。
+    // 在应用层把形态抓住，再显式带进对话框组合。
+    val surface = LocalUiSurface.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("添加自定义电台") },
         text = {
             // 可滚动：五个输入框 + 分类菜单，键盘弹起或大字号下“添加”会不可达
+            CompositionLocalProvider(LocalUiSurface provides surface) {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -467,11 +476,48 @@ private fun AddStationDialog(
                     maxLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
+                // 标签用内联 chip 多选，不用下拉菜单：词表 48 项塞进下拉很不好选，
+                // 而对话框里的普通 DropdownMenu 根本点不开（项目已记过这个坑）。
+                // 外层已有 verticalScroll，chip 比列表长也不会挡住“添加”按钮。
+                Text(
+                    text = if (pickedTags.isEmpty()) "标签（可选，最多 6 个）"
+                    else "已选 ${pickedTags.size}/6：" + pickedTags.joinToString("、") {
+                        StationTag.labelOf(it)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                StationTag.orderedByGroup().forEach { (group, tags) ->
+                    Text(
+                        text = group.label,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(top = Dimens.GapSmall),
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.ChipGap)) {
+                        tags.forEach { tag ->
+                            val on = tag.key in pickedTags
+                            FilterChip(
+                                selected = on,
+                                onClick = {
+                                    pickedTags = when {
+                                        on -> pickedTags - tag.key
+                                        pickedTags.size >= 6 -> pickedTags
+                                        else -> pickedTags + tag.key
+                                    }
+                                },
+                                // 车机档命中区同样要≥88dp；外层 verticalScroll 保证“添加”按钮仍可达
+                                modifier = Modifier.carTouchTarget(),
+                                label = { Text(tag.label) },
+                            )
+                        }
+                    }
+                }
+            }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(name, streamUrl, category, frequency, description) },
+                onClick = { onConfirm(name, streamUrl, category, frequency, description, pickedTags) },
                 enabled = isValid
             ) { Text("添加") }
         },

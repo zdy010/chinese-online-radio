@@ -31,6 +31,20 @@ data class ManageUiState(
     val easterEggMessage: String? = null
 )
 
+/**
+ * 自定义电台的标签清洗：只认词表、去重、按词表顺序、最多 6 个。
+ *
+ * UI 上只能选词表内的 chip，这里仍然再洗一遍：DataStore 里的数据可能来自
+ * 别的版本或手改，词表外的 key 一旦入库，列表就会把英文原值当标签显示给用户。
+ */
+fun sanitizeTags(raw: List<String>): List<String> =
+    com.radio.chinese.domain.model.StationTag.byKeyOrder(
+        keys = raw.map { it.trim() }.filter {
+            it.isNotEmpty() && com.radio.chinese.domain.model.StationTag.isValidKey(it)
+        },
+        limit = 6,
+    ).map { it.key }
+
 @HiltViewModel
 class ManageViewModel @Inject constructor(
     private val repository: StationRepository,
@@ -138,7 +152,8 @@ class ManageViewModel @Inject constructor(
         streamUrl: String,
         category: String,
         frequency: String,
-        description: String
+        description: String,
+        tags: List<String> = emptyList()
     ) {
         // 检测彩蛋
         if (BuildConfig.ENABLE_EASTER_EGG && isEasterEgg(streamUrl)) {
@@ -158,7 +173,8 @@ class ManageViewModel @Inject constructor(
                 category = category,
                 streamUrl = streamUrl,
                 frequency = frequency,
-                description = description
+                description = description,
+                tags = sanitizeTags(tags),
             )
             repository.addCustomStation(station)
             loadData()
