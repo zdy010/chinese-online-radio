@@ -11,10 +11,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -64,32 +60,8 @@ class StationRepository @Inject constructor(
             .bufferedReader()
             .use { it.readText() }
 
-        val jsonObject = json.parseToJsonElement(jsonString).jsonObject
-        val stationsArray = jsonObject["stations"]?.jsonArray ?: return emptyList()
-
-        val stations = stationsArray.map { element ->
-            val obj = element.jsonObject
-            val sources = obj["sources"]?.jsonArray?.map { srcObj ->
-                val src = srcObj.jsonObject
-                StationSource(
-                    url = src["url"]?.jsonPrimitive?.content ?: "",
-                    label = src["label"]?.jsonPrimitive?.content ?: "",
-                    bitrate = src["bitrate"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
-                )
-            }
-            RadioStation(
-                id = obj["id"]?.jsonPrimitive?.content ?: "",
-                name = obj["name"]?.jsonPrimitive?.content ?: "",
-                category = obj["category"]?.jsonPrimitive?.content ?: "general",
-                streamUrl = obj["streamUrl"]?.jsonPrimitive?.content ?: "",
-                sources = sources ?: emptyList(),
-                logoUrl = obj["logoUrl"]?.jsonPrimitive?.content ?: "",
-                frequency = obj["frequency"]?.jsonPrimitive?.content ?: "",
-                description = obj["description"]?.jsonPrimitive?.content ?: "",
-                website = obj["website"]?.jsonPrimitive?.content ?: ""
-            )
-        }
-
+        // 解析逻辑在 StationJson（纯函数），JVM 单测才能直接校验真 JSON 的合法性
+        val stations = com.radio.chinese.data.local.StationJson.parse(jsonString)
         builtInStations = stations
         return stations
     }

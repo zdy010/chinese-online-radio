@@ -20,6 +20,7 @@ import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.service.StreamStatus
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StatusChip
+import com.radio.chinese.ui.common.stationSubtitle
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
@@ -280,11 +281,12 @@ private fun StationManageItem(
                     }
                 }
                 val subtitle = buildString {
-                    if (station.frequency.isNotBlank()) append(station.frequency)
-                    if (station.frequency.isNotBlank() && station.category.isNotBlank()) append(" · ")
-                    append(CATEGORIES.find { it.first == station.category }?.second ?: station.category)
+                    // 副标题走全站唯一规则（真频率 > 国家·语言 > 分类名），
+                    // 再加检测结论；以前这里自己拼 frequency + 分类，与首页不一致
+                    append(stationSubtitle(station, StationCategory.labelOf(station.category)))
                     if (checkResult != null && checkResult.status != StreamStatus.CHECKING) {
-                        append(" · ${checkResult.message}")
+                        if (isNotEmpty()) append(" · ")
+                        append(checkResult.message)
                     }
                 }
                 if (subtitle.isNotBlank()) {

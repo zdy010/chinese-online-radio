@@ -37,6 +37,7 @@ import com.radio.chinese.domain.model.StationSource
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StationCover
+import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 
@@ -354,15 +355,13 @@ private fun StationInfoBlock(
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
         )
-        if (station.frequency.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(Dimens.GapTiny))
-            Text(
-                text = station.frequency,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
+        // 频率 / 国家·语言 / 分类名三者按统一规则取一个，副标题为空时不留间隙
+        StationSubtitleText(
+            station = station,
+            modifier = Modifier.padding(top = Dimens.GapTiny),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
         // 视口不够高时让位给播放键：宁可少一段可有可无的简介，也不能让暂停按不到
         if (showDescription && station.description.isNotEmpty()) {
             Spacer(modifier = Modifier.height(Dimens.GapSmall))
