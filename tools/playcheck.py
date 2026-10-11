@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
+TOOLS_DIR = TOOLS
 sys.path.insert(0, str(TOOLS))
 ROOT = TOOLS.parent
 
@@ -99,6 +100,31 @@ def drop_failed(results, stations):
     return [s for s in stations if s["id"] not in bad], sorted(bad)
 
 
+FAILED_LIST = TOOLS_DIR / "play_failed.json"
+
+
+def record_failed(stations, dropped_ids):
+    """把实播失败条目的地址归并写入名单，供 fetch_stations 下次跳过。
+
+    不写就会在重跑流水线时把“已验证放不出声音”的台又加回来。
+    主源与镜像都写：它们已证实不能用，不能因为换了候选顺序又进来。
+    """
+    try:
+        data = json.loads(FAILED_LIST.read_text(encoding="utf-8"))
+    except Exception:
+        data = {"urls": [], "note": "装机实播未起声音的地址，由 playcheck.py 维护"}
+    urls = set(data.get("urls") or [])
+    for s in stations:
+        if s["id"] in dropped_ids:
+            urls.add(s.get("streamUrl", ""))
+            for src in (s.get("sources") or []):
+                if src.get("url"):
+                    urls.add(src["url"])
+    data["urls"] = sorted(u for u in urls if u)
+    FAILED_LIST.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return len(data["urls"])
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--pkg", default="com.radio.chinese")
@@ -106,6 +132,9 @@ def main():
                    help="每类抽几台，形如 opera=3,sports=2")
     p.add_argument("--out", default=str(ROOT / ".qtest/playcheck.json"))
     p.add_argument("--wait", type=float, default=25.0)
+    p.add_argument("--max-scrolls", type=int, default=30, help="定位台名时最多滚几屏")
+    p.add_argument("--names", default="",
+                   help="按台名子串点名要验的台（逗号分隔），优先于分类抽样")
     p.add_argument("--drop-only", action="store_true",
                    help="不重测，只按 --out 里已有的实播结果剔除未出声条目")
     p.add_argument("--drop-failed", action="store_true",
@@ -129,11 +158,26 @@ def main():
             STATIONS_JSON.write_text(json.dumps({"stations": kept}, ensure_ascii=False, indent=2),
                                      encoding="utf-8")
             print(f"清单现为 {len(kept)} 台（备份 radio_stations.json.preplay.bak）")
+            print(f"实播失败名单已更新，共 {record_failed(stations, set(dropped))} 个地址")
         return 0
     bak = Path(str(STATIONS_JSON) + ".bak")
     old_ids = {s["id"] for s in json.loads(bak.read_text(encoding="utf-8"))["stations"]} if bak.exists() else set()
     new_ids = {s["id"] for s in stations} - old_ids
-    sample = pick_sample(stations, new_ids, per)
+    if args.names.strip():
+        wanted = [n.strip() for n in args.names.split(",") if n.strip()]
+        forced = []
+        for term in wanted:
+            hit = next((s for s in stations if term.lower() in s["name"].lower()), None)
+            if hit is None:
+                print(f"[warn] 清单里没有台名含「{term}」的台，跳过", file=sys.stderr)
+            else:
+                forced.append(hit)
+        if not forced:
+            print("没有可验的台")
+            return 1
+        sample = forced
+    else:
+        sample = pick_sample(stations, new_ids, per)
     print(f"抽样 {len(sample)} 台新增条目做装机实播：")
     for s in sample:
         print(f"  {s['category']:<9} {s['name'][:26]:<28} {s['streamUrl'].split('/')[2][:26]}")
@@ -148,7 +192,7 @@ def main():
         if not ut.tap(category_label(s["category"]), max_scrolls=3):
             results.append({"id": s["id"], "name": label, "state": "NO-CATEGORY"})
             continue
-        found = ut.tap(label, settle=1.0, max_scrolls=30)
+        found = ut.tap(label, settle=1.0, max_scrolls=args.max_scrolls)
         if not found:
             results.append({"id": s["id"], "name": label, "state": "NOT-FOUND"})
             print(f"  [NOT-FOUND] {label}")

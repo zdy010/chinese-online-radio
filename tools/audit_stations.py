@@ -51,8 +51,8 @@ def audit(stations, live_urls=None, prev_ids=None, baseline=None):
     """返回 [(检查名, 是否通过, 说明)]。任何一项不通过，退出码非 0。
 
     重要区分：“新增条目”与“历史存量”用不同强度。
-    存量大陆台本来就没 sources 字段、存量里本来就有 6 条裸 IP 主地址，
-    把它们当本次失败会导致真正的新增问题被噪声淹没。
+    存量大陆台本来就没 sources 字段，把它们当本次失败会导致
+    真正的新增问题被噪声淹没。
     """
     checks = []
     keys = station_category_keys()
@@ -94,8 +94,13 @@ def audit(stations, live_urls=None, prev_ids=None, baseline=None):
 
     bad_new = [i for i in _bad_host(stations) if new_ids is None or i in new_ids]
     bad_all = _bad_host(stations)
-    checks.append(("新增主地址无裸IP与盗版CDN", not bad_new,
-                   f"{bad_new[:3]}" if bad_new else f"存量遗留 {len(bad_all)} 条（先记录，不阻塞）"))
+    checks.append(("新增主地址无盗版CDN", not bad_new,
+                   f"{bad_new[:3]}" if bad_new else f"盗版特征 {len(bad_all)} 条"))
+    # 裸 IP 不再是排除理由（实测它挡掉了 Radio Caroline、台北 Hit FM 等可用台），
+    # 但数量还是报出来：IP 托管的流生命周期短，日后排查用得上
+    ip_cnt = sum(1 for s in stations if re.match(
+        r"^\d+\.\d+\.\d+\.\d+", str(s.get("streamUrl", "").split("//", 1)[-1])))
+    print(f"  [info] 裸 IP 主地址共 {ip_cnt} 条（允许存在，生命周期短）")
 
     multi = [s for s in stations if len(s.get("sources") or []) > 1]
     checks.append(("多源台数大于 0（切源功能有数据可用）", bool(multi),
@@ -119,10 +124,11 @@ def _shared_urls(stations):
 
 
 def _bad_host(stations):
+    """只查盗版转播 CDN 特征。裸 IP 已不视为排除理由（小站长用 IP 托管常见）。"""
     out = []
     for s in stations:
         host = str(s.get("streamUrl", "")).split("/")[2] if "//" in str(s.get("streamUrl", "")) else ""
-        if re.match(r"^\d+\.\d+\.\d+\.\d+", host) or "fhbf9" in host:
+        if "fhbf9" in host:
             out.append(s.get("id", "?"))
     return out
 

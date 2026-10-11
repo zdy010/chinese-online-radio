@@ -266,14 +266,19 @@ def _lang_label(kind: str) -> str:
 
 def build_entry(name, category, url, cc, country_zh, bitrate, homepage, taken,
                 lang_kind="chinese", tags="") -> dict:
-    """按大陆/海外两种字段语义构造条目（约定见模块 docstring）。"""
+    """按大陆/海外两种字段语义构造条目（约定见模块 docstring）。
+
+    adult 分类走海外式写法（它们几乎全在境外），但 category 保持 adult 而不是 world，
+    免得用户在“世界”标签下撞见不该随便出现的内容。
+    """
     overseas = (cc or "").upper() != "CN"
-    if overseas:
-        cat = "world"
+    cat = category or "general"
+    if overseas or cat in ("world", "adult"):
         zh = country_zh or (cc or "").upper()
         frequency = f"{zh} · {_lang_label(lang_kind)}"
         description = f"全球节目源 · {zh} · {genre_zh(tags)}"
         sources = [{"url": url, "label": "网络源", "bitrate": int(bitrate or 0)}]
+        cat = "adult" if cat == "adult" else "world"
     else:
         cat = category or "general"
         frequency = ""
@@ -359,12 +364,50 @@ VIDEO_URL_HINT = re.compile(r"/\d{3,4}p(?![a-z0-9])|/video/|\.mp4($|\?)|/dash/",
 AUDIO_MAX_BITRATE = 400
 
 
+# 真成人标记：按 token 精确判，绝不用子串。
+# 实测教训：“adult contemporary / adult hits / hot adult contemporary”是音乐格式，
+# 子串匹配曾误杀 Heart UK（3.4万票）等 7 个主流台，而一条真成人内容也没拦住。
+ADULT_TOKENS = {"porn", "xxx", "18+", "21+", "sex", "erotic", "nsfw", "adult only"}
+
+
+def tag_tokens(cand: dict) -> set:
+    return {t.strip().lower() for t in (cand.get("tags") or "").split(",") if t.strip()}
+
+
+def is_adult_tag(cand: dict) -> bool:
+    """是不是成人内容。按项目规定全球源不过滤成人，所以这只用于归类，不用于排除。"""
+    return bool(tag_tokens(cand) & ADULT_TOKENS)
+
+
+PLAY_FAILED = TOOLS / "play_failed.json"
+
+
+def load_play_failed(path=None) -> set:
+    """读装机实播确认失败的流地址。
+
+    不持久化就会在重跑流水线时把已验证放不出声音的台又加回来。
+    名单读失败不阻断取数，但必须说明原因：静默当成空名单会把坏源又收进来。
+    """
+    p = Path(path or PLAY_FAILED)
+    if not p.exists():
+        print(f"[warn] 实播失败名单不存在：{p}（本次不跳过任何地址）", file=sys.stderr)
+        return set()
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[warn] 实播失败名单解析失败：{e}（本次不跳过任何地址）", file=sys.stderr)
+        return set()
+    return {norm_url(u) for u in (data.get("urls") or []) if u}
+
+
 def drop_reason(cand: dict):
     """候选淘汰原因。必须可解释：静默消失的条目以后没人能复查。
 
-    实测必需的两类排除：
-      bare-ip    —— 如 202.39.43.67:1935，无法证明发布方身份
-      pirate-cdn —— 如 vip1.fhbf9.com，非内容方自我公开的盗版转播
+    曾经过滤但现在不再排除的：
+      裸 IP    —— 实测挡掉了 Radio Caroline、台北 Hit FM、台中廣播等 47 个可用台，
+                  小站长用 IP 托管 Shoutcast 是常态，可用就收
+      成人标记 —— 项目规定全球源不过滤成人，改为归入 StationCategory 的 adult
+    仍然排除的：盗版转播 CDN（版权边界）、视频流、码率异常非音频。
     """
     url = (cand.get("url") or "").strip()
     if not url:
@@ -372,8 +415,6 @@ def drop_reason(cand: dict):
     if not url.lower().startswith(("http://", "https://")):
         return "not-http"
     host = (cand.get("host") or urlparse(url).netloc).lower()
-    if re.match(r"^\d+\.\d+\.\d+\.\d+(:\d+)?$", host):
-        return "bare-ip"
     if _pirate(host):
         return "pirate-cdn"
     if VIDEO_URL_HINT.search(url):
@@ -383,9 +424,6 @@ def drop_reason(cand: dict):
             return "bitrate-too-high-for-audio"
     except (TypeError, ValueError):
         pass
-    tags = (cand.get("tags") or "").lower()
-    if any(k in tags for k in ("adult", "18+", "xxx", "sex", "porn")):
-        return "adult"
     return None
 
 
@@ -538,6 +576,14 @@ def cmd_merge(args) -> int:
     alive = [c for c in pool
              if verified.get(c.get("url_resolved") or c.get("url"), {}).get("verdict") == sp.LIVE
              and drop_reason(c) is None]
+    # 实播确认失败的地址不再收：PC 侧“能下载分片”不等于 ExoPlayer 能出声
+    play_failed = load_play_failed()
+    if play_failed:
+        before = len(alive)
+        alive = [c for c in alive
+                 if norm_url(c.get("url_resolved") or c.get("url") or "") not in play_failed]
+        print(f"跳过实播失败地址命中的候选 {before - len(alive)} 条（名单共 {len(play_failed)} 个地址）",
+              file=sys.stderr)
     # 淘汰原因全量报出来：只说“收了多少”而不说“丢了什么、为什么丢”，以后无法复查
     tally = {}
     for c in pool:
@@ -604,16 +650,25 @@ CATEGORY_TIER = {
     "world": 100,
     "news": 60, "traffic": 60, "finance": 60, "music": 60, "arts": 60,
     "general": 30,
+    "adult": 20,      # 不排除，但也不能挤占薄分类与华语/英语台的名额
 }
 
-# 每类限额：电视伴音候选最多（ CCTV 全频道），不限额就会吃掉大半名额
-CATEGORY_CAP = {"opera": 999, "sports": 999, "tv_audio": 40, "world": 45}
+# 每类限额：电视伴音候选最多（ CCTV 全频道），不限额就会吃掉大半名额。
+# 世界限额 45 实测不够：候选 401 组，线到 138 分时会把台中廣播(132)、
+# 全澳華語廣播華廈之聲(135) 这类华语台挤出去，进来的全是英国 Heart/Pumpkin FM 这类小台。
+CATEGORY_CAP = {"opera": 999, "sports": 999, "tv_audio": 40, "world": 55, "adult": 4}
 CATEGORY_CAP_DEFAULT = 25
 
 
-def score_candidate(name, cc, category, host, bitrate, votes) -> int:
-    """名额排序：分类分层 > 官方域名 > 码率/票数。"""
+def score_candidate(name, cc, category, host, bitrate, votes, lang_kind="") -> int:
+    """名额排序：分类分层 > 华语优先 > 官方域名 > 码率/票数。
+
+    华语优先是实测定出来的：世界候选里英语台数量远多于华语台，
+    不给华语加分时名额会被码率标注高的英国小台占满。
+    """
     s = CATEGORY_TIER.get(category, CATEGORY_TIER["general"])
+    if category in ("world", "adult") and lang_kind == "chinese":
+        s += 25
     if not is_aggregator(host):
         s += 20
     s += min(15, int(bitrate or 0) // 20)
@@ -694,9 +749,13 @@ def build_selection(alive, stations, country_map=None, max_new: int = 2000):
                 skipped += 1
                 continue
         category = "world" if cc != "CN" else sp.classify_by_name(fname)
+        if is_adult_tag(first):
+            # 按项目规定不过滤成人内容，但它们应落在已有的 adult 分类，
+            # 而不是混进 world 里让用户在“世界”标签下撞见
+            category = "adult"
         score = score_candidate(fname, cc, category,
                                 first.get("host", ""), first.get("bitrate", 0),
-                                first.get("votes", 0))
+                                first.get("votes", 0), lang_kind)
         urls = []
         for c in rows:
             u = c.get("url_resolved") or c.get("url")
@@ -704,18 +763,12 @@ def build_selection(alive, stations, country_map=None, max_new: int = 2000):
                 urls.append(u)
         ranked.append((score, key, first, cc, category, urls, lang_kind))
     ranked.sort(key=lambda t: -t[0])
-    # 先按限额选型，再按分数序认领地址：镜像不受名额限制（它不占新台位），
-    # 但必须排在新台认领地址之后判定，否则会出现同一个流既是新台主源又算成旧台镜像
-    chosen = pick_indices(ranked, max_new)
-    for pos, (score, key, first, cc, category, urls, lang_kind) in enumerate(ranked):
-        exist = by_key.get(key)
-        if exist is not None:
-            fresh = [u for u in urls
-                     if norm_url(u) not in {norm_url(x) for x in entry_urls(exist)}
-                     and norm_url(u) not in taken_urls]
-            if fresh:
-                mirrors.setdefault(exist["name"], []).extend(fresh)
-            continue
+    # 名额只按“新台组”计算：镜像组不新增条目，混在同一个 ranked 里算 max_new
+    # 会白白吃掉名额（实测因此漏掉了 台中廣播 等 18 个合格新台）。
+    new_ranked = [t for t in ranked if by_key.get(t[1]) is None]
+    mirror_ranked = [t for t in ranked if by_key.get(t[1]) is not None]
+    chosen = pick_indices(new_ranked, max_new)
+    for pos, (score, key, first, cc, category, urls, lang_kind) in enumerate(new_ranked):
         if pos not in chosen:
             continue
         fresh = [u for u in urls if norm_url(u) not in taken_urls]
@@ -738,6 +791,18 @@ def build_selection(alive, stations, country_map=None, max_new: int = 2000):
         taken.add(entry["id"])
         entry["_score"] = score
         new_entries.append(entry)
+
+    # 镜像不受名额限制，但在新台认领地址之后再算一轮：
+    # 避免同一个流既是新台主源又当成旧台的镜像源
+    for score, key, first, cc, category, urls, lang_kind in mirror_ranked:
+        exist = by_key.get(key)
+        if exist is None:
+            continue
+        fresh = [u for u in urls
+                 if norm_url(u) not in {norm_url(x) for x in entry_urls(exist)}
+                 and norm_url(u) not in taken_urls]
+        if fresh:
+            mirrors.setdefault(exist["name"], []).extend(fresh)
 
     new_entries.sort(key=lambda e: -e.get("_score", 0))
     for e in new_entries:

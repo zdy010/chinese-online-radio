@@ -1,0 +1,7 @@
+{
+  "note": "装机实播未起声音的地址，由 playcheck.py 维护；fetch_stations.merge 会跳过这些地址",
+  "urls": [
+    "http://lhttp.qingting.fm/live/5054/64k.mp3",
+    "http://live.shaoxing.com.cn/audio/s10001-xq3/index.m3u8"
+  ]
+}
