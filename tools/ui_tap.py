@@ -148,6 +148,25 @@ def goto_category_station(pkg, category, station):
     return tap(station, settle=1.0, max_scrolls=12)
 
 
+def type_text(query: str, attempts: int = 3):
+    """逐字符输入，并**确认输进去了**。
+
+    实测：一次 `input text "Linn"` 在 Compose 输入框上只收到 "L"，另一次一个字也没进。
+    不校验就会把 IME 故障当成“这个台搜不到”的数据结论，所以输完回读屏幕。
+    """
+    for i in range(attempts):
+        for ch in query:
+            adb("shell", "input", "text", "%s" if ch == " " else ch)
+            time.sleep(0.2)
+        time.sleep(1.0)
+        xml, _ = dump("typed")
+        if query.lower() in xml.lower():
+            return True
+        print(f"  [warn] 第 {i + 1} 次输入未生效（只到：“{query[:4]}”），重试", file=sys.stderr)
+        time.sleep(0.6)
+    return False
+
+
 def search_and_play(pkg, query, station, wait=13.0):
     """走搜索入口播放：用于排在长列表尾部的条目。
 
@@ -157,7 +176,9 @@ def search_and_play(pkg, query, station, wait=13.0):
     goto_home(pkg)
     if not tap("搜索电台名称或频率", max_scrolls=1):
         return False
-    adb("shell", "input", "text", query.replace(" ", "%s"))
+    if not type_text(query):
+        print(f"[FAIL] 输入框拿不到关键词「{query}」：IME 问题，不是电台问题")
+        return False
     time.sleep(2.5)
     if not tap(station, settle=1.0, max_scrolls=6):
         return False

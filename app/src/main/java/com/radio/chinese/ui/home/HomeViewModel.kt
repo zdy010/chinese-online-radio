@@ -6,6 +6,8 @@ import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.StationFilter
+import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +23,9 @@ data class HomeUiState(
     val filteredStations: List<RadioStation> = emptyList(),
     val favoriteIds: Set<String> = emptySet(),
     val categories: List<Pair<String, String>> = emptyList(),
+    val tagsWithCount: List<Pair<StationTag, Int>> = emptyList(),
     val selectedCategory: String? = null,
+    val selectedTag: String? = null,
     val searchQuery: String = "",
     val isLoading: Boolean = true,
     val error: String? = null
@@ -38,6 +42,7 @@ class HomeViewModel @Inject constructor(
     private val _stations = MutableStateFlow<List<RadioStation>>(emptyList())
     private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
     private val _selectedCategory = MutableStateFlow<String?>(null)
+    private val _selectedTag = MutableStateFlow<String?>(null)
     private val _searchQuery = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
@@ -45,12 +50,14 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeUiState> = combine(
         combine(_stations, _favoriteIds) { a, b -> Pair(a, b) },
-        combine(_selectedCategory, _searchQuery) { a, b -> Pair(a, b) },
+        combine(_selectedCategory, _searchQuery, _selectedTag) { c, q, t -> Triple(c, q, t) },
         combine(_isLoading, _error) { a, b -> Pair(a, b) }
-    ) { (stations, favIds), (category, query), (loading, error) ->
-        val filtered = filterStations(stations, category, query)
+    ) { (stations, favIds), filterState, (loading, error) ->
+        val (category, query, tag) = filterState
+        val filtered = StationFilter.apply(stations, category, query, tag)
         // 分类条/分类网格只列“真的有电台”的分类：全量枚举会把一个都不存在的
         // 分类（如未加载全球源时的世界/成人）也摆上去，点进去只能看到一个空列表。
+        // 标签同一个道理，由 StationFilter.tagsWithCount 保证。
         val usedCategories = stationRepository.getCategories().filter { (id, _) ->
             stations.any { it.category == id }
         }
@@ -59,7 +66,9 @@ class HomeViewModel @Inject constructor(
             filteredStations = filtered,
             favoriteIds = favIds,
             categories = usedCategories,
+            tagsWithCount = StationFilter.tagsWithCount(stations),
             selectedCategory = category,
+            selectedTag = tag,
             searchQuery = query,
             isLoading = loading,
             error = error
@@ -116,6 +125,11 @@ class HomeViewModel @Inject constructor(
         _selectedCategory.value = category
     }
 
+    /** 标签筛选入口；传 null 回到不设标签筛选。与分类、搜索互不干扰。 */
+    fun selectTag(tag: String?) {
+        _selectedTag.value = tag?.takeIf { StationTag.isValidKey(it) }
+    }
+
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -131,24 +145,5 @@ class HomeViewModel @Inject constructor(
             val isFavorite = _favoriteIds.value.contains(stationId)
             favoriteRepository.toggleFavorite(stationId, isFavorite)
         }
-    }
-
-    private fun filterStations(
-        stations: List<RadioStation>,
-        category: String?,
-        query: String
-    ): List<RadioStation> {
-        var result = stations
-        if (category != null) {
-            result = result.filter { it.category == category }
-        }
-        if (query.isNotBlank()) {
-            val lowerQuery = query.lowercase()
-            result = result.filter {
-                it.name.lowercase().contains(lowerQuery) ||
-                it.frequency.lowercase().contains(lowerQuery)
-            }
-        }
-        return result
     }
 }
