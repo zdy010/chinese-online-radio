@@ -34,6 +34,7 @@ import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.StationCover
+import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
@@ -232,13 +233,8 @@ fun StationListItem(
                         )
                     }
                 }
-                if (station.frequency.isNotEmpty()) {
-                    Text(
-                        text = station.frequency,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                // 副标题规则在 stationSubtitle 一处定义，与播放器、管理页共用
+                StationSubtitleText(station = station)
             }
 
             // Favorite Button
