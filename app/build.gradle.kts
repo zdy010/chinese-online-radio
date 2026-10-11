@@ -167,4 +167,8 @@ dependencies {
 
     // Security (encrypted credential storage)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // JVM 单元测试：本项目此前没有任何单测能力，而标签词表 / assets 解析 / 副标题规则
+    // 都属于“运行时静默错”的类别，光靠设备手点扫不出来
+    testImplementation("junit:junit:4.13.2")
 }
