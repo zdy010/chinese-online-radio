@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,6 +36,7 @@ import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isCarSurface
 
 /**
  * 按标签浏览电台。两态：标签云 → 该标签下的电台列表。
@@ -65,8 +66,9 @@ fun TagScreen(
         topBar = {
             if (showTopBar) {
                 TopAppBar(
-                    // 车机档要 88dp 命中区：顶栏高度不够时返回键会被夹在 64dp 里撑不开
-                    modifier = Modifier.height(Dimens.TopBarHeight),
+                    // 与 PlayerScreen 同一种写法：车机档要把顶栏抬到 88dp，
+                    // 否则里面的返回键只能拿到顶栏默认的 64dp 短边
+                    modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
                     windowInsets = NestedWindowInsets,
                     title = { Text(title) },
                     navigationIcon = {

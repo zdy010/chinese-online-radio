@@ -69,6 +69,7 @@ fun RadioNavGraph(
             val stationId = backStackEntry.arguments?.getString("stationId") ?: return@composable
             PlayerScreen(
                 stationId = stationId,
+                onNavigateToTag = { tag -> navController.navigate(Screen.Tags.createRoute(tag)) },
                 onNavigateBack = { navController.popBackStack() }
             )
         }

@@ -38,6 +38,7 @@ import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.common.StationSubtitleText
+import com.radio.chinese.ui.common.StationTagChips
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 
@@ -46,6 +47,7 @@ import com.radio.chinese.ui.theme.isCarSurface
 fun PlayerScreen(
     stationId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToTag: (String) -> Unit = {},
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -164,6 +166,7 @@ fun PlayerScreen(
                         StationInfoBlock(
                             station = station,
                             showDescription = !shortViewport,
+                            onTagClick = onNavigateToTag,
                             modifier = Modifier.weight(1.2f)
                         )
                     }
@@ -178,6 +181,7 @@ fun PlayerScreen(
                     StationInfoBlock(
                         station = station,
                         showDescription = !shortViewport,
+                        onTagClick = onNavigateToTag,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -347,6 +351,7 @@ private fun CoverBlock(
 private fun StationInfoBlock(
     station: RadioStation,
     showDescription: Boolean,
+    onTagClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -371,6 +376,16 @@ private fun StationInfoBlock(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 2
+            )
+        }
+        // 标签复用同一个视口开关：车机 240dpi 档横屏只有 480dp 高，
+        // 另开一个条件很容易把播控顶出去
+        if (showDescription && station.tags.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.GapSmall))
+            StationTagChips(
+                tags = station.tags,
+                onTagClick = onTagClick,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
