@@ -1,0 +1,2032 @@
+[
+ {
+  "url": "https://ngcdn001.cnr.cn/live/zgzs/index.m3u8",
+  "name": "中国之声",
+  "tags": "中国之声",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cnr.cn/gbzb/"
+ },
+ {
+  "url": "https://ngcdn002.cnr.cn/live/jjzs/index.m3u8",
+  "name": "经济之声",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "",
+  "homepage": ""
+ },
+ {
+  "url": "https://stream.hndt.com/live/jingji/playlist.m3u8",
+  "name": "河南经济广播",
+  "tags": "music,talk",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/jiaotong/playlist.m3u8",
+  "name": "河南交通广播",
+  "tags": "traffic",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/yinyue/playlist.m3u8",
+  "name": "河南音乐广播",
+  "tags": "music,pop",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://fm881.hnr.cn/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/nongcun/playlist.m3u8",
+  "name": "河南农村广播",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "",
+  "homepage": "http://fm1074.hnr.cn/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/sijiache/playlist.m3u8",
+  "name": "河南旅游广播",
+  "tags": "m3u8,tourism",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/jiaoyu/playlist.m3u8",
+  "name": "河南教育广播",
+  "tags": "children,classic hits,educational",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/leling/playlist.m3u8",
+  "name": "河南信息广播",
+  "tags": "old age",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "http://sk.cri.cn/hyhq.m3u8",
+  "name": "CRI中文环球广播·CRI chinese service",
+  "tags": "international,music,news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://chinese.cri.cn/radio/hyhq/index.html"
+ },
+ {
+  "url": "http://sk.cri.cn/am846.m3u8",
+  "name": "CRI英语资讯广播 China Plus Radio",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "english",
+  "homepage": "http://www.cri.cn/"
+ },
+ {
+  "url": "http://sk.cri.cn/nhzs.m3u8",
+  "name": "CRI Voice of South China Sea",
+  "tags": "beijing",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.cri.cn/"
+ },
+ {
+  "url": "http://sk.cri.cn/hxfh.m3u8",
+  "name": "CRI世界华声",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "cantonese,hakka,hokkien,teochew",
+  "homepage": "http://chinese.cri.cn/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxahjtgb/playlist.m3u8",
+  "name": "安徽交通广播",
+  "tags": "traffic",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.ahrtv.cn/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxhebwygb/playlist.m3u8?wsSession=c650605f64c6488d38b66982-174814121476253&wsIPSercert=302e928c9e06924943d63c021170d763",
+  "name": "河北文艺广播 高清",
+  "tags": "culture",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.hebtv.com/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxhebzhgb/playlist.m3u8?wsSession=d966c1f28016a758d88ba0c2-174814184394876&wsIPSercert=302e928c9e06924943d63c021170d763",
+  "name": "河北综合广播 高清",
+  "tags": "full service",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.hebtv.com/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxhebjtgb/playlist.m3u8?wsSession=a919bd0baf31a1a6f3966f08-174814190710731&wsIPSercert=302e928c9e06924943d63c021170d763",
+  "name": "河北交通广播 高清",
+  "tags": "traffic information",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.hebtv.com/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxhebjjgb/playlist.m3u8?wsSession=a919bd0baf31a1a6f3966f08-174814197009714&wsIPSercert=302e928c9e06924943d63c021170d763",
+  "name": "河北经济广播 高清",
+  "tags": "storytelling",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.hebtv.com/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxhebshgb/playlist.m3u8?wsSession=5047841c34cc76f1a161d1fe-174814204119356&wsIPSercert=302e928c9e06924943d63c021170d763",
+  "name": "河北生活广播 高清",
+  "tags": "full service",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.hebtv.com/"
+ },
+ {
+  "url": "http://live.shaoxing.com.cn/audio/s10001-xw1/index.m3u8",
+  "name": "绍兴综合广播",
+  "tags": "93.6,93.6 fm,information,news,public radio",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.shaoxing.com.cn/"
+ },
+ {
+  "url": "http://live.shaoxing.com.cn/audio/s10001-jt2/index.m3u8",
+  "name": "绍兴交通广播",
+  "tags": "94.1,94.1 fm,entertainment,traffic radio broadcast",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.shaoxing.com.cn/"
+ },
+ {
+  "url": "http://live.zohi.tv/audio/s10001-FM901/index.m3u8",
+  "name": "福州左海之声",
+  "tags": "culture",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "hokkien",
+  "homepage": "http://www.zohi.tv/"
+ },
+ {
+  "url": "http://live.zohi.tv/audio/s10001-FM876/index.m3u8",
+  "name": "福州交通之声",
+  "tags": "traffic",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.zohi.tv/"
+ },
+ {
+  "url": "http://live.zohi.tv/audio/s10001-FM944/index.m3u8",
+  "name": "福州新闻广播",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.zohi.tv/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wx32hljcygb/playlist.m3u8?wsSession=a919bd0baf31a1a6f3966f08-174778330216034&wsIPSercert=2683acdad9e689f89519c7ec3f7e218b",
+  "name": "黑龙江朝语广播",
+  "tags": "full service",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "korean",
+  "homepage": "https://www.hljtv.com/"
+ },
+ {
+  "url": "http://sk.cri.cn/hxfh.m3u8",
+  "name": "CRI世界华声",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "cantonese,hakka,hokkien,teochew",
+  "homepage": "http://chinese.cri.cn/"
+ },
+ {
+  "url": "http://stream.pbs.gov.tw:1935/live/mp3:PBS/playlist.m3u8",
+  "name": "警察廣播電台 - 全國治安交通網",
+  "tags": "local news,traffic",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://pbs.npa.gov.tw/ch/index#a4"
+ },
+ {
+  "url": "https://stream.ginnet.cloud/live0130lo-yfyo/_definst_/fm/playlist.m3u8",
+  "name": "臺北電台",
+  "tags": "news,public radio,talk",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.radio.gov.taipei/"
+ },
+ {
+  "url": "https://stream.ginnet.cloud/live0130lo-yfyo/_definst_/am/playlist.m3u8",
+  "name": "臺北電台AM",
+  "tags": "public radio",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.radio.gov.taipei/"
+ },
+ {
+  "url": "http://live.zohi.tv/audio/s10001-FM893/index.m3u8",
+  "name": "福州音乐广播",
+  "tags": "music",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.zohi.tv/"
+ },
+ {
+  "url": "https://icecast.walmradio.com:8443/jazz",
+  "name": "Adroit Jazz Underground",
+  "tags": "avant-garde,bebop,big band,bop,combos,contemporary,contemporary jazz,cool,cool jazz,free jazz,fusion,hard bop,hd,mainstream,mainstream jazz,modern,modern big band,post-bop,straight-ahead,walm,west coast",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://walmradio.com/jazz"
+ },
+ {
+  "url": "https://icecast.walmradio.com:8443/walm",
+  "name": "WALM HD",
+  "tags": "christian,christian music,contemporary christian,jesus",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://walmradio.com/walm"
+ },
+ {
+  "url": "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service",
+  "name": "BBC World Service",
+  "tags": "news,talk",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.bbc.co.uk/programmes/w172xzjgf6lxp7y"
+ },
+ {
+  "url": "https://icecast.walmradio.com:8443/otr",
+  "name": "WALM - Old Time Radio",
+  "tags": "78,78-rpm,78rpm,classic,comedy,drama,easy listening,musical,mystery,old time radio,otr,sci-fi,v-disc,vintage,walm",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://walmradio.com/otr"
+ },
+ {
+  "url": "http://jking.cdnstream1.com/b22139_128mp3",
+  "name": "101 SMOOTH JAZZ",
+  "tags": "easy listening,jazz,smooth jazz",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://101smoothjazz.com/"
+ },
+ {
+  "url": "http://ice-the.musicradio.com/ClassicFMMP3",
+  "name": "Classic FM UK",
+  "tags": "classical",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "http://www.classicfm.com/"
+ },
+ {
+  "url": "http://listen.181fm.com/181-oldschool_128k.mp3",
+  "name": "181.FM - Old School HipHop/RnB",
+  "tags": "hiphop,oldschool,rnb,waynesboro",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.181.fm/"
+ },
+ {
+  "url": "http://relax.stream.publicradio.org/relax.mp3",
+  "name": "Your Classical - Relax",
+  "tags": "classical,relax",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.yourclassical.org/"
+ },
+ {
+  "url": "http://15113.live.streamtheworld.com:3690/977_COUNTRY_SC",
+  "name": ".977 Country",
+  "tags": "country",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.977music.com/"
+ },
+ {
+  "url": "http://radio.stereoscenic.com/asp-h",
+  "name": "Ambient Sleeping Pill",
+  "tags": "ambient,meditation,sleep",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://ambientsleepingpill.com/"
+ },
+ {
+  "url": "http://stream2.friskyradio.com/frisky_mp3_hi",
+  "name": "Frisky",
+  "tags": "electronic,frisky,new york city,progressive",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://www.friskyradio.com/"
+ },
+ {
+  "url": "http://media-sov.musicradio.com/LBC973MP3Low",
+  "name": "LBC Radio",
+  "tags": "political talk",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "http://www.lbc.co.uk/"
+ },
+ {
+  "url": "http://78.129.202.200:8040/;",
+  "name": "Radio Caroline",
+  "tags": "country,pop,rock",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "http://www.radiocaroline.co.uk/"
+ },
+ {
+  "url": "http://bigrradio.cdnstream1.com/5186_128",
+  "name": "Big R Radio - 80s Metal FM",
+  "tags": "80s,aor,glam metal,hair metal,hard rock,heavy metal,metal",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.bigrradio.com/"
+ },
+ {
+  "url": "http://media-ice.musicradio.com/CapitalMP3",
+  "name": "Capital FM London",
+  "tags": "pop",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "http://www.capitalfm.com/london/"
+ },
+ {
+  "url": "https://ice5.somafm.com/secretagent-128-mp3",
+  "name": "SomaFM Secret Agent (128k MP3)",
+  "tags": "ambient,downtempo,jazz,lounge,samba,sixties",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://somafm.com/secretagent/"
+ },
+ {
+  "url": "https://media-ssl.musicradio.com/Heart80sMP3",
+  "name": "Heart 80s",
+  "tags": "80s,national,pop,public radio,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.heart.co.uk/80s"
+ },
+ {
+  "url": "http://hydra.cdnstream.com/1521_128",
+  "name": "Hard Rock Heaven",
+  "tags": "80s,glam metal,hair metal,hard rock,heavy metal,overland park",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://hrhradio.com/"
+ },
+ {
+  "url": "http://ice-sov.musicradio.com/HeartLondonMP3",
+  "name": "Heart London 106.2 [MP3]",
+  "tags": "commercial,hot adult contemporary,london",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "http://www.heart.co.uk/london"
+ },
+ {
+  "url": "http://listen.181fm.com/181-beat_128k.mp3",
+  "name": "181.FM - The Beat (HipHop/R&B)",
+  "tags": "hiphop,rnb,urban,waynesboro",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.181.fm/"
+ },
+ {
+  "url": "http://npr-ice.streamguys1.com/live.mp3",
+  "name": "NPR 24 Hour Program Stream",
+  "tags": "news,news talk,political talk,politics,public radio,talk",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://www.npr.org/2016/04/05/472557877/npr-program-stream"
+ },
+ {
+  "url": "http://streams.echoesofbluemars.org:8000/cryosleep",
+  "name": "Cryosleep",
+  "tags": "ambient,calm,music,nobeat,sleep,space",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.echoesofbluemars.org/cryosleep.php"
+ },
+ {
+  "url": "http://158.69.114.190:8065/;",
+  "name": "The Big 80s Station",
+  "tags": "80s",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.thebig80sstation.com/"
+ },
+ {
+  "url": "https://listen-msmn.sharp-stream.com/nme1.mp3",
+  "name": "TMM 1",
+  "tags": "alternative,alternative rock,garage,indie,indie pop,indie rock,left-field dance",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.themusicmachine.co.uk/"
+ },
+ {
+  "url": "https://listen.181fm.com/181-highway_128k.mp3",
+  "name": "181.FM - Highway 181",
+  "tags": "classic country,waynesboro",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.181.fm/"
+ },
+ {
+  "url": "http://media-ice.musicradio.com/LBCUKMP3Low",
+  "name": "LBC London (National stream)",
+  "tags": "news,talk",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "http://lbc.co.uk/"
+ },
+ {
+  "url": "https://media-ssl.musicradio.com/Heart70sMP3",
+  "name": "Heart 70s",
+  "tags": "70s,national,pop,public radio,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.heart.co.uk/70s"
+ },
+ {
+  "url": "https://media-ssl.musicradio.com/GoldMP3",
+  "name": "Gold",
+  "tags": "classic hits,national,oldies,public radio,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.mygoldmusic.co.uk/"
+ },
+ {
+  "url": "https://funkyradio.streamingmedia.it/play.mp3",
+  "name": "FUNKY RADIO - Only Funk Music (60's 70's)",
+  "tags": "60s,70s,70s disco,80s,black,black music,disco,funk,funky,motown,music,oldies,p-funk,r&b,r'n'b,rare groove,rnb,soul,usa",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english,italian",
+  "homepage": "https://funky.radio/"
+ },
+ {
+  "url": "https://streaming.radiostreamlive.com/miamibeachradio_devices",
+  "name": "Miami Beach Radio",
+  "tags": "hits,ocean drive,rsl",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://www.miamibeachradio.com/"
+ },
+ {
+  "url": "http://media-ice.musicradio.com/ClassicFMMP3",
+  "name": "Classic FM",
+  "tags": "classic fm,classical",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.classicfm.com/"
+ },
+ {
+  "url": "https://media-ssl.musicradio.com/ChillMP3",
+  "name": "Smooth Chill",
+  "tags": "chillout,national,public radio,smooth,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.smoothradio.com/chill/"
+ },
+ {
+  "url": "https://tunein.cdnstream1.com/2868_96.mp3",
+  "name": "CNN UK",
+  "tags": "business,business news,education,local news,news,ridwan,talk",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "engilsh",
+  "homepage": "https://edition.cnn.com/"
+ },
+ {
+  "url": "https://media-ssl.musicradio.com/HeartDanceMP3",
+  "name": "Heart Dance",
+  "tags": "dance,national,pop,public radio,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.heart.co.uk/dance"
+ },
+ {
+  "url": "https://media-ssl.musicradio.com/Heart90sMP3",
+  "name": "Heart 90s",
+  "tags": "90s,national,pop,public radio,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.heart.co.uk/90s"
+ },
+ {
+  "url": "http://bigrradio.cdnstream1.com/5105_128",
+  "name": "2000 FM - RnB & Hip-Hop",
+  "tags": "hiphop,rnb",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.2000fm.net/"
+ },
+ {
+  "url": "https://listen-msmn.sharp-stream.com/nme2.mp3",
+  "name": "TMM 2",
+  "tags": "alternative,hiphop,electronic",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.themusicmachine.co.uk/"
+ },
+ {
+  "url": "http://listen.181fm.com/181-80scountry_128k.mp3",
+  "name": "181.FM - 80's Country",
+  "tags": "80s,country,waynesboro",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.181.fm/"
+ },
+ {
+  "url": "http://streaming.live365.com/b48071_128mp3",
+  "name": "101 SMOOTH JAZZ MELLOW MIX",
+  "tags": "easy listening,mellow,smooth jazz",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.101smoothjazz.com/mellow.html"
+ },
+ {
+  "url": "http://usa17.fastcast4u.com:5508/stream",
+  "name": "ChroniX Radio Metalcore",
+  "tags": "death metal,heavy metal,industrial,metalcore,thrash metal",
+  "cc": "CA",
+  "country": "Canada",
+  "country_zh": "加拿大",
+  "language": "english",
+  "homepage": "http://chronixradio.net/"
+ },
+ {
+  "url": "http://icecast.thisisdax.com/RadioXUKMP3",
+  "name": "RadioX UK",
+  "tags": "",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.radiox.co.uk/"
+ },
+ {
+  "url": "https://discofunk.streamingmedia.it/usa",
+  "name": "70s 80s Disco Funk ModernSoul Boogie",
+  "tags": "1970s,1980s,70's,70er,70s,70s disco,80,80's,80er,80s,boogie,funk",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://funky.radio/discofunk_modernsoul_boogie"
+ },
+ {
+  "url": "https://maggie.torontocast.com:2020/stream/reggaechillcafe",
+  "name": "REGGAE CHILL CAFE",
+  "tags": "chill,chillout,dancehall,reggae,relax,relaxation,relaxing,tropical",
+  "cc": "CA",
+  "country": "Canada",
+  "country_zh": "加拿大",
+  "language": "english",
+  "homepage": "https://radiosuitenetwork.torontocast.stream/"
+ },
+ {
+  "url": "https://kathy.torontocast.com:2800/;",
+  "name": "metal rock radio",
+  "tags": "classic rock,metal,rock",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.metalrock.fm/"
+ },
+ {
+  "url": "http://cc.net2streams.com:8565/kissfm.mp3",
+  "name": "Kiss FM 87.6, 87.8 & 88.0 Melbourne, VIC",
+  "tags": "dance,electronica,melbourne",
+  "cc": "AU",
+  "country": "Australia",
+  "country_zh": "澳大利亚",
+  "language": "english",
+  "homepage": "https://kissfm.com.au/"
+ },
+ {
+  "url": "http://jking.cdnstream1.com/b75154_128mp3",
+  "name": "SMOOTH JAZZ 24/7",
+  "tags": "easy listening,jazz,smooth jazz",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://www.smoothjazz247.com/"
+ },
+ {
+  "url": "http://deep.friskyradio.com/friskydeep_aachi",
+  "name": "Frisky Deep",
+  "tags": "new york city",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://www.friskyradio.com/"
+ },
+ {
+  "url": "http://sc.hot108.com:4000/",
+  "name": "Hot 108 JAMZ",
+  "tags": "rap hiphop rnb",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "http://hot108.com/"
+ },
+ {
+  "url": "https://smoothjazz.cdnstream1.com/2585_128.mp3",
+  "name": "SmoothJazz.com 128k mp3",
+  "tags": "monterey,smooth jazz",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "english",
+  "homepage": "https://www.smoothjazz.com/"
+ },
+ {
+  "url": "http://media-ice.musicradio.com/HeartUKMP3",
+  "name": "Heart UK",
+  "tags": "adult contemporary,national,pop,public radio,variety",
+  "cc": "GB",
+  "country": "The United Kingdom Of Great Britain And Northern Ireland",
+  "country_zh": "英国",
+  "language": "english",
+  "homepage": "https://www.heart.co.uk/"
+ },
+ {
+  "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/YES933AAC.aac",
+  "name": "YES 933 Radio",
+  "tags": "",
+  "cc": "SG",
+  "country": "Singapore",
+  "country_zh": "新加坡",
+  "language": "chinese",
+  "homepage": "http://www.meradio.sg/radio/yes-933"
+ },
+ {
+  "url": "http://59.120.88.155:8000/live.mp3",
+  "name": "Classical 古典音樂台 FM 97.7",
+  "tags": "classical music",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "http://www.family977.com.tw/index.php"
+ },
+ {
+  "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/LOVE972FMAAC.aac",
+  "name": "Love 972 Radio",
+  "tags": "",
+  "cc": "SG",
+  "country": "Singapore",
+  "country_zh": "新加坡",
+  "language": "chinese",
+  "homepage": "http://www.meradio.sg/radio/love-972"
+ },
+ {
+  "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/883JIAAAC.aac",
+  "name": "Jia 883 Radio",
+  "tags": "",
+  "cc": "SG",
+  "country": "Singapore",
+  "country_zh": "新加坡",
+  "language": "chinese",
+  "homepage": "http://www.883jia.com.sg/"
+ },
+ {
+  "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/UFM_1003AAC.aac",
+  "name": "UFM 100.3 Radio",
+  "tags": "",
+  "cc": "SG",
+  "country": "Singapore",
+  "country_zh": "新加坡",
+  "language": "chinese",
+  "homepage": "http://www.ufm1003.sg/"
+ },
+ {
+  "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/CAPITAL958FMAAC.aac",
+  "name": "Capital 958 Radio",
+  "tags": "",
+  "cc": "SG",
+  "country": "Singapore",
+  "country_zh": "新加坡",
+  "language": "chinese",
+  "homepage": "http://www.meradio.sg/radio/capital-958"
+ },
+ {
+  "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/HAO_963AAC.aac",
+  "name": "SPH 963 Radio",
+  "tags": "",
+  "cc": "SG",
+  "country": "Singapore",
+  "country_zh": "新加坡",
+  "language": "chinese",
+  "homepage": "http://www.963haofm.sg/"
+ },
+ {
+  "url": "https://stream.hndt.com/live/yule/playlist.m3u8",
+  "name": "河南戏曲广播",
+  "tags": "entertainment",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv5_2.m3u8",
+  "name": "CCTV-5体育伴音",
+  "tags": "sports,tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv5plus_2.m3u8",
+  "name": "CCTV-5+体育赛事伴音",
+  "tags": "sport,sports",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv11_2.m3u8",
+  "name": "CCTV-11戏曲伴音",
+  "tags": "opera",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "http://stream.hndt.com/live/wangluoxiqu/playlist.m3u8",
+  "name": "河南戏曲网络广播",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "http://satellitepull.cnr.cn/live/wxahxqgb/playlist.m3u8?wsSession=c650605f64c6488d38b66982-174830342984889&wsIPSercert=cd39a342afce39d82188ebae3a31d1b8",
+  "name": "安徽戏曲广播 高清",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.ahtv.cn/"
+ },
+ {
+  "url": "https://lhttp.qtfm.cn/live/20500178/64k.mp3",
+  "name": "听·越剧",
+  "tags": "opera,traditional opera",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.ajmide.com/home/contact.html"
+ },
+ {
+  "url": "https://lhttp.qingting.fm/live/269/64k.mp3",
+  "name": "上海戏剧曲艺广播",
+  "tags": "literature,opera,traditional opera",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.smg.cn/review/channel/channel_26/index.html"
+ },
+ {
+  "url": "http://lhttp.qingting.fm/live/1677/64k.mp3",
+  "name": "青岛音乐•体育广播",
+  "tags": "music,pop music",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://wap.qtv.com.cn/"
+ },
+ {
+  "url": "http://lhttp.qingting.fm/live/1085/64k.mp3",
+  "name": "大连体育广播",
+  "tags": "sports news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.dltv.cn/"
+ },
+ {
+  "url": "http://lhttp.qingting.fm/live/20211678/64k.mp3",
+  "name": "廊坊戏曲广播·飞扬105",
+  "tags": "music",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.lfnrtv.com/"
+ },
+ {
+  "url": "https://lhttp.qingting.fm/live/1085/64k.mp3",
+  "name": "DLR-3 大连体育广播",
+  "tags": "sports",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.dltv.cn/test/"
+ },
+ {
+  "url": "http://live.xmcdn.com/live/88/64.m3u8",
+  "name": "南京体育广播",
+  "tags": "104.3,104.3 fm,sport,sports",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.njgb.com/"
+ },
+ {
+  "url": "http://ls.qingting.fm/live/4595.m3u8",
+  "name": "潮州戏曲广播",
+  "tags": "opera",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chaoshan dialect",
+  "homepage": "http://www.czbtv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv13_2.m3u8",
+  "name": "CCTV-13新闻伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "http://playtv-live.ifeng.com/live/06OLEEWQKN4_audio.m3u8",
+  "name": "凤凰卫视资讯台",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.ifeng.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv4_2.m3u8",
+  "name": "CCTV-4中文国际伴音",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv2_2.m3u8",
+  "name": "CCTV-2财经伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv15_2.m3u8",
+  "name": "CCTV-15音乐伴音",
+  "tags": "music",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv8_2.m3u8",
+  "name": "CCTV-8电视剧伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv12_2.m3u8",
+  "name": "CCTV-12社会与法伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctvamerica_2.m3u8",
+  "name": "CCTV-4中文国际美洲伴音",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://tv.cctv.com/cctv4america/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv3_2.m3u8",
+  "name": "CCTV-3综艺伴音",
+  "tags": "entertainment",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv10_2.m3u8",
+  "name": "CCTV-10科教伴音",
+  "tags": "education,educational,tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/dongfang_2.m3u8",
+  "name": "东方卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.smg.cn/review/index.html"
+ },
+ {
+  "url": "https://wstvcpudali.v.myalicdn.com/wstvcpud/udrmbtv9_1/index.m3u8?adapt=0&BR=audio",
+  "name": "北京BTV新闻伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.brtv.org.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctveurope_2.m3u8",
+  "name": "CCTV-4中文国际欧洲伴音",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://tv.cctv.com/cctv4europe/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv17_2.m3u8",
+  "name": "CCTV农业节目伴音",
+  "tags": "culture",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "http://a1live.livecdn.yicai.com/live/radio_tv.m3u8",
+  "name": "第一财经电视伴音",
+  "tags": "economics",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.yicai.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv14_2.m3u8",
+  "name": "CCTV-少儿伴音",
+  "tags": "children",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.cctv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/btv1_2.m3u8",
+  "name": "北京卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.brtv.org.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/liaoning_2.m3u8",
+  "name": "辽宁卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.weibo.com/wangluods?sudaref=www.baidu.com"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv16_2.m3u8",
+  "name": "CCTV奥林匹克伴音",
+  "tags": "olympics,sport",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.olympicchannelchina.cn/"
+ },
+ {
+  "url": "https://5ddce30eb4b55.streamlock.net/bltvhd/bltv1/chunklist_w511254805.m3u8",
+  "name": "人间卫视",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://m.bltv.tv/"
+ },
+ {
+  "url": "https://wstvcpudali.v.myalicdn.com/wstvcpud/udrmbtv7_1/index.m3u8?adapt=0&BR=audio",
+  "name": "BTV生活伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.brtv.org.cn/mobile/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv1_2.m3u8",
+  "name": "CCTV-1综合伴音",
+  "tags": "full service,tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://tv.cctv.com/cctv1/index.shtml"
+ },
+ {
+  "url": "https://wstvcpudali.v.myalicdn.com/wstvcpud/udrmbtv2_1/index.m3u8?adapt=0&BR=audio",
+  "name": "BTV文艺伴音",
+  "tags": "entertainment",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.brtv.org.cn/mobile/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/anhui_2.m3u8",
+  "name": "安徽卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.ahrtv.cn/"
+ },
+ {
+  "url": "https://wstvcpudali.v.myalicdn.com/wstvcpud/udrmbtv5_1/index.m3u8?adapt=0&BR=audio",
+  "name": "BTV财经伴音",
+  "tags": "economics",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.brtv.org.cn/mobile/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/shandong_2.m3u8",
+  "name": "山东卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.iqilu.com/"
+ },
+ {
+  "url": "https://wstvcpudali.v.myalicdn.com/wstvcpud/udrmbtv3_1/index.m3u8?adapt=0&BR=audio",
+  "name": "BTV科教伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.brtv.org.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/sichuan_2.m3u8",
+  "name": "四川卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.sctv.com/live/list"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/hubei_2.m3u8",
+  "name": "湖北卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://news.hbtv.com.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cetv1_2.m3u8",
+  "name": "CETV-1伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.centv.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv6_2.m3u8",
+  "name": "CCTV-6电影频道伴音",
+  "tags": "film,movie,tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.1905.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cetv2_2.m3u8",
+  "name": "CETV-2伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.centv.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cetv3_2.m3u8",
+  "name": "CETV-3伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.centv.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/guizhou_2.m3u8",
+  "name": "贵州卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.gzstv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/qinghai_2.m3u8",
+  "name": "青海卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.qhbtv.com/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cctv9_2.m3u8",
+  "name": "CCTV-9纪录伴音",
+  "tags": "culture,documentary,science,tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://tv.cctv.com/cctv9/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/cetv4_2.m3u8",
+  "name": "CETV-4伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.centv.cn/"
+ },
+ {
+  "url": "http://satellitepull.cnr.cn/live/wx32hunws/playlist.m3u8?wsSession=5047841c34cc76f1a161d1fe-174718229204467&wsIPSercert=29f90b67755e3a4646651f7aa8eb5fd6",
+  "name": "湖南卫视伴音",
+  "tags": "entertainment,music,tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.mgtv.com/show/?hk=p69ci"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/tianjin_2.m3u8",
+  "name": "天津卫视伴音",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "",
+  "homepage": "http://tjtv.enorth.com.cn/"
+ },
+ {
+  "url": "https://piccpndali.v.myalicdn.com/audio/guangdong_2.m3u8",
+  "name": "广东卫视伴音",
+  "tags": "tv",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.gdtv.cn/"
+ },
+ {
+  "url": "http://zbbf2.ahbztv.com/live/4f3.m3u8",
+  "name": "CNR-1 中国之声",
+  "tags": "information,news,public radio",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.cnr.cn/"
+ },
+ {
+  "url": "http://us3.internet-radio.com:8232/stream",
+  "name": "牽手之聲網路台",
+  "tags": "internet radio",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.ilovetacp.org.tw/cancheers/cancheers.aspx"
+ },
+ {
+  "url": "https://stream.ginnet.cloud/live0115lo-89xv/_definst_/fm881/playlist.m3u8",
+  "name": "世新廣播電台-1",
+  "tags": "education,educational",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://shrs.shu.edu.tw/"
+ },
+ {
+  "url": "https://radioserver12.profesionalhosting.com/proxy/pkg152492/stream",
+  "name": "华夏之声China FM·意大利罗马FM89.5",
+  "tags": "information,music,oldies",
+  "cc": "IT",
+  "country": "Italy",
+  "country_zh": "意大利",
+  "language": "chinese",
+  "homepage": "https://chinafm.es/"
+ },
+ {
+  "url": "http://kxparadio.serverroom.us:5852/stream.mp3",
+  "name": "美国中文电台-西雅图",
+  "tags": "chinese,news",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "chinese",
+  "homepage": "https://www.uschineseradio.com/"
+ },
+ {
+  "url": "http://fm971.cityfm.tw:8080/971.mp3",
+  "name": "城市廣播網•台南知音",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.cityfm.tw/"
+ },
+ {
+  "url": "https://vip.wongsong.cn/proxy/wongsong/stream-mp3-WongSong",
+  "name": "Music of China 中国音乐",
+  "tags": "music",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "cantonese,chinese",
+  "homepage": "https://wongsong.cn/"
+ },
+ {
+  "url": "https://s26.myradiostream.com:20274/listen.mp3",
+  "name": "新西兰中文广播电台 FM90.6 Radio Chinese",
+  "tags": "chinese,culture,information,lifestyle,music,new zealand",
+  "cc": "NZ",
+  "country": "New Zealand",
+  "country_zh": "新西兰",
+  "language": "cantonese,chinese,hakka,hokkien",
+  "homepage": "https://fm906.co.nz/"
+ },
+ {
+  "url": "http://stream.pbs.gov.tw:1935/live/TPS/playlist.m3u8",
+  "name": "警察廣播電台 - 台北台",
+  "tags": "local news,traffic",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://pbs.npa.gov.tw/ch/index#a4"
+ },
+ {
+  "url": "http://fm901.cityfm.tw:8080/901.mp3",
+  "name": "台中城市廣播",
+  "tags": "information,music",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.cityfm.tw/"
+ },
+ {
+  "url": "http://stream.pbs.gov.tw:1935/live/TCS/playlist.m3u8",
+  "name": "警察廣播電台 - 台中台",
+  "tags": "local news,traffic",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://pbs.npa.gov.tw/ch/index#a4"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/PBS/playlist.m3u8",
+  "name": "警察廣播電臺 - 全國治安交通網 FM 104.9",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "http://nap.casthost.net:8759/;?icy=http",
+  "name": "星岛中文电台国语广播",
+  "tags": "96.1,96.1 fm,information,music",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "chinese",
+  "homepage": "http://www.chineseradio.com/main/#"
+ },
+ {
+  "url": "https://rthkradiopth-live.akamaized.net/hls/live/2040082/radiopth/master.m3u8",
+  "name": "香港普通话台",
+  "tags": "information,news,public radio",
+  "cc": "HK",
+  "country": "Hong Kong",
+  "country_zh": "中国香港",
+  "language": "chinese",
+  "homepage": "https://www.rthk.hk/radio/pth"
+ },
+ {
+  "url": "https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/playlist.m3u8",
+  "name": "正聲廣播公司",
+  "tags": "104.1,104.1 fm,public radio",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.csbc.com.tw/"
+ },
+ {
+  "url": "http://46.4.40.246:8059/stream",
+  "name": "全澳华语广播华厦之声",
+  "tags": "am1629",
+  "cc": "AU",
+  "country": "Australia",
+  "country_zh": "澳大利亚",
+  "language": "chinese",
+  "homepage": "http://www.huaxia.net.au/"
+ },
+ {
+  "url": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/classic/playlist.m3u8",
+  "name": "佳音經典音樂網",
+  "tags": "chirstian,classical",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.goodnews.org.tw/forum.php?change_model=forum_detail&id=124"
+ },
+ {
+  "url": "https://streams.radiomast.io/ce298b32-8776-4192-9900-092f44b63e7f",
+  "name": "BBN 中文",
+  "tags": "bible",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://bbn1.bbnradio.org/"
+ },
+ {
+  "url": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm909/playlist.m3u8",
+  "name": "佳音電台",
+  "tags": "chirstian",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.goodnews.org.tw/forum.php?change_model=forum_detail&id=124"
+ },
+ {
+  "url": "https://5b2959fe11444.streamlock.net/radio/fm961.stream/playlist.m3u8",
+  "name": "加拿大中文电台FM.96.1",
+  "tags": "96.1,96.1 fm,music,news,pop,talk",
+  "cc": "CA",
+  "country": "Canada",
+  "country_zh": "加拿大",
+  "language": "chinese",
+  "homepage": "http://www.am1470.com/home_c.php?1634199366"
+ },
+ {
+  "url": "http://radiokest.serverroom.us:6670/;?type=http&nocache=3295",
+  "name": "美国中文电台-旧金山",
+  "tags": "chinese,news,public radio",
+  "cc": "US",
+  "country": "The United States Of America",
+  "country_zh": "美国",
+  "language": "chinese",
+  "homepage": "https://www.uschineseradio.com/"
+ },
+ {
+  "url": "http://livestream.1766.today:1768/live1.mp3",
+  "name": "1766線上電臺-百家知識",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.1766.today/"
+ },
+ {
+  "url": "https://5b2959fe11444.streamlock.net/radio/fm947.stream/playlist.m3u8",
+  "name": "加拿大中文电台FM94.7",
+  "tags": "full service",
+  "cc": "CA",
+  "country": "Canada",
+  "country_zh": "加拿大",
+  "language": "cantonese,chinese",
+  "homepage": "https://www.fm947.com/"
+ },
+ {
+  "url": "http://test.taiwan-radio.tw:8000/TP.AM1323",
+  "name": "台灣廣播 台北一台",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.taiwanradio.com.tw/ec99/rwd1638/product.asp?prodid=tp01"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/TPS/playlist.m3u8",
+  "name": "警察廣播電臺 - 臺北分臺 FM 94.3",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://cdn280.ccdntech.com/live-http/_definst_/vod280_Live/bb/playlist.m3u8",
+  "name": "B&B RADIO 幫幫廣播網",
+  "tags": "lifestyle",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://bbradio.pch.org.tw/"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/KSS/playlist.m3u8",
+  "name": "警察廣播電臺 - 高雄分臺 FM 93.1",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://radio.nitro-server.uk/listen/1940sshanghaioldtimesmusicradio/radio.mp3",
+  "name": "上海麗都廣播電台 1940's Shanghai Vintage Jazz Shidaiqu Radio",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://radio.nitro-server.uk/public/1940sshanghaioldtimesmusicradio"
+ },
+ {
+  "url": "http://stream.pbs.gov.tw:1935/live/HLS/playlist.m3u8",
+  "name": "警察廣播電台 - 花蓮台",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://pbs.npa.gov.tw/"
+ },
+ {
+  "url": "http://radio.mcu.edu.tw:8080/radio?1747274117052",
+  "name": "MCBS 銘傳廣播電台",
+  "tags": "full service",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://radio.mcu.edu.tw/"
+ },
+ {
+  "url": "http://stream.pbs.gov.tw:1935/live/ELS/playlist.m3u8",
+  "name": "警察廣播電台 - 宜蘭台",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/TCS/playlist.m3u8",
+  "name": "警察廣播電臺 - 臺中分臺 FM 94.5",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/SCS/playlist.m3u8",
+  "name": "警察廣播電臺 - 新竹分臺 AM 1512",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/TNS/playlist.m3u8",
+  "name": "警察廣播電臺 - 臺南分臺 AM 1314",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/TTS/playlist.m3u8",
+  "name": "警察廣播電臺 - 臺東分臺 FM 94.3",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "https://stream.pbs.gov.tw/live/HLS/playlist.m3u8",
+  "name": "警察廣播電臺 - 花蓮分臺 FM 94.3",
+  "tags": "emergency & public safety,government,local traffic & weather,news,traffic,weather",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,mandarin",
+  "homepage": "https://www.pbs.npa.gov.tw/"
+ },
+ {
+  "url": "http://s1.voscast.com:10442/stream",
+  "name": "2AC澳洲华人电台粤语广播",
+  "tags": "full service",
+  "cc": "AU",
+  "country": "Australia",
+  "country_zh": "澳大利亚",
+  "language": "cantonese",
+  "homepage": "https://www.2ac.com.au/"
+ },
+ {
+  "url": "http://playtv-live.ifeng.com/live/06OLEGEGM4G_audio.m3u8",
+  "name": "凤凰卫视中文台",
+  "tags": "news,talk",
+  "cc": "HK",
+  "country": "Hong Kong",
+  "country_zh": "中国香港",
+  "language": "chinese",
+  "homepage": "https://www.ifeng.com/"
+ },
+ {
+  "url": "http://202.39.43.67:1935/live/RA000036/chunklist.m3u8",
+  "name": "Hit FM台北之音廣播",
+  "tags": "music",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.hitoradio.com/newweb/onair.php"
+ },
+ {
+  "url": "https://flv.ccdntech.com/live/_definst_/mp4:vod117_Live/live1/chunklist_w872521607.m3u8",
+  "name": "正聲廣播電台FM104",
+  "tags": "music,news",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.csbc.com.tw/"
+ },
+ {
+  "url": "http://211.20.119.101:8081/",
+  "name": "台中廣播",
+  "tags": "public radio",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.fm1007lucky.com/"
+ },
+ {
+  "url": "http://202.39.43.67:1935/live/RA000080/chunklist.m3u8",
+  "name": "台北流行音樂廣播",
+  "tags": "music",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.pop917.com/home.aspx"
+ },
+ {
+  "url": "http://59.125.41.65:8081/",
+  "name": "台中歡喜之聲FM105.5",
+  "tags": "talk",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.smileradio.com.tw/radio-info.asp?id=245"
+ },
+ {
+  "url": "http://60.248.53.115:8081/",
+  "name": "嘉義環球廣播",
+  "tags": "talk",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.smileradio.com.tw/radio-info.asp?id=246"
+ },
+ {
+  "url": "https://streamak0134.akamaized.net/live0134lh-5gst/_definst_/am855/chunklist.m3u8",
+  "name": "民本電台-2",
+  "tags": "talk",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://mingpen.com.tw/"
+ },
+ {
+  "url": "http://202.39.43.67:1935/live/RA000076/chunklist.m3u8",
+  "name": "漢聲調頻",
+  "tags": "",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://audio.voh.com.tw/TW/Program/ugC_Program.aspx?Show=B"
+ },
+ {
+  "url": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm1043/chunklist_w1108784103.m3u8",
+  "name": "桃園GO GO104.3",
+  "tags": "music,talk",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/fm1043/chunklist_w1108784103.m3u8"
+ },
+ {
+  "url": "http://202.39.43.67:1935/live/RA000013/chunklist.m3u8",
+  "name": "人人電台 好事聯播網FM98.9",
+  "tags": "music",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "http://www.bestradio.com.tw/"
+ },
+ {
+  "url": "http://202.39.43.67:1935/live/RA000012/chunklist.m3u8",
+  "name": "好事聯播網 高雄港都",
+  "tags": "music",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.apple-line.com/"
+ },
+ {
+  "url": "https://cdn280.ccdntech.com/live-http/_definst_/vod280_Live/needs/chunklist.m3u8",
+  "name": "Needs Radio 全球華語廣播網",
+  "tags": "arts,culture,public radio",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese",
+  "homepage": "https://www.needsradio.org.tw/"
+ },
+ {
+  "url": "https://satellitepull.cnr.cn/live/wxzhzs/playlist.m3u8?wsSession=c650605f64c6488d38b66982-174761774475052&wsIPSercert=270c8446fe14303f2433a2f164ccd9e5",
+  "name": "台海之聲",
+  "tags": "full service",
+  "cc": "TW",
+  "country": "Taiwan, Republic Of China",
+  "country_zh": "台湾",
+  "language": "chinese,hakka,hokkien",
+  "homepage": "http://www.cnr.cn/"
+ },
+ {
+  "url": "http://pool.anison.fm:9000/AniSonFM(320)?",
+  "name": "Anison动漫音乐台",
+  "tags": "anime,jpop,russia,俄罗斯动漫广播电台",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese,english,japanese,russian",
+  "homepage": "https://cn.anison.fm/"
+ },
+ {
+  "url": "http://stream3.hndt.com/now/AFqvb0VX/playlist.m3u8",
+  "name": "心灵音乐馆",
+  "tags": "instrumental,nature,relax",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "http://cm61-10-2-143.hkcable.com.hk/live_freedirect/freehd209_h.live/playlist.m3u8",
+  "name": "有线新闻台",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "",
+  "homepage": "http://www.cabletv.com.hk/ct/"
+ },
+ {
+  "url": "http://cm61-10-2-143.hkcable.com.hk/live_freedirect/hd110_h.live/playlist.m3u8",
+  "name": "有线直播新闻台",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "",
+  "homepage": "http://www.cabletv.com.hk/ct/"
+ },
+ {
+  "url": "http://stream3.hndt.com/now/ufjjbZxV/playlist.m3u8",
+  "name": "河南网络动感音乐台",
+  "tags": "music,pop",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ },
+ {
+  "url": "http://cm61-10-2-143.hkcable.com.hk/live_freedirect/freehd208_h.live/playlist.m3u8",
+  "name": "有线财经资讯台",
+  "tags": "",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "cantonese",
+  "homepage": "http://www.cabletv.com.hk/ct/"
+ },
+ {
+  "url": "http://audiolive302.iqilu.com/sdradioShenghuo/sdradio04/playlist.m3u8",
+  "name": "经典105·山东经典音乐广播",
+  "tags": "golden music",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://v.iqilu.com/radio/main/shenghuo?spm=zm5094-001.0.0.1.VBBoEr"
+ },
+ {
+  "url": "http://goldfm.cn:8000/goldfm",
+  "name": "AsiaFM亚洲经典台",
+  "tags": "classic hits,hd,music,oldies",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.asiafm.net/index.php#page1"
+ },
+ {
+  "url": "https://radio.chinesemusicworld.com/chinesemusic.mp3",
+  "name": "Chinese Classical Music (Mp3 stream)",
+  "tags": "classical,instrumental,traditional",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese,english",
+  "homepage": "https://chinesemusicworld.com/"
+ },
+ {
+  "url": "https://replaynewszh.ice.infomaniak.ch/replaynewszh-128.mp3",
+  "name": "REPLAY NEWS - 中文 每5分钟播报一次新闻的电台",
+  "tags": "news",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "https://www.replaynews.net/"
+ },
+ {
+  "url": "http://stream3.hndt.com/now/C5NvUpwy/playlist.m3u8",
+  "name": "河南网络经典FM",
+  "tags": "oldies",
+  "cc": "CN",
+  "country": "China",
+  "country_zh": "中国",
+  "language": "chinese",
+  "homepage": "http://www.hndt.com/"
+ }
+]
