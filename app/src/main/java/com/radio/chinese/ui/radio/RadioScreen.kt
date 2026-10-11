@@ -38,6 +38,7 @@ fun RadioScreen(
     playerManager: PlayerManager,
     onNavigateToPlayer: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToTag: (String?) -> Unit = {},
     themeMode: Int,
     onThemeChanged: (Int) -> Unit
 ) {
@@ -100,6 +101,7 @@ fun RadioScreen(
                     searchQuery = searchQuery,
                     onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateToSettings = onNavigateToSettings,
+                    onNavigateToTag = onNavigateToTag,
                     scope = scope,
                     modifier = Modifier.weight(1f)
                 )
@@ -116,6 +118,7 @@ fun RadioScreen(
                 searchQuery = searchQuery,
                 onNavigateToPlayer = onNavigateToPlayer,
                 onNavigateToSettings = onNavigateToSettings,
+                onNavigateToTag = onNavigateToTag,
                 scope = scope,
                 modifier = Modifier.weight(1f)
             )
@@ -131,6 +134,7 @@ private fun RadioPagerHost(
     searchQuery: String,
     onNavigateToPlayer: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToTag: (String?) -> Unit,
     scope: CoroutineScope,
     modifier: Modifier = Modifier
 ) {
@@ -141,6 +145,7 @@ private fun RadioPagerHost(
                 onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(2) } },
                 onNavigateToSettings = onNavigateToSettings)
             1 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
+                onNavigateToTag = onNavigateToTag,
                 onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
             2 -> FavoritesScreen(showTopBar = false, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
                 onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
