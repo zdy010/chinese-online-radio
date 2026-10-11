@@ -26,6 +26,7 @@ import com.radio.chinese.ui.navigation.Screen
 import com.radio.chinese.ui.player.PlayerScreen
 import com.radio.chinese.ui.radio.RadioScreen
 import com.radio.chinese.ui.settings.SettingsScreen
+import com.radio.chinese.ui.tag.TagScreen
 import com.radio.chinese.ui.manage.ManageScreen
 
 data class BottomNavItem(
@@ -51,6 +52,7 @@ fun RadioNavGraph(
                 playerManager = playerManager,
                 onNavigateToPlayer = { stationId -> navController.navigate(Screen.Player.createRoute(stationId)) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToTag = { tag -> navController.navigate(Screen.Tags.createRoute(tag)) },
                 themeMode = themeMode,
                 onThemeChanged = onThemeChanged
             )
@@ -68,6 +70,21 @@ fun RadioNavGraph(
             PlayerScreen(
                 stationId = stationId,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.Tags.route,
+            arguments = listOf(navArgument(Screen.Tags.ARG) {
+                type = NavType.StringType
+                defaultValue = ""
+                nullable = true
+            })
+        ) { backStackEntry ->
+            TagScreen(
+                initialTag = backStackEntry.arguments?.getString(Screen.Tags.ARG),
+                onNavigateToPlayer = { stationId -> navController.navigate(Screen.Player.createRoute(stationId)) },
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 

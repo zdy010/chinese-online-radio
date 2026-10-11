@@ -65,6 +65,11 @@ object Dimens {
     val RailWidth: Dp
         @Composable get() = if (car) 120.dp else 80.dp
 
+    // 顶部导航栏高度：Material3 默认 64dp 会把里面的返回键卡在 64dp 高。
+    // 车机档要求命中区 88dp，顶栏本身不加高，控件自身达不到那个高度
+    val TopBarHeight: Dp
+        @Composable get() = if (car) 96.dp else 64.dp
+
     // 车机档正文限宽：超宽屏上不让内容从屏幕左拉到右，眼睛要横着找控件
     val CarContentMaxWidth: Dp = 1000.dp
 

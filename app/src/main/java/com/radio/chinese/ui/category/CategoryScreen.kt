@@ -33,6 +33,7 @@ import com.radio.chinese.ui.theme.isCarSurface
 fun CategoryScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToTag: (String?) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     showTopBar: Boolean = true,
     searchQuery: String = ""
@@ -81,28 +82,39 @@ fun CategoryScreen(
                 }
 
                 else -> {
-                    LazyVerticalGrid(
-                        columns = if (isCarSurface()) GridCells.Adaptive(minSize = 240.dp)
-                        else GridCells.Fixed(2),
-                        modifier = m,
-                        contentPadding = PaddingValues(Dimens.ScreenPadding),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.GapMedium)
-                    ) {
-                        items(uiState.categories, key = { it.first }) { (id, name) ->
-                            CategoryCard(
-                                categoryId = id,
-                                categoryName = name,
-                                stationCount = uiState.stations.count { it.category == id },
-                                onClick = { selectedCategory = id }
-                            )
+                    // 入口放在网格上方而不是网格首格：占用 items 的 key 会与分类卡碰撞，
+                    // 也会打乱分类已有的网格排布
+                    Column(m) {
+                        TagBrowseEntry(
+                            tagCount = uiState.tagsWithCount.size,
+                            onClick = { onNavigateToTag(null) },
+                        )
+                        LazyVerticalGrid(
+                            columns = if (isCarSurface()) GridCells.Adaptive(minSize = 240.dp)
+                            else GridCells.Fixed(2),
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(Dimens.ScreenPadding),
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.GapMedium)
+                        ) {
+                            items(uiState.categories, key = { it.first }) { (id, name) ->
+                                CategoryCard(
+                                    categoryId = id,
+                                    categoryName = name,
+                                    stationCount = uiState.stations.count { it.category == id },
+                                    onClick = { selectedCategory = id }
+                                )
+                            }
                         }
                     }
                 }
             }
         } else {
             // Stations in selected category
-            val stations = uiState.stations.filter { it.category == selectedCategory && (searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true)) }
+            // 筛选规则不在这页里重写一遍：走 StationFilter，搜索范畴与首页保持一致
+            // （以前这里只比台名，于是分类页搜「豫剧」「英国」都搜不到）
+            val stations = com.radio.chinese.domain.model.StationFilter
+                .apply(uiState.stations, selectedCategory, searchQuery)
             val currentStation by viewModel.playerManager.currentStation.collectAsState()
             val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
 
@@ -132,6 +144,52 @@ fun CategoryScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * 按标签浏览的入口行。
+ *
+ * 做成网格上方的一整行而不是网格首格：当 tagCount 为 0 时网格只有分类卡，
+ * 把入口当成网格第一项会让列数与 key 的对应关系变得绕。0 个标签时写清楚原因，
+ * 不拿一个点进去只会看到空列表的入口骗人点。
+ */
+@Composable
+private fun TagBrowseEntry(tagCount: Int, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall)
+            .clickable(enabled = tagCount > 0, onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(Dimens.CardPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Tag,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(Dimens.IconLarge),
+            )
+            Spacer(modifier = Modifier.width(Dimens.GapMedium))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "按标签浏览",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    text = if (tagCount > 0) "$tagCount 个标签可选" else "暂无可用标签",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
             }
         }
     }

@@ -9,6 +9,16 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     data object Manage : Screen("manage")
 
+    /**
+     * 按标签浏览。tag 为空进标签云，非空直接落到该标签的电台列表。
+     * 默认值用空字串而不是 null：NavType.StringType 对可空参数必须有默认值，
+     * 否则不传 tag 的入口跳转会在运行时报参数缺失。
+     */
+    data object Tags : Screen("tags?tag={tag}") {
+        const val ARG = "tag"
+        fun createRoute(tag: String?): String = "tags?tag=" + (tag ?: "")
+    }
+
     /** 按键诊断（设置页连点「关于」7 次解锁的隐藏页） */
     data object Diagnostics : Screen("diagnostics")
 
