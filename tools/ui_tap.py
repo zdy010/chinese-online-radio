@@ -23,15 +23,31 @@ ADB = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Android", "Sdk", "platfo
 
 def adb(*args, check=True):
     cmd = [ADB] + list(args)
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    # 必须显式指定 UTF-8：Windows 上 text=True 默认按 GBK 代码页解码，
+    # 而 dumpsys / uiautomator 输出里常有 UTF-8 字节，会直接报
+    # UnicodeDecodeError 把读取线程带崩（实测踩过）
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", timeout=60)
     if check and r.returncode != 0:
         raise RuntimeError(f"adb {' '.join(args)} 失败: {r.stderr.strip()[:200]}")
     return (r.stdout or "").strip()
 
 
-def dump(tag="cur"):
-    """取当前界面 XML。返回 (xml 文本, 落盘路径)。"""
-    adb("shell", "uiautomator", "dump", "/sdcard/ui.xml")
+def dump(tag="cur", retries=4):
+    """取当前界面 XML。返回 (xml 文本, 落盘路径)。
+
+    uiautomator dump 在界面动画中会偶发失败（实测：刚点完分类就抓），
+    重试几次而不是抛异常带崩整轮巡检。
+    """
+    last = ""
+    for i in range(retries):
+        r = subprocess.run([ADB, "shell", "uiautomator", "dump", "/sdcard/ui.xml"],
+                           capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=60)
+        last = (r.stdout or "") + (r.stderr or "")
+        if r.returncode == 0 and "dumped to" in last:
+            break
+        time.sleep(1.5 + i)
     out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".qtest",
                        f"ui_{tag}.xml")
     os.makedirs(os.path.dirname(out), exist_ok=True)

@@ -5750,28 +5750,6 @@
       "sources": []
     },
     {
-      "id": "st_绍兴戏曲广播",
-      "name": "绍兴戏曲广播",
-      "category": "opera",
-      "streamUrl": "http://live.shaoxing.com.cn/audio/s10001-xq3/index.m3u8",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "",
-      "website": "http://www.shaoxing.com.cn/",
-      "sources": [
-        {
-          "url": "http://live.shaoxing.com.cn/audio/s10001-xq3/index.m3u8",
-          "label": "主源",
-          "bitrate": 0
-        },
-        {
-          "url": "http://lhttp.qingting.fm/live/5054/64k.mp3",
-          "label": "镜像源",
-          "bitrate": 0
-        }
-      ]
-    },
-    {
       "id": "st_安徽戏曲广播 高清",
       "name": "安徽戏曲广播 高清",
       "category": "opera",
