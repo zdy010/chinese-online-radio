@@ -50,3 +50,11 @@ test_*.py
 expected_*.py
 expected_*.json
 *.log
+__pycache__/
+*.bak
+
+# 例外：tools/ 下的取数与实测脚本是交付物，必须入库。
+# 上面的 *.py / test_*.py 是无差别的临时脚本规则，不排除掉的话
+# fetch_stations.py / station_probe.py 及其测试全部不会出现在仓库里，
+# 下次扩充电台或回填标签只能重新人肉摸一遍。
+!tools/*.py
