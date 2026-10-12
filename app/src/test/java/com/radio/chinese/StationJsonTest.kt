@@ -31,8 +31,12 @@ class StationJsonTest {
     }
 
     @Test
-    fun `台数不少于 465`() {
-        assertTrue("实际 ${stations.size} 台", stations.size >= 465)
+    fun `台数不少于 455`() {
+        // 这条是防「意外截断」的下限（比如解析改坏只读到前一段），不是对死源的承诺。
+        // 从 465 降到 455：全量体检实测列出 10 台所有地址均判死（mgtv/fjtv 返回 HTML、
+        // qingting manifest 404、流端口关闭），且替代探测找不回同一家源，
+        // 判定过程见 tools/recheck_report.txt。留着它们只会让用户点到就报错。
+        assertTrue("实际 ${stations.size} 台", stations.size >= 455)
     }
 
     @Test
