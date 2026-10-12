@@ -153,11 +153,14 @@ def main():
         kept, dropped = drop_failed(results, stations)
         print(f"已有实播结果 {len(results)} 台；未出声待剔除 {len(dropped)} 条：{dropped}")
         if dropped:
-            Path(str(STATIONS_JSON) + ".preplay.bak").write_text(
-                STATIONS_JSON.read_text(encoding="utf-8"), encoding="utf-8")
+            bak_preplay = Path(str(STATIONS_JSON) + ".preplay.bak")
+            # 基线只认第一次：无条件覆写会把上一轮的备份冲掉，下次就没人知道
+            # “剔除前的原样”长什么样了（A-2 的幂等自证污染就是这么出的）。
+            if not bak_preplay.exists():
+                bak_preplay.write_text(STATIONS_JSON.read_text(encoding="utf-8"), encoding="utf-8")
             STATIONS_JSON.write_text(json.dumps({"stations": kept}, ensure_ascii=False, indent=2),
                                      encoding="utf-8")
-            print(f"清单现为 {len(kept)} 台（备份 radio_stations.json.preplay.bak）")
+            print(f"清单现为 {len(kept)} 台（基线备份：{bak_preplay.name}，已存在则不覆盖）")
             print(f"实播失败名单已更新，共 {record_failed(stations, set(dropped))} 个地址")
         return 0
     bak = Path(str(STATIONS_JSON) + ".bak")

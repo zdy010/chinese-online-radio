@@ -31,12 +31,15 @@ class StationJsonTest {
     }
 
     @Test
-    fun `台数不少于 455`() {
+    fun `台数不少于 451`() {
         // 这条是防「意外截断」的下限（比如解析改坏只读到前一段），不是对死源的承诺。
-        // 从 465 降到 455：全量体检实测列出 10 台所有地址均判死（mgtv/fjtv 返回 HTML、
-        // qingting manifest 404、流端口关闭），且替代探测找不回同一家源，
-        // 判定过程见 tools/recheck_report.txt。留着它们只会让用户点到就报错。
-        assertTrue("实际 ${stations.size} 台", stations.size >= 455)
+        // 从 465 降到 451，两轮都有实测凭据：
+        //   465→455：全量体检（tools/recheck_report.txt）判 10 台所有地址均死，
+        //             且逐个找过替代源，能救的都救回了（福建新闻广播换 satellitepull）。
+        //   455→451：剩下 6 台「未表态」的拿到真机当裁判，4 台确实放不出声
+        //             （北京戏曲曲艺/山西音乐/Jil FM 直接 ERROR，苏州综合广播 60s 仍缓冲），
+        //             另 2 台在手机上正常出声所以保留（PC 侧 timeout 只是本机网络假阳性）。
+        assertTrue("实际 ${stations.size} 台", stations.size >= 451)
     }
 
     @Test

@@ -17,6 +17,11 @@
     python tools/recheck_stations.py --out .qtest/v.json  # 指定产物
 产出 JSON 供 tools/apply_source_fix.py 消费，人读摘要写同名 .txt。
 本脚本只读清单、不改清单。
+
+unknown 不是可以安全发版的结论。探针分不出「本机走不出去」与「对方已下线」，
+而播放器能：拿 tools/playcheck.py --names 把这些台在真机上点一遍，
+未进 PLAYING 的才是该剔除的（2026-10-12 实测：北京戏曲曲艺 PC 侧只是未表态，
+真机切台直接 state=ERROR）。
 """
 import argparse
 import concurrent.futures as cf
@@ -99,27 +104,29 @@ def run(assets_path: Path, out_path: Path, workers: int, timeout: float) -> int:
     stations = data["stations"]
     per_station_urls = {st["id"]: station_urls(st) for st in stations}
 
-    # 第一轮：按地址并发。同一地址被多个台共用时只测一次。
+    # 第一轮：按地址并发，但**同一个地址只测一次**（缓存键就是地址本身）。
+    # 这不只是省时间：上一轮串行复测发现 satellitepull 会被限流，
+    # 同一台共用地址多打几次就会多出几个假 unknown，而假 unknown 会直接影响剔除判断。
     all_urls = []
     for st in stations:
         for item in per_station_urls[st["id"]]:
             all_urls.append((st["id"], item))
-    cache = {}
+    verdict_of = {}
     with cf.ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(probe_one, it["url"], 2, 1.5, timeout): (sid, it)
-                for sid, it in all_urls}
+        futs = {ex.submit(probe_one, it["url"], 2, 1.5, timeout): it["url"]
+                for it in {item["url"]: item for _sid, item in all_urls}.values()}
         done = 0
         for fut in cf.as_completed(futs):
-            sid, it = futs[fut]
+            url = futs[fut]
             r = fut.result()
-            cache[(sid, it["url"])] = {"verdict": r["verdict"], "why": r["why"]}
+            verdict_of[url] = {"verdict": r["verdict"], "why": r["why"]}
             done += 1
             if done % 100 == 0:
                 print("  首轮 %d/%d" % (done, len(futs)), file=sys.stderr)
 
     rows = []
     for st in stations:
-        first = [{"url": it["url"], "label": it["label"], **cache[(st["id"], it["url"])]}
+        first = [{"url": it["url"], "label": it["label"], **verdict_of[it["url"]]}
                  for it in per_station_urls[st["id"]]]
         rows.append(summarize(st, first, "concurrent"))
 

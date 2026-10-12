@@ -1,7 +1,11 @@
 {
   "note": "装机实播未起声音的地址，由 playcheck.py 维护；fetch_stations.merge 会跳过这些地址",
   "urls": [
+    "http://audio-live.radio.cn/live/szxwzh1/playlist.m3u8",
     "http://lhttp.qingting.fm/live/5054/64k.mp3",
-    "http://live.shaoxing.com.cn/audio/s10001-xq3/index.m3u8"
+    "http://live.shaoxing.com.cn/audio/s10001-xq3/index.m3u8",
+    "http://live.xmcdn.com/live/106/64.m3u8",
+    "https://radiojeunesse.ice.infomaniak.ch/jeunesse.mp3",
+    "https://radiolive.sxrtv.com/live/yinyue/playlist.m3u8"
   ]
 }
