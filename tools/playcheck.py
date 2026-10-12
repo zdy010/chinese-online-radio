@@ -103,6 +103,18 @@ def drop_failed(results, stations):
 FAILED_LIST = TOOLS_DIR / "play_failed.json"
 
 
+def ensure_preplay_backup() -> Path:
+    """剔除前的基线只认第一次：已存在就不覆盖。
+
+    无条件覆写会把上一轮的备份冲掉，下次再没人知道“剔除前原样”长什么样
+    （A-2 的幂等自证污染就是这个成因）。两个剔除入口共用这里。
+    """
+    bak = Path(str(STATIONS_JSON) + ".preplay.bak")
+    if not bak.exists():
+        bak.write_text(STATIONS_JSON.read_text(encoding="utf-8"), encoding="utf-8")
+    return bak
+
+
 def record_failed(stations, dropped_ids):
     """把实播失败条目的地址归并写入名单，供 fetch_stations 下次跳过。
 
@@ -153,11 +165,7 @@ def main():
         kept, dropped = drop_failed(results, stations)
         print(f"已有实播结果 {len(results)} 台；未出声待剔除 {len(dropped)} 条：{dropped}")
         if dropped:
-            bak_preplay = Path(str(STATIONS_JSON) + ".preplay.bak")
-            # 基线只认第一次：无条件覆写会把上一轮的备份冲掉，下次就没人知道
-            # “剔除前的原样”长什么样了（A-2 的幂等自证污染就是这么出的）。
-            if not bak_preplay.exists():
-                bak_preplay.write_text(STATIONS_JSON.read_text(encoding="utf-8"), encoding="utf-8")
+            bak_preplay = ensure_preplay_backup()
             STATIONS_JSON.write_text(json.dumps({"stations": kept}, ensure_ascii=False, indent=2),
                                      encoding="utf-8")
             print(f"清单现为 {len(kept)} 台（基线备份：{bak_preplay.name}，已存在则不覆盖）")
@@ -192,7 +200,9 @@ def main():
         if not ut.tap("分类", max_scrolls=2):
             results.append({"id": s["id"], "name": label, "state": "NAV-FAIL"})
             continue
-        if not ut.tap(category_label(s["category"]), max_scrolls=3):
+        # 分类磁贴要多滚几屏：分类页顶部现在多了「按标签浏览」入口，
+        # 只滚 3 屏会把「世界」这种排在后面的磁贴报成找不到。
+        if not ut.tap(category_label(s["category"]), max_scrolls=6):
             results.append({"id": s["id"], "name": label, "state": "NO-CATEGORY"})
             continue
         found = ut.tap(label, settle=1.0, max_scrolls=args.max_scrolls)
@@ -211,18 +221,19 @@ def main():
     fails = [r for r in results if r.get("state") != "PLAYING"]
     print(f"\n实播巡检：{len(results)} 台，未进入 PLAYING 的 {len(fails)} 台")
     for r in fails:
-        print(f"  {r['category']} | {r['name']} | {r.get('state')}")
+        # 导航失败的条目没有 category 字段（它根本没走到播放那步），
+        # 直接取键会把整个巡检带崩，拿不到已跑出来的结论。
+        print(f"  {r.get('category', '-')} | {r['name']} | {r.get('state')}")
 
     if args.drop_failed:
         noaudio = [r for r in results if not r.get("audio_started")]
         print("\n按系统侧播放器判据未出声的：" + (", ".join(r["name"] for r in noaudio) or "（无）"))
         kept, dropped = drop_failed(results, stations)
         if dropped:
-            Path(str(STATIONS_JSON) + ".preplay.bak").write_text(
-                STATIONS_JSON.read_text(encoding="utf-8"), encoding="utf-8")
+            bak = ensure_preplay_backup()
             STATIONS_JSON.write_text(json.dumps({"stations": kept}, ensure_ascii=False, indent=2),
                                      encoding="utf-8")
-            print(f"已剔除 {len(dropped)} 条：{dropped}；清单现为 {len(kept)} 台（备份 .preplay.bak）")
+            print(f"已剔除 {len(dropped)} 条：{dropped}；清单现为 {len(kept)} 台（基线备份：{bak.name}）")
         else:
             print("无需剔除")
     return 0 if not fails else 1
