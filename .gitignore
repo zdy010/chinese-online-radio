@@ -22,6 +22,11 @@ Thumbs.db
 # Screenshots / debug dumps
 .qtest/
 .superpowers/
+
+# 本地 agent 辅助目录：.workbuddy 里存的是明文令牌，绝不能在 git add -A 时顺手入库；
+# .interview 是整个 Python venv 与录音缓存，体积大且可重建。
+.workbuddy/
+.interview/
 s1.png
 s2.png
 s3.png
@@ -59,3 +64,7 @@ __pycache__/
 # 下次扩充电台或回填标签只能重新人肉摸一遍。
 !tools/*.py
 !tools/*.json
+
+# 但体检工具的原始转储不入库：它是每次重跑都会变的 180KB 测量集，
+# 人读的结论 tools/recheck_report.txt 才是要留在仓里的证据。
+tools/recheck_report.json
