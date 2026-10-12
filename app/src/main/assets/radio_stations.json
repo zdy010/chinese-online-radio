@@ -93,36 +93,17 @@
       "language": ""
     },
     {
-      "id": "hn_news",
-      "name": "湖南新闻广播",
-      "category": "news",
-      "streamUrl": "https://live.mgtv.com/live/xwgb/playlist.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 102.8",
-      "description": "湖南广播电视台新闻广播",
-      "tags": [
-        "localnews"
-      ],
-      "country": "",
-      "language": ""
-    },
-    {
       "id": "hn_traffic",
       "name": "湖南交通广播",
       "category": "traffic",
-      "streamUrl": "https://live.mgtv.com/live/jtgb/playlist.m3u8",
+      "streamUrl": "http://a.live.hnradio.com/jtpd/radio120k_jtpd.m3u8?auth_key=1588751155-0-0-301d7e28868eff70a72edf5e4569b546",
       "logoUrl": "file:///android_asset/logos/hn_traffic.webp",
       "frequency": "FM 91.8",
       "description": "湖南广播电视台交通广播",
       "sources": [
         {
-          "url": "https://live.mgtv.com/live/jtgb/playlist.m3u8",
-          "label": "主源",
-          "bitrate": 0
-        },
-        {
           "url": "http://a.live.hnradio.com/jtpd/radio120k_jtpd.m3u8?auth_key=1588751155-0-0-301d7e28868eff70a72edf5e4569b546",
-          "label": "镜像源",
+          "label": "主源",
           "bitrate": 0
         }
       ],
@@ -136,19 +117,14 @@
       "id": "hn_music",
       "name": "湖南音乐之声",
       "category": "music",
-      "streamUrl": "https://live.mgtv.com/live/yyzs/playlist.m3u8",
+      "streamUrl": "http://a.live.hnradio.com/yypd/radio120k_yypd.m3u8?auth_key=1588751172-0-0-d97b858279c1c86650172b9913ea4af2",
       "logoUrl": "",
       "frequency": "FM 89.3",
       "description": "湖南广播电视台音乐之声",
       "sources": [
         {
-          "url": "https://live.mgtv.com/live/yyzs/playlist.m3u8",
-          "label": "主源",
-          "bitrate": 0
-        },
-        {
           "url": "http://a.live.hnradio.com/yypd/radio120k_yypd.m3u8?auth_key=1588751172-0-0-d97b858279c1c86650172b9913ea4af2",
-          "label": "镜像源",
+          "label": "主源",
           "bitrate": 0
         }
       ],
@@ -160,7 +136,7 @@
       "id": "fj_news",
       "name": "福建新闻广播",
       "category": "news",
-      "streamUrl": "https://live.fjtv.net/live/xwgb/playlist.m3u8",
+      "streamUrl": "https://satellitepull.cnr.cn/live/wx32fjxwgb/playlist.m3u8",
       "logoUrl": "file:///android_asset/logos/fj_news.webp",
       "frequency": "FM 103.7",
       "description": "福建广播电视台新闻广播",
@@ -168,7 +144,14 @@
         "localnews"
       ],
       "country": "",
-      "language": ""
+      "language": "",
+      "sources": [
+        {
+          "url": "https://satellitepull.cnr.cn/live/wx32fjxwgb/playlist.m3u8",
+          "label": "satellitepull:wx32fjxwgb",
+          "bitrate": 0
+        }
+      ]
     },
     {
       "id": "bj_opera",
@@ -703,18 +686,18 @@
       "id": "st_苏州生活广播",
       "name": "苏州生活广播",
       "category": "arts",
-      "streamUrl": "http://audio-live.radio.cn/live/szsh1/playlist.m3u8",
+      "streamUrl": "http://lhttp.qingting.fm/live/2801/64k.mp3",
       "logoUrl": "file:///android_asset/logos/st_苏州生活广播.webp",
       "frequency": "",
       "description": "",
       "sources": [
         {
-          "url": "http://audio-live.radio.cn/live/szsh1/playlist.m3u8",
+          "url": "http://lhttp.qingting.fm/live/2801/64k.mp3",
           "label": "主源",
           "bitrate": 0
         },
         {
-          "url": "http://lhttp.qingting.fm/live/2801/64k.mp3",
+          "url": "http://audio-live.radio.cn/live/szsh1/playlist.m3u8",
           "label": "镜像源",
           "bitrate": 0
         }
@@ -727,18 +710,18 @@
       "id": "st_苏州儿童广播",
       "name": "苏州儿童广播",
       "category": "arts",
-      "streamUrl": "http://audio-live.radio.cn/live/szet1/playlist.m3u8",
+      "streamUrl": "http://lhttp.qingting.fm/live/2807/64k.mp3",
       "logoUrl": "file:///android_asset/logos/st_苏州儿童广播.webp",
       "frequency": "",
       "description": "",
       "sources": [
         {
-          "url": "http://audio-live.radio.cn/live/szet1/playlist.m3u8",
+          "url": "http://lhttp.qingting.fm/live/2807/64k.mp3",
           "label": "主源",
           "bitrate": 0
         },
         {
-          "url": "http://lhttp.qingting.fm/live/2807/64k.mp3",
+          "url": "http://audio-live.radio.cn/live/szet1/playlist.m3u8",
           "label": "镜像源",
           "bitrate": 0
         }
@@ -765,18 +748,18 @@
       "id": "st_苏州交通经济广播",
       "name": "苏州交通经济广播",
       "category": "traffic",
-      "streamUrl": "http://audio-live.radio.cn/live/szjtjj1/playlist.m3u8",
+      "streamUrl": "http://lhttp.qingting.fm/live/2806/64k.mp3",
       "logoUrl": "",
       "frequency": "",
       "description": "",
       "sources": [
         {
-          "url": "http://audio-live.radio.cn/live/szjtjj1/playlist.m3u8",
+          "url": "http://lhttp.qingting.fm/live/2806/64k.mp3",
           "label": "主源",
           "bitrate": 0
         },
         {
-          "url": "http://lhttp.qingting.fm/live/2806/64k.mp3",
+          "url": "http://audio-live.radio.cn/live/szjtjj1/playlist.m3u8",
           "label": "镜像源",
           "bitrate": 0
         }
@@ -942,18 +925,6 @@
       "tags": [
         "trafficnow"
       ],
-      "country": "",
-      "language": ""
-    },
-    {
-      "id": "st_湖北城市之声",
-      "name": "湖北城市之声",
-      "category": "news",
-      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubjtgb/playlist.m3u8",
-      "logoUrl": "file:///android_asset/logos/st_湖北城市之声.webp",
-      "frequency": "",
-      "description": "",
-      "tags": [],
       "country": "",
       "language": ""
     },
@@ -1867,18 +1838,6 @@
       "category": "news",
       "streamUrl": "https://satellitepull.cnr.cn/live/wxsczhgb/playlist.m3u8",
       "logoUrl": "",
-      "frequency": "",
-      "description": "",
-      "tags": [],
-      "country": "",
-      "language": ""
-    },
-    {
-      "id": "st_四川私家车广播",
-      "name": "四川私家车广播",
-      "category": "traffic",
-      "streamUrl": "https://satellitepull.cnr.cn/live/wxsc925/playlist.m3u8",
-      "logoUrl": "file:///android_asset/logos/st_四川私家车广播.webp",
       "frequency": "",
       "description": "",
       "tags": [],
@@ -3141,18 +3100,18 @@
       "id": "st_苏州都市音乐广播",
       "name": "苏州都市音乐广播",
       "category": "music",
-      "streamUrl": "http://audio-live.radio.cn/live/szyy1/playlist.m3u8",
+      "streamUrl": "http://lhttp.qingting.fm/live/2803/64k.mp3",
       "logoUrl": "",
       "frequency": "",
       "description": "",
       "sources": [
         {
-          "url": "http://audio-live.radio.cn/live/szyy1/playlist.m3u8",
+          "url": "http://lhttp.qingting.fm/live/2803/64k.mp3",
           "label": "主源",
           "bitrate": 0
         },
         {
-          "url": "http://lhttp.qingting.fm/live/2803/64k.mp3",
+          "url": "http://audio-live.radio.cn/live/szyy1/playlist.m3u8",
           "label": "镜像源",
           "bitrate": 0
         }
@@ -3356,18 +3315,6 @@
           "bitrate": 0
         }
       ],
-      "tags": [],
-      "country": "",
-      "language": ""
-    },
-    {
-      "id": "st_楚天音乐广播",
-      "name": "楚天音乐广播",
-      "category": "music",
-      "streamUrl": "https://satellitepull.cnr.cn/live/wx32hubctyygb/playlist.m3u8",
-      "logoUrl": "file:///android_asset/logos/st_楚天音乐广播.webp",
-      "frequency": "",
-      "description": "",
       "tags": [],
       "country": "",
       "language": ""
@@ -4168,21 +4115,16 @@
       "id": "gl_gb_radiocaroline",
       "name": "Radio Caroline",
       "category": "world",
-      "streamUrl": "http://78.129.202.200:8040/;",
+      "streamUrl": "http://sc6.radiocaroline.net:8040/;stream.mp3",
       "logoUrl": "",
       "frequency": "",
       "description": "英国的英语电台，主要播摇滚、乡村、欧美流行",
       "website": "http://www.radiocaroline.co.uk/",
       "sources": [
         {
-          "url": "http://78.129.202.200:8040/;",
-          "label": "网络源",
-          "bitrate": 128
-        },
-        {
           "url": "http://sc6.radiocaroline.net:8040/;stream.mp3",
-          "label": "镜像源",
-          "bitrate": 0
+          "label": "主源",
+          "bitrate": 128
         }
       ],
       "tags": [
@@ -4488,28 +4430,6 @@
         "hiphop"
       ],
       "country": "德国",
-      "language": "英语"
-    },
-    {
-      "id": "gl_us_thebig80sstation",
-      "name": "The Big 80s Station",
-      "category": "world",
-      "streamUrl": "http://158.69.114.190:8065/;",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "美国的英语电台，主要播八十年代",
-      "website": "http://www.thebig80sstation.com/",
-      "sources": [
-        {
-          "url": "http://158.69.114.190:8065/;",
-          "label": "网络源",
-          "bitrate": 128
-        }
-      ],
-      "tags": [
-        "hits80"
-      ],
-      "country": "美国",
       "language": "英语"
     },
     {
@@ -4847,28 +4767,6 @@
         "oldies"
       ],
       "country": "英国",
-      "language": "英语"
-    },
-    {
-      "id": "gl_my_jazzlounge",
-      "name": "Jazz Lounge",
-      "category": "world",
-      "streamUrl": "http://eu8.fastcast4u.com:5068/;",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "马来西亚的英语电台，主要播爵士",
-      "website": "http://shoutcast.flashradio.info/#/Jazz/1292701/",
-      "sources": [
-        {
-          "url": "http://eu8.fastcast4u.com:5068/;",
-          "label": "网络源",
-          "bitrate": 320
-        }
-      ],
-      "tags": [
-        "jazz"
-      ],
-      "country": "马来西亚",
       "language": "英语"
     },
     {
@@ -5901,26 +5799,6 @@
       "language": "英语"
     },
     {
-      "id": "gl_de_reggaeradiorastamu",
-      "name": "Reggae Radio Rastamusic.com",
-      "category": "world",
-      "streamUrl": "http://origin-rastamusic.streamguys1.com/rastamusic.mp3",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "德国的英语电台",
-      "website": "http://www.rastamusic.com/",
-      "sources": [
-        {
-          "url": "http://origin-rastamusic.streamguys1.com/rastamusic.mp3",
-          "label": "网络源",
-          "bitrate": 192
-        }
-      ],
-      "tags": [],
-      "country": "德国",
-      "language": "英语"
-    },
-    {
       "id": "gl_gb_heartlondon1062aac",
       "name": "Heart London 106.2 [AAC]",
       "category": "world",
@@ -6192,26 +6070,6 @@
         "sleep"
       ],
       "country": "土耳其",
-      "language": "英语"
-    },
-    {
-      "id": "gl_ag_antiguaobserverrad",
-      "name": "Antigua Observer Radio 91.1 St. John's",
-      "category": "world",
-      "streamUrl": "http://s8.voscast.com:8176/;",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "AG的英语电台",
-      "website": "http://antiguaobserver.com/",
-      "sources": [
-        {
-          "url": "http://s8.voscast.com:8176/;",
-          "label": "网络源",
-          "bitrate": 192
-        }
-      ],
-      "tags": [],
-      "country": "AG",
       "language": "英语"
     },
     {
@@ -8234,28 +8092,6 @@
       "language": "华语"
     },
     {
-      "id": "gl_us_c9c2d6bcb",
-      "name": "星岛中文电台国语广播",
-      "category": "world",
-      "streamUrl": "http://nap.casthost.net:8759/;?icy=http",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "美国的华语电台，主要播本地新闻",
-      "website": "http://www.chineseradio.com/main/#",
-      "sources": [
-        {
-          "url": "http://nap.casthost.net:8759/;?icy=http",
-          "label": "网络源",
-          "bitrate": 64
-        }
-      ],
-      "tags": [
-        "localnews"
-      ],
-      "country": "美国",
-      "language": "华语"
-    },
-    {
       "id": "gl_hk_cfe485780",
       "name": "香港普通话台",
       "category": "world",
@@ -8587,26 +8423,6 @@
       "sources": [
         {
           "url": "http://stream.pbs.gov.tw:1935/live/HLS/playlist.m3u8",
-          "label": "网络源",
-          "bitrate": 128
-        }
-      ],
-      "tags": [],
-      "country": "台湾",
-      "language": "华语"
-    },
-    {
-      "id": "gl_tw_mcbs",
-      "name": "MCBS 銘傳廣播電台",
-      "category": "world",
-      "streamUrl": "http://radio.mcu.edu.tw:8080/radio?1747274117052",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "台湾的华语电台",
-      "website": "http://radio.mcu.edu.tw/",
-      "sources": [
-        {
-          "url": "http://radio.mcu.edu.tw:8080/radio?1747274117052",
           "label": "网络源",
           "bitrate": 128
         }

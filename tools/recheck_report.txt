@@ -1,0 +1,42 @@
+清单体检 465 台：448 live / 11 gone / 6 unknown
+
+可播但主源不是可用地址（建议提升镜像为主源）7 台：
+   湖南交通广播                   主源=gone(body-html) 第2个源 live
+   湖南音乐之声                   主源=gone(body-html) 第2个源 live
+   苏州生活广播                   主源=unknown(timeout) 第2个源 live
+   苏州儿童广播                   主源=unknown(timeout) 第2个源 live
+   苏州交通经济广播                 主源=unknown(timeout) 第2个源 live
+   苏州都市音乐广播                 主源=unknown(timeout) 第2个源 live
+   Radio Caroline           主源=gone(direct) 第2个源 live
+
+所有源都确认不可播（候选剔除）11 台：
+   湖南新闻广播                   [news]
+        gone     主源                 body-html
+   福建新闻广播                   [news]
+        gone     主源                 body-html
+   湖北城市之声                   [news]
+        gone     主源                 manifest-404
+   四川私家车广播                  [traffic]
+        gone     主源                 manifest-404
+   楚天音乐广播                   [music]
+        gone     主源                 manifest-404
+   The Big 80s Station      [world]
+        gone     主源                 direct
+   Jazz Lounge              [world]
+        gone     主源                 direct
+   Reggae Radio Rastamusic. [world]
+        gone     主源                 direct
+   Antigua Observer Radio 9 [world]
+        gone     主源                 direct
+   星岛中文电台国语广播               [world]
+        gone     主源                 direct
+   MCBS 銘傳廣播電台              [world]
+        gone     主源                 direct
+
+两轮都未表态（超时/连不上，不定性为死）6 台：
+   北京戏曲曲艺                   app-error-body
+   苏州综合广播                   timeout
+   山西音乐广播                   conn-error
+   Hot 93 - 93.5 - Port of  timeout
+   Jil FM                   direct
+   上海麗都廣播電台 1940's Shanghai conn-error
