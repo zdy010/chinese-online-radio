@@ -154,20 +154,6 @@
       ]
     },
     {
-      "id": "bj_opera",
-      "name": "北京戏曲曲艺",
-      "category": "opera",
-      "streamUrl": "http://live.xmcdn.com/live/106/64.m3u8",
-      "logoUrl": "",
-      "frequency": "FM 105.1",
-      "description": "北京广播电视台戏曲曲艺频道，京剧曲艺综合",
-      "tags": [
-        "jingju"
-      ],
-      "country": "",
-      "language": ""
-    },
-    {
       "id": "suzhou_opera",
       "name": "苏州戏曲广播",
       "category": "opera",
@@ -729,18 +715,6 @@
       "tags": [
         "kids"
       ],
-      "country": "",
-      "language": ""
-    },
-    {
-      "id": "st_苏州综合广播",
-      "name": "苏州综合广播",
-      "category": "news",
-      "streamUrl": "http://audio-live.radio.cn/live/szxwzh1/playlist.m3u8",
-      "logoUrl": "file:///android_asset/logos/st_苏州综合广播.webp",
-      "frequency": "",
-      "description": "",
-      "tags": [],
       "country": "",
       "language": ""
     },
@@ -3176,18 +3150,6 @@
           "bitrate": 0
         }
       ],
-      "tags": [],
-      "country": "",
-      "language": ""
-    },
-    {
-      "id": "st_山西音乐广播",
-      "name": "山西音乐广播",
-      "category": "music",
-      "streamUrl": "https://radiolive.sxrtv.com/live/yinyue/playlist.m3u8",
-      "logoUrl": "file:///android_asset/logos/st_山西音乐广播.webp",
-      "frequency": "",
-      "description": "",
       "tags": [],
       "country": "",
       "language": ""
@@ -6828,26 +6790,6 @@
       "tags": [],
       "country": "新加坡",
       "language": "华语"
-    },
-    {
-      "id": "gl_dz_jilfm",
-      "name": "Jil FM",
-      "category": "world",
-      "streamUrl": "https://radiojeunesse.ice.infomaniak.ch/jeunesse.mp3",
-      "logoUrl": "",
-      "frequency": "",
-      "description": "DZ的英语电台",
-      "website": "https://my.radioalgerie.dz/fr/jilfm",
-      "sources": [
-        {
-          "url": "https://radiojeunesse.ice.infomaniak.ch/jeunesse.mp3",
-          "label": "网络源",
-          "bitrate": 0
-        }
-      ],
-      "tags": [],
-      "country": "DZ",
-      "language": "英语"
     },
     {
       "id": "gl_us_numetalradio",
