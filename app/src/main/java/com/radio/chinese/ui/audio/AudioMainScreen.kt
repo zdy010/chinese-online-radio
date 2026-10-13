@@ -61,7 +61,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioMainScreen(
-    playerManager: PlayerManager
+    playerManager: PlayerManager,
+    onOpenPlayer: () -> Unit = {}
 ) {
     val tabs = listOf(
         SurfaceTab("本地", Icons.Default.Folder),
@@ -127,7 +128,9 @@ fun AudioMainScreen(
                     // 这两个方法早就在 PlayerManager 里，只是从未被任何界面调用；
                     // 步长显式传 10，与图标上的「10」一致
                     onSeekForward = { playerManager.seekOperaForward(10) },
-                    onSeekBackward = { playerManager.seekOperaBackward(10) }
+                    onSeekBackward = { playerManager.seekOperaBackward(10) },
+                    // 点标题行/展开图标进全屏播放页；九个快捷控件原样保留
+                    onClick = onOpenPlayer
                 )
             }
         }

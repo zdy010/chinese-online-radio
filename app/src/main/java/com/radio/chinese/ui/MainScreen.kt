@@ -59,7 +59,10 @@ fun RadioNavGraph(
         }
 
         composable(Screen.Audio.route) {
-            AudioMainScreen(playerManager = playerManager)
+            AudioMainScreen(
+                playerManager = playerManager,
+                onOpenPlayer = { navController.navigate(Screen.OperaPlayer.route) }
+            )
         }
 
         composable(
