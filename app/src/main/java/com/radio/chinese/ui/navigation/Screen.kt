@@ -6,6 +6,8 @@ sealed class Screen(val route: String) {
     data object Player : Screen("player/{stationId}") {
         fun createRoute(stationId: String) = "player/$stationId"
     }
+    /** 音频库（戏曲）全屏播放页：无参数，状态一律读 PlayerManager */
+    data object OperaPlayer : Screen("opera_player")
     data object Settings : Screen("settings")
     data object Manage : Screen("manage")
 

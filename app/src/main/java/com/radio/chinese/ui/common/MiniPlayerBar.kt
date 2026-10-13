@@ -1,6 +1,7 @@
 package com.radio.chinese.ui.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
@@ -41,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.ui.theme.Dimens
@@ -173,6 +177,7 @@ fun OperaMiniPlayerBar(
     onSeek: (Long) -> Unit,
     onSeekForward: () -> Unit,
     onSeekBackward: () -> Unit,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val canSeek = durationMs > 0L
@@ -199,7 +204,9 @@ fun OperaMiniPlayerBar(
                     .fillMaxWidth()
                     // 手机档保持原来的 32dp 下限，车机档抬到 64dp 命中区
                     .heightIn(min = Dimens.SliderTouchHeight)
-                    .padding(horizontal = Dimens.GapMedium),
+                    .padding(horizontal = Dimens.GapMedium)
+                    // 语义层给滑条名字：无障碍播报读出“播放进度”，自动化也能稳定定位它
+                    .semantics { contentDescription = "播放进度" },
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -214,34 +221,49 @@ fun OperaMiniPlayerBar(
                 .height(Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(Dimens.CoverTiny)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-                contentAlignment = Alignment.Center
+            // 标题信息行可点进全屏播放页；按钮与滑条命中区不动（onClick=null 时与旧行为完全一致）
+            Row(
+                modifier = if (onClick != null) Modifier.weight(1f).clickable(onClick = onClick) else Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.MusicNote,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.IconMedium),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Box(
+                    modifier = Modifier
+                        .size(Dimens.CoverTiny)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = null,
+                        modifier = Modifier.size(Dimens.IconMedium),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.width(Dimens.GapMedium))
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (bitrateText != null) "$timeText · $bitrateText" else timeText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(Dimens.GapMedium))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = if (bitrateText != null) "$timeText · $bitrateText" else timeText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            // 展开入口：中老年用户需要可见 affordance，不能只靠“猜标题行可点”
+            if (onClick != null) {
+                IconButton(
+                    onClick = onClick,
+                    modifier = if (car) Modifier.size(Dimens.TouchMin) else Modifier
+                ) {
+                    Icon(Icons.Default.OpenInFull, contentDescription = "展开全屏播放", modifier = Modifier.size(Dimens.IconMedium))
+                }
             }
             IconButton(onClick = onStop) {
                 Icon(
