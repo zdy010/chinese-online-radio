@@ -311,7 +311,8 @@ class WebDavClient @Inject constructor() {
                     size = it.size,
                     categoryName = categoryName,
                     operaName = operaName,
-                    downloadUrl = getFileUrl(it.href)
+                    downloadUrl = getFileUrl(it.href),
+                    sourcePath = it.href
                 )
             }
     }

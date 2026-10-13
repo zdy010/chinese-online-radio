@@ -74,7 +74,9 @@ data class OperaAudioFile(
     val operaName: String,
     val downloadUrl: String? = null,
     val etag: String? = null,
-    val s3KeyFlag: String? = null
+    val s3KeyFlag: String? = null,
+    /** 源内原始路径（WebDAV href / 本地路径 / M3U 条目 URL），歌词封面等附属文件按它推导 */
+    val sourcePath: String? = null
 )
 
 // ===== 下载模型 =====

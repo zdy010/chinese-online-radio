@@ -102,6 +102,17 @@ class PlayerManager @Inject constructor(
     private val _operaRepeatMode = MutableStateFlow(OperaRepeatMode.ALL)
     val operaRepeatMode: StateFlow<OperaRepeatMode> = _operaRepeatMode
 
+    /**
+     * 戏曲播放上下文：歌词/封面等附属文件要靠「哪个源的哪个路径」找回归属。
+     * 只在点播入口写入；内部上下段保留 sourceId 只换 trackPath；stopOpera 清空。
+     */
+    private val _operaContext = MutableStateFlow<OperaPlayContext?>(null)
+    val operaContext: StateFlow<OperaPlayContext?> = _operaContext
+
+    /** 当前播放项元数据（含内嵌封面 artworkData），只跟戏曲模式 */
+    private val _operaMediaMetadata = MutableStateFlow<MediaMetadata?>(null)
+    val operaMediaMetadata: StateFlow<MediaMetadata?> = _operaMediaMetadata
+
     private var pendingOpera: OperaAudioFile? = null
     private var pendingOperaPlaylist: List<OperaAudioFile> = emptyList()
     private var pendingOperaLocalPath: String? = null
@@ -133,6 +144,11 @@ class PlayerManager @Inject constructor(
             override fun onIsPlayingChanged(playing: Boolean) {
                 _isPlaying.value = playing
                 if (_isOperaMode.value) startOperaPositionUpdater()
+            }
+
+            override fun onMediaMetadataChanged(md: MediaMetadata) {
+                // 电台模式不写：直播流的旧 metadata 不该串进戏曲播放页
+                if (_isOperaMode.value) _operaMediaMetadata.value = md
             }
 
             override fun onPlaybackStateChanged(state: Int) {
@@ -390,8 +406,9 @@ class PlayerManager @Inject constructor(
      *  @param file 要播放的文件
      *  @param playlist 播放列表（用于上下切歌）
      *  @param localPath 本地路径（已下载文件），null 表示从远程播放
+     *  @param context 点播上下文（附属文件归属）；内部切歌不传，沿旧源换路径
      */
-    fun playOperaFile(file: OperaAudioFile, playlist: List<OperaAudioFile>, localPath: String? = null) {
+    fun playOperaFile(file: OperaAudioFile, playlist: List<OperaAudioFile>, localPath: String? = null, context: OperaPlayContext? = null) {
         // 互斥：停止电台
         _currentStation.value = null
         _isOperaMode.value = true
@@ -401,6 +418,8 @@ class PlayerManager @Inject constructor(
         val index = playlist.indexOfFirst { it.fileId == file.fileId }
         _operaIndex.value = index
         _operaFile.value = file
+        _operaContext.value = nextOperaContext(_operaContext.value, file, context)
+        android.util.Log.d("PlayerManager", "OperaContext sourceId=${_operaContext.value?.sourceId} path=${_operaContext.value?.trackPath}")
 
         // 记录本地路径供上下切歌使用
         if (localPath != null) downloadedPaths[file.fileId] = localPath
@@ -574,6 +593,8 @@ class PlayerManager @Inject constructor(
         _operaFile.value = null
         _operaPlaylist.value = emptyList()
         _operaIndex.value = -1
+        _operaContext.value = null
+        _operaMediaMetadata.value = null
         controller?.stop()
     }
 
@@ -591,3 +612,18 @@ class PlayerManager @Inject constructor(
 
 /** 戏曲播放循环模式。 */
 enum class OperaRepeatMode { ALL, ONE, RANDOM }
+
+/**
+ * 戏曲点播上下文：sourceId=0 是约定值，表示本地直连（MediaStore/文件路径，无库记录无鉴权）。
+ * 附属文件（歌词/封面）靠它找回浏览器与凭证。
+ */
+data class OperaPlayContext(val sourceId: Long, val trackPath: String)
+
+/** 纯函数便于单测：显式 context 优先；内部切段保留 sourceId 只换 trackPath；无路可推时保持旧值。 */
+internal fun nextOperaContext(
+    old: OperaPlayContext?,
+    file: OperaAudioFile,
+    explicit: OperaPlayContext?
+): OperaPlayContext? = explicit ?: old?.let { o ->
+    (file.sourcePath ?: file.downloadUrl)?.let { o.copy(trackPath = it) } ?: o
+}
