@@ -187,6 +187,24 @@ class WebDavClient @Inject constructor() {
         return url
     }
 
+    /** GET 指定路径的附属文件字节（歌词/封面）。404、鉴权失败、网络异常统一走 Result.failure，不抛。 */
+    suspend fun getBytes(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+        try {
+            val request = Request.Builder()
+                .url(normalizeUrl(path))
+                .header("Authorization", authHeader())
+                .get()
+                .build()
+            client.newCall(request).execute().use { resp ->
+                val body = resp.body
+                if (!resp.isSuccessful || body == null) Result.failure(Exception("HTTP ${resp.code}"))
+                else Result.success(body.bytes())
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ========== 工具方法 ==========
 
     private fun normalizeUrl(path: String): String {

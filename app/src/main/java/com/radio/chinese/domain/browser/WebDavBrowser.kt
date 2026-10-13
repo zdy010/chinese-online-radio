@@ -39,6 +39,11 @@ class WebDavBrowser(
         webDavClient.verifyConnection()
     }
 
+    override suspend fun readSidecar(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+        applyCredentials()
+        webDavClient.getBytes(path)
+    }
+
     private fun applyCredentials() {
         webDavClient.serverUrl = serverUrl
         webDavClient.username = username

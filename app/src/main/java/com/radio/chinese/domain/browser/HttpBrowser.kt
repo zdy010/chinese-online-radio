@@ -35,4 +35,16 @@ class HttpBrowser(private val okHttpClient: OkHttpClient) : AudioBrowser {
     }
 
     override fun isStreamSource(): Boolean = true
+
+    override suspend fun readSidecar(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+        try {
+            okHttpClient.newCall(Request.Builder().url(path).build()).execute().use { r ->
+                val b = r.body
+                if (r.isSuccessful && b != null) Result.success(b.bytes())
+                else Result.failure(Exception("HTTP ${r.code}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

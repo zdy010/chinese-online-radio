@@ -30,6 +30,35 @@ class LocalBrowser(private val context: Context) : AudioBrowser {
     override fun isStreamSource(): Boolean = false
 
     /**
+     * 读附属文件（同名 .lrc/.jpg）：MediaStore 曲目只给 content:// URI，而歌词封面不在媒体索引里，
+     * 必须先回查 DATA 列换成文件系统路径再直读。canRead 失败即 failure；
+     * Android 11+ 作用域存储可能拒读非媒体文件，本地源 sidecar 支持以真机裁决为准。
+     */
+    override suspend fun readSidecar(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+        try {
+            val real = if (path.startsWith("content://")) {
+                queryDataColumn(android.net.Uri.parse(path))
+                    ?: return@withContext Result.failure(Exception("MediaStore 无文件路径"))
+            } else path
+            val file = java.io.File(real)
+            if (!file.canRead()) Result.failure(Exception("不可读: ${file.name}"))
+            else Result.success(file.readBytes())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun queryDataColumn(uri: android.net.Uri): String? =
+        context.contentResolver.query(
+            uri, arrayOf(android.provider.MediaStore.MediaColumns.DATA), null, null, null
+        )?.use { c ->
+            if (c.moveToFirst()) {
+                val i = c.getColumnIndex(android.provider.MediaStore.MediaColumns.DATA)
+                if (i >= 0) c.getString(i) else null
+            } else null
+        }
+
+    /**
      * 扫描所有音频文件，按文件夹分组，返回文件夹列表（根目录）
      */
     private fun scanFolderStructure(): List<AudioTrack> {
