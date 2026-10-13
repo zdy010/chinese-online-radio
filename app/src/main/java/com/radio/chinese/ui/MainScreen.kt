@@ -23,6 +23,7 @@ import com.radio.chinese.ui.audio.AudioMainScreen
 import com.radio.chinese.ui.diagnostics.DiagnosticsScreen
 import com.radio.chinese.ui.keysettings.KeySettingsScreen
 import com.radio.chinese.ui.navigation.Screen
+import com.radio.chinese.ui.player.OperaPlayerScreen
 import com.radio.chinese.ui.player.PlayerScreen
 import com.radio.chinese.ui.radio.RadioScreen
 import com.radio.chinese.ui.settings.SettingsScreen
@@ -62,6 +63,13 @@ fun RadioNavGraph(
             AudioMainScreen(
                 playerManager = playerManager,
                 onOpenPlayer = { navController.navigate(Screen.OperaPlayer.route) }
+            )
+        }
+
+        composable(Screen.OperaPlayer.route) {
+            OperaPlayerScreen(
+                playerManager = playerManager,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
