@@ -29,6 +29,7 @@ data class LibraryUiState(
 
     // Browse state
     val browsingSource: AudioSource? = null,
+    val showBrowseContent: Boolean = false,
     val browsePath: String = "",
     val browseItems: List<AudioTrack> = emptyList(),
     val browseHistory: List<String> = emptyList(),
@@ -38,13 +39,31 @@ data class LibraryUiState(
     val isPlaying: Boolean = false,
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
+    val bitrateBps: Int = 0,
     val playError: String? = null,
+    val repeatMode: RepeatMode = RepeatMode.ALL,
+    val playlistIndex: Int = -1,
 
     // Favorites & Recent
     val favorites: List<AudioFavoriteEntity> = emptyList(),
     val recentPlays: List<AudioRecentEntity> = emptyList(),
-    val showFavorites: Boolean = false
+    val showFavorites: Boolean = false,
+    val searchQuery: String = ""
 )
+
+enum class RepeatMode { ALL, ONE, RANDOM }
+
+private fun RepeatMode.toService(): com.radio.chinese.service.OperaRepeatMode = when (this) {
+    RepeatMode.ALL -> com.radio.chinese.service.OperaRepeatMode.ALL
+    RepeatMode.ONE -> com.radio.chinese.service.OperaRepeatMode.ONE
+    RepeatMode.RANDOM -> com.radio.chinese.service.OperaRepeatMode.RANDOM
+}
+
+private fun com.radio.chinese.service.OperaRepeatMode.toUi(): RepeatMode = when (this) {
+    com.radio.chinese.service.OperaRepeatMode.ALL -> RepeatMode.ALL
+    com.radio.chinese.service.OperaRepeatMode.ONE -> RepeatMode.ONE
+    com.radio.chinese.service.OperaRepeatMode.RANDOM -> RepeatMode.RANDOM
+}
 
 @HiltViewModel
 class AudioLibraryViewModel @Inject constructor(
@@ -67,7 +86,15 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch { playerManager.isPlaying.collect { v -> _state.update { it.copy(isPlaying = v) } } }
         viewModelScope.launch { playerManager.operaPosition.collect { v -> _state.update { it.copy(positionMs = v) } } }
         viewModelScope.launch { playerManager.operaDuration.collect { v -> _state.update { it.copy(durationMs = v) } } }
+        viewModelScope.launch { playerManager.operaBitrate.collect { v -> _state.update { it.copy(bitrateBps = v) } } }
+        viewModelScope.launch { playerManager.operaFile.collect { file ->
+            if (file != null) _state.update { it.copy(currentTrack = it.currentTrack?.copy(name = file.name)) }
+        } }
         viewModelScope.launch { playerManager.error.collect { v -> _state.update { it.copy(playError = v) } } }
+        // 循环模式的单一事实源在 PlayerManager（它才能真的影响下一首）
+        viewModelScope.launch {
+            playerManager.operaRepeatMode.collect { mode -> _state.update { it.copy(repeatMode = mode.toUi()) } }
+        }
         // 订阅收藏与最近播放
         viewModelScope.launch { repository.favorites.collect { favs -> _state.update { s -> s.copy(favorites = favs) } } }
         viewModelScope.launch { repository.recentPlays.collect { recents -> _state.update { s -> s.copy(recentPlays = recents) } } }
@@ -85,6 +112,8 @@ class AudioLibraryViewModel @Inject constructor(
 
     fun showAddDialog() = _state.update { it.copy(showAddDialog = true) }
     fun hideAddDialog() = _state.update { it.copy(showAddDialog = false, error = null) }
+
+    fun updateSearchQuery(q: String) = _state.update { it.copy(searchQuery = q) }
 
     fun addSource(name: String, type: SourceType, url: String, username: String, password: String) {
         // 解析隐藏快捷码
@@ -121,10 +150,11 @@ class AudioLibraryViewModel @Inject constructor(
 
     private fun resolveShortcut(name: String, type: SourceType, url: String, username: String, password: String): ShortcutRes {
         if (type != SourceType.WEBDAV) return ShortcutRes(name, type, url, username, password)
-        return when (url.trim()) {
-            "xxx1" -> ShortcutRes("123云盘·豫剧", SourceType.WEBDAV, "xxx://xxx.xxx.cn/xxx", "xxx", "xxx")
-            "xxx2" -> ShortcutRes("123云盘", SourceType.WEBDAV, "xxx://xxx.xxx.cn/xxx", "xxx", "xxx")
-            else -> ShortcutRes(name, type, url, username, password)
+        val entry = com.radio.chinese.config.EasterEggConfig.QUICK_CODES[url.trim()]
+        return if (entry != null) {
+            ShortcutRes(entry.name, entry.type, entry.url, entry.username, entry.password)
+        } else {
+            ShortcutRes(name, type, url, username, password)
         }
     }
 
@@ -136,7 +166,7 @@ class AudioLibraryViewModel @Inject constructor(
 
     fun browseSource(source: AudioSource) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null, browsingSource = source, browsePath = "", browseHistory = emptyList()) }
+            _state.update { it.copy(isLoading = true, error = null, browsingSource = source, showBrowseContent = true, browsePath = "", browseHistory = emptyList()) }
             val browser = createBrowser(source)
             repository.refreshSource(source, "", browser)
                 .onSuccess { items ->
@@ -167,7 +197,7 @@ class AudioLibraryViewModel @Inject constructor(
         val history = _state.value.browseHistory
         if (history.isEmpty()) {
             // 回到来源列表
-            _state.update { it.copy(browsingSource = null, browseItems = emptyList(), browsePath = "", browseHistory = emptyList()) }
+            _state.update { it.copy(browsingSource = null, showBrowseContent = false, browseItems = emptyList(), browsePath = "", browseHistory = emptyList()) }
             return
         }
         val prev = history.dropLast(1)
@@ -207,27 +237,74 @@ class AudioLibraryViewModel @Inject constructor(
         val source = _state.value.browsingSource ?: return
         val browser = createBrowser(source)
         val uri = browser.resolveUri(track)
-        val file = com.radio.chinese.domain.model.OperaAudioFile(
-            fileId = track.path.hashCode().toLong(),
-            name = track.name,
-            size = track.size,
-            categoryName = source.name,
-            operaName = track.parentPath.substringAfterLast("/"),
-            downloadUrl = uri
-        )
-        playerManager.playOperaFile(file, emptyList())
-        _state.update { it.copy(currentTrack = track) }
-        // 记录最近播放
+
+        // 构建播放列表（当前浏览目录中的非文件夹文件）
+        val playlist = _state.value.browseItems.filter { !it.isFolder }.map { item ->
+            com.radio.chinese.domain.model.OperaAudioFile(
+                fileId = item.id.toLongOrNull() ?: item.path.hashCode().toLong(),
+                name = item.name,
+                size = item.size,
+                categoryName = source.name,
+                operaName = item.parentPath.substringAfterLast("/"),
+                downloadUrl = if (item.id == track.id) uri else browser.resolveUri(item),
+                sourcePath = item.path
+            )
+        }
+        val index = playlist.indexOfFirst { it.fileId.toString() == track.id || it.name == track.name }
+        val file = playlist.getOrElse(index) {
+            com.radio.chinese.domain.model.OperaAudioFile(
+                fileId = track.path.hashCode().toLong(),
+                name = track.name,
+                size = track.size,
+                categoryName = source.name,
+                operaName = track.parentPath.substringAfterLast("/"),
+                downloadUrl = uri,
+                sourcePath = track.path
+            )
+        }
+        playerManager.playOperaFile(file, playlist, context = com.radio.chinese.service.OperaPlayContext(source.id, track.path))
+        _state.update { it.copy(currentTrack = track, playlistIndex = index.coerceAtLeast(0)) }
         viewModelScope.launch {
             repository.recordPlay(source.id, track.path, track.name, source.name)
         }
     }
 
-    fun toggleFavorite(trackPath: String, trackName: String, sourceName: String) {
-        val source = _state.value.browsingSource ?: return
-        viewModelScope.launch {
-            repository.toggleFavorite(source.id, trackPath, trackName, sourceName)
+    fun seekTo(posMs: Long) = playerManager.seekOperaTo(posMs)
+    fun playNext() = playerManager.playOperaNext()
+    fun playPrevious() = playerManager.playOperaPrevious()
+
+    /**
+     * 收藏/取消收藏。
+     *
+     * 旧实现从 browsingSource 取 sourceId，在收藏页里它是 null，
+     * 导致收藏页的删除按钮静默失效，因此改为由调用方传入真正的 sourceId。
+     */
+    fun toggleFavorite(sourceId: Long, trackPath: String, trackName: String, sourceName: String) {
+        if (sourceId <= 0L) {
+            _state.update { it.copy(playError = "这条收藏缺少来源信息，无法取消，请重新添加收藏") }
+            return
         }
+        // 乐观更新 UI
+        val isNowFav = !_state.value.favorites.any { it.trackPath == trackPath }
+        _state.update { s ->
+            val newFavs = if (isNowFav)
+                s.favorites + AudioFavoriteEntity(trackPath = trackPath, trackName = trackName, sourceName = sourceName, sourceId = sourceId)
+            else
+                s.favorites.filter { it.trackPath != trackPath }
+            s.copy(favorites = newFavs)
+        }
+        viewModelScope.launch {
+            repository.toggleFavorite(sourceId, trackPath, trackName, sourceName)
+        }
+    }
+
+    /** 从收藏列表项直接取消，用收藏自带的 sourceId。 */
+    fun removeFavorite(fav: AudioFavoriteEntity) {
+        toggleFavorite(fav.sourceId, fav.trackPath, fav.trackName, fav.sourceName)
+    }
+
+    fun cycleRepeatMode() {
+        playerManager.cycleOperaRepeatMode()
     }
 
     fun isFavorited(trackPath: String): Boolean {
@@ -265,8 +342,8 @@ class AudioLibraryViewModel @Inject constructor(
         playerManager.playOperaFile(
             com.radio.chinese.domain.model.OperaAudioFile(
                 fileId = track.path.hashCode().toLong(), name = track.name, size = 0,
-                categoryName = source.name, operaName = "", downloadUrl = uri
-            ), emptyList()
+                categoryName = source.name, operaName = "", downloadUrl = uri, sourcePath = track.path
+            ), emptyList(), context = com.radio.chinese.service.OperaPlayContext(source.id, track.path)
         )
         _state.update { it.copy(currentTrack = track, browsingSource = source) }
         viewModelScope.launch {
