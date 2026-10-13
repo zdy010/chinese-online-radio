@@ -36,10 +36,8 @@ class LocalBrowser(private val context: Context) : AudioBrowser {
      */
     override suspend fun readSidecar(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
         try {
-            val real = if (path.startsWith("content://")) {
-                queryDataColumn(android.net.Uri.parse(path))
-                    ?: return@withContext Result.failure(Exception("MediaStore 无文件路径"))
-            } else path
+            val real = resolveDataPath(path)
+                ?: return@withContext Result.failure(Exception("MediaStore 无文件路径"))
             val file = java.io.File(real)
             if (!file.canRead()) Result.failure(Exception("不可读: ${file.name}"))
             else Result.success(file.readBytes())
@@ -47,6 +45,10 @@ class LocalBrowser(private val context: Context) : AudioBrowser {
             Result.failure(e)
         }
     }
+
+    /** content:// 经 DATA 列换文件系统路径；文件系统路径原样返回；解不出返回 null。 */
+    internal fun resolveDataPath(path: String): String? =
+        if (path.startsWith("content://")) queryDataColumn(android.net.Uri.parse(path)) else path
 
     private fun queryDataColumn(uri: android.net.Uri): String? =
         context.contentResolver.query(
