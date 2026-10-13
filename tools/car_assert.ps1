@@ -29,7 +29,23 @@ if (-not $InFile) {
 }
 if (-not (Test-Path $src)) { "ERROR: 找不到 $src（先用 cap.ps1 采集，或去掉 -InFile）"; exit 2 }
 [xml]$doc = Get-Content $src -Raw -Encoding UTF8
+
+# 先取屏幕根节点边界：下面判断“是否被裁切”要用。
+# uiautomator 对被部分裁切的节点上报的是**剩余可见部分**的 bounds，
+# 于是一个 88dp 的 chip 会读成 21dp。拿这种残缺尺寸判命中区违规是假阳性，
+# 本项目就因此误报过一个并不存在的“车机对话框 Dimens 失效”缺陷。
+#
+# 注意这里的参照物只能到**窗口边界**：整页滚动时控件被屏幕底边裁到，这里能挑出来；
+# 而对话框/内层滚动容器把自己的子控件裁短时，切割线在窗口内部（实测在 y=296 与
+# y=2107/2163），这里抓不到。那种情况必须多帧滚动重采：同一个控件在某一帧
+# 量到 >= 阈值即说明它本来的尺寸达标，稳定偏矮才是真缺陷。
+$root = $doc.DocumentElement.FirstChild
+$rm = [regex]::Match($root.GetAttribute("bounds"), '\[(\d+),(\d+)\]\[(\d+),(\d+)\]')
+$scrR = 999999; $scrB = 999999
+if ($rm.Success) { $scrR = [int]$rm.Groups[3].Value; $scrB = [int]$rm.Groups[4].Value }
+
 $viol = New-Object System.Collections.Generic.List[string]
+$clipped = New-Object System.Collections.Generic.List[string]
 function Walk($nodes) {
   foreach ($c in $nodes) {
     if ($c.GetAttribute("clickable") -eq "true") {
@@ -39,9 +55,16 @@ function Walk($nodes) {
         $h = ([int]$m.Groups[4].Value - [int]$m.Groups[2].Value) / $density
         # 小于 1dp 的节点是被裁切或不可见，不计入
         if ($w -ge 1 -and $h -ge 1 -and ($w -lt $minDp -or $h -lt $minDp)) {
+          $x1 = [int]$m.Groups[1].Value; $y1 = [int]$m.Groups[2].Value
+          $x2 = [int]$m.Groups[3].Value; $y2 = [int]$m.Groups[4].Value
           $lab = $c.GetAttribute("content-desc")
           if (-not $lab) { $lab = $c.GetAttribute("text") }
-          $viol.Add(("{0}x{1}dp '{2}' {3}" -f [math]::Round($w, 1), [math]::Round($h, 1), $lab, $m.Value))
+          # 边缘接触 = 尺寸不可采信，单独报，不混进违规清单
+          if ($x1 -lt 0 -or $y1 -lt 0 -or $x2 -ge $scrR - 2 -or $y2 -ge $scrB - 2) {
+            $clipped.Add(("{0}x{1}dp '{2}' {3}" -f [math]::Round($w, 1), [math]::Round($h, 1), $lab, $m.Value))
+          } else {
+            $viol.Add(("{0}x{1}dp '{2}' {3}" -f [math]::Round($w, 1), [math]::Round($h, 1), $lab, $m.Value))
+          }
         }
       }
     }
@@ -54,6 +77,16 @@ if ($viol.Count -eq 0) {
 } else {
   "VIOLATIONS ($($viol.Count)) 阈值 $minDp dp @ density $density"
   $viol | ForEach-Object { "  $_" }
+}
+if ($clipped.Count -gt 0) {
+  # 这些节点只量到了被裁切后的可见部分，不能得出达标与否的结论：滚动后再采一帧才算
+  "UNCERTAIN ($($clipped.Count)) 贴窗口边被裁切、尺寸不可采信（需滚动后重采）"
+  $clipped | ForEach-Object { "  $_" }
+}
+if ($viol.Count -gt 0) {
+  # 单帧无法区分“真矮”与“被内层容器裁短”。不排掉这一层就会再次把测量问题当产品缺陷。
+  "提示：以上违规仍可能包含被对话框/滚动容器裁切的节点。"
+  "请沿同一控件多滚几屏重采：只要有一帧达到阈值，就是裁切而非违规。"
 }
 
 # 第 2 项断言：可点控件必须落在屏幕内。被裁到屏外的节点在 dump 里仍然带完整尺寸，
