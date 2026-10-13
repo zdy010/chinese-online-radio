@@ -24,7 +24,6 @@ import com.radio.chinese.ui.common.StatusChip
 import com.radio.chinese.ui.common.stationSubtitle
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
-import com.radio.chinese.ui.theme.LocalUiSurface
 import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.launch
 
@@ -402,18 +401,20 @@ private fun AddStationDialog(
     var showCategoryMenu by remember { mutableStateOf(false) }
 
     val isValid = name.isNotBlank() && streamUrl.isNotBlank()
-    // AlertDialog 的内容是独立组合窗口，拿不到应用层提供的 LocalUiSurface，
-    // 对话框里 isCarSurface() 会永远得到默认的 Phone，Dimens 换档全部失效
-    // （车机档实测：加了 carTouchTarget 的 chip 仍是 70dp）。
-    // 在应用层把形态抓住，再显式带进对话框组合。
-    val surface = LocalUiSurface.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("添加自定义电台") },
         text = {
             // 可滚动：五个输入框 + 分类菜单，键盘弹起或大字号下“添加”会不可达
-            CompositionLocalProvider(LocalUiSurface provides surface) {
+            //
+            // 这里不要再把 LocalUiSurface 用 CompositionLocalProvider 显式带进对话框：
+            // 此前注释断言“AlertDialog 是独立组合窗口、拿不到应用层形态，Dimens 换档全失效”，
+            // 那个结论来自由于读错了量的尺子——贴着对话框底边被裁切的 chip
+            // 在 uiautomator 里上报的是剩余可见高度（88dp 会读成 21dp）。
+            // 2026-10-13 A/B 实测：删掉 provider 后（debug 包），四个分组 16 个 chip
+            // 仍然全部 88.0dp、命中区违规 0，与带 provider 的包逐一一致。
+            // 形态 local 本来就会随对话框内容一起传递，其余对话框无需特殊处理。
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -512,7 +513,6 @@ private fun AddStationDialog(
                         }
                     }
                 }
-            }
             }
         },
         confirmButton = {
