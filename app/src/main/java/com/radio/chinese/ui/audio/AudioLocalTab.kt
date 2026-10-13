@@ -120,11 +120,15 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager, search
                                         fileId = ai.path.hashCode().toLong(),
                                         name = ai.name, size = ai.size,
                                         categoryName = "本地", operaName = "",
-                                        downloadUrl = ai.path
+                                        downloadUrl = ai.path,
+                                        sourcePath = ai.path
                                     )
                                 }
                                 val index = audioItems.indexOfFirst { it.path == item.path }.coerceAtLeast(0)
-                                playerManager.playOperaFile(playlist[index], playlist)
+                                playerManager.playOperaFile(
+                                    playlist[index], playlist,
+                                    context = com.radio.chinese.service.OperaPlayContext(0L, item.path)
+                                )
                             }
                         }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
