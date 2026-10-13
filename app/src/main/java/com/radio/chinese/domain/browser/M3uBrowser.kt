@@ -33,6 +33,18 @@ class M3uBrowser @Inject constructor(
 
     override fun isStreamSource(): Boolean = false
 
+    override suspend fun readSidecar(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+        try {
+            okHttpClient.newCall(Request.Builder().url(path).build()).execute().use { r ->
+                val b = r.body
+                if (r.isSuccessful && b != null) Result.success(b.bytes())
+                else Result.failure(Exception("HTTP ${r.code}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun parseM3u(content: String, baseUrl: String): List<AudioTrack> {
         val tracks = mutableListOf<AudioTrack>()
         var currentTitle: String? = null
