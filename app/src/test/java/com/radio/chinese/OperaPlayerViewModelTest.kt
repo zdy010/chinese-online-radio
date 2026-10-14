@@ -130,6 +130,29 @@ class OperaPlayerViewModelTest {
         assertEquals(0, sidecar.imageCalls)
     }
 
+    @Test fun embeddedArtworkClearedOnTrackSwitch() = runTest {
+        // 终审 C1：A 段带内嵌封面，换到无封面的 B 段——旧 artwork 不得挂在 B 上。
+        // 真实链路里段落边界由 PlayerManager 重置 operaMediaMetadata=null，
+        // 本测试验证 VM 对“新段+元数据已清空”不会残留旧封面
+        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        val mdA = MediaMetadata.Builder().setArtworkData(byteArrayOf(1, 2, 3), null).build()
+        metaFlow.value = mdA
+        val vm = OperaPlayerViewModel(pm, FakeSidecar(lyrics = { Result.failure(Exception("NOT_FOUND")) }))
+        fileFlow.value = opera(1L); ctxFlow.value = ctx1
+        runCurrent()
+        assertEquals(CoverSource.EMBEDDED, vm.uiState.value.coverSource)
+        // 换段瞬间：PlayerManager 尚未重置元数据（md 仍是 A 的），
+        // 内嵌收集器会把 A 的 artwork 写进 B 的键上——这就是 C1 的污染窗口
+        fileFlow.value = opera(2L)
+        ctxFlow.value = OperaPlayContext(7L, "/dav/a2.mp3")
+        runCurrent()
+        // B 段真正的元数据到达：无内嵌封面（artworkData=null）
+        metaFlow.value = null
+        runCurrent()
+        assertEquals(CoverSource.NONE, vm.uiState.value.coverSource)
+        assertEquals(null, vm.uiState.value.coverBytes)
+    }
+
     @Test fun noContextClearsEverything() = runTest {
         Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
         val vm = OperaPlayerViewModel(pm, FakeSidecar(lyrics = { Result.success(twoLines) }))

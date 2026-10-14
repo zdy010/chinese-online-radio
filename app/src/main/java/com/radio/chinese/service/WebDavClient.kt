@@ -188,11 +188,17 @@ class WebDavClient @Inject constructor() {
     }
 
     /** GET 指定路径的附属文件字节（歌词/封面）。404、鉴权失败、网络异常统一走 Result.failure，不抛。 */
-    suspend fun getBytes(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+    suspend fun getBytes(path: String): Result<ByteArray> = getBytes(path, serverUrl, username, password)
+
+    /**
+     * 显式凭证版 GET：sidecar 取料在 IO 线程上与列表页并发时，不读写单例可变凭证字段——
+     * 否则多账号源（123 云盘四个快捷码）会把 B 账号的 Basic 凭证发往 A 主机（终审 I2）。
+     */
+    suspend fun getBytes(path: String, serverUrl: String, username: String, password: String): Result<ByteArray> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
-                .url(normalizeUrl(path))
-                .header("Authorization", authHeader())
+                .url(normalizeUrl(path, serverUrl))
+                .header("Authorization", Credentials.basic(username, password))
                 .get()
                 .build()
             client.newCall(request).execute().use { resp ->
@@ -207,7 +213,9 @@ class WebDavClient @Inject constructor() {
 
     // ========== 工具方法 ==========
 
-    private fun normalizeUrl(path: String): String {
+    private fun normalizeUrl(path: String): String = normalizeUrl(path, serverUrl)
+
+    internal fun normalizeUrl(path: String, serverUrl: String): String {
         val base = serverUrl.trimEnd('/')
         // 如果path是根路径"/"，直接返回base URL（避免URI.resolve替换掉已有的path部分）
         if (path == "/" || path.isEmpty()) return base
