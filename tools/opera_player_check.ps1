@@ -11,7 +11,9 @@ $pkg = "com.radio.chinese.debug"
 $out = Join-Path (Split-Path $PSScriptRoot -Parent) ".qtest"
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 $fails = 0
-function Check($cond, [string]$what) { if ($cond) { "PASS: $what" } else { "FAIL: $what"; $script:fails++ } }
+$ran = 0
+# 每条 Check 计入分母；结尾校验执行数下限，防“断言被 if 跳过也报 ALL PASS”（终审 I4）
+function Check($cond, [string]$what) { $script:ran++; if ($cond) { "PASS: $what" } else { "FAIL: $what"; $script:fails++ } }
 function Dump([string]$name) {
   # 切密度/转屏瞬间 uiautomator 会回 null root 不落盘：重试直到拿到非空树，防“旧文件冒充本次抓取”
   for ($i = 1; $i -le 8; $i++) {
@@ -99,9 +101,8 @@ Check ((Has $d "上一段") -and (Has $d "下一段")) "新页: 上/下一段"
 Check ((Has $d "暂停播放") -or (Has $d "继续播放")) "新页: 播放/暂停"
 Check (Has $d "停止播放") "新页: 停止"
 Check ((Has $d "后退 10 秒") -and (Has $d "前进 10 秒")) "新页: ±10 秒（有时长）"
-# 内容区三态：封面/歌词/占位都算达标（本地源 .lrc 在 Android 11+ 模拟器上受作用域存储限制，
-# 歌词真阳性由真机 WebDAV 端到端裁决；占位文案本身也是验收项）
-Check ((Has $d "专辑封面") -or (Has $d "第一句 测试歌词") -or (HasTextLike $d "暂无歌词|正在加载歌词")) "新页: 内容区三态之一(封面/歌词/占位提示)"
+# 歌词真阳性：本地同名 .lrc 必须可见（夹具自带 lrc，看不到就是链路断，不给“占位也算过”的后门）
+Check (Has $d "第一句 测试歌词") "新页: 歌词真阳性(本地 .lrc 加载成功)"
 if ((Has $d "专辑封面") -and (Has $d "第一句 测试歌词")) {
   # 双页态：横滑切页后歌词可见
   $scr = ((& $adb shell wm size) -join " "); $m = [regex]::Match($scr, '(\d+)x(\d+)')
@@ -110,12 +111,15 @@ if ((Has $d "专辑封面") -and (Has $d "第一句 测试歌词")) {
   Start-Sleep -Milliseconds 900
   Check (Has (Dump "swiped") "第一句 测试歌词") "新页: 封面→歌词滑动切换"
 }
-# 点歌词行跳播（仅当歌词可见；不可见则真机 WebDAV 补验）
+# 点歌词行跳播：seek 真生效的硬证据 = 时间文本落到被点行的时间戳（00:08，给 ±3s 容差）
 $d3 = Dump "lyrictap"
 if (Tap $d3 "第二句 点我应该跳转") {
   $d4 = Dump "lyrictap_after"
   $t = (@($d4.SelectNodes("//*")) | Where-Object { $_.GetAttribute("text") -match '^\d+:\d\d' } | Select-Object -First 1)
-  if ($t) { Check $true "新页: 点歌词后时间文本存在($($t.GetAttribute('text')))" } else { Check $false "新页: 点歌词后时间文本缺失" }
+  $txt = if ($t) { $t.GetAttribute("text") } else { "" }
+  Check ($txt -match '^0:0[5-9]') "新页: 点歌词行 seek 到 0:08(实测 $txt)"
+} else {
+  Check $false "新页: 歌词行不可点(点击入口丢失)"
 }
 # 返回不中断播放
 Tap (Dump "backfrom") "返回" | Out-Null
@@ -161,4 +165,6 @@ if (-not $SkipCar) {
     & $adb shell settings put system user_rotation 0 | Out-Null
   }
 }
-if ($fails -gt 0) { "RESULT: $fails 项失败"; exit 1 } else { "RESULT: ALL PASS"; exit 0 }
+if ($fails -gt 0) { "RESULT: $fails 项失败（共执行 $ran 条断言）"; exit 1 }
+if ($ran -lt 21) { "RESULT: 仅执行了 $ran 条断言(<21)，有断言被跳过，不算通过"; exit 1 }
+"RESULT: ALL PASS（$ran 条断言全部执行）"; exit 0
