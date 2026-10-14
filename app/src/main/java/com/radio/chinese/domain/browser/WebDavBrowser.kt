@@ -40,8 +40,9 @@ class WebDavBrowser(
     }
 
     override suspend fun readSidecar(path: String): Result<ByteArray> = withContext(Dispatchers.IO) {
-        applyCredentials()
-        webDavClient.getBytes(path)
+        // 不走 applyCredentials：sidecar 取料与列表页并发，凭证随调用显式传入，
+        // 不读写单例可变字段（终审 I2）
+        webDavClient.getBytes(path, serverUrl, username, password)
     }
 
     private fun applyCredentials() {

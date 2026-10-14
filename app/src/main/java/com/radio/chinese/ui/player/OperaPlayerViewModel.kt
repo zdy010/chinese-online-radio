@@ -85,12 +85,14 @@ class OperaPlayerViewModel @Inject constructor(
                 }
             }
         }
-        // 内嵌封面：artworkData 一到就落位，并把同段的 sidecar 图挤掉
+        // 内嵌封面：artworkData 一到就落位；新段元数据无图时只清 EMBEDDED 归属，
+        // 不碰已落位的 sidecar 图（终审 C1：旧段 artwork 不得常驻到新段）
         viewModelScope.launch {
             combine(keys, playerManager.operaMediaMetadata) { k, md -> k.first to md?.artworkData }
                 .collect { (fileId, art) ->
                     if (fileId == -1L) _uiState.update { it.copy(coverBytes = null, coverSource = CoverSource.NONE) }
                     else if (art != null && art.isNotEmpty()) _uiState.update { it.copy(coverBytes = art, coverSource = CoverSource.EMBEDDED) }
+                    else _uiState.update { if (it.coverSource == CoverSource.EMBEDDED) it.copy(coverBytes = null, coverSource = CoverSource.NONE) else it }
                 }
         }
         viewModelScope.launch {
@@ -105,8 +107,8 @@ class OperaPlayerViewModel @Inject constructor(
     private fun loadSidecars(ctx: OperaPlayContext) = flow {
         emit(SidecarEvent(clear = true))
         emit(SidecarEvent(lyricsStatus = LyricsStatus.LOADING))
-        // readLyrics 自身返回 Result，runCatching 只捕异常/取消：双层压平，超时与失败都落到 null
-        val text = runCatching { withTimeout(8_000) { sidecar.readLyrics(ctx) } }.getOrNull()?.getOrNull()
+        // 只吞“取料失败/超时”；协程取消必须原样上抛，否则换段后还会白自多发一次取料（终审 I1）
+        val text = runCatchingOp { withTimeout(8_000) { sidecar.readLyrics(ctx) } }?.getOrNull()
         val parsed = text?.let { LrcParser.parse(it) }
         emit(SidecarEvent(
             lyricsStatus = if (!parsed.isNullOrEmpty()) LyricsStatus.READY else LyricsStatus.MISSING,
@@ -115,10 +117,19 @@ class OperaPlayerViewModel @Inject constructor(
         // 现读元数据当前值：已有内嵌封面就不浪费 sidecar 图流量（更晚到的内嵌由上面收集器覆盖）
         val hasEmbedded = playerManager.operaMediaMetadata.value?.artworkData?.isNotEmpty() == true
         if (!hasEmbedded) {
-            val img = runCatching { withTimeout(8_000) { sidecar.readImage(ctx) } }.getOrNull()?.getOrNull()
+            val img = runCatchingOp { withTimeout(8_000) { sidecar.readImage(ctx) } }?.getOrNull()
             if (img != null && img.isNotEmpty()) emit(SidecarEvent(cover = img))
         }
     }
+
+    /** 取料容错：失败/超时返回 null；父协程取消原样重抛。
+     *  TimeoutCancellationException 是 CancellationException 的子类，必须先于父类型捕获，
+     *  否则超时会被当成取消重抛、状态永远卡在 LOADING（timeoutTreatedAsMissing 钉住）。 */
+    private suspend fun <T> runCatchingOp(block: suspend () -> Result<T>): Result<T>? =
+        try { block() }
+        catch (e: kotlinx.coroutines.TimeoutCancellationException) { null }
+        catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (e: Exception) { null }
 
     /** 点歌词行跳播：歌词播放器标配动作，seek 直调 PlayerManager。 */
     fun seekToLine(index: Int) {

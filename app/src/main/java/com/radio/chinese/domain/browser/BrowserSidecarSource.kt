@@ -55,7 +55,8 @@ class BrowserSidecarSource @Inject constructor(
         } else ctx.trackPath
         for (ext in exts) {
             val p = sidecarPath(base, ext)
-            val r = byteCache[p] ?: browser.readSidecar(p).also { byteCache[p] = it }
+            // 只缓存成功：弱网一次超时/竞态一次 403 不得把失败钉死到进程结束（终审 I3）
+            val r = byteCache[p] ?: browser.readSidecar(p).also { if (it.isSuccess) byteCache[p] = it }
             r.getOrNull()?.let { return map(it) }
         }
         return Result.failure(Exception("NOT_FOUND"))

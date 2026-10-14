@@ -419,6 +419,9 @@ class PlayerManager @Inject constructor(
         _operaIndex.value = index
         _operaFile.value = file
         _operaContext.value = nextOperaContext(_operaContext.value, file, context)
+        // 段落边界即失效：不重置的话，新段 prepare 完成前收集器会把上一段的
+        // artwork 当作新段封面贴回去（终审 C1）
+        _operaMediaMetadata.value = null
         android.util.Log.d("PlayerManager", "OperaContext sourceId=${_operaContext.value?.sourceId} path=${_operaContext.value?.trackPath}")
 
         // 记录本地路径供上下切歌使用
