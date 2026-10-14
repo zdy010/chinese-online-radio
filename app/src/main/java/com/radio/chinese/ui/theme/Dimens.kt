@@ -68,9 +68,11 @@ object Dimens {
     // 车机档正文限宽：超宽屏上不让内容从屏幕左拉到右，眼睛要横着找控件
     val CarContentMaxWidth: Dp = 1000.dp
 
-    // 全屏播放页横屏车机档右侧控件栏宽度（手机档单列不用）
+    // 全屏播放页横屏车机档右侧控件栏宽度（手机档单列不用）。
+    // 必须装得下主控件行五个 88dp 按钮（5×88=440）加左右留白；
+    // 原先 420dp 会把按钮压到 56dp，命中区直接跌破车机档下限。
     val PlayerSideWidth: Dp
-        @Composable get() = if (car) 420.dp else 0.dp
+        @Composable get() = if (car) 520.dp else 0.dp
 
     // 播放主控件：替换原先的 GapHuge * 2 与 40.dp 裸值
     val PlayButtonSize: Dp

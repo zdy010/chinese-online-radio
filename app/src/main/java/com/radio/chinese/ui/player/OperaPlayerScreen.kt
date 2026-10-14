@@ -137,7 +137,7 @@ fun OperaPlayerScreen(
             // 车机横屏：左信息+内容，右进度+大控件；±10 秒贴主播放键两侧在 ControlRow 内
             Row(Modifier.fillMaxSize().padding(padding)) {
                 Column(Modifier.weight(1f)) {
-                    info
+                    info()
                     contentArea(Modifier.weight(1f))
                 }
                 Column(
@@ -145,16 +145,16 @@ fun OperaPlayerScreen(
                         .width(Dimens.PlayerSideWidth)
                         .padding(end = Dimens.ScreenPadding, bottom = Dimens.GapLarge)
                 ) {
-                    slider
-                    controls
+                    slider()
+                    controls()
                 }
             }
         } else {
             Column(Modifier.fillMaxSize().padding(padding)) {
-                info
+                info()
                 contentArea(Modifier.weight(1f))
-                slider
-                controls
+                slider()
+                controls()
             }
         }
     }
@@ -223,8 +223,8 @@ private fun OperaContentArea(
                 }
             }
         }
-        hasCover -> CoverPage(state.coverBytes!!)
-        hasLyrics -> LyricPage(state, car, onLineClick)
+        hasCover -> Box(modifier.fillMaxSize()) { CoverPage(state.coverBytes!!) }
+        hasLyrics -> Box(modifier.fillMaxSize()) { LyricPage(state, car, onLineClick) }
         else -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
@@ -314,22 +314,40 @@ private fun ControlRow(
         OperaRepeatMode.ONE -> "单曲循环"
         OperaRepeatMode.RANDOM -> "随机播放"
     }
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextButton(onClick = onCycleRepeat) {
+    val repeatBtn = @Composable {
+        TextButton(
+            onClick = onCycleRepeat,
+            // 车机档循环按钮也要拿满 88dp 命中区（裸 TextButton 只有 48dp，验收脚本会判违规）
+            modifier = if (car) Modifier.heightIn(min = Dimens.TouchMin) else Modifier
+        ) {
             Text(repeatLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
-        Spacer(Modifier.weight(1f))
+    }
+    val stopBtn = @Composable {
+        IconButton(onClick = onStop, modifier = btnMod) {
+            Icon(Icons.Default.Close, "停止播放")
+        }
+    }
+    val seekBackBtn = @Composable {
         if (canSeek) {
             IconButton(onClick = onBackward, modifier = btnMod) {
                 Icon(Icons.Default.Replay10, "后退 10 秒", modifier = if (car) Modifier.size(Dimens.IconLarge) else Modifier)
             }
         }
+    }
+    val seekFwdBtn = @Composable {
+        if (canSeek) {
+            IconButton(onClick = onForward, modifier = btnMod) {
+                Icon(Icons.Default.Forward10, "前进 10 秒", modifier = if (car) Modifier.size(Dimens.IconLarge) else Modifier)
+            }
+        }
+    }
+    val prevBtn = @Composable {
         IconButton(onClick = onPrevious, modifier = btnMod) {
             Icon(Icons.Default.SkipPrevious, "上一段", modifier = Modifier.size(Dimens.IconMedium))
         }
+    }
+    val playBtn = @Composable {
         IconButton(onClick = onPlayPause, modifier = Modifier.size(Dimens.PlayButtonSize)) {
             Icon(
                 if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -337,17 +355,43 @@ private fun ControlRow(
                 modifier = Modifier.size(Dimens.PlayIconSize)
             )
         }
+    }
+    val nextBtn = @Composable {
         IconButton(onClick = onNext, modifier = btnMod) {
             Icon(Icons.Default.SkipNext, "下一段", modifier = Modifier.size(Dimens.IconMedium))
         }
-        if (canSeek) {
-            IconButton(onClick = onForward, modifier = btnMod) {
-                Icon(Icons.Default.Forward10, "前进 10 秒", modifier = if (car) Modifier.size(Dimens.IconLarge) else Modifier)
+    }
+    if (car) {
+        // 车机档：八个 88dp 按钮单行要 704dp，右侧控件栏装不下——
+        // 拆两行：主控制（±10/上下段/播放）居中，循环与停止分列两端
+        Column(Modifier.fillMaxWidth().padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapSmall)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                seekBackBtn()
+                prevBtn()
+                playBtn()
+                nextBtn()
+                seekFwdBtn()
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                repeatBtn()
+                Spacer(Modifier.weight(1f))
+                stopBtn()
             }
         }
-        Spacer(Modifier.weight(1f))
-        IconButton(onClick = onStop, modifier = btnMod) {
-            Icon(Icons.Default.Close, "停止播放")
+    } else {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeatBtn()
+            Spacer(Modifier.weight(1f))
+            seekBackBtn()
+            prevBtn()
+            playBtn()
+            nextBtn()
+            seekFwdBtn()
+            Spacer(Modifier.weight(1f))
+            stopBtn()
         }
     }
 }
