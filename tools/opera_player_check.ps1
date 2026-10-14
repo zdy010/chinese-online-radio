@@ -1,4 +1,4 @@
-param([switch]$SkipCar)
+param([switch]$SkipCar, [string]$Pkg = "com.radio.chinese.debug")
 # 音频库播放页验收：回归基线（迷你条控件不缩水）+ 入口跳转 + 新页控件 + 歌词 + 车机档 88dp。
 # 前提：设备在线；/sdcard/Music/opera_test/ 里有 demo.m4a(+demo.lrc，可选 demo.jpg 验双页态)。
 # 纪律1：开头清旧 opera_*.xml——本项目旧坑是拿旧产物冒充本次抓取。
@@ -6,8 +6,8 @@ param([switch]$SkipCar)
 $ErrorActionPreference = "Continue"
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
 # 注意：debug 构建的 applicationId 带 .debug 后缀（与设备上可能残留的 release 包并存），
-# 写死正式包名会调到旧 release 版——本项目实测踩过的假验收坑。
-$pkg = "com.radio.chinese.debug"
+# 写死正式包名会调到旧 release 版——本项目实测踩过的假验收坑。release 验收传 -Pkg com.radio.chinese。
+$pkg = $Pkg
 $out = Join-Path (Split-Path $PSScriptRoot -Parent) ".qtest"
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 $fails = 0
