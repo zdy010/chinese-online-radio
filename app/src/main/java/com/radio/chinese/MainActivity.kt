@@ -19,6 +19,7 @@ import com.radio.chinese.service.KeyCapture
 import com.radio.chinese.service.KeyDiagnostics
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.MainScreen
+import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.ChineseRadioTheme
 import com.radio.chinese.ui.theme.FontScaleOption
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,27 +48,18 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
 
         setContent {
-            val themeMode by preferences.themeMode.collectAsState(initial = 0)
+            // initial = SYSTEM：冷启动首帧的深浅结论必须和「无偏好」的解析结果一致，
+            // 否则首帧会闪一下别的配色再去对齐 Flow 的值。
+            val theme by preferences.theme.collectAsState(initial = AppTheme.SYSTEM)
             val fontScaleKey by preferences.fontScaleKey.collectAsState(initial = FontScaleOption.STANDARD.key)
             val uiMode by preferences.uiMode.collectAsState(initial = 0)
-            var currentThemeMode by remember { mutableIntStateOf(themeMode) }
-
-            LaunchedEffect(themeMode) {
-                currentThemeMode = themeMode
-            }
 
             ChineseRadioTheme(
-                themeMode = currentThemeMode,
+                theme = theme,
                 fontScale = FontScaleOption.fromKey(fontScaleKey).factor,
                 uiMode = uiMode
             ) {
-                MainScreen(
-                    playerManager = playerManager,
-                    themeMode = currentThemeMode,
-                    onThemeChanged = { mode ->
-                        currentThemeMode = mode
-                    }
-                )
+                MainScreen(playerManager = playerManager)
             }
         }
     }
