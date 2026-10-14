@@ -84,8 +84,8 @@ fun AppTheme.isDarkConsidering(systemDark: Boolean): Boolean = when (tone) {
 
 - 新增 `private val KEY_THEME_KEY = stringPreferencesKey("theme_key")`。
 - **不复用旧键名 `theme_mode`**：DataStore Preferences 里同名不同类型的键会撞车，读侧拿到非预期类型会静默失败。换名是最便宜的规避。
-- 暴露 `val themeKey: Flow<String>` 与 `suspend fun setThemeKey(key: String)`；`setThemeMode(Int)` 写入路径删除，`themeMode` 保留为只读迁移源。
-- 迁移在读取侧完成，单向：`theme_key` 有值即用；无值则 `AppTheme.fromLegacyMode(themeMode)`，并立即回写 `theme_key`。回写发生在 `RadioPreferences` 内部，不经过 ViewModel，避免迁移逻辑有两份。
+- 暴露 `val theme: Flow<AppTheme>`（已含新旧键合并）与 `suspend fun setThemeKey(key: String)`；`setThemeMode(Int)` 与 `themeMode: Flow<Int>` 都删除（已无调用点，留着就是两个真相源），`KEY_THEME_MODE` 仅作迁移读取源。`RadioPreferences` 因此引用 `ui.theme.AppTheme`，与本目录已有的 `availabilityToColor`（一个为 UI 服务的取值函数）同档取舍：多一个类型比多一处判定划算。
+- 迁移在读取侧一次合并，单向且**不回写**：有 `theme_key` 就用；无则 `AppTheme.fromLegacyMode(themeMode)`。合并在 `RadioPreferences.theme` 这一个 Flow 里做完，全树只有这一处。不回写的理由：DataStore 的 `Flow.map` 里写不了盘，要回写就得多一个冷启动写盘的副作用和一个调用点，而结论已经定死在 `AppTheme.fromStoredValues` 这个纯函数里，回写买不到任何东西。
 - 降级到老版本时读不到 `theme_key`，走 `theme_mode ?: 0` = 跟随系统，不崩、也不会静默显示成别的主题。
 
 ## 4. 解析入口与系统栏
@@ -145,15 +145,20 @@ LaunchedEffect(activity, dark) {
 
 ### 5.2 色调面板派生规则
 
-底色 `base` 向墨色 `ink` 线性插值，替代库默认灰阶。用 `androidx.compose.ui.graphics.lerp`（纯 sRGB 通道插值，确定性、可单测、不引依赖）：
+底色 `base` 向墨色 `ink` 线性插值，替代库默认灰阶。插值自己写通道算式而不是调 `androidx.compose.ui.graphics.lerp`：两者算法完全相同，但 `lerp` 属于 ui-graphics 的运行时入口，而 §8 的对比度不变式要在 **JVM 单测**里逐槽位跑（无 Android 运行时），自己算能把“单测跑不了”的风险归零。
 
 ```kotlin
 /**
  * 中性面板取色：从底色向墨色插值。
- * 深浅两档共用同一个函数——差别只在 tone 表，暗档插向白所以越界越亮，
+ * 深浅两档共用同一个函数——差别只在 tone 表，暗档插向白所以越高越亮，
  * 亮档插向黑所以越高越暗（M3 亮档本就靠加深表达层级）。
  */
-private fun tonal(base: Color, ink: Color, tone: Float): Color = lerp(base, ink, tone)
+internal fun tonal(base: Color, ink: Color, tone: Float): Color = Color(
+    red = base.red + (ink.red - base.red) * tone,
+    green = base.green + (ink.green - base.green) * tone,
+    blue = base.blue + (ink.blue - base.blue) * tone,
+    alpha = base.alpha,
+)
 ```
 
 tone 取值固定成两张表，实现时照抄，不许自行调整：
@@ -168,22 +173,24 @@ tone 取值固定成两张表，实现时照抄，不许自行调整：
 | surfaceBright | 0.16 | 0.00 |
 | surfaceDim | 0.00 | 0.12 |
 | surfaceVariant | 0.16 | 0.08 |
-| outline | 0.42 | 0.42 |
-| outlineVariant | 0.22 | 0.22 |
+| outline | 0.50 | 0.48 |
+| outlineVariant | 0.34 | 0.30 |
 | inverseSurface | 0.88 | 0.88 |
 | inverseOnSurface | 0.06 | 0.12 |
 
-两个 tone 是算过才定的，不是抄的，改动前请先看 §8 的断言：
+几个 tone 是算过才定的，不是抄的，改动前请先看 §8 的断言：
 
-- **outline = 0.42**：`outline` 承担 Card/OutlinedButton 描边，属非文本元素，WCAG 要求 ≥3:1。取 0.32 时纯黑档算出 `#525252`，对 `#000000` 只有 2.7:1，直接不达标；提到 0.42 得 `#6B6B6B`，对纯黑 3.9:1、对白底 5.3:1，两档都过。
+- **outline 暗档 = 0.50 / 亮档 = 0.48**：`outline` 承担 Card/OutlinedButton 描边，属非文本元素，WCAG 要求 ≥3:1。实测：0.32 时纯黑档得 `#525252`，对 `#000000` 只有 2.7:1；0.42 时 amber 得 2.9:1、soft_dark 得 3.02:1（一个不达标一个贴边）。暗档提到 0.50 后 amber 3.3:1、soft_dark 3.7:1、纯黑 5.3:1；亮档 0.48 对 `high_contrast` 白底 3.7:1、对两份暖底 3.3:1。
 - **inverseOnSurface 亮档 = 0.12**（不是 0.92）：`inverseSurface` 在亮档是深色面板（tone 0.88），它的 on 色必须是浅字；取 0.92 会得到深字压深底。暗档反过来取 0.06。这一对是 §8 断言里的 `inverseSurface / inverseOnSurface` 配对。
-- `outlineVariant` 只做分隔线，纯装饰，**不参与对比度断言**（0.22 在任何底上都远低于 3:1，这是设计意图，不是缺陷）。
+- `outlineVariant` 只做分隔线，纯装饰，**不参与对比度断言**（取 0.34/0.30 是为了在黑底上看得见一条线，不是为了达标）。
 
 派生规则不适用于 `system` / `classic_light` / `classic_dark`——这三项继续原样返回 `Theme.kt` 里现有的两份 `ColorScheme`，一个字节都不改。
 
 ### 5.3 覆写型主题的锚点值
 
-暗档 `onPrimary` / `onSecondary` / `onTertiary` 一律 = `lerp(base, 对应主色, 0.25)`；亮档一律 = `#FFFFFF`。所以表里只给需要人判断的列。
+暗档 `onPrimary` / `onSecondary` / `onTertiary` 一律 = `lerp(base, 对应主色, 0.18)`；亮档一律 = `#FFFFFF`。所以表里只给需要人判断的列。
+
+> 0.18 而非 0.25：取 0.25 时 `soft_dark` 的 primary/onPrimary 对只有 **4.1:1**，不达正文 4.5:1；改 0.18 后得 4.9:1，而 amber（7.1:1）与纯黑（9.2:1）本来就宽裕。tertiary 同理：`soft_dark` 的 onTertiary 在 0.18 下得 4.58:1，是全部配对里最紧的一条，改动 tone 时先看它。
 
 | 主题 | base | ink | inkSoft（=onSurfaceVariant / onSecondaryContainer 之外的次级文字） |
 |---|---|---|---|
@@ -245,9 +252,9 @@ amber 与 high_contrast 的两条特意要求：amber 的 secondary/tertiary 容
 1. `AppTheme.fromKey("没见过的键")` → SYSTEM；9 个 `key` 互不重复。
 2. `fromLegacyMode`：0→SYSTEM、1→CLASSIC_LIGHT、2→CLASSIC_DARK、任意其他值→SYSTEM。
 3. `isDarkConsidering`：LIGHT 恒 false、DARK 恒 true、SYSTEM 跟随入参。
-4. **对比度不变式（本设计的安全网）**：遍历 9 主题 × 有效深浅，对每对 `(容器, 前景)` 断言 WCAG 对比度——正文类配对 ≥4.5:1（primary/onPrimary、primaryContainer/onPrimaryContainer、secondary 系、tertiary 系、surface/onSurface、background/onBackground、surfaceVariant/onSurfaceVariant、inverseSurface/inverseOnSurface、surfaceContainer* 各档与 onSurface），非文本配对 ≥3:1（outline/surface、outline 与 surfaceContainerHighest）。`outlineVariant`、`scrim`、纯装饰的 `hint` 文字不在断言范围内（写明排除理由，否则实现的人会拿 3:1 去卡分隔线，把好看的线改粗）。这条能自动抓住唯一一类真实事故：漏改一个槽位导致白底白字，也让 §5.2 的派生 tone 表在被改动时立刻暴露。
+4. **对比度不变式（本设计的安全网）**：遍历 9 主题 × 有效深浅，对每对 `(容器, 前景)` 断言 WCAG 对比度——正文类配对 ≥4.5:1（primary/onPrimary、primaryContainer/onPrimaryContainer、secondary 系、tertiary 系、surface/onSurface、background/onBackground、surfaceVariant/onSurfaceVariant、inverseSurface/inverseOnSurface、surfaceContainer* 各档与 onSurface），非文本配对 ≥3:1（**仅** outline/surface）。`outlineVariant`、`scrim`、纯装饰的 `hint` 文字、以及「outline 对 surfaceContainerHighest」不在断言范围内——最后那条我自己算过：亮档 outline 对 containerHighest 只有 2.4:1，M3 自身默认值同样达不到，而分层本来由色调面板承担，写进断言只会逼人把描边改粗。这条能自动抓住唯一一类真实事故：漏改一个槽位导致白底白字，也让 §5.2 的派生 tone 表在被改动时立刻暴露。
 5. `resolveColorScheme` 对 `system` / `classic_light` / `classic_dark` 返回值与改造前的 `LightColorScheme` / `DarkColorScheme` **引用相等**，防止回归基线被派生规则污染。
-6. 迁移读侧：DataStore 只有 `theme_mode=2`、无 `theme_key` 时解析出 CLASSIC_DARK，且回写发生一次。
+6. 迁移读侧：`fromStoredValues(null, 2)` 解析出 CLASSIC_DARK、`fromStoredValues(null, 0)` 与全空解析出 SYSTEM、`fromStoredValues("amber", 2)` 不受旧键影响、`fromStoredValues("垃圾值", 2)` 回落 SYSTEM。合并逻辑是纯函数，因此不需要造 DataStore 也能把迁移钉死（Flow 接线部分由编译与 Task 5/6 的装机冒烟兼顾）。
 
 **UI 自动化**（沿用 `.qtest` 的 PowerShell + uiautomator 风格，含冷启动就绪轮询与权限预授权）：
 
@@ -296,3 +303,4 @@ amber 与 high_contrast 的两条特意要求：amber 的 secondary/tertiary 容
 2. **§2 轮次曾说「纯黑主题必须让 `surface` 与 `background` 留 1% 差，否则卡片边界消失」——此结论作废**。面板分离由 §5.2 的色调系列负责，`surface` 直接等于 `base`，不需要手动留差。
 3. 第 1 节批准的「删除 `currentThemeMode` 镜像与 `onThemeChanged` 透传」「旧 `theme_mode` 单向迁移不回滚」维持不变。
 4. **spec 自审阶段的三处修正**（写完后拿 §8 的算法逐条复核发现的，不是实现期才会遇到）：`outline` 派生 tone 由 0.32 提到 0.42（纯黑档 2.7:1 不达标）；亮档 `inverseOnSurface` 由 0.92 改为 0.12（原值会得到深字压深底）；`secondary` 主色由「降一档饱和、值待定」改为恒等于 `primary`（无调用点，原表述是未决项）。
+5. **写实施计划时的逐值验算修正**：上一轮把 `outline` 定成 0.42 仍不够——amber 只有 2.9:1、soft_dark 3.02:1，所以暗档提到 **0.50**、亮档定 **0.48**；`outlineVariant` 随之从 0.22 提到 0.34/0.30（纯为看得见）；§5.3 的暗档 on 主色插值系数由 0.25 改为 **0.18**（0.25 下 `soft_dark` 的 primary/onPrimary 只有 4.1:1）；§8 取消「outline 对 surfaceContainerHighest ≥3:1」这条断言（亮档实际 2.4:1，且 M3 默认值同样达不到，写进去只会误导实现者改粗描边）。另：§5.2 的插值改为自写通道算式而不是 `androidx.compose.ui.graphics.lerp`，因为 §8 的不变式要在纯 JVM 单测里跑。
