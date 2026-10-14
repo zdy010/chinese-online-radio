@@ -39,8 +39,6 @@ fun RadioScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToTag: (String?) -> Unit = {},
-    themeMode: Int,
-    onThemeChanged: (Int) -> Unit
 ) {
     // 页签名字必须对得上内容：原先第二个页签叫「地区」，但电台数据里根本没有地区/省份字段，
     // 实际展示的是分类网格，用户点进去看到的是与标签无关的内容。第一个页签是全部电台+分类筛选条，

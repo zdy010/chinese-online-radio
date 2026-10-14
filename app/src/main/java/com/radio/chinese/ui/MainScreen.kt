@@ -41,8 +41,6 @@ data class BottomNavItem(
 fun RadioNavGraph(
     navController: NavHostController,
     playerManager: PlayerManager,
-    themeMode: Int,
-    onThemeChanged: (Int) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -54,8 +52,6 @@ fun RadioNavGraph(
                 onNavigateToPlayer = { stationId -> navController.navigate(Screen.Player.createRoute(stationId)) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToTag = { tag -> navController.navigate(Screen.Tags.createRoute(tag)) },
-                themeMode = themeMode,
-                onThemeChanged = onThemeChanged
             )
         }
 
@@ -106,7 +102,6 @@ fun RadioNavGraph(
                 onNavigateToManage = { navController.navigate(Screen.Manage.route) },
                 onNavigateToKeySettings = { navController.navigate(Screen.KeySettings.route) },
                 onNavigateToDiagnostics = { navController.navigate(Screen.Diagnostics.route) },
-                onThemeChanged = onThemeChanged
             )
         }
 
@@ -127,8 +122,6 @@ fun RadioNavGraph(
 @Composable
 fun MainScreen(
     playerManager: PlayerManager,
-    themeMode: Int,
-    onThemeChanged: (Int) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -170,8 +163,6 @@ fun MainScreen(
             RadioNavGraph(
                 navController = navController,
                 playerManager = playerManager,
-                themeMode = themeMode,
-                onThemeChanged = onThemeChanged
             )
         }
     }

@@ -5,13 +5,17 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.radio.chinese.ui.theme.AppTheme
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
@@ -30,10 +34,25 @@ class RadioPreferences @Inject constructor(
 ) {
     private val dataStore = context.dataStore
 
-    // Theme mode: 0 = system, 1 = light, 2 = dark
-    val themeMode: Flow<Int> = dataStore.data.map { prefs ->
-        prefs[KEY_THEME_MODE] ?: 0
-    }
+    /**
+     * 当前主题。读取侧一次合并新旧两键：有 theme_key 用 theme_key，没有才按
+     * 旧 theme_mode 映射——这就是升级用户的原样迁移，不需要回写。
+     *
+     * 不回写 theme_key：回写要额外背一个「冷启动即写盘」的副作用和一个调用点，
+     * 而合并结论已经定死在 AppTheme.fromStoredValues 这一处。
+     *
+     * data 层引 ui.theme.AppTheme 的取舍同本目录 SourceAvailabilityStore 里的取色函数：
+     * 为 UI 服务的取值逻辑留在这里，多一个类型比多一处判定划算。
+     */
+    val theme: Flow<AppTheme> = dataStore.data
+        .catch { e ->
+            // 根 Composable 的取色入口，Flow 一旦终止主题就再也回不来。
+            // 读盘 IO 错误降级成「无偏好」= 跟随系统；其他异常照常抛出，不吞。
+            if (e is IOException) emit(emptyPreferences()) else throw e
+        }
+        .map { prefs ->
+            AppTheme.fromStoredValues(prefs[KEY_THEME_KEY], prefs[KEY_THEME_MODE] ?: 0)
+        }
 
     // Last played station ID
     val lastPlayedStationId: Flow<String?> = dataStore.data.map { prefs ->
@@ -92,9 +111,9 @@ class RadioPreferences @Inject constructor(
         }
     }
 
-    suspend fun setThemeMode(mode: Int) {
+    suspend fun setThemeKey(key: String) {
         dataStore.edit { prefs ->
-            prefs[KEY_THEME_MODE] = mode
+            prefs[KEY_THEME_KEY] = key
         }
     }
 
@@ -270,6 +289,8 @@ class RadioPreferences @Inject constructor(
     }
 
     companion object {
+        private val KEY_THEME_KEY = stringPreferencesKey("theme_key")
+        /** 旧明暗开关（0/1/2）。只作 theme_key 缺失时的迁移来源，不再有新写入。 */
         private val KEY_THEME_MODE = intPreferencesKey("theme_mode")
         private val KEY_LAST_STATION = stringPreferencesKey("last_played_station")
         private val KEY_SLEEP_TIMER = intPreferencesKey("sleep_timer_minutes")

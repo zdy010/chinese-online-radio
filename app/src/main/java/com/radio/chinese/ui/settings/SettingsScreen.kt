@@ -18,6 +18,7 @@ import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.common.carTouchTarget
+import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.FontScaleOption
 import com.radio.chinese.ui.theme.isCarSurface
@@ -30,7 +31,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
-    val themeMode: Int = 0,
+    val theme: AppTheme = AppTheme.SYSTEM,
     val fontScaleKey: String = FontScaleOption.STANDARD.key,
     val uiMode: Int = 0,
     val bootAutoStart: Boolean = false
@@ -54,8 +55,8 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            preferences.themeMode.collect { mode ->
-                _uiState.value = _uiState.value.copy(themeMode = mode)
+            preferences.theme.collect { theme ->
+                _uiState.value = _uiState.value.copy(theme = theme)
             }
         }
         viewModelScope.launch {
@@ -75,9 +76,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setThemeMode(mode: Int) {
+    fun setTheme(theme: AppTheme) {
         viewModelScope.launch {
-            preferences.setThemeMode(mode)
+            preferences.setThemeKey(theme.key)
         }
     }
 
@@ -107,7 +108,6 @@ fun SettingsScreen(
     onNavigateToManage: () -> Unit,
     onNavigateToKeySettings: () -> Unit,
     onNavigateToDiagnostics: () -> Unit,
-    onThemeChanged: (Int) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -150,15 +150,7 @@ fun SettingsScreen(
             // Theme Setting
             ListItem(
                 headlineContent = { Text("主题") },
-                supportingContent = {
-                    Text(
-                        when (uiState.themeMode) {
-                            1 -> "浅色模式"
-                            2 -> "深色模式"
-                            else -> "跟随系统"
-                        }
-                    )
-                },
+                supportingContent = { Text(uiState.theme.label) },
                 leadingContent = {
                     Icon(Icons.Default.Palette, contentDescription = null)
                 },
@@ -347,33 +339,27 @@ fun SettingsScreen(
             onDismissRequest = { showThemeDialog = false },
             title = { Text("选择主题") },
             text = {
-                Column {
-                    listOf(
-                        0 to "跟随系统",
-                        1 to "浅色模式",
-                        2 to "深色模式"
-                    ).forEach { (mode, label) ->
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    AppTheme.entries.forEach { theme ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = Dimens.RowMinHeight)
                                 .clickable {
-                                    viewModel.setThemeMode(mode)
-                                    onThemeChanged(mode)
+                                    viewModel.setTheme(theme)
                                     showThemeDialog = false
-                                }
-                                .padding(vertical = 12.dp),
+                                },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = uiState.themeMode == mode,
+                                selected = uiState.theme == theme,
                                 onClick = {
-                                    viewModel.setThemeMode(mode)
-                                    onThemeChanged(mode)
+                                    viewModel.setTheme(theme)
                                     showThemeDialog = false
                                 }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(label)
+                            Spacer(modifier = Modifier.width(Dimens.GapSmall))
+                            Text(theme.label)
                         }
                     }
                 }
