@@ -8,7 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
-private val LightColorScheme = lightColorScheme(
+/**
+ * 经典蓝基线。internal 而不是 private：
+ * ThemeContrastTest 要断言三档经典主题返回的仍是这两个实例本身（引用相等），
+ * 派生规则一旦把它们也改了，回归基线就悄悄没了。
+ */
+internal val LightColorScheme = lightColorScheme(
     primary = Color(0xFF1565C0),
     onPrimary = Color.White,
     primaryContainer = Color(0xFFD1E4FF),
@@ -27,7 +32,7 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = Color(0xFF43474E)
 )
 
-private val DarkColorScheme = darkColorScheme(
+internal val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF9ECAFF),
     onPrimary = Color(0xFF003258),
     primaryContainer = Color(0xFF00497D),
