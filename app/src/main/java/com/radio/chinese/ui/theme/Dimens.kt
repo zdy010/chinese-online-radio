@@ -79,4 +79,12 @@ object Dimens {
         @Composable get() = if (car) 96.dp else 64.dp
     val PlayIconSize: Dp
         @Composable get() = if (car) 56.dp else 40.dp
+
+    // 主题选择对话框的预览色块：车机档要给看不清文字的人一个靠颜色选主题的
+    // 抓手，太小就没意义了
+    val ThemeSwatchSize: Dp
+        @Composable get() = if (car) 32.dp else 24.dp
+
+    // 色块描边宽度：不参与换档，两个形态都用 1dp 勾出边界
+    val SwatchBorderWidth: Dp = 1.dp
 }

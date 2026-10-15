@@ -1,6 +1,9 @@
 package com.radio.chinese.ui.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +26,7 @@ import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.FontScaleOption
 import com.radio.chinese.ui.theme.isCarSurface
+import com.radio.chinese.ui.theme.resolveColorScheme
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -335,41 +340,119 @@ fun SettingsScreen(
     }
 
     if (showThemeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            title = { Text("选择主题") },
-            text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    AppTheme.entries.forEach { theme ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = Dimens.RowMinHeight)
-                                .clickable {
-                                    viewModel.setTheme(theme)
-                                    showThemeDialog = false
-                                },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = uiState.theme == theme,
-                                onClick = {
-                                    viewModel.setTheme(theme)
-                                    showThemeDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(Dimens.GapSmall))
-                            Text(theme.label)
-                        }
+        ThemePickerDialog(
+            current = uiState.theme,
+            onSelect = { theme ->
+                viewModel.setTheme(theme)
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
+        )
+    }
+}
+
+/**
+ * 主题选择对话框。
+ *
+ * 必须能滚到底：9 行 × 车机档 Dimens.RowMinHeight(88dp) = 792dp，而 density 上报 240 的
+ * 车机横屏只有 480dp 高（与 usesRailNavigation 当年「四个条目装不下导致收藏不可达」
+ * 是同一个坑）。这里 verticalScroll 与 heightIn(max) 两个约束都要给，只给一个会装不下或撑破窗口。
+ */
+@Composable
+private fun ThemePickerDialog(
+    current: AppTheme,
+    onSelect: (AppTheme) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val systemDark = isSystemInDarkTheme()
+    // 上限取「屏高 70%」与 420dp 的较小值：屏幕矮就跟着矮，不让对话框顶到状态栏
+    val maxHeight = minOf((LocalConfiguration.current.screenHeightDp * 0.7f).dp, 420.dp)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("选择主题") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = maxHeight)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                AppTheme.groupedForPicker().forEach { (group, themes) ->
+                    Text(
+                        text = group.label,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = Dimens.GapLarge, bottom = Dimens.GapTiny)
+                    )
+                    themes.forEach { theme ->
+                        ThemePickerRow(
+                            theme = theme,
+                            selected = current == theme,
+                            systemDark = systemDark,
+                            onSelect = { onSelect(theme) }
+                        )
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text("关闭")
-                }
             }
-        )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("关闭") }
+        }
+    )
+}
+
+/** 一行 = 单选钮 + 名称与场景说明 + 行尾三色预览。整行可点。 */
+@Composable
+private fun ThemePickerRow(
+    theme: AppTheme,
+    selected: Boolean,
+    systemDark: Boolean,
+    onSelect: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = Dimens.RowMinHeight)
+            .clickable(onClick = onSelect),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 单选钮与整行走同一个回调：命中区只有一处，不会两个入口给两个结论
+        RadioButton(selected = selected, onClick = onSelect)
+        Spacer(modifier = Modifier.width(Dimens.GapSmall))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = theme.label, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = theme.hint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.width(Dimens.ChipGap))
+        ThemeSwatchRow(theme = theme, systemDark = systemDark)
+    }
+}
+
+/**
+ * 三个色块用「该主题解析后的实际颜色」画，不引第二套判色路径：
+ * 一律走 resolveColorScheme，system 档按当前系统深浅预览。
+ * 给不识字或看不清的老人一个靠颜色选对主题的兜底。
+ */
+@Composable
+private fun ThemeSwatchRow(theme: AppTheme, systemDark: Boolean) {
+    val scheme = theme.resolveColorScheme(theme.isDarkConsidering(systemDark))
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.GapTiny)) {
+        listOf(scheme.primary, scheme.surfaceContainerHigh, scheme.onSurface).forEach { c ->
+            Box(
+                modifier = Modifier
+                    .size(Dimens.ThemeSwatchSize)
+                    .background(c, MaterialTheme.shapes.extraSmall)
+                    .border(
+                        width = Dimens.SwatchBorderWidth,
+                        color = MaterialTheme.colorScheme.outline,
+                        shape = MaterialTheme.shapes.extraSmall
+                    )
+            )
+        }
     }
 }
 
