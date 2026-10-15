@@ -143,23 +143,19 @@ class SourceAvailabilityStore @Inject constructor(
     }
 }
 
-/** 根据可用性分数计算颜色 (#RRGGBB 格式)：1.0=绿 0.5=黄 0.0=红 */
-fun availabilityToColor(score: Float): Long {
-    val clamped = score.coerceIn(0.0f, 1.0f)
-    return when {
-        clamped >= 0.5f -> {
-            // 绿到黄 (0.5→黄, 1.0→绿)
-            val ratio = (clamped - 0.5f) * 2f // 0~1
-            val r = (0xFF * (1f - ratio * 0.7f)).toLong() shl 16
-            val g = (0xFF * (0.7f + ratio * 0.3f)).toLong() shl 8
-            0xFF000000L or r or g
-        }
-        else -> {
-            // 红到黄 (0.0→红, 0.5→黄)
-            val ratio = clamped * 2f // 0~1
-            val r = 0xFFL shl 16
-            val g = (0xFF * ratio * 0.7f).toLong() shl 8
-            0xFF000000L or r or g
-        }
-    }
+/** 可用性档位：绿=可用、黄=一般、红=失效。语义跨主题不变。 */
+enum class SourceQuality { GOOD, FAIR, BAD }
+
+/**
+ * 分数 → 档位。颜色不在这里管：语义色必须按深浅换明度，而 data 层不知道当前深浅。
+ *
+ * 旧实现是连续插值出 #4CFF00→#FFB200→#FF0000，但那些值在白底上约 1.4:1、
+ * 在纯黑底上约 1.5:1，本来就接近看不见；收窄成三档反而更可辨，
+ * 持久化的仍然是分数，健康检查逻辑一字不动。
+ */
+fun availabilityToQuality(score: Float): SourceQuality = when {
+    score.isNaN() -> SourceQuality.BAD
+    score >= 0.75f -> SourceQuality.GOOD
+    score >= 0.5f -> SourceQuality.FAIR
+    else -> SourceQuality.BAD
 }

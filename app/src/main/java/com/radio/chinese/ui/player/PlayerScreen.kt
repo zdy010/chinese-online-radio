@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
-import com.radio.chinese.data.local.availabilityToColor
+import com.radio.chinese.data.local.availabilityToQuality
+import com.radio.chinese.ui.theme.sourceQualityColor
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import com.radio.chinese.ui.common.LoadingState
@@ -411,12 +412,8 @@ private fun SourceSelector(
         Spacer(modifier = Modifier.height(Dimens.GapSmall))
         sources.forEach { (source, score) ->
             val isActive = currentSource?.url == source.url
-            val colorInt = availabilityToColor(score)
-            val color = Color(
-                ((colorInt shr 16) and 0xFF) / 255f,
-                ((colorInt shr 8) and 0xFF) / 255f,
-                (colorInt and 0xFF) / 255f
-            )
+            // 语义不变、明度随主题：具体取哪个颜色由主题层的 LocalIsDarkTheme 定
+            val color = sourceQualityColor(availabilityToQuality(score))
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
