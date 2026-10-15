@@ -42,6 +42,14 @@ class RadioService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
 
+    /**
+     * 耳机线控 HEADSETHOOK 单/双击判别：单击=播放/暂停，窗口内第二击=下一台/下一段。
+     * 系统/默认处理把双击转成 seekToNextMediaItem，而本播放器恒为单 MediaItem，等于无事发生，
+     * 所以必须自己判（线控双击 1.0.75→123 回归的根因）。
+     */
+    private val hookDetector = HeadsetHookDetector()
+    private val hookHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     override fun onCreate() {
         super.onCreate()
         initializePlayer()
@@ -160,6 +168,35 @@ class RadioService : MediaSessionService() {
         ): Boolean {
             val keyEvent = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
                 ?: return false
+            // 诊断不留盲区：以前 126/85 交给默认处理、不记任何痕迹，
+            // 真机上无法区分“键没到会话”和“默认处理没执行”
+            if (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.repeatCount == 0 &&
+                keyEvent.keyCode in MEDIA_BUTTON_KEYS
+            ) {
+                KeyDiagnostics.record("媒体键", "${KeyEvent.keyCodeToString(keyEvent.keyCode)}(${keyEvent.keyCode})")
+            }
+            // 耳机线控钩子键：自己判单击/双击，DOWN/UP 全消费，不让默认处理重复 toggle
+            if (keyEvent.keyCode == KeyEvent.KEYCODE_HEADSETHOOK) {
+                if (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.repeatCount == 0) {
+                    when (hookDetector.onKeyDown(keyEvent.eventTime)) {
+                        HeadsetHookResult.NEXT -> playerManager.handleMediaSkip(true)
+                        HeadsetHookResult.PENDING -> hookHandler.postDelayed({
+                            if (hookDetector.expirePending(android.os.SystemClock.uptimeMillis()) == HeadsetHookResult.TOGGLE) {
+                                playerManager.togglePlayPause()
+                            }
+                        }, 520)
+                        else -> Unit
+                    }
+                }
+                return true
+            }
+            // 播放/暂停显式处理：不依赖厂商系统对默认按键处理的实现差异
+            if (keyEvent.keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+                if (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.repeatCount == 0) {
+                    playerManager.togglePlayPause()
+                }
+                return true
+            }
             if (keyEvent.keyCode != KeyEvent.KEYCODE_MEDIA_NEXT && keyEvent.keyCode != KeyEvent.KEYCODE_MEDIA_PREVIOUS) {
                 return false
             }
@@ -173,10 +210,7 @@ class RadioService : MediaSessionService() {
                 else keyBindings.actionFor(keyEvent.keyCode)?.takeIf { it != CarKeyAction.GO_BACK }
                 val name = "${KeyEvent.keyCodeToString(keyEvent.keyCode)}(${keyEvent.keyCode})"
                 when (bound) {
-                    null -> {
-                        KeyDiagnostics.record("媒体键", name)
-                        playerManager.handleMediaSkip(keyEvent.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT)
-                    }
+                    null -> playerManager.handleMediaSkip(keyEvent.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT)
                     CarKeyAction.PLAY_PAUSE -> {
                         KeyDiagnostics.record("媒体键·自定义", name)
                         playerManager.togglePlayPause()
@@ -251,5 +285,15 @@ class RadioService : MediaSessionService() {
 
         /** 1002 避开 Media3 自己用的 1001 */
         private const val READY_NOTIFICATION_ID = 1002
+
+        /** 会话入口诊断要记录的媒体键集合（含线控钩子键） */
+        private val MEDIA_BUTTON_KEYS = setOf(
+            KeyEvent.KEYCODE_HEADSETHOOK,
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            KeyEvent.KEYCODE_MEDIA_PLAY,
+            KeyEvent.KEYCODE_MEDIA_PAUSE,
+            KeyEvent.KEYCODE_MEDIA_NEXT,
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS
+        )
     }
 }
