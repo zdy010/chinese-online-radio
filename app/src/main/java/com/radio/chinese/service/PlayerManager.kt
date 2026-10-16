@@ -32,7 +32,8 @@ class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: RadioPreferences,
     private val stationRepository: StationRepository,
-    private val webDavClient: WebDavClient
+    private val webDavClient: WebDavClient,
+    private val ttsAnnouncer: TtsAnnouncer
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var controllerFuture: ListenableFuture<MediaController>? = null
@@ -367,22 +368,46 @@ class PlayerManager @Inject constructor(
      * 电台列表按需从仓库取；无内容播放时 playNext/playPrevious 自身不动作。
      */
     fun handleMediaSkip(forward: Boolean) {
-        if (_isOperaMode.value) {
-            if (forward) playOperaNext() else playOperaPrevious()
-            return
-        }
         scope.launch {
-            // 用活动列表：节目源管理里标记无效的电台不参与切台
+            if (_isOperaMode.value) {
+                val name = peekOperaTargetName(forward)
+                announceThen(name) { if (forward) playOperaNext() else playOperaPrevious() }
+                return@launch
+            }
+            // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台
             val stations = stationRepository.getActiveStations()
             // 查询期间用户可能切进戏曲模式，落地前以最新状态为准
             if (_isOperaMode.value) {
-                if (forward) playOperaNext() else playOperaPrevious()
-            } else if (forward) {
-                playNext(stations)
-            } else {
-                playPrevious(stations)
+                val name = peekOperaTargetName(forward)
+                announceThen(name) { if (forward) playOperaNext() else playOperaPrevious() }
+                return@launch
             }
+            // 无正在播放时保持既有 no-op（不擅自起播首台）
+            val current = _currentStation.value ?: return@launch
+            val target = nextStation(stations, current.id, forward) ?: return@launch
+            announceThen(target.name) { playStation(target) }
         }
+    }
+
+    /**
+     * 先播报再开播：有目标名且播报开关开时，暂停当前流→播“即将播放：X”（内部带超时/降级）→再执行 play。
+     * 播报失败/无引擎照常 play，绝不因播报吞掉切台。关播报则跳过暂停，行为与改造前一致。
+     */
+    private suspend fun announceThen(name: String?, play: () -> Unit) {
+        if (name != null && preferences.voiceAnnounceEnabled.first()) {
+            controller?.pause()
+            ttsAnnouncer.speak("即将播放：$name")
+        }
+        play()
+    }
+
+    /** 不产生副作用地取“下一个/上一个戏曲曲目名”；无可前进项时返回 null（与 playOperaNext 越界即退出一致）。 */
+    private fun peekOperaTargetName(forward: Boolean): String? {
+        val playlist = _operaPlaylist.value
+        val idx = _operaIndex.value
+        val nextIdx = if (forward) idx + 1 else idx - 1
+        if (playlist.isEmpty() || idx < 0 || nextIdx < 0 || nextIdx >= playlist.size) return null
+        return playlist[nextIdx].name
     }
 
     // ========== 戏曲播放 ==========
