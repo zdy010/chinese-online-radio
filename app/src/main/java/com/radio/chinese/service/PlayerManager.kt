@@ -16,6 +16,7 @@ import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -32,14 +33,22 @@ class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: RadioPreferences,
     private val stationRepository: StationRepository,
-    private val webDavClient: WebDavClient
+    private val webDavClient: WebDavClient,
+    private val ttsAnnouncer: TtsAnnouncer
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
+        // 播报/资产/绑定等外部交互异常不得炸掉主线程；留痕后照常，切台降级为无声
+        android.util.Log.e("PlayerManager", "未捕获异常", e)
+    })
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
 
     private val _currentStation = MutableStateFlow<RadioStation?>(null)
     val currentStation: StateFlow<RadioStation?> = _currentStation
+
+    /** 连按保护：一次切台已解析但尚未起播（播报挂起中）时的目标 id，供下一次按键以它为基准。 */
+    @Volatile
+    private var pendingSkipTargetId: String? = null
 
     /** 当前正在使用的节目源 */
     private val _currentSource = MutableStateFlow<StationSource?>(null)
@@ -121,6 +130,8 @@ class PlayerManager @Inject constructor(
     private val operaPositionHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     fun connect() {
+        // 后台预热播报引擎，避免首次线控切台才付枚举/冷启动代价（已缓存则直接返回）
+        scope.launch { runCatching { ttsAnnouncer.warmUp() } }
         val sessionToken = SessionToken(context, ComponentName(context, RadioService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         controllerFuture?.addListener({
@@ -218,6 +229,7 @@ class PlayerManager @Inject constructor(
     fun playStation(station: RadioStation) {
         // 互斥：清除戏曲状态
         stopOpera()
+        pendingSkipTargetId = null   // 目标已落地，清除连按基准
         _currentStation.value = station
         _error.value = null
         _status.value = null
@@ -350,23 +362,16 @@ class PlayerManager @Inject constructor(
     }
 
     fun playNext(stations: List<RadioStation>) {
+        // 无正在播放时保持既有 no-op（不擅自起播第一个台）；有当前台才用 nextStation 算相邻
         val current = _currentStation.value ?: return
-        val currentIndex = stations.indexOfFirst { it.id == current.id }
-        if (currentIndex >= 0 && currentIndex < stations.size - 1) {
-            playStation(stations[currentIndex + 1])
-        } else if (stations.isNotEmpty()) {
-            playStation(stations[0])
-        }
+        val target = nextStation(stations, current.id, forward = true) ?: return
+        playStation(target)
     }
 
     fun playPrevious(stations: List<RadioStation>) {
         val current = _currentStation.value ?: return
-        val currentIndex = stations.indexOfFirst { it.id == current.id }
-        if (currentIndex > 0) {
-            playStation(stations[currentIndex - 1])
-        } else if (stations.isNotEmpty()) {
-            playStation(stations.last())
-        }
+        val target = nextStation(stations, current.id, forward = false) ?: return
+        playStation(target)
     }
 
     /**
@@ -374,22 +379,49 @@ class PlayerManager @Inject constructor(
      * 电台列表按需从仓库取；无内容播放时 playNext/playPrevious 自身不动作。
      */
     fun handleMediaSkip(forward: Boolean) {
-        if (_isOperaMode.value) {
-            if (forward) playOperaNext() else playOperaPrevious()
-            return
-        }
         scope.launch {
-            // 用活动列表：节目源管理里标记无效的电台不参与切台
+            if (_isOperaMode.value) {
+                val name = peekOperaTargetName(forward)
+                announceThen(name) { if (forward) playOperaNext() else playOperaPrevious() }
+                return@launch
+            }
+            // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台
             val stations = stationRepository.getActiveStations()
             // 查询期间用户可能切进戏曲模式，落地前以最新状态为准
             if (_isOperaMode.value) {
-                if (forward) playOperaNext() else playOperaPrevious()
-            } else if (forward) {
-                playNext(stations)
-            } else {
-                playPrevious(stations)
+                val name = peekOperaTargetName(forward)
+                announceThen(name) { if (forward) playOperaNext() else playOperaPrevious() }
+                return@launch
             }
+            // 无正在播放时保持既有 no-op（不擅自起播首台）
+            val current = _currentStation.value ?: return@launch
+            // 连按保护：播报挂起期间 _currentStation 尚未更新，第二次按键基于“待落地目标”继续前推，避免回到同一台
+            val baseId = pendingSkipTargetId ?: current.id
+            val target = nextStation(stations, baseId, forward) ?: return@launch
+            pendingSkipTargetId = target.id
+            announceThen(target.name) { playStation(target) }
         }
+    }
+
+    /**
+     * 先播报再开播：有目标名且播报开关开时，暂停当前流→播“即将播放：X”（内部带超时/降级）→再执行 play。
+     * 播报失败/无引擎照常 play，绝不因播报吞掉切台。关播报则跳过暂停，行为与改造前一致。
+     */
+    private suspend fun announceThen(name: String?, play: () -> Unit) {
+        if (name != null && runCatching { preferences.voiceAnnounceEnabled.first() }.getOrDefault(false)) {
+            runCatching { controller?.pause() }
+            runCatching { ttsAnnouncer.speak("即将播放：$name") }   // 内部已降级，异常不外泄
+        }
+        play()
+    }
+
+    /** 不产生副作用地取“下一个/上一个戏曲曲目名”；无可前进项时返回 null（与 playOperaNext 越界即退出一致）。 */
+    private fun peekOperaTargetName(forward: Boolean): String? {
+        val playlist = _operaPlaylist.value
+        val idx = _operaIndex.value
+        val nextIdx = if (forward) idx + 1 else idx - 1
+        if (playlist.isEmpty() || idx < 0 || nextIdx < 0 || nextIdx >= playlist.size) return null
+        return playlist[nextIdx].name
     }
 
     // ========== 戏曲播放 ==========
@@ -611,6 +643,21 @@ class PlayerManager @Inject constructor(
         _isConnected.value = false
         _isOperaMode.value = false
     }
+}
+
+/**
+ * 线控切台的“下一个/上一个”目标解析（纯函数，供播报与播放复用）。
+ * 命中当前台取相邻；末位前进回绕首位、首位后退回绕末位；
+ * 当前台不在列表（含 null）时前进取首位、后退取末位；空列表返回 null。
+ * 行为与旧 playNext/playPrevious 的索引数学一致（其“无当前台不动作”由调用方守卫）。
+ */
+fun nextStation(stations: List<RadioStation>, currentId: String?, forward: Boolean): RadioStation? {
+    if (stations.isEmpty()) return null
+    val idx = stations.indexOfFirst { it.id == currentId }
+    if (idx < 0) return if (forward) stations.first() else stations.last()
+    val next = if (forward) (idx + 1) % stations.size
+    else (idx - 1 + stations.size) % stations.size
+    return stations[next]
 }
 
 /** 戏曲播放循环模式。 */

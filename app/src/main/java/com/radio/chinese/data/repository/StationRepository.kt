@@ -1,10 +1,14 @@
 package com.radio.chinese.data.repository
 
 import android.content.Context
+import com.radio.chinese.data.RegionRepository
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.data.local.RegionGazetteer
 import com.radio.chinese.data.local.SourceAvailabilityStore
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.RegionResolver
 import com.radio.chinese.domain.model.StationFilter
+import com.radio.chinese.domain.model.StationSorter
 import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -20,10 +24,18 @@ import javax.inject.Singleton
 class StationRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: RadioPreferences,
-    private val sourceAvailabilityStore: SourceAvailabilityStore
+    private val sourceAvailabilityStore: SourceAvailabilityStore,
+    private val regionRepository: RegionRepository
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private var builtInStations: List<RadioStation>? = null
+
+    /** 省市词表：仅在本地优先排序命中时懒加载，无地区线索的台不参与。 */
+    private val gazetteer by lazy {
+        RegionGazetteer.parse(
+            context.assets.open("region_gazetteer.json").bufferedReader().use { it.readText() }
+        )
+    }
 
     /** 获取指定电台排序后的节目源列表（按可用性从高到低） */
     suspend fun getSortedSources(stationId: String): List<StationSource> {
@@ -79,7 +91,22 @@ class StationRepository @Inject constructor(
     suspend fun getActiveStations(): List<RadioStation> = withContext(Dispatchers.IO) {
         val all = getAllStations()
         val invalidIds = preferences.invalidStationIds.first()
-        all.filter { it.id !in invalidIds }
+        val active = all.filter { it.id !in invalidIds }
+        applyLocalPriority(active)
+    }
+
+    /**
+     * 本地优先接线：开关开且用户地区非空时套用排序，否则原样返回。
+     * 台地区由 RegionResolver 从台名/简介运行时推断，不改源数据。
+     * 抽成独立内部函数便于单测钉住“何时排序/何时不排”，不依赖真电台清单解析。
+     */
+    internal suspend fun applyLocalPriority(active: List<RadioStation>): List<RadioStation> {
+        if (!preferences.localFirstEnabled.first()) return active
+        val user = regionRepository.currentUserRegion()
+        if (user.isEmpty) return active
+        return StationSorter.localPriority(active, user) { st ->
+            RegionResolver.infer("${st.name} ${st.description}", st.country, gazetteer)
+        }
     }
 
     suspend fun getStationById(id: String): RadioStation? {
