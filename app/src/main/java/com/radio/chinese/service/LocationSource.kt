@@ -34,6 +34,10 @@ class AndroidLocationSource @Inject constructor(
     @ApplicationContext private val context: Context
 ) : LocationSource {
 
+    private companion object {
+        const val LAST_KNOWN_MAX_AGE_MS = 10 * 60 * 1000L // 10 分钟内的 last-known 才算“当前”
+    }
+
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
 
@@ -52,10 +56,12 @@ class AndroidLocationSource @Inject constructor(
 
     private fun lastKnown(): Coords? {
         val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-        val best: Location? = providers.mapNotNull {
+        val best = providers.mapNotNull {
             runCatching { locationManager?.getLastKnownLocation(it) }.getOrNull()
-        }.maxByOrNull { it.time }
-        return best?.let { Coords(it.latitude, it.longitude) }
+        }.maxByOrNull { it.time } ?: return null
+        // 陈旧保护：车机 last-known 常是几天前/几百公里外的点，超过新鲜度窗口就不当“当前位置”，改走实时定位
+        if (System.currentTimeMillis() - best.time > LAST_KNOWN_MAX_AGE_MS) return null
+        return Coords(best.latitude, best.longitude)
     }
 
     private fun pickProvider(): String? {

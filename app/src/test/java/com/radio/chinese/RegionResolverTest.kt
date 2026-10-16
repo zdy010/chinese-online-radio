@@ -41,4 +41,10 @@ class RegionResolverTest {
         // “绍兴”在 pos0，“杭州”在其后；取最靠前的绍兴
         assertEquals(Region("浙江", "绍兴"), RegionResolver.infer("绍兴杭州联合广播", "中国", g))
     }
+
+    @Test fun `省名与市名同现时优先取市而非最靠前的省`() {
+        // 全国电台最常见命名：省名在前、市名在后。不能因为省名 pos 更小就只判到省
+        assertEquals(Region("河南", "郑州"), RegionResolver.infer("河南郑州交通广播", "中国", g))
+        assertEquals(Region("四川", "成都"), RegionResolver.infer("四川成都音乐广播", "中国", g))
+    }
 }

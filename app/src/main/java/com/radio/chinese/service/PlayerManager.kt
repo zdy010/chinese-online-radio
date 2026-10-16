@@ -16,6 +16,7 @@ import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -35,12 +36,19 @@ class PlayerManager @Inject constructor(
     private val webDavClient: WebDavClient,
     private val ttsAnnouncer: TtsAnnouncer
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
+        // 播报/资产/绑定等外部交互异常不得炸掉主线程；留痕后照常，切台降级为无声
+        android.util.Log.e("PlayerManager", "未捕获异常", e)
+    })
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
 
     private val _currentStation = MutableStateFlow<RadioStation?>(null)
     val currentStation: StateFlow<RadioStation?> = _currentStation
+
+    /** 连按保护：一次切台已解析但尚未起播（播报挂起中）时的目标 id，供下一次按键以它为基准。 */
+    @Volatile
+    private var pendingSkipTargetId: String? = null
 
     /** 当前正在使用的节目源 */
     private val _currentSource = MutableStateFlow<StationSource?>(null)
@@ -122,6 +130,8 @@ class PlayerManager @Inject constructor(
     private val operaPositionHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     fun connect() {
+        // 后台预热播报引擎，避免首次线控切台才付枚举/冷启动代价（已缓存则直接返回）
+        scope.launch { runCatching { ttsAnnouncer.warmUp() } }
         val sessionToken = SessionToken(context, ComponentName(context, RadioService::class.java))
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         controllerFuture?.addListener({
@@ -219,6 +229,7 @@ class PlayerManager @Inject constructor(
     fun playStation(station: RadioStation) {
         // 互斥：清除戏曲状态
         stopOpera()
+        pendingSkipTargetId = null   // 目标已落地，清除连按基准
         _currentStation.value = station
         _error.value = null
         _status.value = null
@@ -384,7 +395,10 @@ class PlayerManager @Inject constructor(
             }
             // 无正在播放时保持既有 no-op（不擅自起播首台）
             val current = _currentStation.value ?: return@launch
-            val target = nextStation(stations, current.id, forward) ?: return@launch
+            // 连按保护：播报挂起期间 _currentStation 尚未更新，第二次按键基于“待落地目标”继续前推，避免回到同一台
+            val baseId = pendingSkipTargetId ?: current.id
+            val target = nextStation(stations, baseId, forward) ?: return@launch
+            pendingSkipTargetId = target.id
             announceThen(target.name) { playStation(target) }
         }
     }
@@ -394,9 +408,9 @@ class PlayerManager @Inject constructor(
      * 播报失败/无引擎照常 play，绝不因播报吞掉切台。关播报则跳过暂停，行为与改造前一致。
      */
     private suspend fun announceThen(name: String?, play: () -> Unit) {
-        if (name != null && preferences.voiceAnnounceEnabled.first()) {
-            controller?.pause()
-            ttsAnnouncer.speak("即将播放：$name")
+        if (name != null && runCatching { preferences.voiceAnnounceEnabled.first() }.getOrDefault(false)) {
+            runCatching { controller?.pause() }
+            runCatching { ttsAnnouncer.speak("即将播放：$name") }   // 内部已降级，异常不外泄
         }
         play()
     }
