@@ -13,6 +13,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.resume
 import java.util.Locale
 
@@ -30,22 +32,25 @@ class TtsAnnouncer @Inject constructor(
 ) {
     @Volatile private var tts: TextToSpeech? = null
     @Volatile private var chosen: TtsOption? = null
+    private val engineMutex = Mutex()
 
     private companion object {
         const val SPEAK_TIMEOUT_MS = 3_500L
         const val SPEAK_RATE = 1.1f
     }
 
-    /** 依当前偏好或跨引擎选优，确保一个可用的中文引擎就绪（结果缓存，preview 后重置）。 */
-    private suspend fun ensureReady(): TextToSpeech? = withContext(Dispatchers.Default) {
-        tts?.let { if (chosen != null) return@withContext it }
-        val target = resolveOption() ?: return@withContext null
-        val engine = initEngine(target.enginePackage) ?: return@withContext null
+    /** 依当前偏好或跨引擎选优，确保一个可用的中文引擎就绪。check-then-act 于互斥锁内，避免并发重复初始化/泄漏。 */
+    private suspend fun ensureReady(): TextToSpeech? = engineMutex.withLock {
+        (tts?.takeIf { chosen != null })?.let { return@withLock it }
+        val target = resolveOption() ?: return@withLock null
+        val engine = initEngine(target.enginePackage) ?: return@withLock null
         runCatching {
             engine.language = Locale.forLanguageTag(target.voice.localeTag)
             target.voice.name.let { vn -> engine.voices?.firstOrNull { it.name == vn }?.let { engine.voice = it } }
             engine.setSpeechRate(SPEAK_RATE)
         }
+        // 锁内先关旧实例再换发，不遗留未 shutdown 的引擎
+        runCatching { tts?.shutdown() }
         chosen = target
         tts = engine
         engine
@@ -80,7 +85,13 @@ class TtsAnnouncer @Inject constructor(
         return ensureReady() != null
     }
 
-    /** 播报；成功 true，降级/失败 false。异常或超时一律 false 让切台照常继续。 */
+    /** 预热：提前在后台解析引擎/音色并初始化，避免首次切台才付冷启动代价。 */
+    suspend fun warmUp() {
+        if (!preferences.voiceAnnounceEnabled.first()) return
+        ensureReady()
+    }
+
+    /** 播报；成功 true，降级/失败 false。异常或超时一律 false 让切台照常继续；超时同时 stop 防止与新流叠音。 */
     suspend fun speak(text: String): Boolean {
         if (!preferences.voiceAnnounceEnabled.first()) return false
         val engine = ensureReady() ?: return false
@@ -96,31 +107,34 @@ class TtsAnnouncer @Inject constructor(
                 if (r != TextToSpeech.SUCCESS && cont.isActive) cont.resume(false)
             }
         }
+        if (ok == null) runCatching { engine.stop() }   // 超时：引擎仍在念，停下避免叠音
         return ok == true
     }
 
-    /** 设置页试听某个引擎+音色组合：记住选择并发一句样例。 */
-    suspend fun preview(option: TtsOption): Boolean = withContext(Dispatchers.Default) {
-        reset()
-        preferences.setPreferredTtsEngine(option.enginePackage)
-        preferences.setPreferredVoice(option.voice.name)
-        chosen = option
-        val engine = initEngine(option.enginePackage) ?: return@withContext false
-        runCatching {
-            engine.language = Locale.forLanguageTag(option.voice.localeTag)
-            engine.voices?.firstOrNull { it.name == option.voice.name }?.let { engine.voice = it }
-            engine.setSpeechRate(SPEAK_RATE)
+    /** 设置页试听某个引擎+音色：锁内换发引擎，锁外发声（speak 会再拿锁，避免重入死锁）。 */
+    suspend fun preview(option: TtsOption): Boolean {
+        engineMutex.withLock {
+            runCatching { tts?.shutdown() }
+            tts = null
+            chosen = null
+            preferences.setPreferredTtsEngine(option.enginePackage)
+            preferences.setPreferredVoice(option.voice.name)
+            val engine = initEngine(option.enginePackage) ?: return@withLock
+            runCatching {
+                engine.language = Locale.forLanguageTag(option.voice.localeTag)
+                engine.voices?.firstOrNull { it.name == option.voice.name }?.let { engine.voice = it }
+                engine.setSpeechRate(SPEAK_RATE)
+            }
+            tts = engine
+            chosen = option
         }
-        tts = engine
-        speak("即将播放：中国之声 交通广播")
+        return speak("即将播放：中国之声 交通广播")
     }
 
-    /** 使缓存失效（切换偏好或释放时调用），下次 ensureReady 重新解析。 */
-    private fun reset() {
-        tts?.shutdown()
+    /** 释放引擎（onCleared）：尽力而为，非挂起。 */
+    fun shutdown() {
+        runCatching { tts?.shutdown() }
         tts = null
         chosen = null
     }
-
-    fun shutdown() = reset()
 }

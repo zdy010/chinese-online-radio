@@ -82,6 +82,8 @@ class SettingsViewModel @Inject constructor(
     val voiceOptions: StateFlow<List<TtsOption>> = _voiceOptions
     private val _selectedVoiceName = MutableStateFlow<String?>(null)
     val selectedVoiceName: StateFlow<String?> = _selectedVoiceName
+    private val _selectedEngine = MutableStateFlow<String?>(null)
+    val selectedEngine: StateFlow<String?> = _selectedEngine
     private val _regionLabel = MutableStateFlow<String>("")
     val regionLabel: StateFlow<String> = _regionLabel
     private val _regionMessage = MutableStateFlow<String?>(null)
@@ -151,6 +153,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { preferences.voiceAnnounceEnabled.collect { v -> _uiState.value = _uiState.value.copy(voiceAnnounceEnabled = v) } }
         viewModelScope.launch { preferences.localFirstEnabled.collect { v -> _uiState.value = _uiState.value.copy(localFirstEnabled = v) } }
         viewModelScope.launch { preferences.preferredVoice.collect { _selectedVoiceName.value = it } }
+        viewModelScope.launch { preferences.preferredTtsEngine.collect { _selectedEngine.value = it } }
         viewModelScope.launch { _regionLabel.value = formatRegion(regionRepository.currentUserRegion()) }
         viewModelScope.launch {
             val opts = withContext(Dispatchers.Default) { catalog.listOptions().filter { VoiceScoring.isChinese(it.voice) } }
@@ -174,6 +177,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             announcer.preview(opt)
             _selectedVoiceName.value = opt.voice.name
+            _selectedEngine.value = opt.enginePackage
         }
     }
 
@@ -577,6 +581,7 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     val options by viewModel.voiceOptions.collectAsState()
     val selectedVoice by viewModel.selectedVoiceName.collectAsState()
+    val selectedEngine by viewModel.selectedEngine.collectAsState()
     val regionLabel by viewModel.regionLabel.collectAsState()
     val regionMessage by viewModel.regionMessage.collectAsState()
     var voiceExpanded by remember { mutableStateOf(false) }
@@ -585,7 +590,10 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted -> if (granted) viewModel.relocate() else viewModel.relocate() }
+    ) { _ -> viewModel.relocate() }   // 拒绝时 relocate 内部会回退为手动提示
+
+    fun isSelected(opt: TtsOption): Boolean =
+        opt.enginePackage == selectedEngine && opt.voice.name == selectedVoice
 
     ListItem(
         headlineContent = { Text("线控播报") },
@@ -600,7 +608,7 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
     )
 
     if (uiState.voiceAnnounceEnabled) {
-        val currentLabel = options.firstOrNull { it.voice.name == selectedVoice }
+        val currentLabel = options.firstOrNull { isSelected(it) }
             ?.let { "${it.engineLabel} · ${it.voice.name}" } ?: "自动（跨引擎选优）"
         ListItem(
             headlineContent = { Text("播报音色") },
@@ -619,10 +627,10 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
                     ) {
                         Text(
                             text = "${opt.engineLabel} · ${opt.voice.name}" + if (opt.voice.isNetwork) "（联网）" else "",
-                            color = if (opt.voice.name == selectedVoice) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            color = if (isSelected(opt)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
-                        if (opt.voice.name == selectedVoice) Icon(Icons.Default.Check, contentDescription = null)
+                        if (isSelected(opt)) Icon(Icons.Default.Check, contentDescription = null)
                     }
                 }
             }
@@ -676,7 +684,7 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
                     value = manualProvince,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("省份（手动兑底）") },
+                    label = { Text("省份（手动兜底）") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(provMenu) },
                     modifier = Modifier.menuAnchor().fillMaxWidth().padding(horizontal = Dimens.ScreenPadding)
                 )

@@ -30,6 +30,13 @@ class StationSorterTest {
         assertEquals(0, StationSorter.tierOf(Region.NONE, user))
     }
 
+    @Test fun `港澳台对大陆用户算同国家 tier1`() {
+        val user = Region("浙江", "绍兴")
+        assertEquals(1, StationSorter.tierOf(Region("台湾", "台北"), user))
+        assertEquals(1, StationSorter.tierOf(Region("香港", ""), user))
+        assertEquals(1, StationSorter.tierOf(Region("澳门", ""), user))
+    }
+
     @Test fun `按 tier 降序且同 tier 保持入参顺序`() {
         val input = listOf(st("foreign"), st("sameProv"), st("none"), st("sameCity"), st("sameCountry"))
         val out = StationSorter.localPriority(input, Region("浙江", "绍兴"), regionOf).map { it.id }

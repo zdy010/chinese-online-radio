@@ -9,12 +9,16 @@ import com.radio.chinese.domain.model.VoiceScoring
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** 一个「引擎 × 音色」可选项，供设置页列全清单与试听选择。 */
 data class TtsOption(val enginePackage: String, val engineLabel: String, val voice: VoiceMeta)
 
 interface VoiceCatalogSource {
-    fun listOptions(): List<TtsOption>
+    suspend fun listOptions(): List<TtsOption>
     fun defaultEnginePackage(): String?
 }
 
@@ -40,21 +44,35 @@ class AndroidVoiceCatalog @Inject constructor(
 
     override fun defaultEnginePackage(): String? = listEnginePackages().firstOrNull()
 
-    override fun listOptions(): List<TtsOption> {
+    override suspend fun listOptions(): List<TtsOption> = withContext(Dispatchers.Default) {
         val result = mutableListOf<TtsOption>()
         for (pkg in listEnginePackages()) {
             val label = engineLabel(pkg)
-            val tts = TextToSpeech(context, null, pkg)
+            // 引擎绑定是异步的：先等 onInit==SUCCESS，未就绪就跳过，不能把“未就绪”当成“无音色”
+            val engine = initAwait(pkg) ?: continue
             try {
-                val voices: Set<Voice> = tts.voices ?: emptySet()
+                val voices: Set<Voice> = engine.voices ?: emptySet()
                 for (v in voices) result += TtsOption(pkg, label, v.toMeta(pkg, label))
             } catch (_: Exception) {
                 // 个别引擎取 voices 抛异常：跳过该引擎，不影响其余候选
             } finally {
-                runCatching { tts.shutdown() }
+                runCatching { engine.shutdown() }
             }
         }
-        return result
+        result
+    }
+
+    private suspend fun initAwait(pkg: String): TextToSpeech? {
+        val deferred = CompletableDeferred<Boolean>()
+        val engine = TextToSpeech(context, { status ->
+            deferred.complete(status == TextToSpeech.SUCCESS)
+        }, pkg)
+        val ok = withTimeoutOrNull(1_500) { deferred.await() } == true
+        if (!ok) {
+            runCatching { engine.shutdown() }
+            return null
+        }
+        return engine
     }
 
     private fun listEnginePackages(): List<String> {
