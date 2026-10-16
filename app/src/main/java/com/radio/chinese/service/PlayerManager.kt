@@ -350,23 +350,16 @@ class PlayerManager @Inject constructor(
     }
 
     fun playNext(stations: List<RadioStation>) {
+        // 无正在播放时保持既有 no-op（不擅自起播第一个台）；有当前台才用 nextStation 算相邻
         val current = _currentStation.value ?: return
-        val currentIndex = stations.indexOfFirst { it.id == current.id }
-        if (currentIndex >= 0 && currentIndex < stations.size - 1) {
-            playStation(stations[currentIndex + 1])
-        } else if (stations.isNotEmpty()) {
-            playStation(stations[0])
-        }
+        val target = nextStation(stations, current.id, forward = true) ?: return
+        playStation(target)
     }
 
     fun playPrevious(stations: List<RadioStation>) {
         val current = _currentStation.value ?: return
-        val currentIndex = stations.indexOfFirst { it.id == current.id }
-        if (currentIndex > 0) {
-            playStation(stations[currentIndex - 1])
-        } else if (stations.isNotEmpty()) {
-            playStation(stations.last())
-        }
+        val target = nextStation(stations, current.id, forward = false) ?: return
+        playStation(target)
     }
 
     /**
@@ -611,6 +604,21 @@ class PlayerManager @Inject constructor(
         _isConnected.value = false
         _isOperaMode.value = false
     }
+}
+
+/**
+ * 线控切台的“下一个/上一个”目标解析（纯函数，供播报与播放复用）。
+ * 命中当前台取相邻；末位前进回绕首位、首位后退回绕末位；
+ * 当前台不在列表（含 null）时前进取首位、后退取末位；空列表返回 null。
+ * 行为与旧 playNext/playPrevious 的索引数学一致（其“无当前台不动作”由调用方守卫）。
+ */
+fun nextStation(stations: List<RadioStation>, currentId: String?, forward: Boolean): RadioStation? {
+    if (stations.isEmpty()) return null
+    val idx = stations.indexOfFirst { it.id == currentId }
+    if (idx < 0) return if (forward) stations.first() else stations.last()
+    val next = if (forward) (idx + 1) % stations.size
+    else (idx - 1 + stations.size) % stations.size
+    return stations[next]
 }
 
 /** 戏曲播放循环模式。 */
