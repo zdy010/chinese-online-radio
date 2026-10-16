@@ -18,6 +18,8 @@ object RegionGazetteer {
     data class Data(
         val citiesToProvince: Map<String, String>,
         val provinceNames: List<String>,
+        /** 直辖市（省市同名）：北京/上海/天津/重庆。命中它们时同时填 city，便于按 tier3 匹配。 */
+        val municipalities: Set<String>,
     )
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -25,10 +27,12 @@ object RegionGazetteer {
     fun parse(text: String): Data {
         val raw = json.decodeFromString<GazetteerRaw>(text)
         val map = LinkedHashMap<String, String>()
+        val municipalities = LinkedHashSet<String>()
         for (p in raw.provinces) {
             map.putIfAbsent(p.name, p.name)
             for (c in p.cities) map.putIfAbsent(c, p.name)
+            if (p.cities.size == 1 && p.cities.first() == p.name) municipalities.add(p.name)
         }
-        return Data(map, raw.provinces.map { it.name })
+        return Data(map, raw.provinces.map { it.name }, municipalities)
     }
 }
