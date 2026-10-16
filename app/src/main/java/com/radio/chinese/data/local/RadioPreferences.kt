@@ -314,6 +314,14 @@ class RadioPreferences @Inject constructor(
         // 戏曲收藏：收藏的文件ID集合
         private val KEY_OPERA_FAV_FILES = stringSetPreferencesKey("opera_fav_files")
 
+        // 收听增强：线控播报 + 本地优先
+        private val KEY_VOICE_ANNOUNCE = booleanPreferencesKey("voice_announce_enabled")
+        private val KEY_PREFERRED_TTS_ENGINE = stringPreferencesKey("preferred_tts_engine")
+        private val KEY_PREFERRED_VOICE = stringPreferencesKey("preferred_voice")
+        private val KEY_LOCAL_FIRST = booleanPreferencesKey("local_first_enabled")
+        private val KEY_CACHED_REGION = stringPreferencesKey("cached_region")
+        private val KEY_MANUAL_REGION = stringPreferencesKey("manual_region")
+
         /** radioRecentStationIds 的分隔符 */
         private const val SEPARATOR = ","
     }
@@ -340,5 +348,40 @@ class RadioPreferences @Inject constructor(
         dataStore.edit { prefs ->
             prefs[KEY_OPERA_FAV_FILES] = fileIds.map { it.toString() }.toSet()
         }
+    }
+
+    // ========== 收听增强：线控播报 + 本地优先 ==========
+
+    /** 线控切台播报开关，默认开（新功能主路径）。 */
+    val voiceAnnounceEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_VOICE_ANNOUNCE] ?: true }
+    val preferredTtsEngine: Flow<String?> = dataStore.data.map { it[KEY_PREFERRED_TTS_ENGINE] }
+    val preferredVoice: Flow<String?> = dataStore.data.map { it[KEY_PREFERRED_VOICE] }
+    /** 本地节目排序优先，默认开。 */
+    val localFirstEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_LOCAL_FIRST] ?: true }
+    val cachedRegion: Flow<String?> = dataStore.data.map { it[KEY_CACHED_REGION] }
+    val manualRegion: Flow<String?> = dataStore.data.map { it[KEY_MANUAL_REGION] }
+
+    suspend fun setVoiceAnnounceEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_VOICE_ANNOUNCE] = enabled }
+    }
+
+    suspend fun setPreferredTtsEngine(pkg: String?) {
+        dataStore.edit { prefs -> if (pkg == null) prefs.remove(KEY_PREFERRED_TTS_ENGINE) else prefs[KEY_PREFERRED_TTS_ENGINE] = pkg }
+    }
+
+    suspend fun setPreferredVoice(name: String?) {
+        dataStore.edit { prefs -> if (name == null) prefs.remove(KEY_PREFERRED_VOICE) else prefs[KEY_PREFERRED_VOICE] = name }
+    }
+
+    suspend fun setLocalFirstEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_LOCAL_FIRST] = enabled }
+    }
+
+    suspend fun setCachedRegion(value: String?) {
+        dataStore.edit { prefs -> if (value == null) prefs.remove(KEY_CACHED_REGION) else prefs[KEY_CACHED_REGION] = value }
+    }
+
+    suspend fun setManualRegion(value: String?) {
+        dataStore.edit { prefs -> if (value == null) prefs.remove(KEY_MANUAL_REGION) else prefs[KEY_MANUAL_REGION] = value }
     }
 }
