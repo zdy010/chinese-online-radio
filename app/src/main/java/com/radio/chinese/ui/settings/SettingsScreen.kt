@@ -1,5 +1,7 @@
 package com.radio.chinese.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +21,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.data.local.RegionGazetteer
+import com.radio.chinese.data.RegionRepository
+import com.radio.chinese.domain.model.Region
+import com.radio.chinese.domain.model.VoiceScoring
+import com.radio.chinese.service.AndroidVoiceCatalog
+import com.radio.chinese.service.TtsAnnouncer
+import com.radio.chinese.service.TtsOption
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.common.carTouchTarget
@@ -39,7 +52,9 @@ data class SettingsUiState(
     val theme: AppTheme = AppTheme.SYSTEM,
     val fontScaleKey: String = FontScaleOption.STANDARD.key,
     val uiMode: Int = 0,
-    val bootAutoStart: Boolean = false
+    val bootAutoStart: Boolean = false,
+    val voiceAnnounceEnabled: Boolean = true,
+    val localFirstEnabled: Boolean = true
 )
 
 /**
@@ -52,11 +67,36 @@ const val ICP_QUERY_URL = "https://beian.miit.gov.cn"
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val preferences: RadioPreferences
+    private val preferences: RadioPreferences,
+    @ApplicationContext private val appContext: Context,
+    private val catalog: AndroidVoiceCatalog,
+    private val announcer: TtsAnnouncer,
+    private val regionRepository: RegionRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState
+
+    /** 设备上所有中文「引擎×音色」候选，供试听与选择。 */
+    private val _voiceOptions = MutableStateFlow<List<TtsOption>>(emptyList())
+    val voiceOptions: StateFlow<List<TtsOption>> = _voiceOptions
+    private val _selectedVoiceName = MutableStateFlow<String?>(null)
+    val selectedVoiceName: StateFlow<String?> = _selectedVoiceName
+    private val _selectedEngine = MutableStateFlow<String?>(null)
+    val selectedEngine: StateFlow<String?> = _selectedEngine
+    private val _regionLabel = MutableStateFlow<String>("")
+    val regionLabel: StateFlow<String> = _regionLabel
+    private val _regionMessage = MutableStateFlow<String?>(null)
+    val regionMessage: StateFlow<String?> = _regionMessage
+
+    private val gazetteer by lazy {
+        RegionGazetteer.parse(
+            appContext.assets.open("region_gazetteer.json").bufferedReader().use { it.readText() }
+        )
+    }
+    val provinceList: List<String> get() = gazetteer.provinceNames
+    fun citiesOf(province: String): List<String> =
+        gazetteer.citiesToProvince.filterValues { it == province }.keys.filter { it != province }
 
     init {
         viewModelScope.launch {
@@ -79,6 +119,7 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(bootAutoStart = enabled)
             }
         }
+        observeListenEnhance()
     }
 
     fun setTheme(theme: AppTheme) {
@@ -103,6 +144,66 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             preferences.setBootAutoStart(enabled)
         }
+    }
+
+    // ========== 收听增强 ==========
+
+    /** 在 init 块内被调：加载播报开关、本地优先开关、音色候选、当前地区。 */
+    private fun observeListenEnhance() {
+        viewModelScope.launch { preferences.voiceAnnounceEnabled.collect { v -> _uiState.value = _uiState.value.copy(voiceAnnounceEnabled = v) } }
+        viewModelScope.launch { preferences.localFirstEnabled.collect { v -> _uiState.value = _uiState.value.copy(localFirstEnabled = v) } }
+        viewModelScope.launch { preferences.preferredVoice.collect { _selectedVoiceName.value = it } }
+        viewModelScope.launch { preferences.preferredTtsEngine.collect { _selectedEngine.value = it } }
+        viewModelScope.launch { _regionLabel.value = formatRegion(regionRepository.currentUserRegion()) }
+        viewModelScope.launch {
+            val opts = withContext(Dispatchers.Default) { catalog.listOptions().filter { VoiceScoring.isChinese(it.voice) } }
+            _voiceOptions.value = opts
+        }
+    }
+
+    private fun formatRegion(r: Region): String =
+        listOf(r.province, r.city).filter { it.isNotBlank() }.distinct().joinToString(" ")
+
+    fun setVoiceAnnounce(enabled: Boolean) {
+        viewModelScope.launch { preferences.setVoiceAnnounceEnabled(enabled) }
+    }
+
+    fun setLocalFirst(enabled: Boolean) {
+        viewModelScope.launch { preferences.setLocalFirstEnabled(enabled) }
+    }
+
+    /** 选定引擎+音色并试听（TtsAnnouncer.preview 会记住偏好并播样例）。 */
+    fun previewOption(opt: TtsOption) {
+        viewModelScope.launch {
+            announcer.preview(opt)
+            _selectedVoiceName.value = opt.voice.name
+            _selectedEngine.value = opt.enginePackage
+        }
+    }
+
+    /** 先试缓存定位刷新；失败提示用户去手动选。 */
+    fun relocate() {
+        viewModelScope.launch {
+            val r = regionRepository.refreshFromLocation()
+            if (r != null && !r.isEmpty) {
+                _regionLabel.value = formatRegion(r)
+                _regionMessage.value = null
+            } else {
+                _regionMessage.value = "未能自动定位，可手动选择省市"
+            }
+        }
+    }
+
+    fun setManualRegion(province: String, city: String) {
+        viewModelScope.launch {
+            preferences.setManualRegion("$province|$city")
+            _regionLabel.value = formatRegion(Region(province, city))
+            _regionMessage.value = null
+        }
+    }
+
+    override fun onCleared() {
+        announcer.shutdown()
     }
 }
 
@@ -243,6 +344,12 @@ fun SettingsScreen(
                         viewModel.setBootAutoStart(!uiState.bootAutoStart)
                     }
             )
+
+            HorizontalDivider()
+
+            // 收听增强：线控播报 + 本地节目优先
+            SectionHeader(title = "收听增强")
+            ListenEnhanceSection(viewModel)
 
             HorizontalDivider()
 
@@ -462,4 +569,150 @@ private fun getVersionName(): String {
     return try {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
     } catch (_: Exception) { "?" }
+}
+
+/**
+ * 收听增强分区：线控播报开关 + 引擎×音色试听选择；本地优先开关 + 地区（定位/手动）。
+ * 音色列表只展中文候选（避免英文音色刷屏），每项显示「引擎名 · 音色名」，点即试听并写偏好。
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val options by viewModel.voiceOptions.collectAsState()
+    val selectedVoice by viewModel.selectedVoiceName.collectAsState()
+    val selectedEngine by viewModel.selectedEngine.collectAsState()
+    val regionLabel by viewModel.regionLabel.collectAsState()
+    val regionMessage by viewModel.regionMessage.collectAsState()
+    var voiceExpanded by remember { mutableStateOf(false) }
+    var regionExpanded by remember { mutableStateOf(false) }
+    var manualProvince by remember { mutableStateOf("") }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ -> viewModel.relocate() }   // 拒绝时 relocate 内部会回退为手动提示
+
+    fun isSelected(opt: TtsOption): Boolean =
+        opt.enginePackage == selectedEngine && opt.voice.name == selectedVoice
+
+    ListItem(
+        headlineContent = { Text("线控播报") },
+        supportingContent = { Text("用方向盘/线控切台时先语音提示“即将播放”再开播；需设备已装中文语音引擎") },
+        leadingContent = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null) },
+        trailingContent = {
+            Switch(checked = uiState.voiceAnnounceEnabled, onCheckedChange = { viewModel.setVoiceAnnounce(it) })
+        },
+        modifier = Modifier
+            .carTouchTarget()
+            .clickable { viewModel.setVoiceAnnounce(!uiState.voiceAnnounceEnabled) }
+    )
+
+    if (uiState.voiceAnnounceEnabled) {
+        val currentLabel = options.firstOrNull { isSelected(it) }
+            ?.let { "${it.engineLabel} · ${it.voice.name}" } ?: "自动（跨引擎选优）"
+        ListItem(
+            headlineContent = { Text("播报音色") },
+            supportingContent = {
+                Text(if (options.isEmpty()) "未检测到中文语音引擎" else "当前：$currentLabel（点选试听）")
+            },
+            leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
+            modifier = Modifier.carTouchTarget().clickable { voiceExpanded = !voiceExpanded }
+        )
+        if (voiceExpanded) {
+            Column(Modifier.padding(horizontal = Dimens.ScreenPadding)) {
+                options.forEach { opt ->
+                    Row(
+                        Modifier.fillMaxWidth().carTouchTarget().clickable { viewModel.previewOption(opt) },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${opt.engineLabel} · ${opt.voice.name}" + if (opt.voice.isNetwork) "（联网）" else "",
+                            color = if (isSelected(opt)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (isSelected(opt)) Icon(Icons.Default.Check, contentDescription = null)
+                    }
+                }
+            }
+        }
+    }
+
+    HorizontalDivider(Modifier.padding(top = Dimens.GapSmall))
+
+    ListItem(
+        headlineContent = { Text("本地节目优先") },
+        supportingContent = { Text("按当前所在地区，把本地电台排在首页与切台顺序前面") },
+        leadingContent = { Icon(Icons.Default.MyLocation, contentDescription = null) },
+        trailingContent = {
+            Switch(checked = uiState.localFirstEnabled, onCheckedChange = { viewModel.setLocalFirst(it) })
+        },
+        modifier = Modifier
+            .carTouchTarget()
+            .clickable { viewModel.setLocalFirst(!uiState.localFirstEnabled) }
+    )
+
+    if (uiState.localFirstEnabled) {
+        ListItem(
+            headlineContent = { Text("本地地区") },
+            supportingContent = { Text(if (regionLabel.isBlank()) "未设置" else regionLabel) },
+            leadingContent = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+            modifier = Modifier.carTouchTarget().clickable { regionExpanded = !regionExpanded }
+        )
+        regionMessage?.let {
+            Text(
+                it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = Dimens.ScreenPadding)
+            )
+        }
+        if (regionExpanded) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.GapSmall)
+            ) {
+                OutlinedButton(
+                    onClick = { locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
+                    modifier = Modifier.carTouchTarget()
+                ) { Text("重新定位") }
+                TextButton(
+                    onClick = { viewModel.setManualRegion("", "") },
+                    modifier = Modifier.carTouchTarget()
+                ) { Text("清除") }
+            }
+            var provMenu by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(expanded = provMenu, onExpandedChange = { provMenu = it }) {
+                OutlinedTextField(
+                    value = manualProvince,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("省份（手动兜底）") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(provMenu) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth().padding(horizontal = Dimens.ScreenPadding)
+                )
+                ExposedDropdownMenu(expanded = provMenu, onDismissRequest = { provMenu = false }) {
+                    viewModel.provinceList.forEach { p ->
+                        DropdownMenuItem(text = { Text(p) }, onClick = { manualProvince = p; viewModel.setManualRegion(p, ""); provMenu = false })
+                    }
+                }
+            }
+            val cities = viewModel.citiesOf(manualProvince)
+            if (cities.isNotEmpty()) {
+                var cityMenu by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(expanded = cityMenu, onExpandedChange = { cityMenu = it }) {
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("城市") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(cityMenu) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth().padding(horizontal = Dimens.ScreenPadding)
+                    )
+                    ExposedDropdownMenu(expanded = cityMenu, onDismissRequest = { cityMenu = false }) {
+                        cities.forEach { c ->
+                            DropdownMenuItem(text = { Text(c) }, onClick = { viewModel.setManualRegion(manualProvince, c); cityMenu = false })
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
