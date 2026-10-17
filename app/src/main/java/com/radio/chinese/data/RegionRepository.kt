@@ -5,10 +5,13 @@ import com.radio.chinese.data.local.CityCoordinates
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.domain.model.NearestCityFinder
 import com.radio.chinese.domain.model.Region
+import com.radio.chinese.domain.model.resolveRegion
 import com.radio.chinese.service.AndroidLocationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 
 /**
@@ -36,11 +39,16 @@ class RegionRepository @Inject constructor(
 
     private fun format(r: Region): String = "${r.province}|${r.city}"
 
-    suspend fun currentUserRegion(): Region {
-        parseRegion(preferences.manualRegion.first())?.let { if (!it.isEmpty) return it }
-        parseRegion(preferences.cachedRegion.first())?.let { if (!it.isEmpty) return it }
-        return Region.NONE
-    }
+    /**
+     * 当前地区的响应式流：手动/缓存任一变化都会重新发射。
+     * 首页观察它，设置页定位或改选手动地区后返回列表即重排，不需重启 App。
+     */
+    val currentRegion: Flow<Region> =
+        combine(preferences.manualRegion, preferences.cachedRegion) { manual, cached ->
+            resolveRegion(manual, cached)
+        }
+
+    suspend fun currentUserRegion(): Region = currentRegion.first()
 
     /** 尝试实时定位并写入缓存；成功返回 region，失败返回 null（缓存不动）。 */
     suspend fun refreshFromLocation(): Region? {

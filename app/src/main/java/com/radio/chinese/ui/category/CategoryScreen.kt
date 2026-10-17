@@ -1,5 +1,6 @@
 package com.radio.chinese.ui.category
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.ui.common.categoryIcon
+import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.common.EmptyState
@@ -41,6 +43,10 @@ fun CategoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     // 用 rememberSaveable：页内状态在左右翻页时会重新创建，普通 remember 会把已选分类重置回网格首页
     var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // 页签宿主里 showTopBar=false，TopAppBar 的返回钮不存在；系统返回又会被 RadioScreen 的
+    // “双击退出”兜底吃掉——分类列表进得去回不来。这里把返回键接回分类网格。
+    BackHandler(enabled = selectedCategory != null) { selectedCategory = null }
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -119,6 +125,20 @@ fun CategoryScreen(
             val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
 
             Column(modifier = m) {
+                if (!showTopBar) {
+                    // 无顶栏的页签形态给一条可见的返回行：不能只靠“滑回上一页/返回键”这种看不见的出路
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .carTouchTarget()
+                            .clickable { selectedCategory = null },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "返回分类")
+                        Spacer(Modifier.width(Dimens.GapSmall))
+                        Text(StationCategory.labelOf(selectedCategory), style = MaterialTheme.typography.titleMedium)
+                    }
+                }
                 if (stations.isEmpty()) {
                     EmptyState(
                         icon = Icons.Default.Radio,
