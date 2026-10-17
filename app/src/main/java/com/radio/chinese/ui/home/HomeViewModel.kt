@@ -3,6 +3,7 @@ package com.radio.chinese.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.data.RegionRepository
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,6 +39,7 @@ class HomeViewModel @Inject constructor(
     private val stationRepository: StationRepository,
     private val favoriteRepository: FavoriteRepository,
     private val preferences: RadioPreferences,
+    private val regionRepository: RegionRepository,
     val playerManager: PlayerManager
 ) : ViewModel() {
 
@@ -83,6 +87,21 @@ class HomeViewModel @Inject constructor(
         loadData()
         observeFavorites()
         observeRecentStations()
+        observeRegionChanges()
+    }
+
+    /**
+     * 地区一变就重拉电台列表：getActiveStations 的本地优先序依赖当前地区，
+     * 以前只在建仓时读一次，设置页定位/改选手动地区后要重启 App 才生效。
+     * drop(1) 跳过初始发射（init 已 loadData），distinctUntilChanged 避免重复重拉。
+     */
+    private fun observeRegionChanges() {
+        viewModelScope.launch {
+            regionRepository.currentRegion
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { loadData() }
+        }
     }
 
     /** 失败态的「重新加载」入口，供列表错误页调用。 */

@@ -15,6 +15,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.delay
 import kotlin.coroutines.resume
 import java.util.Locale
 
@@ -91,24 +92,48 @@ class TtsAnnouncer @Inject constructor(
         ensureReady()
     }
 
-    /** 播报；成功 true，降级/失败 false。异常或超时一律 false 让切台照常继续；超时同时 stop 防止与新流叠音。 */
+    /**
+     * 播报；成功 true，降级/失败 false。
+     * 完成判定不能只听一次回调：部分厂商引擎念到英文/字母等不支持字符会半途发 onError
+     * 但声继续，有的会提前发 onDone——以前立刻 resume 就让新台盖过没念完的播报。
+     * 改为：只听自家的 id，回调后再以 isSpeaking 轮确认真正念完；全程 3.5s 封顶，
+     * 超时/取消时 stop 引擎，绝不让播报卡住切台。
+     */
     suspend fun speak(text: String): Boolean {
         if (!preferences.voiceAnnounceEnabled.first()) return false
         val engine = ensureReady() ?: return false
-        val ok = withTimeoutOrNull(SPEAK_TIMEOUT_MS) {
+        val id = "announce-" + System.nanoTime()
+        val deadline = android.os.SystemClock.elapsedRealtime() + SPEAK_TIMEOUT_MS
+        val callbackOk = withTimeoutOrNull(SPEAK_TIMEOUT_MS) {
             suspendCancellableCoroutine<Boolean> { cont ->
                 engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(id: String?) {}
-                    override fun onDone(id: String?) { if (cont.isActive) cont.resume(true) }
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) {
+                        if (utteranceId == id && cont.isActive) cont.resume(true)
+                    }
                     @Deprecated("Deprecated in Java")
-                    override fun onError(id: String?) { if (cont.isActive) cont.resume(false) }
+                    override fun onError(utteranceId: String?) {
+                        // 不再提前 resume(false)：声可能还在念，交给下方 isSpeaking 轮询定成败
+                    }
                 })
-                val r = engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "announce-" + System.nanoTime())
+                val r = engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, id)
                 if (r != TextToSpeech.SUCCESS && cont.isActive) cont.resume(false)
             }
+        } == true
+        val spokeFully = callbackOk && awaitSpeakingDone(engine, deadline)
+        if (!spokeFully) runCatching { engine.stop() }   // 未完/超时：停下引擎，避免与新流叠音
+        return spokeFully
+    }
+
+    /** 轮询直到引擎真正念完或总预算耗尽；300ms 宽限期避开句间瞬间的假“念完”。 */
+    private suspend fun awaitSpeakingDone(engine: TextToSpeech, deadline: Long): Boolean {
+        delay(300)
+        @Suppress("DEPRECATION")
+        while (engine.isSpeaking) {
+            if (android.os.SystemClock.elapsedRealtime() >= deadline) return false
+            delay(120)
         }
-        if (ok == null) runCatching { engine.stop() }   // 超时：引擎仍在念，停下避免叠音
-        return ok == true
+        return true
     }
 
     /** 设置页试听某个引擎+音色：锁内换发引擎，锁外发声（speak 会再拿锁，避免重入死锁）。 */
