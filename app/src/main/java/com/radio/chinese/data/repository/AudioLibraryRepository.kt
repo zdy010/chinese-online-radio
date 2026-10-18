@@ -4,6 +4,7 @@ import com.radio.chinese.data.CredentialManager
 import com.radio.chinese.data.dao.*
 import com.radio.chinese.data.entity.*
 import com.radio.chinese.domain.*
+import com.radio.chinese.domain.model.IndexQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -70,6 +71,23 @@ class AudioLibraryRepository @Inject constructor(
         cacheDao.deleteBySource(source.id)
         sourceDao.updateSyncTime(source.id, 0)
         return listChildren(source, path, browser)
+    }
+
+    // ========== 搜索 ==========
+
+    /**
+     * 全源曲目搜索。空/空白查询直接返回空列表——不把它送进 LIKE，
+     * 否则模式退化成 `%+%`，等于“匹配全部”。
+     */
+    suspend fun searchTracks(sourceId: Long?, query: String, limit: Int = 200): List<TrackHit> {
+        val pattern = IndexQuery.likePattern(query)
+        if (pattern.isEmpty()) return emptyList()
+        return cacheDao.searchTracks(sourceId, pattern, limit).map {
+            TrackHit(
+                sourceId = it.sourceId, name = it.name, path = it.path,
+                parentPath = it.parentPath, size = it.size
+            )
+        }
     }
 
     // ========== 收藏 ==========
