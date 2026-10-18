@@ -15,9 +15,24 @@
    - 代价已知并认可：全量一轮响应体实测约 1.3MB/源、四源约 8MB，走蜂窝会吃这些流量。
    - 因此 §5 的“移动网络手动刷新文案”、§7 的两行 Wi‑Fi 相关态、§10 第 1/3/5 条里关于 Wi‑Fi 的断言全部作废；**车机档不索引、不搜索这条不变**。
 2. **进行中不出结果**。§7 原写“提示 + 已索引部分结果一起给”，现改为：`Indexing` 阶段只显“正在建立索引，请稍后搜索（已收录 N 个曲目）”，不给半截结果；完成后**自动重跑当前搜索**，用户不必重输关键字。
-3. 判定集中在纯函数 `IndexQuery.searchPhase(...)` → `SearchPhase`（`Disabled/NotIndexed/Deferred/Indexing/Ready/ReadyStale`），UI 只渲染阶段。索引过期（TTL 到或 `lastSyncAt<=0`）时**照常出结果**，只给一行可点的「索引可能已过期，点这里更新」，**不弹窗**。
+3. 判定集中在纯函数 `IndexQuery.searchPhase(...)` → `SearchPhase`（`Disabled/NoWebdavSource/NotIndexed/Deferred/Indexing/Ready/ReadyStale`），UI 只渲染阶段。索引过期（TTL 到或 `lastSyncAt<=0`）时**照常出结果**，只给一行可点的「索引可能已过期，点这里更新」，**不弹窗**。
 4. `webdav_index_enabled` 语义由“是否自动索引”改为“**是否允许建立索引**”（关掉后不弹确认、不起爬，已建好的搜索仍可用）。
 5. 远端索引发布（`2026-10-18-remote-index-publish-design.md`）**暂缓**：服务器无写通道、SSH 不可达、域名被备案阻断。
+
+### 用户实测三个问题后的追补（2026-10-19，commit 57ec8f6）
+
+6. **跨源搜索只属于「网络」页签**。原实现只要手机档有搜索词就顶掉页签内容区，导致「本地」页的搜索框去搜网络曲目。现在 UI 传入 `networkTab`，本地/收藏/最近页签继续只做当页过滤；占位文案随页签变化，**车机档一律保持原文案**。
+7. **必须记录的播放耦合**：`RadioService` 建 ExoPlayer 时从**注入的 `WebDavClient` 单例**读 `authHeader()`，且 `username` 为空就不加 Authorization 头。所以**浏览/播放路径必须复用该单例**，只有并发爬取的索引器用独立实例。本功能初版把 VM 整体改走工厂，切断了这条隐式依赖，造成所有 WebDAV 播放失效（用户实测问题 2）。根治办法（播放侧 per-request 鉴权，如 OkHttp DataSource 或凭证随 MediaItem 下发）**另列议题**，不在本功能里顺手改。
+8. **一个网络源也没添加时不弹“是否建立索引”**，而是 `SearchPhase.NoWebdavSource` 引导去添加来源（用户实测问题 3： “建立的什么索引？”）。`confirmIndexing()` 同时拒绝在零源情况下“假建立”。
+9. **release 构建守卫**（`app/build.gradle.kts`）：`EasterEggConfig.kt`/`YunPanConfig.kt` 与仓库已提交版本逐字不一致，或 `enableEasterEgg=true`，则**拒绝 release 构建**；`-PallowEggInRelease=true` 可显式豁免（仅命令行，不写进配置文件）且产物改名 `*-release-EGG.apk`。后果：`skip-worktree` 只防提交入库、不防被编进 APK，而 **R8 不删字符串常量**，给读取处加 `ENABLE_EASTER_EGG` 门控并不能防反编译取密。实测：默认构建 BUILD FAILED 并列出两条理由，豁免后 BUILD SUCCESSFUL 且文件名为 `-release-EGG.apk`。
+
+### 设备复验（2026-10-19，emulator-5554，从零加源跑全链路）
+
+- 无源 + 网络页签搜索 → 显示“还没有可索引的网络来源”与“添加网络来源”按钮，无确认框
+- 本地页签 → 占位文案为“搜索本地曲目”，输入后列的是本地条目，跨源列表不再抢位
+- 加源后搜索 → 弹“现在为 1 个网络源建立索引？”；确认后 51 次 PROPFIND 跑完，结果**自动出现**
+- 点结果行 → `dumpsys media_session`：`state=PLAYING(3), position=18110, error=null`；`dumpsys audio`：本包 `AudioTrack ... state:started` → **出声恢复**
+- 单测 196/196，`assembleDebug` 绿
 
 ## 1. 目标与非目标
 
