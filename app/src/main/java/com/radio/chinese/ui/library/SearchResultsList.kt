@@ -15,7 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.radio.chinese.domain.IndexState
+import com.radio.chinese.domain.SearchPhase
 import com.radio.chinese.domain.TrackHit
+import com.radio.chinese.domain.model.IndexQuery
 import com.radio.chinese.domain.model.MergedTrack
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.theme.Dimens
@@ -38,90 +44,101 @@ import com.radio.chinese.ui.theme.Dimens
 /**
  * 手机档的全源搜索结果列表。车机档不会走到这里（那里保留目录内过滤）。
  *
- * 空态文案分三种：没搜到 / 还没索引完 / 索引因移动网络暂停——
- * 混用会让用户以为记录丢了，这与 AudioRecentTab、FavoritesScreen 的既有约定同源。
+ * 一切"该显示什么"由 [SearchPhase] 决定，判定在 `IndexQuery.searchPhase` 里且已被单测钉死；
+ * 这里只做渲染，不再自己判断有没有索引、在不在建。
  */
 @Composable
 fun SearchResultsList(
     results: List<MergedTrack>,
     query: String,
+    phase: SearchPhase,
     indexState: IndexState,
     breadcrumbOf: (TrackHit) -> String,
     isFavorited: (String) -> Boolean,
     onPlay: (TrackHit) -> Unit,
     onToggleFavorite: (TrackHit) -> Unit,
+    onBuildIndex: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val indexedNow = (indexState as? IndexState.Running)?.p?.indexedFiles ?: 0
+
     Column(modifier = modifier.fillMaxSize()) {
-        IndexHint(indexState)
+        HintLine(phase, indexedNow, onBuildIndex)
 
-        if (results.isEmpty()) {
-            val indexing = indexState is IndexState.Running || indexState is IndexState.PausedNoWifi
-            EmptyState(
-                icon = Icons.Default.Search,
-                title = when {
-                    query.isBlank() -> "输入曲目名开始搜索"
-                    indexing -> "正在建立索引，请稍后"
-                    else -> "没有匹配「$query」的曲目"
-                },
-                hint = when {
-                    indexState is IndexState.PausedNoWifi ->
-                        "索引已暂停，已收录 ${indexState.p.indexedFiles} 个曲目，连接 Wi-Fi 后继续"
-                    indexState is IndexState.Idle && query.isNotBlank() ->
-                        "连接 Wi-Fi 后会自动开始建立节目索引"
-                    indexState is IndexState.Running ->
-                        "已收录 ${indexState.p.indexedFiles} 个曲目，结果可能不全"
-                    else -> "换个关键字试试"
-                }
+        when (phase) {
+            // 建立中：明确挡结果。半截结果会让人以为搜漏了
+            SearchPhase.Indexing -> EmptyState(
+                icon = Icons.Default.Refresh,
+                title = "正在建立索引，请稍后搜索",
+                hint = if (indexedNow > 0) "已收录 $indexedNow 个曲目，建完自动显示结果"
+                else "建完自动显示结果，可以退出本页等它跑完",
+                modifier = Modifier.weight(1f)
             )
-            return
-        }
 
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(Dimens.ListGap)
-        ) {
-            // key 必须稳定：行内收藏态是 remember 的，无 key 会把星标串到别的行
-            items(results, key = { "${it.name}|${it.size}" }) { merged ->
-                val primary = merged.sources.first()
-                SearchResultRow(
-                    name = merged.name,
-                    crumb = breadcrumbOf(primary),
-                    sourceCount = merged.sources.size,
-                    isFav = isFavorited(primary.path),
-                    onClick = { onPlay(primary) },
-                    onToggleFav = { onToggleFavorite(primary) }
-                )
+            SearchPhase.Deferred, SearchPhase.NotIndexed -> EmptyState(
+                icon = Icons.Default.Search,
+                title = "尚未建立索引，无法搜索全部曲目",
+                hint = "建立后可以按唱段名直接搜索，不必一层层点目录",
+                actionLabel = "现在建立索引",
+                onAction = onBuildIndex,
+                modifier = Modifier.weight(1f)
+            )
+
+            SearchPhase.Disabled -> EmptyState(
+                icon = Icons.Default.Search,
+                title = "索引功能已关闭",
+                hint = "在设置的「音频库」里打开「允许建立网络源索引」后就能搜索全部曲目",
+                modifier = Modifier.weight(1f)
+            )
+
+            SearchPhase.Ready, SearchPhase.ReadyStale -> {
+                if (results.isEmpty()) {
+                    // “没搜到”和“还没索引完”是两回事，文案不能混用
+                    EmptyState(
+                        icon = Icons.Default.Search,
+                        title = if (query.isBlank()) "输入曲目名开始搜索"
+                        else "没有匹配「$query」的曲目",
+                        hint = if (query.isBlank()) null else "换个关键字试试，或点上面的提示更新索引",
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.ListGap),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // key 必须稳定：行内收藏态是 remember 的，无 key 会把星标串到别的行
+                        items(results, key = { "${it.name}|${it.size}" }) { merged ->
+                            val primary = merged.sources.first()
+                            SearchResultRow(
+                                name = merged.name,
+                                crumb = breadcrumbOf(primary),
+                                sourceCount = merged.sources.size,
+                                isFav = isFavorited(primary.path),
+                                onClick = { onPlay(primary) },
+                                onToggleFav = { onToggleFavorite(primary) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-/**
- * 索引进行中的软提示：不挡结果，只说明"结果可能不全"。
- *
- * 已完成（Done）与未开始（Idle）都不显示——用户不需要知道一个已经好了的东西。
- */
+/** 提示行：进行中带已收录数（否则一分多钟的等待看着像卡死）；可操作的阶段才响应点击。 */
 @Composable
-private fun IndexHint(indexState: IndexState) {
-    val text = when (indexState) {
-        is IndexState.Running ->
-            "索引进行中，已收录 ${indexState.p.indexedFiles} 个曲目，结果可能不全"
-        is IndexState.PausedNoWifi ->
-            "索引已暂停（当前不是 Wi-Fi），已收录 ${indexState.p.indexedFiles} 个曲目"
-        is IndexState.PartiallyFailed ->
-            "有 ${indexState.p.skippedDirs} 个目录未能收录，下次进入音频库自动重试"
-        else -> null
-    } ?: return
-
+private fun HintLine(phase: SearchPhase, indexedNow: Int, onBuildIndex: () -> Unit) {
+    val text = IndexQuery.searchHint(phase, indexedNow) ?: return
+    val actionable = phase == SearchPhase.ReadyStale || phase == SearchPhase.Deferred
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(
-            horizontal = Dimens.ScreenPadding,
-            vertical = Dimens.GapTiny
-        )
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = actionable, onClick = onBuildIndex)
+            .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapTiny)
     )
 }
 
@@ -171,7 +188,7 @@ private fun SearchResultRow(
         }
         IconButton(onClick = { favState = !favState; onToggleFav() }) {
             Icon(
-                if (favState) Icons.Default.Star else Icons.Default.StarOutline,
+                if (favState) Icons.Default.Star else Icons.Outlined.StarOutline,
                 contentDescription = if (favState) "取消收藏" else "收藏这一曲",
                 tint = if (favState) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant

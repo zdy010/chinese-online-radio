@@ -50,6 +50,10 @@ interface AudioCacheDao {
 
     @Query("SELECT COUNT(*) FROM audio_cache WHERE sourceId = :sourceId AND isFolder = 0")
     suspend fun countTracks(sourceId: Long): Int
+
+    /** 跨源已收录曲目数：判定“本机到底有没有索引”的唯一口径，不能用内存计数。 */
+    @Query("SELECT COUNT(*) FROM audio_cache WHERE isFolder = 0")
+    suspend fun countAllTracks(): Int
 }
 
 /** dirOldestCachedAt 的行投影：目录路径 + 该目录里最旧的一行时间戳。 */

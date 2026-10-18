@@ -99,6 +99,31 @@ class AudioLibraryRepository @Inject constructor(
         }
     }
 
+    // ========== 索引状态 ==========
+
+    /** 跨源已收录曲目数；0 表示本机从未成功建立过索引。 */
+    suspend fun indexedTrackCount(): Int = cacheDao.countAllTracks()
+
+    /** 可建索引的来源：只有 WebDAV 有目录树可递归。 */
+    suspend fun webdavSources(): List<AudioSource> =
+        getSources().filter { it.type == SourceType.WEBDAV }
+
+    /**
+     * 索引是否可能过期。
+     *
+     * 两种情况都算过期：lastSyncAt<=0（从未整树跑完，含中途有目录失败），
+     * 以及超过源级 TTL。索引残缺时提示「点这里更新」比假装完整更诚实。
+     */
+    suspend fun isIndexStale(now: Long = System.currentTimeMillis()): Boolean {
+        for (s in getSources()) {
+            if (s.type != SourceType.WEBDAV) continue
+            val e = sourceDao.getById(s.id) ?: return true
+            if (e.lastSyncAt <= 0L) return true
+            if (now - e.lastSyncAt > e.cacheTtlMs) return true
+        }
+        return false      // 没有任何 WebDAV 源，或所有源都在 TTL 内
+    }
+
     // ========== 收藏 ==========
 
     val favorites: Flow<List<AudioFavoriteEntity>> = favoriteDao.getAllFlow()

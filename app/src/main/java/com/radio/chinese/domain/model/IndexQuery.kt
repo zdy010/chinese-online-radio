@@ -2,6 +2,7 @@ package com.radio.chinese.domain.model
 
 import com.radio.chinese.domain.IndexState
 import com.radio.chinese.domain.IndexedProgress
+import com.radio.chinese.domain.SearchPhase
 import com.radio.chinese.domain.TrackHit
 
 /** 归并后的搜索结果；`sources.first()` 为主选来源。 */
@@ -95,11 +96,10 @@ object IndexQuery {
      * 多个源的索引状态聚合为一个给 UI 的口径。
      *
      * 搜索是跨源的，提示也必须是跨源口径：否则 A 源在跑、B 源已完，
-     * UI 会拿 B 的 Done 去说“结果已完整”。优先级 Running > Paused > Failed > Done。
+     * UI 会拿 B 的 Done 去说“结果已完整”。优先级 Running > Failed > Done。
      */
     fun aggregate(states: Collection<IndexState>): IndexState {
         running(states)?.let { return IndexState.Running(it) }
-        paused(states)?.let { return IndexState.PausedNoWifi(it) }
         failed(states)?.let { return IndexState.PartiallyFailed(it) }
         val done = states.filterIsInstance<IndexState.Done>()
         if (done.isNotEmpty()) return IndexState.Done(done.sumOf { it.trackCount })
@@ -107,15 +107,13 @@ object IndexQuery {
     }
 
     private fun running(s: Collection<IndexState>) = progress<IndexState.Running>(s)
-    private fun paused(s: Collection<IndexState>) = progress<IndexState.PausedNoWifi>(s)
     private fun failed(s: Collection<IndexState>) = progress<IndexState.PartiallyFailed>(s)
 
-    /** 只取带进度字段的分支，类型参数限定可用状态，避免手拼四个 sumOf。 */
+    /** 只取带进度字段的分支，类型参数限定可用状态，避免手拼三个 sumOf。 */
     private inline fun <reified T : IndexState> progress(states: Collection<IndexState>): IndexedProgress? {
         val list = states.filterIsInstance<T>().mapNotNull { p ->
             when (p) {
                 is IndexState.Running -> p.p
-                is IndexState.PausedNoWifi -> p.p
                 is IndexState.PartiallyFailed -> p.p
                 else -> null
             }
@@ -126,5 +124,39 @@ object IndexQuery {
             pendingDirs = list.sumOf { it.pendingDirs },
             skippedDirs = list.sumOf { it.skippedDirs },
         )
+    }
+
+    /**
+     * 搜索阶段判定（2026-10-18 用户决定：继不主动建索引，进行中不出结果）。
+     *
+     * 顺序有意：先看“在不在跑 / 有没有索引”，再看开关与询问状态——
+     * 关掉“允许建立索引”不能让已建好的搜索失效；正在跑时也不该改口成“以后再说”。
+     */
+    fun searchPhase(
+        indexState: IndexState,
+        indexedCount: Int,
+        askedThisSession: Boolean,
+        allowIndexing: Boolean,
+        stale: Boolean,
+    ): SearchPhase {
+        if (indexState is IndexState.Running) return SearchPhase.Indexing
+        if (indexedCount > 0) return if (stale) SearchPhase.ReadyStale else SearchPhase.Ready
+        if (!allowIndexing) return SearchPhase.Disabled
+        return if (askedThisSession) SearchPhase.Deferred else SearchPhase.NotIndexed
+    }
+
+    /**
+     * 提示行文案；null 表示不占行。
+     *
+     * 进行中带“已收录 N 个曲目”：首轮要一分多钟，光一句“请稍后”会让人以为卡死。
+     */
+    fun searchHint(phase: SearchPhase, indexedCount: Int): String? = when (phase) {
+        SearchPhase.Indexing ->
+            if (indexedCount > 0) "正在建立索引，请稍后搜索（已收录 $indexedCount 个曲目）"
+            else "正在建立索引，请稍后搜索"
+        SearchPhase.Deferred -> "尚未建立索引，无法搜索全部曲目"
+        SearchPhase.Disabled -> "索引功能已关闭，可在设置中开启"
+        SearchPhase.ReadyStale -> "索引可能已过期，点这里更新"
+        else -> null
     }
 }

@@ -40,7 +40,6 @@ class IndexCoordinator(
     private val browser: AudioBrowser,
     private val cache: IndexCacheWriter,
     private val sourceSync: IndexSourceSync,
-    private val gate: NetworkGate,
     private val concurrency: Int = 6,
     private val ttlMs: Long = DEFAULT_TTL_MS,
     private val now: () -> Long = System::currentTimeMillis,
@@ -70,10 +69,6 @@ class IndexCoordinator(
         seen.add(root)
 
         while (pending.isNotEmpty()) {
-            if (!gate.isIndexingAllowed()) {
-                onState(IndexState.PausedNoWifi(IndexedProgress(files, pending.size, skipped)))
-                gate.awaitAllowed()
-            }
             onState(IndexState.Running(IndexedProgress(files, pending.size, skipped)))
 
             val batch = mutableListOf<String>()
@@ -135,14 +130,16 @@ class IndexCoordinator(
  * 索引生命周期门面：每源最多一个在跑任务、状态可订阅、取消不清数据。
  *
  * 不读 UiSurface（CompositionLocal 属 UI 层）：是否调用 start 由手机档 UI 决定，
- * 车机档永不调用，因此车机上一份 PROPFIND 都不会发。
+ * 车机档永不调用，因此车机档一份 PROPFIND 都不会发。
+ *
+ * 调用时机由用户确认驱动（2026-10-18 决策）：不自动起索引，只在用户
+ * 在“是否建立索引”确认框里点了建立之后才 start。网络类型不再是前提条件。
  */
 @Singleton
 class SourceIndexer @Inject constructor(
     private val browserProvider: BrowserProvider,
     private val cacheWriter: IndexCacheWriter,
     private val sourceSync: IndexSourceSync,
-    private val gate: NetworkGate,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
     private val _states = MutableStateFlow<Map<Long, IndexState>>(emptyMap())
@@ -158,7 +155,7 @@ class SourceIndexer @Inject constructor(
         if (jobs[source.id]?.isActive == true) return   // 重复触发合并，不叠并发
         jobs[source.id] = scope.launch {
             _states.update { it + (source.id to IndexState.Running(IndexedProgress(0, 1, 0))) }
-            val st = IndexCoordinator(browser, cacheWriter, sourceSync, gate).crawl(source.id)
+            val st = IndexCoordinator(browser, cacheWriter, sourceSync).crawl(source.id)
             _states.update { it + (source.id to st) }
         }
     }

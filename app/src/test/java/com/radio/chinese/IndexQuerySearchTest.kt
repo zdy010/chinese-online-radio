@@ -123,14 +123,17 @@ class IndexQuerySearchTest {
         assertEquals(IndexState.Running(IndexedProgress(50, 5, 1)), agg)
     }
 
-    @Test fun `没在跑时报 Paused 优先于 Failed 优先于 Done`() {
-        assertEquals(
-            IndexState.PausedNoWifi(IndexedProgress(10, 1, 0)),
-            IndexQuery.aggregate(listOf(IndexState.Done(9), IndexState.PausedNoWifi(IndexedProgress(10, 1, 0))))
-        )
+    @Test fun `聚合优先级：Running 高于 Failed 高于 Done`() {
         assertEquals(
             IndexState.PartiallyFailed(IndexedProgress(4, 0, 2)),
             IndexQuery.aggregate(listOf(IndexState.Done(9), IndexState.PartiallyFailed(IndexedProgress(4, 0, 2))))
+        )
+        assertEquals(
+            IndexState.Running(IndexedProgress(4, 1, 0)),
+            IndexQuery.aggregate(listOf(
+                IndexState.PartiallyFailed(IndexedProgress(4, 0, 2)),
+                IndexState.Running(IndexedProgress(4, 1, 0)),
+            ))
         )
         assertEquals(IndexState.Done(140), IndexQuery.aggregate(listOf(IndexState.Done(40), IndexState.Done(100))))
     }

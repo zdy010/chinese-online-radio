@@ -20,12 +20,14 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -100,10 +102,8 @@ fun AudioMainScreen(
     // 形态判定只有一个源：这里读，往下传布尔给 VM，VM 不自己读 CompositionLocal
     val carSurface = isCarSurface()
     LaunchedEffect(searchQuery, carSurface) { viewModel.updateSearchQuery(searchQuery, carSurface) }
-    // 车机档永不拉起索引：一个 PROPFIND 都不得发出去。
-    // 键里必须带 sources.size：只键 carSurface 时，用户刚加的源不会触发索引，
-    // 要等到重进页面才开始（spec §3 “新建源成功后立即索引”）。
-    LaunchedEffect(uiState.sources.size, carSurface) { viewModel.startIndexingIfNeeded(carSurface) }
+    // 这里故意没有“进页/加源就自动建索引”的副作用：索引只能由用户在确认框里起。
+    // 之前的 LaunchedEffect(sources.size, carSurface) { startIndexingIfNeeded() } 已删除。
 
     val trackTitle = uiState.currentTrack?.name ?: operaFile?.name ?: ""
     val hasPlayer = trackTitle.isNotEmpty()
@@ -202,10 +202,12 @@ fun AudioMainScreen(
                     SearchResultsList(
                         results = uiState.searchResults,
                         query = searchQuery,
+                        phase = uiState.searchPhase,
                         indexState = uiState.indexState,
                         breadcrumbOf = viewModel::breadcrumbFor,
                         isFavorited = viewModel::isFavorited,
                         onPlay = viewModel::playSearchResult,
+                        onBuildIndex = viewModel::confirmIndexing,
                         onToggleFavorite = { hit ->
                             val sourceName = uiState.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
                             viewModel.toggleFavorite(hit.sourceId, hit.path, hit.name, sourceName)
@@ -224,6 +226,27 @@ fun AudioMainScreen(
                 }
             }
         }
+    }
+
+    // 索引确认框：只能由用户点头才起后台爬取，超时、误操作都不会自己跑
+    if (uiState.askIndexConfirm) {
+        val webdavCount = uiState.sources.count { it.type == com.radio.chinese.domain.SourceType.WEBDAV }
+        AlertDialog(
+            onDismissRequest = viewModel::declineIndexing,
+            title = { Text("尚未建立索引") },
+            text = {
+                Text(
+                    "不建立索引就只能看到当前目录里的曲目。\n" +
+                        "现在为 $webdavCount 个网络源建立索引？可能需要 1–3 分钟，期间可以退出本页。"
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmIndexing) { Text("建立索引") }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::declineIndexing) { Text("以后再说") }
+            },
+        )
     }
 
     // 添加来源对话框挂在宿主上：右上角的“+”在四个 Tab 都显示，

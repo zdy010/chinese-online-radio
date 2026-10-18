@@ -20,7 +20,6 @@ data class IndexedProgress(
 sealed interface IndexState {
     data object Idle : IndexState
     data class Running(val p: IndexedProgress) : IndexState
-    data class PausedNoWifi(val p: IndexedProgress) : IndexState
     data class PartiallyFailed(val p: IndexedProgress) : IndexState
     data class Done(val trackCount: Int) : IndexState
 }
@@ -48,6 +47,32 @@ interface IndexCacheWriter {
 /** 源级同步时间戳回写。只在整棵树爬完时写，见 IndexCoordinator 的收尾。 */
 interface IndexSourceSync {
     suspend fun markSynced(sourceId: Long, at: Long)
+}
+
+/**
+ * 音频库“全源搜索”当前的可用阶段（仅手机档会进入）。
+ *
+ * UI 只渲染这个枚举，不自己判断“该不该弹确认 / 该不该挡结果”——
+ * 那些规则一旦写进 Compose 就再也验不到了。
+ */
+enum class SearchPhase {
+    /** 用户关闭了“允许建立索引”且库里无索引 */
+    Disabled,
+
+    /** 从未建立索引且本次会话未问过 → 应弹“是否现在建立” */
+    NotIndexed,
+
+    /** 本次会话已选“以后再说” → 不弹，仅提示行留手动入口 */
+    Deferred,
+
+    /** 建立中 → 不给结果 */
+    Indexing,
+
+    /** 有索引且未过期 → 正常出结果 */
+    Ready,
+
+    /** 有索引但可能过期 → 出结果 + 一行“点这里更新” */
+    ReadyStale,
 }
 
 /** 浏览器提供口：索引器只需要 WebDAV 形态的来源，非 WebDAV 返回 null。 */

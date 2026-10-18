@@ -360,7 +360,12 @@ class RadioPreferences @Inject constructor(
     /** 本地节目排序优先，默认开。 */
     val localFirstEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_LOCAL_FIRST] ?: true }
 
-    /** 后台建立 WebDAV 节目索引（仅手机档生效，且只在 Wi-Fi 下跑），默认开。 */
+    /**
+     * 允许为网络源建立节目索引，默认开。
+     *
+     * 2026-10-18 语义变更：索引不再自动跑（包括不再限定 Wi-Fi），
+     * 这个开关也不再意味着“自动”，而是“允许不允许弹确认、允不允许用户手动起”。
+     */
     val webdavIndexEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_WEBDAV_INDEX_ENABLED] ?: true }
     val cachedRegion: Flow<String?> = dataStore.data.map { it[KEY_CACHED_REGION] }
     val manualRegion: Flow<String?> = dataStore.data.map { it[KEY_MANUAL_REGION] }

@@ -11,7 +11,6 @@ import com.radio.chinese.domain.IndexState
 import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.SourceType
 import com.radio.chinese.service.IndexCoordinator
-import com.radio.chinese.service.NetworkGate
 import com.radio.chinese.service.SourceIndexer
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -87,11 +86,6 @@ class SourceIndexerTest {
         override suspend fun markSynced(sourceId: Long, at: Long) { syncWrites++ }
     }
 
-    private object AllowAllGate : NetworkGate {
-        override fun isIndexingAllowed() = true
-        override suspend fun awaitAllowed() {}
-    }
-
     private fun dir(name: String) = AudioTrack(id = name, name = name, path = name, isFolder = true)
     private fun file(name: String, parent: String) = AudioTrack(id = name, name = name, path = name, parentPath = parent)
 
@@ -99,8 +93,7 @@ class SourceIndexerTest {
         browser: AudioBrowser,
         cache: FakeCache,
         sync: RecordingSync = RecordingSync(),
-        gate: NetworkGate = AllowAllGate,
-    ): IndexState = IndexCoordinator(browser, cache, sync, gate, concurrency = 6).crawl(1L)
+    ): IndexState = IndexCoordinator(browser, cache, sync, concurrency = 6).crawl(1L)
 
     @Test fun `两层树全部目录都被请求`() = runTest {
         val cache = FakeCache()
@@ -177,7 +170,7 @@ class SourceIndexerTest {
 
     @Test fun `同一源重复触发只跑一个任务`() = runTest {
         val browser = FakeBrowser(mapOf("/" to listOf(file("a.mp3", "/"))))
-        val indexer = SourceIndexer(FixedProvider(browser), FakeCache(), RecordingSync(), AllowAllGate, this)
+        val indexer = SourceIndexer(FixedProvider(browser), FakeCache(), RecordingSync(), this)
         indexer.start(webdavSource)
         indexer.start(webdavSource)
         advanceUntilIdle()
@@ -186,7 +179,7 @@ class SourceIndexerTest {
 
     @Test fun `非 WebDAV 源不建任务也不上报状态`() = runTest {
         val indexer = SourceIndexer(
-            FixedProvider(FakeBrowser(emptyMap())), FakeCache(), RecordingSync(), AllowAllGate, this
+            FixedProvider(FakeBrowser(emptyMap())), FakeCache(), RecordingSync(), this
         )
         indexer.start(AudioSource(2, "本地", SourceType.LOCAL, ""))
         advanceUntilIdle()
@@ -200,7 +193,7 @@ class SourceIndexerTest {
             mapOf("/" to listOf(dir("/常香玉")), "/常香玉" to listOf(file("七仙女.mp3", "/常香玉"))),
             hangOn = "/常香玉",
         )
-        val indexer = SourceIndexer(FixedProvider(browser), cache, RecordingSync(), AllowAllGate, this)
+        val indexer = SourceIndexer(FixedProvider(browser), cache, RecordingSync(), this)
         indexer.start(webdavSource)
         advanceUntilIdle()                       // 根目录已落库，子目录挂在网上
         assertTrue("根目录应先已写入", cache.dirs[1L].orEmpty().any { it.parentPath == "/" })

@@ -101,11 +101,6 @@ object AppModule {
             kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default
         )
 
-    @Provides
-    @Singleton
-    fun provideNetworkGate(@ApplicationContext context: Context): com.radio.chinese.service.NetworkGate =
-        com.radio.chinese.service.NetworkGateImpl(context)
-
     /**
      * 索引器只认端口，不认具体实现：写行与时间戳回写都经 Room 适配块，
      * 而浏览器工厂必须每源新建客户端（单例缓存 key 不含源，会跨源串数据）。

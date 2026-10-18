@@ -15,6 +15,7 @@ import com.radio.chinese.domain.*
 import com.radio.chinese.domain.browser.*
 import com.radio.chinese.domain.model.IndexQuery
 import com.radio.chinese.domain.model.MergedTrack
+import com.radio.chinese.domain.SearchPhase
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.service.SourceIndexer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,7 +55,11 @@ data class LibraryUiState(
 
     // 全源搜索（仅手机档）：已归并的结果 + 跨源聚合后的索引状态
     val searchResults: List<MergedTrack> = emptyList(),
-    val indexState: IndexState = IndexState.Idle
+    val indexState: IndexState = IndexState.Idle,
+
+    // 是否该弹“建立索引”确认、以及现在处于哪个阶段（判定在 IndexQuery.searchPhase）
+    val searchPhase: SearchPhase = SearchPhase.Ready,
+    val askIndexConfirm: Boolean = false
 )
 
 enum class RepeatMode { ALL, ONE, RANDOM }
@@ -84,6 +89,11 @@ class AudioLibraryViewModel @Inject constructor(
     private val _state = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _state.asStateFlow()
 
+    // 形态由 UI 传进来。默认按车机处理：宁可少做一步，也不能误起后台爬取
+    private var surfaceIsCar = true
+    private var askedThisSession = false
+    private var lastIndexState: IndexState = IndexState.Idle
+
     init {
         loadSources()
         // 订阅 PlayerManager 状态
@@ -102,11 +112,18 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             playerManager.operaRepeatMode.collect { mode -> _state.update { it.copy(repeatMode = mode.toUi()) } }
         }
-        // 索引状态跨源聚合：搜索是跨源的，提示也必须用跨源口径
+        // 索引状态跨源聚合：搜索是跨源的，提示也必须用跨源口径。
+        // 并从“跑完那一刻”自动重跑一次搜索：否则用户得把关键字删掉重输。
         viewModelScope.launch {
             indexer.states.collect { map ->
                 val agg = IndexQuery.aggregate(map.values)
+                val wasRunning = lastIndexState is IndexState.Running
+                val query = _state.value.searchQuery
+                lastIndexState = agg
                 _state.update { it.copy(indexState = agg) }
+                if (wasRunning && agg !is IndexState.Running && query.isNotBlank() && !surfaceIsCar) {
+                    runSearch(query)
+                }
             }
         }
         // 订阅收藏与最近播放
@@ -128,29 +145,60 @@ class AudioLibraryViewModel @Inject constructor(
     fun hideAddDialog() = _state.update { it.copy(showAddDialog = false, error = null) }
 
     /**
-     * 搜索。形态由 UI 传进来（VM 不能读 CompositionLocal）：
-     * 车机档保持原有的“当前目录内过滤”，全源搜索只在手机档开启。
+     * 搜索。形态由 UI 传进来（VM 不能读 CompositionLocal）：车机档保持原有的
+     * “当前目录内过滤”，全源搜索只在手机档开启。
+     *
+     * 2026-10-18 决定：**绝不主动建索引**。手机档搜到一半发现本机没索引，
+     * 只是请用户确认，不自己起爬。
      */
     fun updateSearchQuery(q: String, carSurface: Boolean) {
+        surfaceIsCar = carSurface
         _state.update { it.copy(searchQuery = q, searchResults = emptyList()) }
-        if (carSurface || q.isBlank()) return
-        viewModelScope.launch {
-            val hits = repository.searchTracks(sourceId = null, query = q, limit = 200)
-            _state.update { it.copy(searchResults = IndexQuery.mergeHits(hits)) }
+        if (carSurface || q.isBlank()) {
+            _state.update { it.copy(searchPhase = SearchPhase.Ready, askIndexConfirm = false) }
+            return
         }
+        viewModelScope.launch { runSearch(q) }
+    }
+
+    /** 查一次阶段，再决定是“请确认 / 挡结果 / 出结果”。 */
+    private suspend fun runSearch(q: String) {
+        val phase = IndexQuery.searchPhase(
+            indexState = _state.value.indexState,
+            indexedCount = repository.indexedTrackCount(),
+            askedThisSession = askedThisSession,
+            allowIndexing = preferences.webdavIndexEnabled.first(),
+            stale = repository.isIndexStale(),
+        )
+        val ask = phase == SearchPhase.NotIndexed && !askedThisSession
+        _state.update { it.copy(searchPhase = phase, askIndexConfirm = ask) }
+        if (phase != SearchPhase.Ready && phase != SearchPhase.ReadyStale) return
+        val hits = repository.searchTracks(sourceId = null, query = q, limit = 200)
+        _state.update { it.copy(searchResults = IndexQuery.mergeHits(hits)) }
     }
 
     /**
-     * 拉起后台索引。车机档永不调用，因此车机上一份 PROPFIND 都不会发；
-     * 开关关闭或移动网络（由 NetworkGate 卡）则不会真的开跑。
+     * 用户点了“建立索引”（或点了“索引可能已过期，点这里更新”）。
+     *
+     * 车机档再卡一道：不能只靠“车机档不渲染这个入口”保证零流量，
+     * 任何一处误接都会静默起爬。网络类型不再是前提（2026-10-18 决定）。
      */
-    fun startIndexingIfNeeded(carSurface: Boolean) {
-        if (carSurface) return
+    fun confirmIndexing() {
+        askedThisSession = true
+        _state.update { it.copy(askIndexConfirm = false) }
+        if (surfaceIsCar) return
         viewModelScope.launch {
             if (!preferences.webdavIndexEnabled.first()) return@launch
-            repository.getSources()
-                .filter { it.type == SourceType.WEBDAV }
-                .forEach { indexer.start(it) }
+            repository.webdavSources().forEach { indexer.start(it) }
+            _state.update { it.copy(searchPhase = SearchPhase.Indexing) }
+        }
+    }
+
+    /** 用户选了“以后再说”：本次会话不再弹，下次冷启动恢复询问（靠新 VM 自然重置）。 */
+    fun declineIndexing() {
+        askedThisSession = true
+        _state.update {
+            it.copy(askIndexConfirm = false, searchPhase = SearchPhase.Deferred)
         }
     }
 

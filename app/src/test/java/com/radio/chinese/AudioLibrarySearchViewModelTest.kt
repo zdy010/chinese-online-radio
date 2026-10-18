@@ -7,6 +7,7 @@ import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.IndexState
 import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.TrackHit
+import com.radio.chinese.domain.SearchPhase
 import com.radio.chinese.domain.SourceType
 import com.radio.chinese.domain.browser.BrowserFactory
 import com.radio.chinese.service.OperaRepeatMode
@@ -93,6 +94,7 @@ class AudioLibrarySearchViewModelTest {
 
     @Test fun `手机档查询走全源并按 name+size 归并`() = runTest(dispatcher) {
         val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 3469
         coEvery { env.repo.searchTracks(null, "花木兰", 200) } returns listOf(
             TrackHit(1, "花木兰", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000),
             TrackHit(2, "花木兰", "/常香玉/花木兰.mp3", "/常香玉", 8_000_000),
@@ -104,28 +106,91 @@ class AudioLibrarySearchViewModelTest {
         assertEquals(listOf(1L, 2L), vm.uiState.value.searchResults[0].sources.map { it.sourceId })
     }
 
-    @Test fun `车机档永不触发索引`() = runTest(dispatcher) {
+    // ── 不主动建索引：弹确认 → 确认才起爬（2026-10-18 用户决定）──
+
+    @Test fun `从未建立索引时搜索不自动起爬而是请求确认`() = runTest(dispatcher) {
         val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
         val vm = build(env)
-        vm.startIndexingIfNeeded(carSurface = true)
+        vm.updateSearchQuery("花木兰", carSurface = false)
         advanceUntilIdle()
+        verify(exactly = 0) { env.indexer.start(any()) }
+        coVerify(exactly = 0) { env.repo.searchTracks(any(), any(), any()) }
+        assertEquals(true, vm.uiState.value.askIndexConfirm)
+        assertEquals(SearchPhase.NotIndexed, vm.uiState.value.searchPhase)
+    }
+
+    @Test fun `用户确认后才开始建立索引`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
+        coEvery { env.repo.webdavSources() } returns listOf(webdavSource)
+        val vm = build(env)
+        vm.updateSearchQuery("花木兰", carSurface = false)
+        advanceUntilIdle()
+        vm.confirmIndexing()
+        advanceUntilIdle()
+        verify(exactly = 1) { env.indexer.start(webdavSource) }
+        assertEquals(false, vm.uiState.value.askIndexConfirm)
+    }
+
+    @Test fun `以后再说后本次会话不再询问但保留手动入口`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
+        val vm = build(env)
+        vm.updateSearchQuery("花木兰", carSurface = false)
+        advanceUntilIdle()
+        vm.declineIndexing()
+        advanceUntilIdle()
+        assertEquals(false, vm.uiState.value.askIndexConfirm)
+        assertEquals(SearchPhase.Deferred, vm.uiState.value.searchPhase)
         verify(exactly = 0) { env.indexer.start(any()) }
     }
 
-    @Test fun `手机档且开关打开才对 WebDAV 源触发索引`() = runTest(dispatcher) {
+    @Test fun `索引完成后自动重跑搜索，不需用户重输关键字`() = runTest(dispatcher) {
+        val states = MutableStateFlow<Map<Long, IndexState>>(
+            mapOf(1L to IndexState.Running(IndexedProgress(900, 12, 0)))
+        )
         val env = Env()
-        coEvery { env.repo.getSources() } returns listOf(webdavSource)
-        val vm = build(env)
-        vm.startIndexingIfNeeded(carSurface = false)
+        coEvery { env.repo.indexedTrackCount() } returns 0 andThen 3469
+        coEvery { env.repo.searchTracks(null, "花木兰", 200) } returns listOf(
+            TrackHit(1, "花木兰", "/a.mp3", "/", 1)
+        )
+        val vm = build(env, states = states)
+        vm.updateSearchQuery("花木兰", carSurface = false)
         advanceUntilIdle()
-        verify(exactly = 1) { env.indexer.start(webdavSource) }
+        assertEquals(SearchPhase.Indexing, vm.uiState.value.searchPhase)
+        assertEquals(0, vm.uiState.value.searchResults.size)
+        coVerify(exactly = 0) { env.repo.searchTracks(any(), any(), any()) }
+
+        states.value = mapOf(1L to IndexState.Done(3469))
+        advanceUntilIdle()
+        assertEquals(SearchPhase.Ready, vm.uiState.value.searchPhase)
+        assertEquals(1, vm.uiState.value.searchResults.size)
     }
 
-    @Test fun `索引开关关闭时不触发`() = runTest(dispatcher) {
+    @Test fun `开关关闭时不询问也不起爬`() = runTest(dispatcher) {
         val env = Env()
-        coEvery { env.repo.getSources() } returns listOf(webdavSource)
+        coEvery { env.repo.indexedTrackCount() } returns 0
+        // 必须用 build 的参数：在 build 之前手工 stub 会被 build 里的默认 stub 盖掉
         val vm = build(env, indexEnabled = false)
-        vm.startIndexingIfNeeded(carSurface = false)
+        vm.updateSearchQuery("花木兰", carSurface = false)
+        advanceUntilIdle()
+        assertEquals(SearchPhase.Disabled, vm.uiState.value.searchPhase)
+        assertEquals(false, vm.uiState.value.askIndexConfirm)
+        verify(exactly = 0) { env.indexer.start(any()) }
+    }
+
+    /**
+     * 车机档不起爬这条不变量必须在 VM 侧也有测试：
+     * 它不能只靠“车机档根本不渲染这个列表”来保证，否则任何一处误接都会静默失效。
+     */
+    @Test fun `车机档即使误调确认也不起爬`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.webdavSources() } returns listOf(webdavSource)
+        val vm = build(env)
+        vm.updateSearchQuery("花木兰", carSurface = true)
+        advanceUntilIdle()
+        vm.confirmIndexing()
         advanceUntilIdle()
         verify(exactly = 0) { env.indexer.start(any()) }
     }
