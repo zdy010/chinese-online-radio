@@ -52,6 +52,7 @@ import com.radio.chinese.ui.common.mediaTimeText
 import com.radio.chinese.ui.library.AddSourceDialog
 import com.radio.chinese.ui.library.AudioLibraryScreen
 import com.radio.chinese.ui.library.AudioLibraryViewModel
+import com.radio.chinese.ui.library.SearchResultsList
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 import com.radio.chinese.ui.theme.usesRailNavigation
@@ -145,7 +146,7 @@ fun AudioMainScreen(
             SearchBarRow(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = "搜索音频",
+                placeholder = if (carSurface) "搜索音频" else "搜索曲目（全部来源）",
                 actions = {
                     val actionSize = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
                     if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
@@ -193,14 +194,32 @@ fun AudioMainScreen(
                     currentPage = pagerState.currentPage,
                     onSelect = onSelectTab
                 )
-                BrowseSourceHeader(visible = headerVisible, name = headerName)
-                AudioPagerHost(
-                    pagerState = pagerState,
-                    playerManager = playerManager,
-                    viewModel = viewModel,
-                    searchQuery = searchQuery,
-                    modifier = Modifier.weight(1f)
-                )
+                // 手机档：输入即跨源搜索，结果列表顶掉页签内容区；清空即回到原来的目录浏览。
+                // 车机档不进这个分支，保证它的渲染与改造前一致。
+                if (searchQuery.isNotBlank() && !carSurface) {
+                    SearchResultsList(
+                        results = uiState.searchResults,
+                        query = searchQuery,
+                        indexState = uiState.indexState,
+                        breadcrumbOf = viewModel::breadcrumbFor,
+                        isFavorited = viewModel::isFavorited,
+                        onPlay = viewModel::playSearchResult,
+                        onToggleFavorite = { hit ->
+                            val sourceName = uiState.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
+                            viewModel.toggleFavorite(hit.sourceId, hit.path, hit.name, sourceName)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    BrowseSourceHeader(visible = headerVisible, name = headerName)
+                    AudioPagerHost(
+                        pagerState = pagerState,
+                        playerManager = playerManager,
+                        viewModel = viewModel,
+                        searchQuery = searchQuery,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
