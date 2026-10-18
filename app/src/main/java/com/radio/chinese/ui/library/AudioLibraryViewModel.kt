@@ -9,16 +9,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.entity.AudioFavoriteEntity
 import com.radio.chinese.data.entity.AudioRecentEntity
+import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.AudioLibraryRepository
 import com.radio.chinese.domain.*
 import com.radio.chinese.domain.browser.*
+import com.radio.chinese.domain.model.IndexQuery
+import com.radio.chinese.domain.model.MergedTrack
 import com.radio.chinese.service.PlayerManager
-import com.radio.chinese.service.WebDavClient
+import com.radio.chinese.service.SourceIndexer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 data class LibraryUiState(
@@ -48,7 +50,11 @@ data class LibraryUiState(
     val favorites: List<AudioFavoriteEntity> = emptyList(),
     val recentPlays: List<AudioRecentEntity> = emptyList(),
     val showFavorites: Boolean = false,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+
+    // 全源搜索（仅手机档）：已归并的结果 + 跨源聚合后的索引状态
+    val searchResults: List<MergedTrack> = emptyList(),
+    val indexState: IndexState = IndexState.Idle
 )
 
 enum class RepeatMode { ALL, ONE, RANDOM }
@@ -69,9 +75,10 @@ private fun com.radio.chinese.service.OperaRepeatMode.toUi(): RepeatMode = when 
 class AudioLibraryViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: AudioLibraryRepository,
-    private val webDavClient: WebDavClient,
-    private val okHttpClient: OkHttpClient,
-    private val playerManager: PlayerManager
+    private val playerManager: PlayerManager,
+    private val browserFactory: BrowserFactory,
+    private val indexer: SourceIndexer,
+    private val preferences: RadioPreferences,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LibraryUiState())
@@ -95,6 +102,13 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             playerManager.operaRepeatMode.collect { mode -> _state.update { it.copy(repeatMode = mode.toUi()) } }
         }
+        // 索引状态跨源聚合：搜索是跨源的，提示也必须用跨源口径
+        viewModelScope.launch {
+            indexer.states.collect { map ->
+                val agg = IndexQuery.aggregate(map.values)
+                _state.update { it.copy(indexState = agg) }
+            }
+        }
         // 订阅收藏与最近播放
         viewModelScope.launch { repository.favorites.collect { favs -> _state.update { s -> s.copy(favorites = favs) } } }
         viewModelScope.launch { repository.recentPlays.collect { recents -> _state.update { s -> s.copy(recentPlays = recents) } } }
@@ -113,7 +127,56 @@ class AudioLibraryViewModel @Inject constructor(
     fun showAddDialog() = _state.update { it.copy(showAddDialog = true) }
     fun hideAddDialog() = _state.update { it.copy(showAddDialog = false, error = null) }
 
-    fun updateSearchQuery(q: String) = _state.update { it.copy(searchQuery = q) }
+    /**
+     * 搜索。形态由 UI 传进来（VM 不能读 CompositionLocal）：
+     * 车机档保持原有的“当前目录内过滤”，全源搜索只在手机档开启。
+     */
+    fun updateSearchQuery(q: String, carSurface: Boolean) {
+        _state.update { it.copy(searchQuery = q, searchResults = emptyList()) }
+        if (carSurface || q.isBlank()) return
+        viewModelScope.launch {
+            val hits = repository.searchTracks(sourceId = null, query = q, limit = 200)
+            _state.update { it.copy(searchResults = IndexQuery.mergeHits(hits)) }
+        }
+    }
+
+    /**
+     * 拉起后台索引。车机档永不调用，因此车机上一份 PROPFIND 都不会发；
+     * 开关关闭或移动网络（由 NetworkGate 卡）则不会真的开跑。
+     */
+    fun startIndexingIfNeeded(carSurface: Boolean) {
+        if (carSurface) return
+        viewModelScope.launch {
+            if (!preferences.webdavIndexEnabled.first()) return@launch
+            repository.getSources()
+                .filter { it.type == SourceType.WEBDAV }
+                .forEach { indexer.start(it) }
+        }
+    }
+
+    /** 结果行的面包屑：拼法在纯函数里，UI 不自己拆路径；源名从已 collected 的 sources 里取。 */
+    fun breadcrumbFor(hit: TrackHit): String {
+        val name = _state.value.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
+        return IndexQuery.breadcrumb(hit.parentPath, name)
+    }
+
+    /**
+     * 点搜索结果直接起播。
+     *
+     * 索引行不带 browsingSource，必须按行自带的 sourceId 找回来源；
+     * 结果来自哪个源就用哪个源，不能拿用户当前正在浏览的那个。
+     */
+    fun playSearchResult(hit: TrackHit) {
+        viewModelScope.launch {
+            val source = repository.getSource(hit.sourceId) ?: return@launch
+            val track = AudioTrack(
+                id = hit.path, name = hit.name, path = hit.path,
+                size = hit.size, sourceId = hit.sourceId, parentPath = hit.parentPath
+            )
+            playTrackWithSource(track, source)
+            _state.update { it.copy(currentTrack = track) }
+        }
+    }
 
     fun addSource(name: String, type: SourceType, url: String, username: String, password: String) {
         // 解析隐藏快捷码
@@ -132,7 +195,9 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val browser = createBrowser(finalName, finalType, finalUrl, finalUsername, finalPassword)
+                val browser = browserFactory.create(
+                    AudioSource(0, finalName, finalType, finalUrl, finalUsername, finalPassword)
+                )
                 val result = browser.testConnection()
                 if (result.isFailure) {
                     _state.update { it.copy(isLoading = false, error = "连接失败: ${result.exceptionOrNull()?.message}") }
@@ -356,16 +421,5 @@ class AudioLibraryViewModel @Inject constructor(
 
     // ========== 工厂方法 ==========
 
-    private fun createBrowser(source: AudioSource): AudioBrowser = createBrowser(
-        source.name, source.type, source.url, source.username, source.password
-    )
-
-    private fun createBrowser(name: String, type: SourceType, url: String, username: String, password: String): AudioBrowser {
-        return when (type) {
-            SourceType.WEBDAV -> WebDavBrowser(webDavClient, url, username, password)
-            SourceType.LOCAL -> LocalBrowser(context)
-            SourceType.M3U -> M3uBrowser(okHttpClient)
-            SourceType.HTTP -> HttpBrowser(okHttpClient)
-        }
-    }
+    private fun createBrowser(source: AudioSource): AudioBrowser = browserFactory.create(source)
 }

@@ -9,6 +9,22 @@ package com.radio.chinese.domain
  * 的既有分层相冲突。
  */
 
+/** 索引进度快照。`pendingDirs` 是队列里还剩的目录数，不是整棵树的总数。 */
+data class IndexedProgress(
+    val indexedFiles: Int,
+    val pendingDirs: Int,
+    val skippedDirs: Int,
+)
+
+/** 索引状态。UI 侧只读，据此决定提示文案与是否显示“结果可能不全”。 */
+sealed interface IndexState {
+    data object Idle : IndexState
+    data class Running(val p: IndexedProgress) : IndexState
+    data class PausedNoWifi(val p: IndexedProgress) : IndexState
+    data class PartiallyFailed(val p: IndexedProgress) : IndexState
+    data class Done(val trackCount: Int) : IndexState
+}
+
 /** 索引器写入缓存的最小行集；字段与 audio_cache 一一对应。 */
 data class IndexRow(
     val path: String,

@@ -1,5 +1,7 @@
 package com.radio.chinese
 
+import com.radio.chinese.domain.IndexState
+import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.TrackHit
 import com.radio.chinese.domain.model.IndexQuery
 import org.junit.Assert.assertEquals
@@ -85,5 +87,33 @@ class IndexQuerySearchTest {
 
     @Test fun `根目录面包屑回退到源名`() {
         assertEquals("123云盘·豫剧", IndexQuery.breadcrumb("/", "123云盘·豫剧"))
+    }
+
+    // ── 索引状态跨源聚合：提示必须反映最差那个源，不能被已完成的源盖掉 ──
+
+    @Test fun `空状态集合聚合为 Idle`() {
+        assertEquals(IndexState.Idle, IndexQuery.aggregate(emptyList()))
+        assertEquals(IndexState.Idle, IndexQuery.aggregate(listOf(IndexState.Idle)))
+    }
+
+    @Test fun `任一源在跑就报 Running 并合并计数`() {
+        val agg = IndexQuery.aggregate(listOf(
+            IndexState.Done(50),
+            IndexState.Running(IndexedProgress(30, 3, 1)),
+            IndexState.Running(IndexedProgress(20, 2, 0)),
+        ))
+        assertEquals(IndexState.Running(IndexedProgress(50, 5, 1)), agg)
+    }
+
+    @Test fun `没在跑时报 Paused 优先于 Failed 优先于 Done`() {
+        assertEquals(
+            IndexState.PausedNoWifi(IndexedProgress(10, 1, 0)),
+            IndexQuery.aggregate(listOf(IndexState.Done(9), IndexState.PausedNoWifi(IndexedProgress(10, 1, 0))))
+        )
+        assertEquals(
+            IndexState.PartiallyFailed(IndexedProgress(4, 0, 2)),
+            IndexQuery.aggregate(listOf(IndexState.Done(9), IndexState.PartiallyFailed(IndexedProgress(4, 0, 2))))
+        )
+        assertEquals(IndexState.Done(140), IndexQuery.aggregate(listOf(IndexState.Done(40), IndexState.Done(100))))
     }
 }

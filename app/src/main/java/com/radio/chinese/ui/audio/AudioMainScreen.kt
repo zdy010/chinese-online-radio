@@ -96,7 +96,11 @@ fun AudioMainScreen(
     }
 
     var searchQuery by remember { mutableStateOf("") }
-    LaunchedEffect(searchQuery) { viewModel.updateSearchQuery(searchQuery) }
+    // 形态判定只有一个源：这里读，往下传布尔给 VM，VM 不自己读 CompositionLocal
+    val carSurface = isCarSurface()
+    LaunchedEffect(searchQuery, carSurface) { viewModel.updateSearchQuery(searchQuery, carSurface) }
+    // 车机档永不拉起索引：一个 PROPFIND 都不得发出去
+    LaunchedEffect(carSurface) { viewModel.startIndexingIfNeeded(carSurface) }
 
     val trackTitle = uiState.currentTrack?.name ?: operaFile?.name ?: ""
     val hasPlayer = trackTitle.isNotEmpty()

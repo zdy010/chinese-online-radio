@@ -8,6 +8,7 @@ import com.radio.chinese.data.local.DownloadedOperaDao
 import com.radio.chinese.data.local.OperaDatabase
 import com.radio.chinese.data.local.RadioDatabase
 import com.radio.chinese.data.local.FavoriteDao
+import com.radio.chinese.domain.browser.BrowserFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -89,4 +90,39 @@ object AppModule {
 
     @Provides
     fun provideAudioRecentDao(db: AudioLibraryDatabase): AudioRecentDao = db.audioRecentDao()
+
+    // ========== 后台索引 ==========
+
+    @Provides
+    @Singleton
+    @ApplicationScope
+    fun provideApplicationScope(): kotlinx.coroutines.CoroutineScope =
+        kotlinx.coroutines.CoroutineScope(
+            kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default
+        )
+
+    @Provides
+    @Singleton
+    fun provideNetworkGate(@ApplicationContext context: Context): com.radio.chinese.service.NetworkGate =
+        com.radio.chinese.service.NetworkGateImpl(context)
+
+    /**
+     * 索引器只认端口，不认具体实现：写行与时间戳回写都经 Room 适配块，
+     * 而浏览器工厂必须每源新建客户端（单例缓存 key 不含源，会跨源串数据）。
+     */
+    @Provides
+    @Singleton
+    fun provideIndexCacheWriter(
+        adapter: com.radio.chinese.data.repository.IndexDaoAdapter
+    ): com.radio.chinese.domain.IndexCacheWriter = adapter
+
+    @Provides
+    @Singleton
+    fun provideIndexSourceSync(
+        adapter: com.radio.chinese.data.repository.IndexDaoAdapter
+    ): com.radio.chinese.domain.IndexSourceSync = adapter
+
+    @Provides
+    @Singleton
+    fun provideBrowserProvider(factory: BrowserFactory): com.radio.chinese.domain.BrowserProvider = factory
 }

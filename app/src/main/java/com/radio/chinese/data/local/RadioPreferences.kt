@@ -319,6 +319,7 @@ class RadioPreferences @Inject constructor(
         private val KEY_PREFERRED_TTS_ENGINE = stringPreferencesKey("preferred_tts_engine")
         private val KEY_PREFERRED_VOICE = stringPreferencesKey("preferred_voice")
         private val KEY_LOCAL_FIRST = booleanPreferencesKey("local_first_enabled")
+        private val KEY_WEBDAV_INDEX_ENABLED = booleanPreferencesKey("webdav_index_enabled")
         private val KEY_CACHED_REGION = stringPreferencesKey("cached_region")
         private val KEY_MANUAL_REGION = stringPreferencesKey("manual_region")
 
@@ -358,6 +359,9 @@ class RadioPreferences @Inject constructor(
     val preferredVoice: Flow<String?> = dataStore.data.map { it[KEY_PREFERRED_VOICE] }
     /** 本地节目排序优先，默认开。 */
     val localFirstEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_LOCAL_FIRST] ?: true }
+
+    /** 后台建立 WebDAV 节目索引（仅手机档生效，且只在 Wi-Fi 下跑），默认开。 */
+    val webdavIndexEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_WEBDAV_INDEX_ENABLED] ?: true }
     val cachedRegion: Flow<String?> = dataStore.data.map { it[KEY_CACHED_REGION] }
     val manualRegion: Flow<String?> = dataStore.data.map { it[KEY_MANUAL_REGION] }
 
@@ -375,6 +379,10 @@ class RadioPreferences @Inject constructor(
 
     suspend fun setLocalFirstEnabled(enabled: Boolean) {
         dataStore.edit { it[KEY_LOCAL_FIRST] = enabled }
+    }
+
+    suspend fun setWebdavIndexEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_WEBDAV_INDEX_ENABLED] = enabled }
     }
 
     suspend fun setCachedRegion(value: String?) {

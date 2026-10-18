@@ -1,5 +1,7 @@
 package com.radio.chinese.domain.model
 
+import com.radio.chinese.domain.IndexState
+import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.TrackHit
 
 /** 归并后的搜索结果；`sources.first()` 为主选来源。 */
@@ -72,4 +74,41 @@ object IndexQuery {
     /** 没爬过的目录（无时间戳）恒要爬。 */
     fun shouldCrawl(stamp: Long?, ttlMs: Long, now: Long): Boolean =
         stamp == null || !isFresh(stamp, ttlMs, now)
+
+    /**
+     * 多个源的索引状态聚合为一个给 UI 的口径。
+     *
+     * 搜索是跨源的，提示也必须是跨源口径：否则 A 源在跑、B 源已完，
+     * UI 会拿 B 的 Done 去说“结果已完整”。优先级 Running > Paused > Failed > Done。
+     */
+    fun aggregate(states: Collection<IndexState>): IndexState {
+        running(states)?.let { return IndexState.Running(it) }
+        paused(states)?.let { return IndexState.PausedNoWifi(it) }
+        failed(states)?.let { return IndexState.PartiallyFailed(it) }
+        val done = states.filterIsInstance<IndexState.Done>()
+        if (done.isNotEmpty()) return IndexState.Done(done.sumOf { it.trackCount })
+        return IndexState.Idle
+    }
+
+    private fun running(s: Collection<IndexState>) = progress<IndexState.Running>(s)
+    private fun paused(s: Collection<IndexState>) = progress<IndexState.PausedNoWifi>(s)
+    private fun failed(s: Collection<IndexState>) = progress<IndexState.PartiallyFailed>(s)
+
+    /** 只取带进度字段的分支，类型参数限定可用状态，避免手拼四个 sumOf。 */
+    private inline fun <reified T : IndexState> progress(states: Collection<IndexState>): IndexedProgress? {
+        val list = states.filterIsInstance<T>().mapNotNull { p ->
+            when (p) {
+                is IndexState.Running -> p.p
+                is IndexState.PausedNoWifi -> p.p
+                is IndexState.PartiallyFailed -> p.p
+                else -> null
+            }
+        }
+        if (list.isEmpty()) return null
+        return IndexedProgress(
+            indexedFiles = list.sumOf { it.indexedFiles },
+            pendingDirs = list.sumOf { it.pendingDirs },
+            skippedDirs = list.sumOf { it.skippedDirs },
+        )
+    }
 }

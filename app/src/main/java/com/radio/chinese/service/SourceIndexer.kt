@@ -7,6 +7,8 @@ import com.radio.chinese.domain.BrowserProvider
 import com.radio.chinese.domain.IndexCacheWriter
 import com.radio.chinese.domain.IndexRow
 import com.radio.chinese.domain.IndexSourceSync
+import com.radio.chinese.domain.IndexState
+import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.model.IndexQuery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -24,22 +26,6 @@ import kotlinx.coroutines.sync.withPermit
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-
-/** 索引进度快照。`pendingDirs` 是队列里还剩的目录数，不是整棵树的总数。 */
-data class IndexedProgress(
-    val indexedFiles: Int,
-    val pendingDirs: Int,
-    val skippedDirs: Int,
-)
-
-/** 索引状态。UI 侧只读，据此决定提示文案与是否显示"结果可能不全"。 */
-sealed interface IndexState {
-    data object Idle : IndexState
-    data class Running(val p: IndexedProgress) : IndexState
-    data class PausedNoWifi(val p: IndexedProgress) : IndexState
-    data class PartiallyFailed(val p: IndexedProgress) : IndexState
-    data class Done(val trackCount: Int) : IndexState
-}
 
 /**
  * BFS + Depth:1 分层遍历一棵 WebDAV 目录树，把每个目录的行灌进缓存表。

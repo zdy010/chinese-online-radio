@@ -7,9 +7,10 @@ import com.radio.chinese.domain.BrowserProvider
 import com.radio.chinese.domain.IndexCacheWriter
 import com.radio.chinese.domain.IndexRow
 import com.radio.chinese.domain.IndexSourceSync
+import com.radio.chinese.domain.IndexState
+import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.SourceType
 import com.radio.chinese.service.IndexCoordinator
-import com.radio.chinese.service.IndexState
 import com.radio.chinese.service.NetworkGate
 import com.radio.chinese.service.SourceIndexer
 import kotlinx.coroutines.test.advanceUntilIdle
