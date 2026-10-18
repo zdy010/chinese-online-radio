@@ -1,13 +1,18 @@
 package com.radio.chinese
 
 import com.radio.chinese.domain.AudioBrowser
+import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.AudioTrack
+import com.radio.chinese.domain.BrowserProvider
 import com.radio.chinese.domain.IndexCacheWriter
 import com.radio.chinese.domain.IndexRow
 import com.radio.chinese.domain.IndexSourceSync
+import com.radio.chinese.domain.SourceType
 import com.radio.chinese.service.IndexCoordinator
 import com.radio.chinese.service.IndexState
 import com.radio.chinese.service.NetworkGate
+import com.radio.chinese.service.SourceIndexer
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -48,6 +53,7 @@ class SourceIndexerTest {
         val tree: Map<String, List<AudioTrack>>,
         val failOnce: MutableSet<String> = mutableSetOf(),
         val alwaysFail: Set<String> = emptySet(),
+        val hangOn: String? = null,
     ) : AudioBrowser {
         val requested = mutableListOf<String>()
         var inFlight = 0
@@ -59,6 +65,7 @@ class SourceIndexerTest {
             maxInFlight = maxOf(maxInFlight, inFlight)
             kotlinx.coroutines.delay(10)   // 真挂起点：让同批次协程真的重叠，否则并发测不出来
             inFlight--
+            if (path == hangOn) kotlinx.coroutines.CompletableDeferred<Unit>().await()
             if (path in alwaysFail || (path in failOnce && failOnce.remove(path)))
                 return Result.failure(RuntimeException("PROPFIND $path 失败"))
             return Result.success(tree[path] ?: emptyList())
@@ -66,6 +73,12 @@ class SourceIndexerTest {
 
         override fun resolveUri(track: AudioTrack) = track.path
         override suspend fun testConnection() = Result.success(Unit)
+    }
+
+    /** 只返回固定浏览器的提供口假件，避免真去建 WebDavClient。 */
+    private class FixedProvider(val browser: AudioBrowser) : BrowserProvider {
+        override fun createForIndexing(source: AudioSource): AudioBrowser? =
+            if (source.type == SourceType.WEBDAV) browser else null
     }
 
     private class RecordingSync : IndexSourceSync {
@@ -155,5 +168,46 @@ class SourceIndexerTest {
         val browser = FakeBrowser(mapOf("/" to listOf(dir("/常香玉"), file("根.mp3", "/"))))
         crawl(browser, cache)
         assertEquals("根目录必爬，新鲜子目录应跳过", listOf("/"), browser.requested)
+    }
+
+    // ── 门面：生命周期与并发触发 ──
+
+    private val webdavSource = AudioSource(1, "豫剧", SourceType.WEBDAV, "http://x", "u", "p")
+
+    @Test fun `同一源重复触发只跑一个任务`() = runTest {
+        val browser = FakeBrowser(mapOf("/" to listOf(file("a.mp3", "/"))))
+        val indexer = SourceIndexer(FixedProvider(browser), FakeCache(), RecordingSync(), AllowAllGate, this)
+        indexer.start(webdavSource)
+        indexer.start(webdavSource)
+        advanceUntilIdle()
+        assertEquals("重复 start 必须并入在跑的任务，不能叠两份并发", 1, browser.requested.count { it == "/" })
+    }
+
+    @Test fun `非 WebDAV 源不建任务也不上报状态`() = runTest {
+        val indexer = SourceIndexer(
+            FixedProvider(FakeBrowser(emptyMap())), FakeCache(), RecordingSync(), AllowAllGate, this
+        )
+        indexer.start(AudioSource(2, "本地", SourceType.LOCAL, ""))
+        advanceUntilIdle()
+        assertEquals(0, indexer.runningCount())
+        assertEquals(emptyMap<Long, IndexState>(), indexer.states.value)
+    }
+
+    @Test fun `取消只停任务，不清已写入的索引`() = runTest {
+        val cache = FakeCache()
+        val browser = FakeBrowser(
+            mapOf("/" to listOf(dir("/常香玉")), "/常香玉" to listOf(file("七仙女.mp3", "/常香玉"))),
+            hangOn = "/常香玉",
+        )
+        val indexer = SourceIndexer(FixedProvider(browser), cache, RecordingSync(), AllowAllGate, this)
+        indexer.start(webdavSource)
+        advanceUntilIdle()                       // 根目录已落库，子目录挂在网上
+        assertTrue("根目录应先已写入", cache.dirs[1L].orEmpty().any { it.parentPath == "/" })
+
+        indexer.cancel(1L)
+
+        assertEquals(IndexState.Idle, indexer.states.value[1L])
+        assertEquals(0, indexer.runningCount())
+        assertTrue("取消不得清空已索引内容", cache.dirs[1L].orEmpty().any { it.parentPath == "/" })
     }
 }

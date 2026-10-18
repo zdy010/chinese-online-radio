@@ -1,16 +1,29 @@
 package com.radio.chinese.service
 
+import com.radio.chinese.di.ApplicationScope
 import com.radio.chinese.domain.AudioBrowser
+import com.radio.chinese.domain.AudioSource
+import com.radio.chinese.domain.BrowserProvider
 import com.radio.chinese.domain.IndexCacheWriter
 import com.radio.chinese.domain.IndexRow
 import com.radio.chinese.domain.IndexSourceSync
 import com.radio.chinese.domain.model.IndexQuery
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /** 索引进度快照。`pendingDirs` 是队列里还剩的目录数，不是整棵树的总数。 */
 data class IndexedProgress(
@@ -129,5 +142,44 @@ class IndexCoordinator(
             if (attempt == 0) delay(RETRY_DELAY_MS)
         }
         return null
+    }
+}
+
+/**
+ * 索引生命周期门面：每源最多一个在跑任务、状态可订阅、取消不清数据。
+ *
+ * 不读 UiSurface（CompositionLocal 属 UI 层）：是否调用 start 由手机档 UI 决定，
+ * 车机档永不调用，因此车机上一份 PROPFIND 都不会发。
+ */
+@Singleton
+class SourceIndexer @Inject constructor(
+    private val browserProvider: BrowserProvider,
+    private val cacheWriter: IndexCacheWriter,
+    private val sourceSync: IndexSourceSync,
+    private val gate: NetworkGate,
+    @ApplicationScope private val scope: CoroutineScope,
+) {
+    private val _states = MutableStateFlow<Map<Long, IndexState>>(emptyMap())
+    val states: StateFlow<Map<Long, IndexState>> = _states.asStateFlow()
+
+    private val jobs = ConcurrentHashMap<Long, Job>()
+
+    fun runningCount(): Int = jobs.values.count { it.isActive }
+
+    fun start(source: AudioSource) {
+        // 非 WebDAV 静默跳过：建索引对它没有意义，也不该弹错
+        val browser = browserProvider.createForIndexing(source) ?: return
+        if (jobs[source.id]?.isActive == true) return   // 重复触发合并，不叠并发
+        jobs[source.id] = scope.launch {
+            _states.update { it + (source.id to IndexState.Running(IndexedProgress(0, 1, 0))) }
+            val st = IndexCoordinator(browser, cacheWriter, sourceSync, gate).crawl(source.id)
+            _states.update { it + (source.id to st) }
+        }
+    }
+
+    /** 取消只停任务：已写入的行留着，下次 start 按新鲜度续爬。 */
+    fun cancel(sourceId: Long) {
+        jobs.remove(sourceId)?.cancel()
+        _states.update { it + (sourceId to IndexState.Idle) }
     }
 }
