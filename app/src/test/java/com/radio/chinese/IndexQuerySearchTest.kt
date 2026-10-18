@@ -1,5 +1,6 @@
 package com.radio.chinese
 
+import com.radio.chinese.domain.TrackHit
 import com.radio.chinese.domain.model.IndexQuery
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -33,5 +34,56 @@ class IndexQuerySearchTest {
 
     @Test fun `首尾空格被裁掉`() {
         assertEquals("%贵妃醉酒%", IndexQuery.likePattern("  贵妃醉酒 "))
+    }
+
+    // ── 跨源归并：实测两个豫剧源同为 3468 首，同一批内容的两种分类视图 ──
+
+    @Test fun `同名同大小跨源归并为一条`() {
+        val hits = listOf(
+            TrackHit(1, "花木兰 选段", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000),
+            TrackHit(2, "花木兰 选段", "/常香玉/花木兰.mp3", "/常香玉", 8_000_000),
+        )
+        val merged = IndexQuery.mergeHits(hits)
+        assertEquals(1, merged.size)
+        assertEquals(listOf(1L, 2L), merged[0].sources.map { it.sourceId })
+    }
+
+    @Test fun `同名不同大小不合并`() {
+        val hits = listOf(
+            TrackHit(1, "花木兰", "/a.mp3", "/", 1_000),
+            TrackHit(2, "花木兰", "/b.mp3", "/", 9_000),
+        )
+        assertEquals(2, IndexQuery.mergeHits(hits).size)
+    }
+
+    @Test fun `名称差异仅首尾空格仍算同一条`() {
+        val hits = listOf(
+            TrackHit(1, " 花木兰 ", "/a.mp3", "/", 1_000),
+            TrackHit(2, "花木兰", "/b.mp3", "/", 1_000),
+        )
+        assertEquals(1, IndexQuery.mergeHits(hits).size)
+    }
+
+    @Test fun `归并结果按名称码位升序与 SQL 排序一致`() {
+        val hits = listOf(
+            TrackHit(1, "穆桂英", "/m.mp3", "/", 1),
+            TrackHit(1, "花木兰", "/h.mp3", "/", 1),
+        )
+        // 穆 U+7A46 排在 花 U+82B1 之前：码位序，与 SQLite `ORDER BY name ASC` 同一套规则
+        assertEquals(listOf("穆桂英", "花木兰"), IndexQuery.mergeHits(hits).map { it.name })
+    }
+
+    // ── 面包屑：结果行要让用户看出这首在哪个目录 ──
+
+    @Test fun `面包屑去掉源根空段`() {
+        assertEquals("豫剧 / 常香玉", IndexQuery.breadcrumb("/豫剧/常香玉", "123云盘·豫剧"))
+    }
+
+    @Test fun `面包屑超长时保留末三段并加省略号`() {
+        assertEquals("… / 乙 / 丙 / 丁", IndexQuery.breadcrumb("/甲/乙/丙/丁", "源", maxSegments = 3))
+    }
+
+    @Test fun `根目录面包屑回退到源名`() {
+        assertEquals("123云盘·豫剧", IndexQuery.breadcrumb("/", "123云盘·豫剧"))
     }
 }

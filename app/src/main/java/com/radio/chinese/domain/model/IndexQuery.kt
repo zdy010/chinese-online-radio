@@ -1,5 +1,10 @@
 package com.radio.chinese.domain.model
 
+import com.radio.chinese.domain.TrackHit
+
+/** 归并后的搜索结果；`sources.first()` 为主选来源。 */
+data class MergedTrack(val name: String, val size: Long, val sources: List<TrackHit>)
+
 /**
  * 索引与搜索的纯判定集合。
  *
@@ -23,5 +28,33 @@ object IndexQuery {
             .replace("%", "\\%")
             .replace("_", "\\_")
         return "%$escaped%"
+    }
+
+    /**
+     * 跨源重复曲目归并。实测两个豫剧源同为 3468 首，是同一批内容的两种
+     * 分类视图，不归并则一次搜索出双倍结果。
+     *
+     * 归并键 name+size 有极低概率误合不同内容，UI 侧保留“几个来源”作逃生门。
+     * 排序用码位序，与 DAO 里 `ORDER BY name ASC`（SQLite BINARY 排序）一致，
+     * 免得库内序与屏上序两套规则。
+     */
+    fun mergeHits(hits: List<TrackHit>): List<MergedTrack> {
+        val grouped = LinkedHashMap<Pair<String, Long>, MutableList<TrackHit>>()
+        for (h in hits) grouped.getOrPut(h.name.trim() to h.size) { mutableListOf() }.add(h)
+        return grouped.values.map { group ->
+            MergedTrack(
+                name = group.first().name.trim(),
+                size = group.first().size,
+                sources = group.sortedBy { it.sourceId }
+            )
+        }.sortedBy { it.name }
+    }
+
+    /** `/豫剧/常香玉` → `豫剧 / 常香玉`；空路径回退源名。 */
+    fun breadcrumb(parentPath: String, sourceName: String, maxSegments: Int = 3): String {
+        val segs = parentPath.split('/').map { it.trim() }.filter { it.isNotEmpty() }
+        if (segs.isEmpty()) return sourceName
+        val shown = if (segs.size > maxSegments) listOf("…") + segs.takeLast(maxSegments) else segs
+        return shown.joinToString(" / ")
     }
 }
