@@ -168,7 +168,7 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null, browsingSource = source, showBrowseContent = true, browsePath = "", browseHistory = emptyList()) }
             val browser = createBrowser(source)
-            repository.refreshSource(source, "", browser)
+            repository.refreshDir(source, "", browser)
                 .onSuccess { items ->
                     _state.update { it.copy(isLoading = false, browseItems = items) }
                 }
@@ -221,7 +221,7 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             val browser = createBrowser(source)
-            repository.refreshSource(source, _state.value.browsePath, browser)
+            repository.refreshDir(source, _state.value.browsePath, browser)
                 .onSuccess { items ->
                     _state.update { it.copy(isLoading = false, browseItems = items, error = null) }
                 }

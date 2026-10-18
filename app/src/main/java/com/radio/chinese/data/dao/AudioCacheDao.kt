@@ -37,4 +37,20 @@ interface AudioCacheDao {
         """
     )
     suspend fun searchTracks(sourceId: Long?, pattern: String, limit: Int): List<AudioCacheEntity>
+
+    /**
+     * 每个已爬目录的最旧 cachedAt。进索引的新鲜度判定唯一依据：
+     * 空目录不留行，因此它每轮都会被重爬一次，代价一个请求。
+     */
+    @Query(
+        "SELECT parentPath, MIN(cachedAt) AS oldest FROM audio_cache " +
+            "WHERE sourceId = :sourceId GROUP BY parentPath"
+    )
+    suspend fun dirOldestCachedAt(sourceId: Long): List<DirStamp>
+
+    @Query("SELECT COUNT(*) FROM audio_cache WHERE sourceId = :sourceId AND isFolder = 0")
+    suspend fun countTracks(sourceId: Long): Int
 }
+
+/** dirOldestCachedAt 的行投影：目录路径 + 该目录里最旧的一行时间戳。 */
+data class DirStamp(val parentPath: String, val oldest: Long)

@@ -67,10 +67,19 @@ class AudioLibraryRepository @Inject constructor(
         return result
     }
 
-    suspend fun refreshSource(source: AudioSource, path: String, browser: AudioBrowser): Result<List<AudioTrack>> {
-        cacheDao.deleteBySource(source.id)
-        sourceDao.updateSyncTime(source.id, 0)
-        return listChildren(source, path, browser)
+    /**
+     * 只重取一个目录：先删该目录旧行再落新行。
+     *
+     * 这里继不沿用旧 refreshSource 的 `deleteBySource`：那会抹掉后台索引
+     * 整整建立的几千行，用户点一下“刷新”就要重跑一轮全量遍历。
+     */
+    suspend fun refreshDir(source: AudioSource, path: String, browser: AudioBrowser): Result<List<AudioTrack>> {
+        cacheDao.deleteByParentPath(source.id, path)
+        val result = browser.listChildren(path)
+        result.onSuccess { items ->
+            cacheDao.insertAll(items.map { it.toEntity(source.id) })
+        }
+        return result
     }
 
     // ========== 搜索 ==========
