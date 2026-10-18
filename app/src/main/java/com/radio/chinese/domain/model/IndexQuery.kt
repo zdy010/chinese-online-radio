@@ -57,4 +57,19 @@ object IndexQuery {
         val shown = if (segs.size > maxSegments) listOf("…") + segs.takeLast(maxSegments) else segs
         return shown.joinToString(" / ")
     }
+
+    /**
+     * 目录行最旧 cachedAt 决定它还算不算新鲜。
+     *
+     * 两种情况一律判为过期：超出 TTL，以及时间戳在未来（用户或车机把时钟
+     * 改回去时，不能让整棵树永远不再刷新）；TTL 非正数视为不做缓存。
+     */
+    fun isFresh(oldestCachedAt: Long, ttlMs: Long, now: Long): Boolean {
+        if (ttlMs <= 0L) return false
+        return (now - oldestCachedAt) in 0 until ttlMs
+    }
+
+    /** 没爬过的目录（无时间戳）恒要爬。 */
+    fun shouldCrawl(stamp: Long?, ttlMs: Long, now: Long): Boolean =
+        stamp == null || !isFresh(stamp, ttlMs, now)
 }
