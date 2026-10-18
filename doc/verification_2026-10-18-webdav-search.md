@@ -22,7 +22,7 @@
 
 ## 2. SQL LIKE 语义（JVM 无法覆盖，用真 SQLite 验证）
 
-`.superpowers/.../sqlcheck.py`：把 `AudioCacheDao.searchTracks` 注解里的 SQL 原样取出，
+`tools/webdav_search_sql_check.py`：把 `AudioCacheDao.searchTracks` 注解里的 SQL 原样取出，
 在 Python 内置 sqlite3（真 SQLite）上跑，8/8 通过：
 
 - `100%` → 只命中字面含 `100%` 的行，**没有退化成"匹配全部"**
@@ -85,12 +85,14 @@
 
 ## 6. 复核方式
 
+两个探针已入库：`tools/webdav_search_sql_check.py`（无需设备）、`tools/device_index_db_check.py`（需设备 + 已加源）。
+
 ```powershell
 # 单测 + 两种构建
 .\gradlew.bat :app:testDebugUnitTest --offline
 .\gradlew.bat :app:assembleDebug :app:assembleRelease --offline
 # SQL 语义
-C:\Python314\python.exe .superpowers\sdd\2026-10-18-webdav-full-source-search-plan\sqlcheck.py
+C:\Python314\python.exe tools\webdav_search_sql_check.py
 # 设备索引落库核对（需先装包并在音频库里加一个 WebDAV 源）
-C:\Python314\python.exe .superpowers\sdd\2026-10-18-webdav-full-source-search-plan\dbcheck.py
+C:\Python314\python.exe tools\device_index_db_check.py
 ```
