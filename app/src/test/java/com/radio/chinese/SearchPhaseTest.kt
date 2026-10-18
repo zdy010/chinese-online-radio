@@ -23,7 +23,8 @@ class SearchPhaseTest {
         asked: Boolean = false,
         allowed: Boolean = true,
         stale: Boolean = false,
-    ) = IndexQuery.searchPhase(state, count, asked, allowed, stale)
+        webdavSources: Int = 1,
+    ) = IndexQuery.searchPhase(state, count, asked, allowed, stale, webdavSources)
 
     @Test fun `已有索引且新鲜则直接出结果`() {
         assertEquals(SearchPhase.Ready, phase(done, 3469))
@@ -42,6 +43,20 @@ class SearchPhaseTest {
 
     @Test fun `从未建立且未询问过则请用户确认`() {
         assertEquals(SearchPhase.NotIndexed, phase(idle, 0))
+    }
+
+    // 用户实测问题 3：一个网络源都没添加时，不应该弹“建立什么索引”
+    @Test fun `没有网络源时不请求建立索引`() {
+        assertEquals(SearchPhase.NoWebdavSource, phase(idle, 0, webdavSources = 0))
+    }
+
+    @Test fun `没有网络源时即使开关开启也不变回 NotIndexed`() {
+        // 询问过与否都不该跳过 NoWebdavSource 去弹确认
+        assertEquals(SearchPhase.NoWebdavSource, phase(idle, 0, asked = true, webdavSources = 0))
+    }
+
+    @Test fun `已有索引时无论有无网络源都照常出结果`() {
+        assertEquals(SearchPhase.Ready, phase(done, 3469, webdavSources = 0))
     }
 
     @Test fun `本次会话已否认过则不再弹，只留手动入口`() {

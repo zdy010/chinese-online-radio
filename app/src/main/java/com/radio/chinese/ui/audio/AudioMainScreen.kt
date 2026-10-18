@@ -101,7 +101,11 @@ fun AudioMainScreen(
     var searchQuery by remember { mutableStateOf("") }
     // 形态判定只有一个源：这里读，往下传布尔给 VM，VM 不自己读 CompositionLocal
     val carSurface = isCarSurface()
-    LaunchedEffect(searchQuery, carSurface) { viewModel.updateSearchQuery(searchQuery, carSurface) }
+    // 跨源搜索只属于「网络」页签；本地/收藏/最近的搜索框继续只做当页过滤（用户实测问题 1）
+    val onNetworkTab = pagerState.currentPage == 1
+    LaunchedEffect(searchQuery, carSurface, onNetworkTab) {
+        viewModel.updateSearchQuery(searchQuery, carSurface, onNetworkTab)
+    }
     // 这里故意没有“进页/加源就自动建索引”的副作用：索引只能由用户在确认框里起。
     // 之前的 LaunchedEffect(sources.size, carSurface) { startIndexingIfNeeded() } 已删除。
 
@@ -148,7 +152,13 @@ fun AudioMainScreen(
             SearchBarRow(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = if (carSurface) "搜索音频" else "搜索曲目（全部来源）",
+                placeholder = when {
+                    // 车机档一律保持原文案：它的渲染必须与改造前一致
+                    carSurface -> "搜索音频"
+                    pagerState.currentPage == 0 -> "搜索本地曲目"
+                    onNetworkTab -> "搜索曲目（全部来源）"
+                    else -> "搜索音频"
+                },
                 actions = {
                     val actionSize = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
                     if (pagerState.currentPage == 1 && uiState.showBrowseContent) {
@@ -198,7 +208,7 @@ fun AudioMainScreen(
                 )
                 // 手机档：输入即跨源搜索，结果列表顶掉页签内容区；清空即回到原来的目录浏览。
                 // 车机档不进这个分支，保证它的渲染与改造前一致。
-                if (searchQuery.isNotBlank() && !carSurface) {
+                if (searchQuery.isNotBlank() && !carSurface && onNetworkTab) {
                     SearchResultsList(
                         results = uiState.searchResults,
                         query = searchQuery,
@@ -208,6 +218,7 @@ fun AudioMainScreen(
                         isFavorited = viewModel::isFavorited,
                         onPlay = viewModel::playSearchResult,
                         onBuildIndex = viewModel::confirmIndexing,
+                        onAddSource = viewModel::showAddDialog,
                         onToggleFavorite = { hit ->
                             val sourceName = uiState.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
                             viewModel.toggleFavorite(hit.sourceId, hit.path, hit.name, sourceName)

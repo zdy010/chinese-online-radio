@@ -58,6 +58,7 @@ class AudioLibrarySearchViewModelTest {
         env: Env,
         indexEnabled: Boolean = true,
         states: MutableStateFlow<Map<Long, IndexState>> = MutableStateFlow(emptyMap()),
+        sources: List<AudioSource> = listOf(webdavSource),
     ): AudioLibraryViewModel {
         Dispatchers.setMain(dispatcher)
         val pm = mockk<PlayerManager>(relaxed = true)
@@ -70,7 +71,7 @@ class AudioLibrarySearchViewModelTest {
         every { pm.operaFile } returns MutableStateFlow<com.radio.chinese.domain.model.OperaAudioFile?>(null)
         every { pm.error } returns MutableStateFlow<String?>(null)
         every { pm.operaRepeatMode } returns MutableStateFlow(OperaRepeatMode.ALL)
-        every { env.repo.allSources } returns MutableStateFlow(listOf(webdavSource))
+        every { env.repo.allSources } returns MutableStateFlow(sources)
         every { env.repo.favorites } returns MutableStateFlow(emptyList())
         every { env.repo.recentPlays } returns MutableStateFlow(emptyList())
         every { env.prefs.webdavIndexEnabled } returns MutableStateFlow(indexEnabled)
@@ -143,6 +144,33 @@ class AudioLibrarySearchViewModelTest {
         advanceUntilIdle()
         assertEquals(false, vm.uiState.value.askIndexConfirm)
         assertEquals(SearchPhase.Deferred, vm.uiState.value.searchPhase)
+        verify(exactly = 0) { env.indexer.start(any()) }
+    }
+
+    /**
+     * 用户实测问题 1：音频库「本地」页页签的搜索框应当只过滤本地曲目，
+     * 不能被跨源搜索顶掉。跨源仅在「网络」页页签生效。
+     */
+    @Test fun `非网络页签搜索不做全源查询也不弹确认`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
+        val vm = build(env)
+        vm.updateSearchQuery("花木兰", carSurface = false, networkTab = false)
+        advanceUntilIdle()
+        coVerify(exactly = 0) { env.repo.searchTracks(any(), any(), any()) }
+        assertEquals(false, vm.uiState.value.askIndexConfirm)
+        assertEquals(emptyList<Any>(), vm.uiState.value.searchResults)
+    }
+
+    /** 用户实测问题 3：没有网络源时不能问“现在建立索引？”。 */
+    @Test fun `无网络源时不弹建立索引确认`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
+        val vm = build(env, sources = emptyList())
+        vm.updateSearchQuery("花木兰", carSurface = false, networkTab = true)
+        advanceUntilIdle()
+        assertEquals(false, vm.uiState.value.askIndexConfirm)
+        assertEquals(SearchPhase.NoWebdavSource, vm.uiState.value.searchPhase)
         verify(exactly = 0) { env.indexer.start(any()) }
     }
 

@@ -91,6 +91,9 @@ class AudioLibraryViewModel @Inject constructor(
 
     // 形态由 UI 传进来。默认按车机处理：宁可少做一步，也不能误起后台爬取
     private var surfaceIsCar = true
+
+    // 跨源搜索只在「网络」页签生效；本地/收藏/最近页签的搜索框仍然只过滤当页列表
+    private var networkTab = false
     private var askedThisSession = false
     private var lastIndexState: IndexState = IndexState.Idle
 
@@ -121,7 +124,7 @@ class AudioLibraryViewModel @Inject constructor(
                 val query = _state.value.searchQuery
                 lastIndexState = agg
                 _state.update { it.copy(indexState = agg) }
-                if (wasRunning && agg !is IndexState.Running && query.isNotBlank() && !surfaceIsCar) {
+                if (wasRunning && agg !is IndexState.Running && query.isNotBlank() && !surfaceIsCar && networkTab) {
                     runSearch(query)
                 }
             }
@@ -145,16 +148,18 @@ class AudioLibraryViewModel @Inject constructor(
     fun hideAddDialog() = _state.update { it.copy(showAddDialog = false, error = null) }
 
     /**
-     * 搜索。形态由 UI 传进来（VM 不能读 CompositionLocal）：车机档保持原有的
-     * “当前目录内过滤”，全源搜索只在手机档开启。
+     * 搜索。两个开关都由 UI 传进来（VM 不能读 CompositionLocal / PagerState）：
+     * 车机档保持“当前目录内过滤”；非「网络」页签也绝不走跨源——否则本地页的
+     * 搜索框会去搜网络曲目（用户实测问题 1）。
      *
      * 2026-10-18 决定：**绝不主动建索引**。手机档搜到一半发现本机没索引，
      * 只是请用户确认，不自己起爬。
      */
-    fun updateSearchQuery(q: String, carSurface: Boolean) {
+    fun updateSearchQuery(q: String, carSurface: Boolean, networkTab: Boolean = true) {
         surfaceIsCar = carSurface
+        this.networkTab = networkTab
         _state.update { it.copy(searchQuery = q, searchResults = emptyList()) }
-        if (carSurface || q.isBlank()) {
+        if (carSurface || !networkTab || q.isBlank()) {
             _state.update { it.copy(searchPhase = SearchPhase.Ready, askIndexConfirm = false) }
             return
         }
@@ -163,12 +168,14 @@ class AudioLibraryViewModel @Inject constructor(
 
     /** 查一次阶段，再决定是“请确认 / 挡结果 / 出结果”。 */
     private suspend fun runSearch(q: String) {
+        val webdavSources = _state.value.sources.count { it.type == SourceType.WEBDAV }
         val phase = IndexQuery.searchPhase(
             indexState = _state.value.indexState,
             indexedCount = repository.indexedTrackCount(),
             askedThisSession = askedThisSession,
             allowIndexing = preferences.webdavIndexEnabled.first(),
             stale = repository.isIndexStale(),
+            webdavSourceCount = webdavSources,
         )
         val ask = phase == SearchPhase.NotIndexed && !askedThisSession
         _state.update { it.copy(searchPhase = phase, askIndexConfirm = ask) }
@@ -189,7 +196,9 @@ class AudioLibraryViewModel @Inject constructor(
         if (surfaceIsCar) return
         viewModelScope.launch {
             if (!preferences.webdavIndexEnabled.first()) return@launch
-            repository.webdavSources().forEach { indexer.start(it) }
+            val targets = repository.webdavSources()
+            if (targets.isEmpty()) return@launch        // 没源可索引：不静默“假建立”
+            targets.forEach { indexer.start(it) }
             _state.update { it.copy(searchPhase = SearchPhase.Indexing) }
         }
     }

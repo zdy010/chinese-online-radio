@@ -138,9 +138,12 @@ object IndexQuery {
         askedThisSession: Boolean,
         allowIndexing: Boolean,
         stale: Boolean,
+        webdavSourceCount: Int = 1,
     ): SearchPhase {
         if (indexState is IndexState.Running) return SearchPhase.Indexing
         if (indexedCount > 0) return if (stale) SearchPhase.ReadyStale else SearchPhase.Ready
+        // 没源就谈不上索引：向用户问“要不要建立索引”是错的，得先让他添加来源
+        if (webdavSourceCount <= 0) return SearchPhase.NoWebdavSource
         if (!allowIndexing) return SearchPhase.Disabled
         return if (askedThisSession) SearchPhase.Deferred else SearchPhase.NotIndexed
     }
@@ -155,6 +158,7 @@ object IndexQuery {
             if (indexedCount > 0) "正在建立索引，请稍后搜索（已收录 $indexedCount 个曲目）"
             else "正在建立索引，请稍后搜索"
         SearchPhase.Deferred -> "尚未建立索引，无法搜索全部曲目"
+        SearchPhase.NoWebdavSource -> "还没有可索引的网络来源"
         SearchPhase.Disabled -> "索引功能已关闭，可在设置中开启"
         SearchPhase.ReadyStale -> "索引可能已过期，点这里更新"
         else -> null

@@ -59,6 +59,9 @@ enum class SearchPhase {
     /** 用户关闭了“允许建立索引”且库里无索引 */
     Disabled,
 
+    /** 一个网络源也没添加：此时“建立索引”无意义，应该引导去添加来源 */
+    NoWebdavSource,
+
     /** 从未建立索引且本次会话未问过 → 应弹“是否现在建立” */
     NotIndexed,
 

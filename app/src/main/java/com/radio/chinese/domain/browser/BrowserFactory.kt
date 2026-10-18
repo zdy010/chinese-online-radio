@@ -12,22 +12,31 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 浏览器工厂。
+ * 浏览器工厂。两条路径**故意**用不同的客户端：
  *
- * WebDAV 每次调用都新建一个 `WebDavClient`：它的凭证是可写字段、列表缓存的 key
- * 只有 path，多源并发共用一个实例必然串。工厂刻意不做缓存——索引器一轮任务持有
- * 一个实例、跑完就丢，免得两万条目录行常驻内存；浏览页同理，用完即弃。
+ * - 浏览 / 播放：用注入的 [sharedWebDavClient] 单例。`RadioService` 建 ExoPlayer 时
+ *   读的就是它（`webDavClient.username.isNotEmpty()` 才加 Authorization 头），
+ *   换成临时实例会让所有 WebDAV 播放失去鉴权——这个耦合很脏，但改掉它必须先重构播放侧，
+ *   不能在一次索引功能里顺手换掉（用户实测问题 2 就是这么来的）。
+ * - 索引：每轮任务一个独立实例。`WebDavClient.listFilesCache` 的 key 只有 path，
+ *   四个快捷码源 base URL 又完全相同，并发共用单例会跨源串数据。
  */
 @Singleton
 class BrowserFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient,
+    private val sharedWebDavClient: WebDavClient,
 ) : BrowserProvider {
 
-    internal var clientFactory: () -> WebDavClient = { WebDavClient() }
+    /** 索引客户端工厂；测试里替换成计数假件。 */
+    internal var indexClientFactory: () -> WebDavClient = { WebDavClient() }
+
+    fun browseClient(source: AudioSource): WebDavClient = sharedWebDavClient
+
+    fun indexClient(source: AudioSource): WebDavClient = indexClientFactory()
 
     fun create(source: AudioSource): AudioBrowser = when (source.type) {
-        SourceType.WEBDAV -> WebDavBrowser(clientFactory(), source.url, source.username, source.password)
+        SourceType.WEBDAV -> WebDavBrowser(browseClient(source), source.url, source.username, source.password)
         SourceType.LOCAL -> LocalBrowser(context)
         SourceType.M3U -> M3uBrowser(okHttpClient)
         SourceType.HTTP -> HttpBrowser(okHttpClient)
@@ -38,5 +47,9 @@ class BrowserFactory @Inject constructor(
      * M3U / HTTP 是扁平播放列表，爬它们没有意义。
      */
     override fun createForIndexing(source: AudioSource): AudioBrowser? =
-        if (source.type == SourceType.WEBDAV) create(source) else null
+        if (source.type == SourceType.WEBDAV) {
+            WebDavBrowser(indexClient(source), source.url, source.username, source.password)
+        } else {
+            null
+        }
 }

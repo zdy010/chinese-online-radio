@@ -58,6 +58,7 @@ fun SearchResultsList(
     onPlay: (TrackHit) -> Unit,
     onToggleFavorite: (TrackHit) -> Unit,
     onBuildIndex: () -> Unit,
+    onAddSource: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val indexedNow = (indexState as? IndexState.Running)?.p?.indexedFiles ?: 0
@@ -72,6 +73,16 @@ fun SearchResultsList(
                 title = "正在建立索引，请稍后搜索",
                 hint = if (indexedNow > 0) "已收录 $indexedNow 个曲目，建完自动显示结果"
                 else "建完自动显示结果，可以退出本页等它跑完",
+                modifier = Modifier.weight(1f)
+            )
+
+            SearchPhase.NoWebdavSource -> EmptyState(
+                // 没添加过网络源时问“要不要建立索引”是答非所问，要引导去加来源
+                icon = Icons.Default.Search,
+                title = "还没有可索引的网络来源",
+                hint = "先添加一个 WebDAV / 云盘来源，就能按唱段名搜索全部曲目",
+                actionLabel = "添加网络来源",
+                onAction = onAddSource,
                 modifier = Modifier.weight(1f)
             )
 
