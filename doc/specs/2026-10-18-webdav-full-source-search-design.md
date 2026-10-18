@@ -7,6 +7,18 @@
 > - 索引未完成时的搜索：给出"正在索引中"提示，同时展示已索引部分的结果。
 > - 手机档搜索框语义统一为**全源搜索**（方案 A）；跨源重复曲目按**曲名+大小归并为一条**（方案 A）。
 
+## 0. 2026-10-18 二次修订（**本节优先于下文**）
+
+用户看过设备实测后改了两条决定。以下条目**取代** §3/§5/§7/§10 中与它冲突的句子：
+
+1. **索引不再自动建立，也不再限定 Wi‑Fi**——改为用户确认驱动：手机档搜索时若本机从未建立索引，弹「尚未建立索引，现在建立？」；确认后才后台起爬；选「以后再说」则本次会话不再询问（冷启动恢复询问）。网络类型不再是前提，**`NetworkGate` 已整体删除**（连带 `IndexState.PausedNoWifi`）。
+   - 代价已知并认可：全量一轮响应体实测约 1.3MB/源、四源约 8MB，走蜂窝会吃这些流量。
+   - 因此 §5 的“移动网络手动刷新文案”、§7 的两行 Wi‑Fi 相关态、§10 第 1/3/5 条里关于 Wi‑Fi 的断言全部作废；**车机档不索引、不搜索这条不变**。
+2. **进行中不出结果**。§7 原写“提示 + 已索引部分结果一起给”，现改为：`Indexing` 阶段只显“正在建立索引，请稍后搜索（已收录 N 个曲目）”，不给半截结果；完成后**自动重跑当前搜索**，用户不必重输关键字。
+3. 判定集中在纯函数 `IndexQuery.searchPhase(...)` → `SearchPhase`（`Disabled/NotIndexed/Deferred/Indexing/Ready/ReadyStale`），UI 只渲染阶段。索引过期（TTL 到或 `lastSyncAt<=0`）时**照常出结果**，只给一行可点的「索引可能已过期，点这里更新」，**不弹窗**。
+4. `webdav_index_enabled` 语义由“是否自动索引”改为“**是否允许建立索引**”（关掉后不弹确认、不起爬，已建好的搜索仍可用）。
+5. 远端索引发布（`2026-10-18-remote-index-publish-design.md`）**暂缓**：服务器无写通道、SSH 不可达、域名被备案阻断。
+
 ## 1. 目标与非目标
 
 **目标**
@@ -97,7 +109,7 @@ run(source):
 - 暴露 `StateFlow<IndexState>`：`Idle / Running(progress: IndexedProgress) / PausedNoWifi(progress) / PartiallyFailed(progress, skipped) / Done(count)`。`IndexedProgress` 含 `indexedFiles`、`pendingDirs`、`skippedDirs`。
 - 同一源同一时刻只允许一个索引 Job（重复触发合并，不叠并发）。
 
-## 5. 网络闸门与形态边界
+## 5. 网络闸门与形态边界（网络闸门部分已被 §0 作废；形态边界仍有效）
 
 **`NetworkGate`（新增 seam）**：`ConnectivityManager` + `registerDefaultNetworkCallback`，判定条件 `hasCapability(NET_CAPABILITY_NOT_METERED) && (hasTransport(WIFI) || hasTransport(ETHERNET))`（以太一并放进来，车机可能走 USB 共享/有线）。提供 `isIndexingAllowed(): Boolean` 与 `allowedFlow: Flow<Boolean>`。`ACCESS_NETWORK_STATE` 已在 Manifest，无需新增权限。
 
@@ -123,7 +135,7 @@ run(source):
 - 归并后主选来源：优先"该源上次播放成功"（复用 `SourceAvailabilityStore` 的可用性分），无记录时取列表中的第一个。点开后若该来源起播失败，走现有 failover 换另一来源重试一次。
 - 大小相同但内容不同的风险：以 `name+size` 归并理论可误合，实测两源同为 3468 首为同一文件集，接受该口径；行上"2 个来源"的可展开详情作为逃生门（点击可看各来源路径）。
 
-## 7. 索引中 / 空索引 / 无结果 的提示态
+## 7. 索引中 / 空索引 / 无结果 的提示态（已被 §0 第 1–3 条修订）
 
 沿用 `ui/common/StateViews` 既有约定（**"搜不到"与"还没索引完"是两回事，文案不得混用**——与 `AudioRecentTab`、`FavoritesScreen` 现有注释同源）：
 
@@ -167,7 +179,7 @@ run(source):
 - `service/OperaRepository.kt` 的 `searchFiles`/`searchLocalCache`/`searchFilesRealtime` 现为**孤儿代码**（除自身声明外无任何注入点，旧戏曲页已在 Phase 5 删除）：其"分层 Depth:1、不用 infinity"的结论已由本设计的 `SourceIndexer` 承接，实现随本功能替换，孤儿文件删除，避免留下两套搜索。
 - 同文件内 `WebDavClient.listFilesCache` 的源级串数据风险（§4）在本设计中通过"每源独立实例"规避；**不改动播放路径上的现有单例行为**（凭证安全的全局整改属另一个议题，不在本 spec 范围）。
 
-## 10. 验收指标
+## 10. 验收指标（其中关 Wi‑Fi 的断言已被 §0 作废）
 
 1. 手机 Wi‑Fi 下，四源（19657 曲目）全量索引 ≤3 分钟，且**不中断正在播放的曲目**（MediaSession 仍为 PLAYING，无缓冲报错）。
 2. 索引完成后搜索"花木兰"响应 ≤100ms（本地查询，与网络无关）。
