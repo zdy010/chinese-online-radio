@@ -52,13 +52,29 @@ object IndexQuery {
         }.sortedBy { it.name }
     }
 
-    /** `/豫剧/常香玉` → `豫剧 / 常香玉`；空路径回退源名。 */
+    /**
+     * `/豫剧/常香玉` → `豫剧 / 常香玉`；空路径回退源名。
+     *
+     * 设备实测：索引落库的 parentPath 是 href 形态（`/webdav/%E7%8E%8B%E9%9C%9E/`），
+     * 所以这里还要剔掉 DAV 挂载前缀段并百分号解码，否则结果行直接显示乱码。
+     * URLDecoder 会把 `+` 解成空格，而曲目文件名里的 `+` 是字面意义，先转义回 %2B。
+     */
     fun breadcrumb(parentPath: String, sourceName: String, maxSegments: Int = 3): String {
-        val segs = parentPath.split('/').map { it.trim() }.filter { it.isNotEmpty() }
+        val segs = parentPath.split('/')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .dropWhile { it.equals("webdav", ignoreCase = true) || it.equals("dav", ignoreCase = true) }
+            .map { decodeSegment(it) }
         if (segs.isEmpty()) return sourceName
         val shown = if (segs.size > maxSegments) listOf("…") + segs.takeLast(maxSegments) else segs
         return shown.joinToString(" / ")
     }
+
+    /** 解不了的片段（如 `%ZZ`）原样保留：面包屑是展示层，不该因一个坏片段报错。 */
+    private fun decodeSegment(raw: String): String =
+        runCatching {
+            java.net.URLDecoder.decode(raw.replace("+", "%2B"), "UTF-8")
+        }.getOrDefault(raw)
 
     /**
      * 目录行最旧 cachedAt 决定它还算不算新鲜。

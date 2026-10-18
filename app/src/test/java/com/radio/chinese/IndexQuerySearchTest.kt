@@ -89,6 +89,24 @@ class IndexQuerySearchTest {
         assertEquals("123云盘·豫剧", IndexQuery.breadcrumb("/", "123云盘·豫剧"))
     }
 
+    // 设备实测：索引落库的 parentPath 是 href 形态（带 DAV 挂载前缀且百分号编码），
+    // 不解码不剔前缀的话，结果行会显示成 %E7%8E%8B%E9%9C%9E 这种乱码。
+    @Test fun `面包屑解码百分号编码的目录名`() {
+        assertEquals("王霞", IndexQuery.breadcrumb("/webdav/%E7%8E%8B%E9%9C%9E/", "123云盘·豫剧"))
+    }
+
+    @Test fun `面包屑去掉 DAV 挂载前缀段`() {
+        assertEquals("豫剧 / 常香玉", IndexQuery.breadcrumb("/webdav/豫剧/常香玉", "源"))
+    }
+
+    @Test fun `加号不被解码成空格`() {
+        assertEquals("白莲花+豫剧", IndexQuery.breadcrumb("/webdav/%E7%99%BD%E8%8E%B2%E8%8A%B1+%E8%B1%AB%E5%89%A7", "源"))
+    }
+
+    @Test fun `无法解码的片段原样保留而不抛异常`() {
+        assertEquals("%ZZ", IndexQuery.breadcrumb("/webdav/%ZZ", "源"))
+    }
+
     // ── 索引状态跨源聚合：提示必须反映最差那个源，不能被已完成的源盖掉 ──
 
     @Test fun `空状态集合聚合为 Idle`() {

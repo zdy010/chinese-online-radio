@@ -100,8 +100,10 @@ fun AudioMainScreen(
     // 形态判定只有一个源：这里读，往下传布尔给 VM，VM 不自己读 CompositionLocal
     val carSurface = isCarSurface()
     LaunchedEffect(searchQuery, carSurface) { viewModel.updateSearchQuery(searchQuery, carSurface) }
-    // 车机档永不拉起索引：一个 PROPFIND 都不得发出去
-    LaunchedEffect(carSurface) { viewModel.startIndexingIfNeeded(carSurface) }
+    // 车机档永不拉起索引：一个 PROPFIND 都不得发出去。
+    // 键里必须带 sources.size：只键 carSurface 时，用户刚加的源不会触发索引，
+    // 要等到重进页面才开始（spec §3 “新建源成功后立即索引”）。
+    LaunchedEffect(uiState.sources.size, carSurface) { viewModel.startIndexingIfNeeded(carSurface) }
 
     val trackTitle = uiState.currentTrack?.name ?: operaFile?.name ?: ""
     val hasPlayer = trackTitle.isNotEmpty()
