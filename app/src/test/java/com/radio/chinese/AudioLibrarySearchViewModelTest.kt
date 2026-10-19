@@ -50,6 +50,9 @@ class AudioLibrarySearchViewModelTest {
         val prefs: RadioPreferences = mockk(relaxed = true),
     )
 
+    /** 供用例在 build 之后改动源列表（重现“加完源回到搜索页”路径）。 */
+    private lateinit var sourcesFlow: MutableStateFlow<List<AudioSource>>
+
     /**
      * 公共脚手架。indexEnabled / states 必须能参数化：这里无条件 stub 会把
      * 用例自己先设的 stub 盖掉，造成“开关关闭却仍触发索引”的假失败。
@@ -71,7 +74,8 @@ class AudioLibrarySearchViewModelTest {
         every { pm.operaFile } returns MutableStateFlow<com.radio.chinese.domain.model.OperaAudioFile?>(null)
         every { pm.error } returns MutableStateFlow<String?>(null)
         every { pm.operaRepeatMode } returns MutableStateFlow(OperaRepeatMode.ALL)
-        every { env.repo.allSources } returns MutableStateFlow(sources)
+        sourcesFlow = MutableStateFlow(sources)
+        every { env.repo.allSources } returns sourcesFlow
         every { env.repo.favorites } returns MutableStateFlow(emptyList())
         every { env.repo.recentPlays } returns MutableStateFlow(emptyList())
         every { env.prefs.webdavIndexEnabled } returns MutableStateFlow(indexEnabled)
@@ -172,6 +176,25 @@ class AudioLibrarySearchViewModelTest {
         assertEquals(false, vm.uiState.value.askIndexConfirm)
         assertEquals(SearchPhase.NoWebdavSource, vm.uiState.value.searchPhase)
         verify(exactly = 0) { env.indexer.start(any()) }
+    }
+
+    /**
+     * 用户实测回归：加完网络源回到搜索页，搜索框里的字没变，阶段却永远停在
+     * “还没有可索引的网络来源”——看着就是搜索坏了。源列表变化必须重算阶段。
+     */
+    @Test fun `新增网络源后无需重输关键字即重算阶段`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
+        val vm = build(env, sources = emptyList())
+        vm.updateSearchQuery("a", carSurface = false, networkTab = true)
+        advanceUntilIdle()
+        assertEquals(SearchPhase.NoWebdavSource, vm.uiState.value.searchPhase)
+
+        sourcesFlow.value = listOf(webdavSource)          // 用户刚保存完一个源
+        advanceUntilIdle()
+
+        assertEquals("加完源应立刻进入待确认态，而不是等用户重输", SearchPhase.NotIndexed, vm.uiState.value.searchPhase)
+        assertEquals(true, vm.uiState.value.askIndexConfirm)
     }
 
     @Test fun `索引完成后自动重跑搜索，不需用户重输关键字`() = runTest(dispatcher) {

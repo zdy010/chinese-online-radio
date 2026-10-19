@@ -140,6 +140,10 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             repository.allSources.collect { sources ->
                 _state.update { it.copy(sources = sources) }
+                // 源列表一变就重算搜索阶段：用户加完源回到搜索页时，搜索框里的字并未改变，
+                // 只靠“搜索词变化”触发的话，界面会永远停在“还没有可索引的网络来源”（看着就是搜索坏了）。
+                val q = _state.value.searchQuery
+                if (q.isNotBlank() && !surfaceIsCar && networkTab) runSearch(q)
             }
         }
     }
