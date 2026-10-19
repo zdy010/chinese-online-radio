@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -57,6 +58,18 @@ class RadioPreferences @Inject constructor(
     // Last played station ID
     val lastPlayedStationId: Flow<String?> = dataStore.data.map { prefs ->
         prefs[KEY_LAST_STATION]
+    }
+
+    /**
+     * 戏曲点播倍速。只作用于音频库/戏曲点播，电台直播流一律原速，
+     * 所以这个值不能当作“全局播放速度”去影响电台。
+     */
+    val operaSpeed: Flow<Float> = dataStore.data.map { prefs ->
+        prefs[KEY_OPERA_SPEED] ?: 1f
+    }
+
+    suspend fun setOperaSpeed(speed: Float) {
+        dataStore.edit { prefs -> prefs[KEY_OPERA_SPEED] = speed }
     }
 
     // Sleep timer minutes (0 = disabled)
@@ -294,6 +307,7 @@ class RadioPreferences @Inject constructor(
         private val KEY_THEME_MODE = intPreferencesKey("theme_mode")
         private val KEY_LAST_STATION = stringPreferencesKey("last_played_station")
         private val KEY_SLEEP_TIMER = intPreferencesKey("sleep_timer_minutes")
+        private val KEY_OPERA_SPEED = floatPreferencesKey("opera_speed")
         private val KEY_RECENT_STATIONS = stringPreferencesKey("radio_recent_station_ids")
         private val KEY_FONT_SCALE = stringPreferencesKey("font_scale")
         private val KEY_UI_MODE = intPreferencesKey("ui_mode")

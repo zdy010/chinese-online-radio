@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -12,6 +13,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.OperaAudioFile
+import com.radio.chinese.domain.model.OperaSpeed
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -110,6 +112,13 @@ class PlayerManager @Inject constructor(
     /** 戏曲循环模式由本类持有，UI 只读，避免「按钮文字变了但行为不变」 */
     private val _operaRepeatMode = MutableStateFlow(OperaRepeatMode.ALL)
     val operaRepeatMode: StateFlow<OperaRepeatMode> = _operaRepeatMode
+
+    /**
+     * 点播倍速。同样由本类持有、UI 只读；只对音频库/戏曲点播生效，
+     * 电台直播流一律原速（见 OperaSpeed），所以它不是“全局播放速度”。
+     */
+    private val _operaSpeed = MutableStateFlow(OperaSpeed.DEFAULT)
+    val operaSpeed: StateFlow<Float> = _operaSpeed
 
     /**
      * 戏曲播放上下文：歌词/封面等附属文件要靠「哪个源的哪个路径」找回归属。
@@ -502,8 +511,11 @@ class PlayerManager @Inject constructor(
         ctrl.clearMediaItems()
         ctrl.setMediaItem(mediaItem)
 
-        // 断点续听
+        // 断点续听 + 恢复上次选的倍速（新 controller 不继承上一轮的 playbackParameters）
         scope.launch {
+            val persisted = runCatching { preferences.operaSpeed.first() }.getOrDefault(OperaSpeed.DEFAULT)
+            _operaSpeed.value = OperaSpeed.normalize(persisted)
+            applyOperaSpeed()
             val saved = preferences.getOperaPlayPosition(file.fileId)
             if (saved > 0) ctrl.seekTo(saved)
         }
@@ -631,6 +643,29 @@ class PlayerManager @Inject constructor(
         _operaContext.value = null
         _operaMediaMetadata.value = null
         controller?.stop()
+        // 点播倍速不得残留到接下来的电台直播流上
+        applyOperaSpeed()
+    }
+
+    /** 设定并持久化点播倍速；输入先吸附到档位。 */
+    fun setOperaSpeed(speed: Float) {
+        val v = OperaSpeed.normalize(speed)
+        _operaSpeed.value = v
+        applyOperaSpeed()
+        scope.launch { preferences.setOperaSpeed(v) }
+    }
+
+    fun cycleOperaSpeed() = setOperaSpeed(OperaSpeed.next(_operaSpeed.value))
+
+    /**
+     * 把“现在该有的速度”推给播放器。pitch 固定 1f 是为了变速不变调：
+     * 慢放听唱词时声音不该变尖变粗。
+     */
+    private fun applyOperaSpeed() {
+        val ctrl = controller ?: return
+        val v = OperaSpeed.parametersFor(_isOperaMode.value, _operaSpeed.value)
+        ctrl.playbackParameters = if (v == OperaSpeed.DEFAULT) PlaybackParameters.DEFAULT
+        else PlaybackParameters(v, 1f)
     }
 
     fun disconnect() {

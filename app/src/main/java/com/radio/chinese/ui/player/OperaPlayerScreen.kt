@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.radio.chinese.domain.model.OperaSpeed
 import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
@@ -56,6 +57,7 @@ fun OperaPlayerScreen(
     val dur by playerManager.operaDuration.collectAsState()
     val br by playerManager.operaBitrate.collectAsState()
     val repeat by playerManager.operaRepeatMode.collectAsState()
+    val speed by playerManager.operaSpeed.collectAsState()
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -132,6 +134,10 @@ fun OperaPlayerScreen(
         val contentArea: @Composable (Modifier) -> Unit = { m ->
             OperaContentArea(m, state, onLineClick = { viewModel.seekToLine(it) })
         }
+        // 倍速只对点播开放：本页就是点播页，电台播放页不给这个控件
+        val speedRow: @Composable () -> Unit = {
+            OperaSpeedRow(current = speed, onPick = { playerManager.setOperaSpeed(it) })
+        }
 
         if (usesRailNavigation()) {
             // 车机横屏：左信息+内容，右进度+大控件；±10 秒贴主播放键两侧在 ControlRow 内
@@ -147,6 +153,7 @@ fun OperaPlayerScreen(
                 ) {
                     slider()
                     controls()
+                    speedRow()
                 }
             }
         } else {
@@ -155,6 +162,51 @@ fun OperaPlayerScreen(
                 contentArea(Modifier.weight(1f))
                 slider()
                 controls()
+                speedRow()
+            }
+        }
+    }
+}
+
+/**
+ * 倍速档位行。一排直接可点而不是“循环按钮”：
+ * 中老年用户看不出“再点一下会到什么速度”，隐藏在一层循环里等于不能用。
+ */
+@Composable
+private fun OperaSpeedRow(current: Float, onPick: (Float) -> Unit) {
+    val car = isCarSurface()
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapTiny),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.GapSmall),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "倍速",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        OperaSpeed.STEPS.forEach { s ->
+            val selected = OperaSpeed.normalize(current) == s
+            Surface(
+                shape = RoundedCornerShape(Dimens.GapLarge),
+                color = if (selected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier
+                    .heightIn(min = if (car) Dimens.TouchMin else 36.dp)
+                    .clip(RoundedCornerShape(Dimens.GapLarge))
+                    .clickable { onPick(s) }
+                    .semantics { contentDescription = "以${OperaSpeed.label(s)}播放" }
+                    .padding(horizontal = Dimens.GapMedium)
+            ) {
+                Text(
+                    text = OperaSpeed.label(s),
+                    style = if (car) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelLarge,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = Dimens.GapTiny)
+                )
             }
         }
     }
