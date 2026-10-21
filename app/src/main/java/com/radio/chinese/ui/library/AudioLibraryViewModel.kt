@@ -15,6 +15,8 @@ import com.radio.chinese.domain.*
 import com.radio.chinese.domain.browser.*
 import com.radio.chinese.domain.model.IndexQuery
 import com.radio.chinese.domain.model.MergedTrack
+import com.radio.chinese.domain.model.OperaQueue
+import com.radio.chinese.domain.model.QueueRow
 import com.radio.chinese.domain.SearchPhase
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.service.SourceIndexer
@@ -229,13 +231,15 @@ class AudioLibraryViewModel @Inject constructor(
      */
     fun playSearchResult(hit: TrackHit) {
         viewModelScope.launch {
-            val source = repository.getSource(hit.sourceId) ?: return@launch
-            val track = AudioTrack(
-                id = hit.path, name = hit.name, path = hit.path,
-                size = hit.size, sourceId = hit.sourceId, parentPath = hit.parentPath
-            )
-            playTrackWithSource(track, source)
-            _state.update { it.copy(currentTrack = track) }
+            val pick = hit.toQueueRow()
+            // 队列跟着结果列表的行序走，上一曲/下一曲才是在用户看到的那一列里跳。
+            // 其余行各取自己的首个来源：同一曲目多源时列表显示的就是第一个
+            val rows = _state.value.searchResults.mapNotNull { merged ->
+                (merged.sources.firstOrNull {
+                    it.sourceId == hit.sourceId && it.path == hit.path
+                } ?: merged.sources.firstOrNull())?.toQueueRow()
+            }
+            playFromRows(rows, pick)
         }
     }
 
@@ -442,40 +446,64 @@ class AudioLibraryViewModel @Inject constructor(
 
     fun playFavorite(fav: AudioFavoriteEntity) {
         viewModelScope.launch {
-            val source = repository.getSource(fav.sourceId) ?: return@launch
-            val track = AudioTrack(
-                id = fav.trackPath.hashCode().toString(), name = fav.trackName,
-                path = fav.trackPath, sourceId = fav.sourceId
-            )
-            playTrackWithSource(track, source)
+            playFromRows(_state.value.favorites.map { it.toQueueRow() }, fav.toQueueRow())
         }
     }
 
     fun playRecent(recent: AudioRecentEntity) {
         viewModelScope.launch {
-            val source = repository.getSource(recent.sourceId) ?: return@launch
-            val track = AudioTrack(
-                id = recent.trackPath.hashCode().toString(), name = recent.trackName,
-                path = recent.trackPath, sourceId = recent.sourceId
-            )
-            playTrackWithSource(track, source)
+            playFromRows(_state.value.recentPlays.map { it.toQueueRow() }, recent.toQueueRow())
         }
     }
 
-    private fun playTrackWithSource(track: AudioTrack, source: AudioSource) {
+    /**
+     * 把界面上的一列曲目当成播放队列放出去。
+     *
+     * 搜索结果、收藏、最近播放这三个入口以前都把队列传成 emptyList()，
+     * PlayerManager 定位不到当前项（index = -1），上一曲/下一曲按了没反应。
+     *
+     * 队列只收 [pick] 所属源的行。WebDAV 的鉴权不跟着 MediaItem 走：
+     * RadioService 每建一次 DataSource 都从注入的那个 WebDavClient 单例现读 authHeader，
+     * 而 WebDavBrowser.resolveUri 会把行所属源的凭证写进同一个单例（browseClient 对所有
+     * 源返回同一实例）。跨源入队等于让最后一次 resolve 覆盖前面所有行，整条队列
+     * 会拿最后一行的账号去放第一首：除了 401，还会把 A 源的凭证发给 B 主机。
+     * 代价是跨源的那几行进不了队，比放不出声与串凭证外发轻得多。
+     */
+    private suspend fun playFromRows(rows: List<QueueRow>, pick: QueueRow) {
+        val source = repository.getSource(pick.sourceId) ?: return
         val browser = createBrowser(source)
-        val uri = browser.resolveUri(track)
-        playerManager.playOperaFile(
-            com.radio.chinese.domain.model.OperaAudioFile(
-                fileId = track.path.hashCode().toLong(), name = track.name, size = 0,
-                categoryName = source.name, operaName = "", downloadUrl = uri, sourcePath = track.path
-            ), emptyList(), context = com.radio.chinese.service.OperaPlayContext(source.id, track.path)
+        val (files, index) = OperaQueue.build(
+            rows = rows.filter { it.sourceId == pick.sourceId },
+            pick = pick,
+            urlOf = { browser.resolveUri(it.asTrack()) },
+            sourceNameOf = { source.name },
         )
-        _state.update { it.copy(currentTrack = track, browsingSource = source) }
+        playerManager.playOperaFile(
+            files[index], files,
+            context = com.radio.chinese.service.OperaPlayContext(source.id, pick.path),
+        )
+        _state.update {
+            it.copy(currentTrack = pick.asTrack(), browsingSource = source)
+        }
         viewModelScope.launch {
-            repository.recordPlay(source.id, track.path, track.name, source.name)
+            repository.recordPlay(source.id, pick.path, pick.name, source.name)
         }
     }
+
+    private fun QueueRow.asTrack() = AudioTrack(
+        id = path, name = name, path = path, size = size,
+        sourceId = sourceId, parentPath = parentPath,
+    )
+
+    private fun TrackHit.toQueueRow() =
+        QueueRow(sourceId = sourceId, path = path, name = name, size = size, parentPath = parentPath)
+
+    /** 收藏与最近只存了路径和名字，没存目录与大小；operaName 留空可接受。 */
+    private fun AudioFavoriteEntity.toQueueRow() =
+        QueueRow(sourceId = sourceId, path = trackPath, name = trackName, size = 0, parentPath = "")
+
+    private fun AudioRecentEntity.toQueueRow() =
+        QueueRow(sourceId = sourceId, path = trackPath, name = trackName, size = 0, parentPath = "")
 
     fun togglePlayPause() = playerManager.togglePlayPause()
     fun stopPlayback() = playerManager.stopOpera()
