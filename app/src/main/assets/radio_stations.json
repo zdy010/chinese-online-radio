@@ -9014,6 +9014,1242 @@
       ],
       "country": "中国",
       "language": "华语"
+    },
+    {
+      "id": "st_北京交通广播",
+      "name": "北京交通广播",
+      "category": "traffic",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/alive/fm1039.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语交通电台，主要播实时路况、行车",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "trafficnow",
+        "drive"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_北京文艺广播",
+      "name": "北京文艺广播",
+      "category": "arts",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/alive/fm876.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语文艺电台，主要播评书故事、相声",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "storytelling",
+        "crosstalk"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_北京音乐广播",
+      "name": "北京音乐广播",
+      "category": "music",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/alive/fm974.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播华语流行",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "cpop"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_北京城市广播",
+      "name": "北京城市广播",
+      "category": "general",
+      "streamUrl": "https://brtv-radiolive.rbc.cn/alive/fm1073.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语综合电台",
+      "website": "",
+      "sources": [],
+      "tags": [],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_上海新闻广播",
+      "name": "上海新闻广播",
+      "category": "news",
+      "streamUrl": "http://lhttp.qingting.fm/live/270/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语新闻电台，主要播本地新闻",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://lhttp.qingting.fm/live/270/64k.mp3",
+          "label": "主源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://lhttp-hw.qtfm.cn/live/270/64k.mp3",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "localnews"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_上海交通广播",
+      "name": "上海交通广播",
+      "category": "traffic",
+      "streamUrl": "http://lhttp.qingting.fm/live/266/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语交通电台，主要播实时路况、行车",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://lhttp.qingting.fm/live/266/64k.mp3",
+          "label": "主源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://lhttp-hw.qtfm.cn/live/266/64k.mp3",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "trafficnow",
+        "drive"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_上海动感101",
+      "name": "上海动感101",
+      "category": "music",
+      "streamUrl": "https://lhttp.qingting.fm/live/274/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播华语流行、欧美流行",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "cpop",
+        "pop"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_上海经典947",
+      "name": "上海经典947",
+      "category": "music",
+      "streamUrl": "http://lhttp.qingting.fm/live/267/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播古典",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "classical"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_天津新闻广播",
+      "name": "天津新闻广播",
+      "category": "news",
+      "streamUrl": "https://lhttp-hw.qtfm.cn/live/5022134/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语新闻电台，主要播本地新闻",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "localnews"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_广东新闻广播",
+      "name": "广东新闻广播",
+      "category": "news",
+      "streamUrl": "https://lhttp.qtfm.cn/live/1254/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语新闻电台，主要播本地新闻",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "localnews"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_广东音乐之声",
+      "name": "广东音乐之声",
+      "category": "music",
+      "streamUrl": "https://lhttp.qtfm.cn/live/1260/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播华语流行",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "cpop"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_广州金曲音乐广播",
+      "name": "广州金曲音乐广播",
+      "category": "music",
+      "streamUrl": "http://lhttp.qingting.fm/live/20192/64k.mp3",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播怀旧老歌、华语流行",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "oldies",
+        "cpop"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_央广音乐之声",
+      "name": "央广音乐之声",
+      "category": "music",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/yyzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播华语流行、欧美流行",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "cpop",
+        "pop"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_央广文艺之声",
+      "name": "央广文艺之声",
+      "category": "arts",
+      "streamUrl": "http://satellitepull.cnr.cn/live/wxwyzs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语文艺电台，主要播评书故事、相声",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "storytelling",
+        "crosstalk"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_央广经典音乐广播",
+      "name": "央广经典音乐广播",
+      "category": "music",
+      "streamUrl": "http://satellitepull.cnr.cn/live/wxdszs/playlist.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语音乐电台，主要播古典、轻音乐",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "classical",
+        "lightmusic"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "st_央广中国交通广播",
+      "name": "央广中国交通广播",
+      "category": "traffic",
+      "streamUrl": "https://ngcdn002.cnr.cn/live/gsgljtgb/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中国的华语交通电台，主要播实时路况、行车",
+      "website": "",
+      "sources": [],
+      "tags": [
+        "trafficnow",
+        "drive"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "gl_hk_rthk1",
+      "name": "香港电台第一台",
+      "category": "general",
+      "streamUrl": "https://rthkradio1-live.akamaized.net/hls/live/2035313/radio1/master.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 粤语",
+      "description": "中国香港的粤语综合电台，主要播本地新闻、闲聊陪伴",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://rthkradio1-live.akamaized.net/hls/live/2035313/radio1/master.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "http://stm1.rthk.hk/radio1",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "localnews",
+        "chat"
+      ],
+      "country": "中国香港",
+      "language": "粤语"
+    },
+    {
+      "id": "gl_hk_rthk2",
+      "name": "香港电台第二台",
+      "category": "music",
+      "streamUrl": "https://rthkradio2-live.akamaized.net/hls/live/2040078/radio2/index_64_a.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 粤语",
+      "description": "中国香港的粤语音乐电台，主要播华语流行、闲聊陪伴",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://rthkradio2-live.akamaized.net/hls/live/2040078/radio2/index_64_a.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "http://stm2.rthk.hk/radio2",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "cpop",
+        "chat"
+      ],
+      "country": "中国香港",
+      "language": "粤语"
+    },
+    {
+      "id": "gl_hk_rthk3",
+      "name": "香港电台第三台",
+      "category": "news",
+      "streamUrl": "https://rthkradio3-live.akamaized.net/hls/live/2040079/radio3/master.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 英语",
+      "description": "中国香港的英语新闻电台，主要播国际新闻、夜间清谈",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://rthkradio3-live.akamaized.net/hls/live/2040079/radio3/master.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "worldnews",
+        "nighttalk"
+      ],
+      "country": "中国香港",
+      "language": "英语"
+    },
+    {
+      "id": "gl_hk_rthk4",
+      "name": "香港电台第四台",
+      "category": "music",
+      "streamUrl": "https://rthkradio4-live.akamaized.net/hls/live/2040080/radio4/master.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 英语",
+      "description": "中国香港的英语音乐电台，主要播古典",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://rthkradio4-live.akamaized.net/hls/live/2040080/radio4/master.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "中国香港",
+      "language": "英语"
+    },
+    {
+      "id": "gl_hk_rthk5",
+      "name": "香港电台第五台",
+      "category": "arts",
+      "streamUrl": "https://rthkradio5-live.akamaized.net/hls/live/2040081/radio5/master.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 粤语",
+      "description": "中国香港的粤语文艺电台",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://rthkradio5-live.akamaized.net/hls/live/2040081/radio5/master.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [],
+      "country": "中国香港",
+      "language": "粤语"
+    },
+    {
+      "id": "gl_hk_metrofinance",
+      "name": "新城财经台",
+      "category": "finance",
+      "streamUrl": "https://1716664847.rsc.cdn77.org/1716664847/tracks-a1/mono.ts.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 粤语",
+      "description": "中国香港的粤语财经电台，主要播财经评述",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://1716664847.rsc.cdn77.org/1716664847/tracks-a1/mono.ts.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "fincomment"
+      ],
+      "country": "中国香港",
+      "language": "粤语"
+    },
+    {
+      "id": "gl_hk_metronews",
+      "name": "新城知讯台",
+      "category": "news",
+      "streamUrl": "https://1603884249.rsc.cdn77.org/1603884249/index.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 粤语",
+      "description": "中国香港的粤语新闻电台，主要播本地新闻",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://1603884249.rsc.cdn77.org/1603884249/index.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "localnews"
+      ],
+      "country": "中国香港",
+      "language": "粤语"
+    },
+    {
+      "id": "gl_hk_metroplus",
+      "name": "新城采讯台",
+      "category": "general",
+      "streamUrl": "https://1946218710.rsc.cdn77.org/1946218710/index.m3u8",
+      "logoUrl": "",
+      "frequency": "中国香港 · 粤语",
+      "description": "中国香港的粤语综合电台",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://1946218710.rsc.cdn77.org/1946218710/index.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [],
+      "country": "中国香港",
+      "language": "粤语"
+    },
+    {
+      "id": "gl_tw_icrt",
+      "name": "ICRT",
+      "category": "music",
+      "streamUrl": "https://n27a-eu.rcs.revma.com/nkdfurztxp3vv",
+      "logoUrl": "",
+      "frequency": "中国台湾 · 英语",
+      "description": "中国台湾的英语音乐电台，主要播欧美流行",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://n27a-eu.rcs.revma.com/nkdfurztxp3vv",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "http://n03.rcs.revma.com/x27mfpztxp3vv",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "pop"
+      ],
+      "country": "中国台湾",
+      "language": "英语"
+    },
+    {
+      "id": "gl_my_988fm",
+      "name": "988电台",
+      "category": "music",
+      "streamUrl": "https://28103.live.streamtheworld.com/988_FMAAC.aac",
+      "logoUrl": "",
+      "frequency": "马来西亚 · 华语",
+      "description": "马来西亚的华语音乐电台，主要播华语流行",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://28103.live.streamtheworld.com/988_FMAAC.aac",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "cpop"
+      ],
+      "country": "马来西亚",
+      "language": "华语"
+    },
+    {
+      "id": "gl_my_aifm",
+      "name": "AI FM",
+      "category": "general",
+      "streamUrl": "https://playerservices.streamtheworld.com/api/livestream-redirect/AI_FMAAC_SC",
+      "logoUrl": "",
+      "frequency": "马来西亚 · 华语",
+      "description": "马来西亚的华语综合电台",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/AI_FMAAC_SC",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [],
+      "country": "马来西亚",
+      "language": "华语"
+    },
+    {
+      "id": "gl_my_traxxfm",
+      "name": "Traxx FM",
+      "category": "music",
+      "streamUrl": "https://playerservices.streamtheworld.com/api/livestream-redirect/TRAXX_FMAAC_SC",
+      "logoUrl": "",
+      "frequency": "马来西亚 · 英语",
+      "description": "马来西亚的英语音乐电台，主要播欧美流行、电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TRAXX_FMAAC_SC",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "pop",
+        "electronic"
+      ],
+      "country": "马来西亚",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_bbcradio1",
+      "name": "BBC Radio 1",
+      "category": "world",
+      "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_01505109/live/ww/bbc_radio_one/bbc_radio_one.isml/bbc_radio_one-audio%3d128000.norewind.m3u8",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播欧美流行、电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://as-hls-ww-live.akamaized.net/pool_01505109/live/ww/bbc_radio_one/bbc_radio_one.isml/bbc_radio_one-audio%3d128000.norewind.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "pop",
+        "electronic"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_bbcradio2",
+      "name": "BBC Radio 2",
+      "category": "world",
+      "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_74208725/live/ww/bbc_radio_two/bbc_radio_two.isml/bbc_radio_two-audio%3d128000.norewind.m3u8",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播欧美流行、怀旧老歌",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://as-hls-ww-live.akamaized.net/pool_74208725/live/ww/bbc_radio_two/bbc_radio_two.isml/bbc_radio_two-audio%3d128000.norewind.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "pop",
+        "oldies"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_bbcradio3",
+      "name": "BBC Radio 3",
+      "category": "world",
+      "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_23461179/live/ww/bbc_radio_three/bbc_radio_three.isml/bbc_radio_three-audio%3d128000.norewind.m3u8",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播古典",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://as-hls-ww-live.akamaized.net/pool_23461179/live/ww/bbc_radio_three/bbc_radio_three.isml/bbc_radio_three-audio%3d128000.norewind.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_bbcradio4",
+      "name": "BBC Radio 4",
+      "category": "world",
+      "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_55057080/live/ww/bbc_radio_fourfm/bbc_radio_fourfm.isml/bbc_radio_fourfm-audio%3d128000.norewind.m3u8",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播夜间清谈、历史人文",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://as-hls-ww-live.akamaized.net/pool_55057080/live/ww/bbc_radio_fourfm/bbc_radio_fourfm.isml/bbc_radio_fourfm-audio%3d128000.norewind.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "nighttalk",
+        "history"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_bbc5live",
+      "name": "BBC Radio 5 Live",
+      "category": "world",
+      "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_89021708/live/ww/bbc_radio_five_live/bbc_radio_five_live.isml/bbc_radio_five_live-audio%3d128000.norewind.m3u8",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播赛事解说",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://as-hls-ww-live.akamaized.net/pool_89021708/live/ww/bbc_radio_five_live/bbc_radio_five_live.isml/bbc_radio_five_live-audio%3d128000.norewind.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "sportslive"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_bbc6music",
+      "name": "BBC Radio 6 Music",
+      "category": "world",
+      "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_81827798/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio%3d320000.norewind.m3u8",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播摇滚、电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://as-hls-ww-live.akamaized.net/pool_81827798/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio%3d320000.norewind.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "rock",
+        "electronic"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_fr_fip",
+      "name": "FIP",
+      "category": "world",
+      "streamUrl": "http://icecast.radiofrance.fr/fip-hifi.aac",
+      "logoUrl": "",
+      "frequency": "法国 · 法语",
+      "description": "法国的法语电台，主要播爵士",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://icecast.radiofrance.fr/fip-hifi.aac",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "jazz"
+      ],
+      "country": "法国",
+      "language": "法语"
+    },
+    {
+      "id": "gl_fr_fipjazz",
+      "name": "FIP Jazz",
+      "category": "world",
+      "streamUrl": "http://icecast.radiofrance.fr/fipjazz-hifi.aac",
+      "logoUrl": "",
+      "frequency": "法国 · 法语",
+      "description": "法国的法语电台，主要播爵士",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://icecast.radiofrance.fr/fipjazz-hifi.aac",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "jazz"
+      ],
+      "country": "法国",
+      "language": "法语"
+    },
+    {
+      "id": "gl_gb_nts1",
+      "name": "NTS Radio 1",
+      "category": "world",
+      "streamUrl": "http://stream-relay-geo.ntslive.net/stream",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播电子舞曲、嘻哈",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream-relay-geo.ntslive.net/stream",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "electronic",
+        "hiphop"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_gb_nts2",
+      "name": "NTS Radio 2",
+      "category": "world",
+      "streamUrl": "http://stream-relay-geo.ntslive.net/stream2",
+      "logoUrl": "",
+      "frequency": "英国 · 英语",
+      "description": "英国的英语电台，主要播电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream-relay-geo.ntslive.net/stream2",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "electronic"
+      ],
+      "country": "英国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_kexp",
+      "name": "KEXP",
+      "category": "world",
+      "streamUrl": "http://live-mp3-128.kexp.org/kexp128.mp3",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播摇滚、欧美流行",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://live-mp3-128.kexp.org/kexp128.mp3",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://kexp.streamguys1.com/kexp160.aac",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "rock",
+        "pop"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_wfmu",
+      "name": "WFMU",
+      "category": "world",
+      "streamUrl": "http://stream0.wfmu.org/freeform-128k",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播摇滚",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream0.wfmu.org/freeform-128k",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "rock"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_ch_swissjazz",
+      "name": "Radio Swiss Jazz",
+      "category": "world",
+      "streamUrl": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
+      "logoUrl": "",
+      "frequency": "瑞士 · 德语",
+      "description": "瑞士的德语电台，主要播爵士",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "jazz"
+      ],
+      "country": "瑞士",
+      "language": "德语"
+    },
+    {
+      "id": "gl_ch_swissclassic",
+      "name": "Radio Swiss Classic",
+      "category": "world",
+      "streamUrl": "http://stream.srg-ssr.ch/m/rsc_de/mp3_128",
+      "logoUrl": "",
+      "frequency": "瑞士 · 德语",
+      "description": "瑞士的德语电台，主要播古典",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream.srg-ssr.ch/m/rsc_de/mp3_128",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "瑞士",
+      "language": "德语"
+    },
+    {
+      "id": "gl_ch_swisspop",
+      "name": "Radio Swiss Pop",
+      "category": "world",
+      "streamUrl": "http://stream.srg-ssr.ch/m/rsp/mp3_128",
+      "logoUrl": "",
+      "frequency": "瑞士 · 德语",
+      "description": "瑞士的德语电台，主要播欧美流行",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream.srg-ssr.ch/m/rsp/mp3_128",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "pop"
+      ],
+      "country": "瑞士",
+      "language": "德语"
+    },
+    {
+      "id": "gl_au_abcradio",
+      "name": "ABC Radio National",
+      "category": "world",
+      "streamUrl": "http://abc.streamguys1.com/live/rnnsw/icecast.audio",
+      "logoUrl": "",
+      "frequency": "澳大利亚 · 英语",
+      "description": "澳大利亚的英语电台，主要播夜间清谈、历史人文",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://abc.streamguys1.com/live/rnnsw/icecast.audio",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://mediaserviceslive.akamaized.net/hls/live/2038318/rnnsw/masterhq.m3u8",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "nighttalk",
+        "history"
+      ],
+      "country": "澳大利亚",
+      "language": "英语"
+    },
+    {
+      "id": "gl_au_abcclassic",
+      "name": "ABC Classic",
+      "category": "world",
+      "streamUrl": "https://mediaserviceslive.akamaized.net/hls/live/2038316/classicfmnsw/index.m3u8",
+      "logoUrl": "",
+      "frequency": "澳大利亚 · 英语",
+      "description": "澳大利亚的英语电台，主要播古典",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://mediaserviceslive.akamaized.net/hls/live/2038316/classicfmnsw/index.m3u8",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "澳大利亚",
+      "language": "英语"
+    },
+    {
+      "id": "gl_au_triplej",
+      "name": "Triple J",
+      "category": "world",
+      "streamUrl": "http://abc.streamguys1.com/live/triplejnsw/icecast.audio",
+      "logoUrl": "",
+      "frequency": "澳大利亚 · 英语",
+      "description": "澳大利亚的英语电台，主要播摇滚、嘻哈",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://abc.streamguys1.com/live/triplejnsw/icecast.audio",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://mediaserviceslive.akamaized.net/hls/live/2038308/triplejnsw/master.m3u8",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "rock",
+        "hiphop"
+      ],
+      "country": "澳大利亚",
+      "language": "英语"
+    },
+    {
+      "id": "gl_nz_rnznational",
+      "name": "RNZ National",
+      "category": "world",
+      "streamUrl": "http://radionz-ice.streamguys.com/national.mp3",
+      "logoUrl": "",
+      "frequency": "新西兰 · 英语",
+      "description": "新西兰的英语电台，主要播夜间清谈",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://radionz-ice.streamguys.com/national.mp3",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "nighttalk"
+      ],
+      "country": "新西兰",
+      "language": "英语"
+    },
+    {
+      "id": "gl_nz_rnzconcert",
+      "name": "RNZ Concert",
+      "category": "world",
+      "streamUrl": "http://radionz-ice.streamguys.com/concert.mp3",
+      "logoUrl": "",
+      "frequency": "新西兰 · 英语",
+      "description": "新西兰的英语电台，主要播古典",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://radionz-ice.streamguys.com/concert.mp3",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "新西兰",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_kcrw",
+      "name": "KCRW",
+      "category": "world",
+      "streamUrl": "https://streams.kcrw.com/kcrw_mp3",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播欧美流行、电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://streams.kcrw.com/kcrw_mp3",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "pop",
+        "electronic"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_wnyc",
+      "name": "WNYC 93.9 FM",
+      "category": "world",
+      "streamUrl": "http://fm939.wnyc.org/wnycfm.aac",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播夜间清谈",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://fm939.wnyc.org/wnycfm.aac",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://fm939.wnyc.org/wnycfm-web",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "nighttalk"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_wbez",
+      "name": "WBEZ 91.5 Chicago",
+      "category": "world",
+      "streamUrl": "http://stream.wbez.org/wbez128.mp3",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播夜间清谈",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://stream.wbez.org/wbez128.mp3",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "nighttalk"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_it_venice",
+      "name": "Venice Classic Radio",
+      "category": "world",
+      "streamUrl": "https://uk2.streamingpulse.com/ssl/vcr1",
+      "logoUrl": "",
+      "frequency": "意大利 · 英语",
+      "description": "意大利的英语电台，主要播古典",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://uk2.streamingpulse.com/ssl/vcr1",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "意大利",
+      "language": "英语"
+    },
+    {
+      "id": "gl_de_nightride",
+      "name": "Nightride FM",
+      "category": "world",
+      "streamUrl": "https://stream.nightride.fm/nightride.mp3",
+      "logoUrl": "",
+      "frequency": "德国 · 英语",
+      "description": "德国的英语电台，主要播电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://stream.nightride.fm/nightride.mp3",
+          "label": "网络源",
+          "bitrate": 0
+        },
+        {
+          "url": "https://stream.nightride.fm/chillsynth.mp3",
+          "label": "镜像源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "electronic"
+      ],
+      "country": "德国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_jp_nightwave",
+      "name": "Nightwave Plaza",
+      "category": "world",
+      "streamUrl": "http://radio.plaza.one/mp3",
+      "logoUrl": "",
+      "frequency": "日本 · 英语",
+      "description": "日本的英语电台，主要播电子舞曲",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://radio.plaza.one/mp3",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "electronic"
+      ],
+      "country": "日本",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_poolsuite",
+      "name": "Poolsuite FM",
+      "category": "world",
+      "streamUrl": "https://s5.radio.co/sc9cb59935/listen",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播电子舞曲、怀旧老歌",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://s5.radio.co/sc9cb59935/listen",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "electronic",
+        "oldies"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_dronezone",
+      "name": "SomaFM Drone Zone",
+      "category": "world",
+      "streamUrl": "https://ice2.somafm.com/dronezone-128-mp3",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播助眠放松、纯音乐",
+      "website": "",
+      "sources": [
+        {
+          "url": "https://ice2.somafm.com/dronezone-128-mp3",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "sleep",
+        "instrumental"
+      ],
+      "country": "美国",
+      "language": "英语"
+    },
+    {
+      "id": "gl_us_espn",
+      "name": "ESPN Radio",
+      "category": "world",
+      "streamUrl": "http://live.amperwave.net/direct/espn-network-48",
+      "logoUrl": "",
+      "frequency": "美国 · 英语",
+      "description": "美国的英语电台，主要播赛事解说",
+      "website": "",
+      "sources": [
+        {
+          "url": "http://live.amperwave.net/direct/espn-network-48",
+          "label": "网络源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "sportslive"
+      ],
+      "country": "美国",
+      "language": "英语"
     }
   ]
 }
