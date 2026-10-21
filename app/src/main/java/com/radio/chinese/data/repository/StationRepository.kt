@@ -30,8 +30,11 @@ class StationRepository @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
     private var builtInStations: List<RadioStation>? = null
 
-    /** 省市词表：仅在本地优先排序命中时懒加载，无地区线索的台不参与。 */
-    private val gazetteer by lazy {
+    /**
+     * 省市词表：本地优先排序与地区页分组共用同一份，避免两处各读一次 assets、各维护一套命中规则。
+     * 首次访问会读盘，调用方应在后台线程触发（HomeViewModel 的 regionBuckets 已 flowOn(Default)）。
+     */
+    val gazetteer: RegionGazetteer.Data by lazy {
         RegionGazetteer.parse(
             context.assets.open("region_gazetteer.json").bufferedReader().use { it.readText() }
         )

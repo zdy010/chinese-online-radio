@@ -1,7 +1,9 @@
 package com.radio.chinese.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,6 +35,7 @@ import com.radio.chinese.ui.common.ErrorState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
+import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.common.carTouchTarget
@@ -53,6 +56,8 @@ fun HomeScreen(
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
     val playbackState by viewModel.playerManager.playbackState.collectAsState()
+    // 长按电台弹出的管理菜单（与节目源管理页同一套交互），方便随时编辑
+    var actionStation by remember { mutableStateOf<RadioStation?>(null) }
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -124,7 +129,8 @@ fun HomeScreen(
                                 viewModel.playStation(station)
                                 onNavigateToPlayer(station.id)
                             },
-                            onFavoriteClick = { viewModel.toggleFavorite(station.id) }
+                            onFavoriteClick = { viewModel.toggleFavorite(station.id) },
+                            onLongClick = { actionStation = station }
                         )
                     }
                     if (isCarSurface()) {
@@ -145,6 +151,28 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    actionStation?.let { station ->
+        StationActionDialog(
+            station = station,
+            // 主页只列有效电台，这里的“恢复为有效”分支不会命中，但仍传真实实现
+            isInvalid = false,
+            isCustom = uiState.customIds.contains(station.id),
+            onDismiss = { actionStation = null },
+            onMarkInvalid = {
+                viewModel.markStationInvalid(station.id)
+                actionStation = null
+            },
+            onMarkValid = {
+                viewModel.restoreStation(station.id)
+                actionStation = null
+            },
+            onDelete = {
+                viewModel.deleteCustomStation(station.id)
+                actionStation = null
+            }
+        )
     }
 }
 
@@ -182,6 +210,7 @@ private fun CategoryChipsRow(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun StationListItem(
     station: RadioStation,
@@ -189,12 +218,19 @@ fun StationListItem(
     isFavorite: Boolean,
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null
 ) {
+    // 不传 onLongClick 时保持原来的 clickable：只在需要长按弹菜单的页面才升级，
+    // 避免给分类页等复用方添上不需要的长按响应
+    val itemModifier = modifier
+        .fillMaxWidth()
+        .let {
+            if (onLongClick != null) it.combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            else it.clickable(onClick = onClick)
+        }
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = itemModifier,
         shape = MaterialTheme.shapes.medium
     ) {
         Row(

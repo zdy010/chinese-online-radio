@@ -65,6 +65,11 @@ object Dimens {
     val RailWidth: Dp
         @Composable get() = if (car) 120.dp else 80.dp
 
+    // 地区选择对话框的省份列表滚动上限：34 个省全展开会顶出屏幕，
+    // 也不能像电台源列表那样压到 160dp——一屏至少要看得到七八个省才方便找
+    val RegionPickerMaxHeight: Dp
+        @Composable get() = if (car) 400.dp else 320.dp
+
     // 车机档正文限宽：超宽屏上不让内容从屏幕左拉到右，眼睛要横着找控件
     val CarContentMaxWidth: Dp = 1000.dp
 

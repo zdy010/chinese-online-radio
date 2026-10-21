@@ -7,16 +7,22 @@ import com.radio.chinese.data.RegionRepository
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.Region
+import com.radio.chinese.domain.model.RegionBucket
 import com.radio.chinese.domain.model.StationFilter
+import com.radio.chinese.domain.model.StationRegion
 import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,6 +31,7 @@ data class HomeUiState(
     val stations: List<RadioStation> = emptyList(),
     val filteredStations: List<RadioStation> = emptyList(),
     val favoriteIds: Set<String> = emptySet(),
+    val customIds: Set<String> = emptySet(),
     val categories: List<Pair<String, String>> = emptyList(),
     val tagsWithCount: List<Pair<StationTag, Int>> = emptyList(),
     val selectedCategory: String? = null,
@@ -45,6 +52,7 @@ class HomeViewModel @Inject constructor(
 
     private val _stations = MutableStateFlow<List<RadioStation>>(emptyList())
     private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
+    private val _customIds = MutableStateFlow<Set<String>>(emptySet())
     private val _selectedCategory = MutableStateFlow<String?>(null)
     private val _selectedTag = MutableStateFlow<String?>(null)
     private val _searchQuery = MutableStateFlow("")
@@ -53,10 +61,10 @@ class HomeViewModel @Inject constructor(
     private val _recentIds = MutableStateFlow<List<String>>(emptyList())
 
     val uiState: StateFlow<HomeUiState> = combine(
-        combine(_stations, _favoriteIds) { a, b -> Pair(a, b) },
+        combine(_stations, _favoriteIds, _customIds) { s, f, c -> Triple(s, f, c) },
         combine(_selectedCategory, _searchQuery, _selectedTag) { c, q, t -> Triple(c, q, t) },
         combine(_isLoading, _error) { a, b -> Pair(a, b) }
-    ) { (stations, favIds), filterState, (loading, error) ->
+    ) { (stations, favIds, custIds), filterState, (loading, error) ->
         val (category, query, tag) = filterState
         val filtered = StationFilter.apply(stations, category, query, tag)
         // 分类条/分类网格只列“真的有电台”的分类：全量枚举会把一个都不存在的
@@ -69,6 +77,7 @@ class HomeViewModel @Inject constructor(
             stations = stations,
             filteredStations = filtered,
             favoriteIds = favIds,
+            customIds = custIds,
             categories = usedCategories,
             tagsWithCount = StationFilter.tagsWithCount(stations),
             selectedCategory = category,
@@ -82,6 +91,35 @@ class HomeViewModel @Inject constructor(
     val recentStations: StateFlow<List<RadioStation>> = combine(_recentIds, _stations) { ids, all ->
         ids.mapNotNull { id -> all.find { it.id == id } }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** 当前地区（手动 > 定位缓存 > 未设置）。地区页的「本地」组与改选入口都读它。 */
+    val userRegion: StateFlow<Region> = regionRepository.currentRegion
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Region.NONE)
+
+    /**
+     * 地区页的分组结果。放在 ViewModel 算而不是页面里算：451 个台对一张 34 省 341 市的词表
+     * 做文本命中是一次十几毫秒的活，左右翻页重建 composable 时不该反复付这笔钱。
+     */
+    val regionBuckets: StateFlow<List<RegionBucket>> =
+        combine(_stations, regionRepository.currentRegion) { stations, region ->
+            stations to region.province
+        }
+            .map { (stations, province) ->
+                StationRegion.bucketize(stations, stationRepository.gazetteer, province)
+            }
+            .flowOn(Dispatchers.Default)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * 省市词表里的省份，供地区页的手动选择对话框用。
+     * 与设置页读的是同一份 region_gazetteer.json，不另维护省份清单。
+     */
+    val provinceNames: List<String> get() = stationRepository.gazetteer.provinceNames
+
+    /** 地区页改选「本地」省份：写的是与设置页同一份手动地区偏好，首页排序会立即跟着变。 */
+    fun setManualRegion(province: String) {
+        viewModelScope.launch { preferences.setManualRegion("$province|") }
+    }
 
     init {
         loadData()
@@ -114,6 +152,7 @@ class HomeViewModel @Inject constructor(
             try {
                 _isLoading.value = true
                 _stations.value = stationRepository.getActiveStations()
+                _customIds.value = stationRepository.getCustomStations().map { it.id }.toSet()
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message
@@ -163,6 +202,32 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val isFavorite = _favoriteIds.value.contains(stationId)
             favoriteRepository.toggleFavorite(stationId, isFavorite)
+        }
+    }
+
+    /**
+     * 主页长按电台即可“随时编辑”：与节目源管理页共用同一套仓库操作。
+     * 主页只列有效电台，标无效后重拉列表会自动把它隐去；自定义源还能删除。
+     */
+    fun markStationInvalid(stationId: String) {
+        viewModelScope.launch {
+            stationRepository.markInvalid(stationId)
+            loadData()
+        }
+    }
+
+    fun restoreStation(stationId: String) {
+        viewModelScope.launch {
+            stationRepository.markValid(stationId)
+            loadData()
+        }
+    }
+
+    fun deleteCustomStation(stationId: String) {
+        viewModelScope.launch {
+            stationRepository.removeCustomStation(stationId)
+            stationRepository.markValid(stationId)
+            loadData()
         }
     }
 }

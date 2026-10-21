@@ -54,3 +54,27 @@ fun isCarSurface(): Boolean = LocalUiSurface.current == UiSurface.Car
 @Composable
 fun usesRailNavigation(): Boolean =
     isCarSurface() && LocalConfiguration.current.screenHeightDp >= 560
+
+/**
+ * 页签栏改用左侧 rail 是否装得下。纯函数，便于单点核对。
+ *
+ * 高度：rail 竖着排，每个条目 TouchMin=88dp，M3 项间距实测 4dp，按 92dp 计；
+ * 屏幕上要先扣掉搜索栏（88dp）与底部导航栏（80dp），剩下的才是 rail 真正拿到的。
+ * 原先只判 screenHeightDp >= 560——那是 4 个页签时的经验值。页签加到 5 个以后，
+ * 1280x720@160dpi 的车机屏（实测 screenHeightDp=636，720 被状态栏与桌面 taskbar 吃掉 84）
+ * 差几 dp 就装不下，「最近」会被裁在屏幕外、点都点不到。
+ *
+ * 宽度：rail 本身吃掉 120dp。手机竖屏强制车机档时（411dp 宽）内容区只剩 227dp，
+ * 卡片文字全部折行，这种情况横着排反而放得下。
+ *
+ * 装不下就退回顶部横条。
+ */
+fun railFits(screenWidthDp: Int, screenHeightDp: Int, tabCount: Int): Boolean =
+    screenWidthDp - 120 >= 480 && screenHeightDp - 168 >= tabCount * 92 + 4
+
+@Composable
+fun canHostRail(tabCount: Int): Boolean {
+    if (!isCarSurface()) return false
+    val cfg = LocalConfiguration.current
+    return railFits(cfg.screenWidthDp, cfg.screenHeightDp, tabCount)
+}

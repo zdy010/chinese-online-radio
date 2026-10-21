@@ -57,7 +57,7 @@ import com.radio.chinese.ui.library.AudioLibraryViewModel
 import com.radio.chinese.ui.library.SearchResultsList
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
-import com.radio.chinese.ui.theme.usesRailNavigation
+import com.radio.chinese.ui.theme.canHostRail
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -177,7 +177,7 @@ fun AudioMainScreen(
             val headerVisible = pagerState.currentPage == 1 && uiState.showBrowseContent
             val headerName = uiState.browsingSource?.name ?: ""
 
-            val railNav = usesRailNavigation()
+            val railNav = canHostRail(tabs.size)
             if (railNav) {
                 // 横屏：页签改左侧栏，内容区拿到整屏高度
                 Row(modifier = Modifier.weight(1f)) {
@@ -185,7 +185,8 @@ fun AudioMainScreen(
                         tabs = tabs,
                         currentPage = pagerState.currentPage,
                         onSelect = onSelectTab,
-                        modifier = Modifier.width(Dimens.RailWidth)
+                        modifier = Modifier.width(Dimens.RailWidth),
+                        useRail = railNav,
                     )
                     Column(modifier = Modifier.weight(1f)) {
                         BrowseSourceHeader(visible = headerVisible, name = headerName)
@@ -204,7 +205,8 @@ fun AudioMainScreen(
                 SurfaceTabBar(
                     tabs = tabs,
                     currentPage = pagerState.currentPage,
-                    onSelect = onSelectTab
+                    onSelect = onSelectTab,
+                    useRail = railNav,
                 )
                 // 手机档：输入即跨源搜索，结果列表顶掉页签内容区；清空即回到原来的目录浏览。
                 // 车机档不进这个分支，保证它的渲染与改造前一致。

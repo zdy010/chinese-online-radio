@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -25,9 +26,10 @@ import com.radio.chinese.ui.common.SurfaceTabBar
 import com.radio.chinese.ui.favorites.FavoritesScreen
 import com.radio.chinese.ui.home.HomeScreen
 import com.radio.chinese.ui.home.HomeViewModel
+import com.radio.chinese.ui.region.RegionScreen
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.canHostRail
 import com.radio.chinese.ui.theme.isCarSurface
-import com.radio.chinese.ui.theme.usesRailNavigation
 import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -40,16 +42,21 @@ fun RadioScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToTag: (String?) -> Unit = {},
 ) {
-    // 页签名字必须对得上内容：原先第二个页签叫「地区」，但电台数据里根本没有地区/省份字段，
-    // 实际展示的是分类网格，用户点进去看到的是与标签无关的内容。第一个页签是全部电台+分类筛选条，
-    // 改名「全部」后两个页签各自名副其实。图标给车机档的左侧导航栏用。
+    // 页签名字必须对得上内容：早期的「地区」页签底下其实是分类网格——当时电台数据里
+    // 没有地区/省份字段，点进去看到的与标签无关，只能改名「全部」。
+    // 现在地区由 RegionResolver 从台名/简介推断（「本地优先」排序已在用，451 个台里 229 个能推出省份），
+    // 「地区」才名副其实地回到最左：在「全部」页向右滑就能滑到它，不必去点顶栏。
+    // 图标给车机档的左侧导航栏用。
     val tabs = listOf(
+        SurfaceTab("地区", Icons.Default.Public),
         SurfaceTab("全部", Icons.Default.Radio),
         SurfaceTab("分类", Icons.Default.Category),
         SurfaceTab("收藏", Icons.Default.Favorite),
         SurfaceTab("最近", Icons.Default.History),
     )
-    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    // 默认停在「全部」而不是「地区」：地区目录是「台太多」时的另一条入口，
+    // 不该把熟悉的电台列表挤掉。在「全部」向右滑就能滑到「地区」，跟点顶栏那一页等价。
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
     val homeViewModel: HomeViewModel = hiltViewModel()
@@ -82,7 +89,8 @@ fun RadioScreen(
         )
 
         val onSelectTab: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
-        val railNav = usesRailNavigation()
+        // 页签数要算进去：5 个条目在矮车机屏上 rail 装不下，得退回顶部横条
+        val railNav = canHostRail(tabs.size)
 
         if (railNav) {
             // 横屏上顶部横条既占高度又浪费宽度，改成左侧栏后内容区拿到整屏高度
@@ -91,7 +99,8 @@ fun RadioScreen(
                     tabs = tabs,
                     currentPage = pagerState.currentPage,
                     onSelect = onSelectTab,
-                    modifier = Modifier.width(Dimens.RailWidth)
+                    modifier = Modifier.width(Dimens.RailWidth),
+                    useRail = railNav,
                 )
                 RadioPagerHost(
                     pagerState = pagerState,
@@ -108,7 +117,8 @@ fun RadioScreen(
             SurfaceTabBar(
                 tabs = tabs,
                 currentPage = pagerState.currentPage,
-                onSelect = onSelectTab
+                onSelect = onSelectTab,
+                useRail = railNav,
             )
             RadioPagerHost(
                 pagerState = pagerState,
@@ -138,16 +148,24 @@ private fun RadioPagerHost(
 ) {
     HorizontalPager(state = pagerState, modifier = modifier) { page ->
         when (page) {
-            0 -> HomeScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
-                onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(1) } },
-                onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(2) } },
+            // 页签顺序：0 地区 / 1 全部 / 2 分类 / 3 收藏 / 4 最近。
+            // 下面几个跳页回调里的数字必须跟着这份顺序走，加页签时一起改。
+            0 -> RegionScreen(
+                onNavigateToPlayer = onNavigateToPlayer,
+                viewModel = homeViewModel,
+                showTopBar = false,
+                searchQuery = searchQuery
+            )
+            1 -> HomeScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
+                onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(2) } },
+                onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(3) } },
                 onNavigateToSettings = onNavigateToSettings)
-            1 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
+            2 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
                 onNavigateToTag = onNavigateToTag,
-                onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
-            2 -> FavoritesScreen(showTopBar = false, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
-                onNavigateBack = { scope.launch { pagerState.animateScrollToPage(0) } })
-            3 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer, searchQuery = searchQuery)
+                onNavigateBack = { scope.launch { pagerState.animateScrollToPage(1) } })
+            3 -> FavoritesScreen(showTopBar = false, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
+                onNavigateBack = { scope.launch { pagerState.animateScrollToPage(1) } })
+            4 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer, searchQuery = searchQuery)
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.radio.chinese.ui.manage
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,10 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationCategory
+import com.radio.chinese.domain.model.StationFilter
 import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.service.StreamStatus
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.StatusChip
+import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.common.stationSubtitle
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
@@ -40,6 +45,10 @@ fun ManageScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var actionStation by remember { mutableStateOf<RadioStation?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    // 搜索命中复用 StationFilter：与主页同一套规则，避免两页搜出不同结果
+    val visibleStations = remember(uiState.stations, uiState.searchQuery) {
+        StationFilter.apply(uiState.stations, category = null, query = uiState.searchQuery)
+    }
 
     // Show easter egg message
     LaunchedEffect(uiState.easterEggMessage) {
@@ -92,6 +101,13 @@ fun ManageScreen(
                 )
                 .fillMaxWidth()
         ) {
+            // 搜索：电台几百个时靠翻不现实，先按关键字过滤
+            SearchBarRow(
+                value = uiState.searchQuery,
+                onValueChange = viewModel::updateSearchQuery,
+                placeholder = "搜索电台名称、频率、标签"
+            )
+
             // Checking progress
             if (uiState.isChecking) {
                 LinearProgressIndicator(
@@ -144,12 +160,24 @@ fun ManageScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
+            } else if (visibleStations.isEmpty()) {
+                // 搜不到时给一句明确反馈，而不是留一片空白让人以为没加载出来
+                Text(
+                    text = if (uiState.searchQuery.isBlank()) "还没有电台"
+                    else "没有匹配「${uiState.searchQuery}」的电台",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 24.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    items(uiState.stations, key = { it.id }) { station ->
+                    items(visibleStations, key = { it.id }) { station ->
                         StationManageItem(
                             station = station,
                             isInvalid = uiState.invalidIds.contains(station.id),
@@ -202,6 +230,7 @@ fun ManageScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun StationManageItem(
     station: RadioStation,
@@ -220,7 +249,9 @@ private fun StationManageItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            // 长按在按住瞬间就会触发 onLongClick，菜单立即弹出，不用等松手；
+            // 松手（普通点击）仍保留入口，不砍掉原有的可达方式
+            .combinedClickable(onClick = onClick, onLongClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isInvalid) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
@@ -304,86 +335,6 @@ private fun StationManageItem(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-}
-
-@Composable
-private fun StationActionDialog(
-    station: RadioStation,
-    isInvalid: Boolean,
-    isCustom: Boolean,
-    onDismiss: () -> Unit,
-    onCheck: () -> Unit,
-    onMarkInvalid: () -> Unit,
-    onMarkValid: () -> Unit,
-    onDelete: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(station.name) },
-        text = {
-            Column {
-                if (station.streamUrl.isNotBlank()) {
-                    Text(
-                        text = station.primaryUrl,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2
-                    )
-                    val sourceCount = station.allSources().size
-                    if (sourceCount > 1) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "共 $sourceCount 个节目源",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                // Check button
-                ListItem(
-                    headlineContent = { Text("检测连接") },
-                    leadingContent = { Icon(Icons.Default.Refresh, null) },
-                    modifier = Modifier.clickable(onClick = onCheck)
-                )
-                HorizontalDivider()
-
-                // Mark invalid / valid
-                if (isInvalid) {
-                    ListItem(
-                        headlineContent = { Text("恢复为有效") },
-                        leadingContent = { Icon(Icons.Default.CheckCircle, null,
-                            tint = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.clickable(onClick = onMarkValid)
-                    )
-                } else {
-                    ListItem(
-                        headlineContent = { Text("标记为无效") },
-                        supportingContent = { Text("标记后不在主页显示，但保留记录") },
-                        leadingContent = { Icon(Icons.Default.Warning, null,
-                            tint = MaterialTheme.colorScheme.error) },
-                        modifier = Modifier.clickable(onClick = onMarkInvalid)
-                    )
-                }
-
-                // Delete (only for custom)
-                if (isCustom) {
-                    HorizontalDivider()
-                    ListItem(
-                        headlineContent = { Text("删除此电台") },
-                        supportingContent = { Text("仅可删除自定义添加的电台") },
-                        leadingContent = { Icon(Icons.Default.Delete, null,
-                            tint = MaterialTheme.colorScheme.error) },
-                        modifier = Modifier.clickable(onClick = onDelete)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("关闭") }
-        }
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)

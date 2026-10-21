@@ -28,6 +28,7 @@ data class ManageUiState(
     val checkedCount: Int = 0,
     val totalCount: Int = 0,
     val isLoading: Boolean = true,
+    val searchQuery: String = "",
     val easterEggMessage: String? = null
 )
 
@@ -193,6 +194,11 @@ class ManageViewModel @Inject constructor(
             repository.markValid(stationId)
             loadData()
         }
+    }
+
+    /** 节目源管理页搜索：与主页复用同一套命中规则（台名/频率/简介/国家/语言/标签）。 */
+    fun updateSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
     }
 
     fun clearEasterEggMessage() {
