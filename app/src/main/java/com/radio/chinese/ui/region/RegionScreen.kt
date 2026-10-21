@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalance
@@ -48,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.RegionBucket
+import com.radio.chinese.domain.model.RegionSection
 import com.radio.chinese.domain.model.StationFilter
 import com.radio.chinese.domain.model.StationRegion
 import com.radio.chinese.ui.common.EmptyState
@@ -203,8 +205,17 @@ private fun RegionIndex(
                 onClick = onChangeRegion,
             )
         }
-        items(buckets, key = { it.key }) { bucket ->
-            RegionBucketRow(bucket = bucket, onClick = { onPick(bucket.key) })
+        itemsIndexed(buckets, key = { _, bucket -> bucket.key }) { index, bucket ->
+            // 进「国外」段时插一条分隔标题：没有它，台湾/香港会和美国/英国
+            // 平排在一起，看不出哪个是国内哪个是国外
+            if (index == 0 || buckets[index - 1].section != bucket.section) {
+                RegionSectionHeader(bucket.section)
+            }
+            RegionBucketRow(
+                bucket = bucket,
+                icon = bucketIcon(bucket),
+                onClick = { onPick(bucket.key) },
+            )
         }
     }
 }
@@ -250,8 +261,19 @@ private fun RegionHeaderCard(label: String, hint: String, onClick: () -> Unit) {
     }
 }
 
+/** 大段分隔标题。港澳台算中国段，国外按国家算另一段，靠它把两层语义分开。 */
 @Composable
-private fun RegionBucketRow(bucket: RegionBucket, onClick: () -> Unit) {
+private fun RegionSectionHeader(section: RegionSection) {
+    Text(
+        text = if (section == RegionSection.CN) "中国" else "国外",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = Dimens.GapMedium),
+    )
+}
+
+@Composable
+private fun RegionBucketRow(bucket: RegionBucket, icon: ImageVector, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -266,7 +288,7 @@ private fun RegionBucketRow(bucket: RegionBucket, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = bucketIcon(bucket.key),
+                imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(Dimens.IconMedium),
@@ -350,7 +372,13 @@ private fun RegionPickerDialog(
         onDismissRequest = onDismiss,
         title = { Text("选择本地省份") },
         text = {
-            LazyColumn(modifier = Modifier.heightIn(max = Dimens.RegionPickerMaxHeight)) {
+            // 上限跟着屏高收敛：横屏手机与超宽车机只有三四百 dp 高，
+            // 单用 RegionPickerMaxHeight 会把「取消」顶出屏幕
+            LazyColumn(
+                modifier = Modifier.heightIn(
+                    max = Dimens.dialogListMaxHeight(Dimens.RegionPickerMaxHeight)
+                )
+            ) {
                 items(provinces, key = { it }) { province ->
                     Row(
                         modifier = Modifier
@@ -372,11 +400,14 @@ private fun RegionPickerDialog(
     )
 }
 
-/** 分组图标。省份共用 Place，中央/本地/境外/其他各有自己的符号，扫一眼能分清层级。 */
-private fun bucketIcon(key: String): ImageVector = when {
-    key == StationRegion.CENTRAL -> Icons.Default.AccountBalance
-    key == StationRegion.LOCAL -> Icons.Default.MyLocation
-    key == StationRegion.OVERSEAS -> Icons.Default.Language
-    key == StationRegion.OTHER -> Icons.Default.MoreHoriz
+/**
+ * 分组图标。省份共用 Place，外国共用 Language，中央/本地/其他各有自己的符号。
+ * 国外按国家分组后 key 是动态的，不能再拿 key 比字面量，改看 section。
+ */
+private fun bucketIcon(bucket: RegionBucket): ImageVector = when {
+    bucket.key == StationRegion.CENTRAL -> Icons.Default.AccountBalance
+    bucket.key == StationRegion.LOCAL -> Icons.Default.MyLocation
+    bucket.key == StationRegion.OTHER -> Icons.Default.MoreHoriz
+    bucket.section == RegionSection.FOREIGN -> Icons.Default.Language
     else -> Icons.Default.Place
 }

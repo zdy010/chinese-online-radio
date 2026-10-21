@@ -90,6 +90,7 @@ data class EpgProgram(
 - 唯一来源，**禁止在 Kotlin 里再写第二份映射**。
 - 构建期校验：每个 `stationId` 必须能在 `radio_stations.json` 里查到，否则 JVM 测试失败。
 - 台名比对必须先规范化（去首尾空格、内部连续空格压成一个），云听返回里实测有 `" 经济之声"` 这种带前导空格的台名。
+- **2026-10-21 预跑该闸门**：现有 56 条映射的 `stationId` 全部能在 451 台库里查到，`stationId` 与 `broadcastId` 均无重复，规范化后台名与台库 100% 一致。补入 9 个央广台后需重跑一次。
 
 ## 3. 缓存与刷新
 
@@ -119,9 +120,13 @@ suspend fun deleteOlderThan(before: String)
 
 ## 4. UI
 
-### 4.1 播放页内嵌（A）
+### 4.1 播放页内嵌
 
 位置：`StationInfoBlock` 之后、`PlaybackStatusIndicator` 之前。
+
+> 注意：`StationInfoBlock` 在宽屏（与封面并排）和竖屏（封面在上）两个分支里各调一次，
+> 但两个分支在其后汇合，`PlaybackStatusIndicator` 全页只有一处。卡片插在汇合点之后即可，
+> **不要往两个分支里各塞一份**。
 
 ```
 ┌────────────────────────────────────────┐
@@ -135,16 +140,16 @@ suspend fun deleteOlderThan(before: String)
 - 车机档：行高 ≥ `Dimens.TouchMin`，字号跟随 `MaterialTheme.typography`，不另设固定 sp。
 - 无数据：**整个 composable 不渲染**，不留空白、不显示占位文案。
 
-### 4.2 独立节目单页（B）
+### 4.2 独立节目单页
 
 - 路由：`Screen.Epg`，`route = "epg"`。
-- 入口：`RadioScreen` 的 `SearchBarRow` 右侧动作区，与设置按钮同排，图标用 `Icons.Default.CalendarView`（或 `Schedule`）。
+- 入口：`RadioScreen` 的 `SearchBarRow` 右侧动作区，与设置按钮同排，图标用 `Icons.Default.CalendarMonth`（节目单是按日切片的列表，日历语义比 `Schedule` 贴切；项目已依赖 extended 图标集，该符号可用）。
 - 结构：`TopAppBar("节目单") + 日期切换行（今天/明天/后天）+ 搜索框 + LazyColumn`
 - 列表行：`台名` / `当前节目 · 时段` / `接下来 节目名`，点击 → `playerManager.playStation(station)` 后跳播放页。
 - 排序：有当前节目的台优先，其余按省份/台名。
 - 车机档：列表行 `minHeight = Dimens.RowMinHeight`（88dp），左右 `ScreenPadding`（32dp）。
 
-### 4.3 节目搜索（C）
+### 4.3 节目搜索
 
 - `RadioScreen` 搜索框占位符改为「搜索电台、频率或节目」。
 - `HomeViewModel` 在现有 `StationFilter.apply` 之外增加一路 `EpgQuery.search(query, cachedPrograms)`，结果分两组渲染：
@@ -152,23 +157,46 @@ suspend fun deleteOlderThan(before: String)
   - `节目`：仅在节目结果非空时出现，行内显示 `节目名` / `电台名 · 时段`
 - 搜索范围**只限本地已缓存节目单**（当天）。原因：全量 307 个台实时搜索会瞬间打 300+ 请求，违反 §0 合规边界。
 - 点击节目结果 → 起播该台 + 跳播放页。
+- **地区页不参与节目搜索**：它和「全部」页共用顶栏那一个输入框，但只做电台名/频率过滤（`StationFilter.apply` 逐组过滤）。「节目」分组只在「全部」页渲染，避免同一次输入在两个页签里给出两套语义。
 
 ## 5. 分阶段实施
 
 | 阶段 | 范围 | 交付物 | 前置条件 |
 |---|---|---|---|
-| **A（本期）** | 56 个已匹配台 + 央广 11 个可验静态流的台补入台库（合计 ~67 台） | 完整 EPG 功能（播放页/独立页/搜索） | 央广静态流已验证可播 |
+| **A（本期）** | 56 个已匹配台 + 补 9 个央广台（合计 65 台；中国之声、经济之声已在库） | 完整 EPG 功能（播放页/独立页/搜索） | 央广静态流已验证可播 |
 | B | 省台逐个验流后入库（预计 +30–80 台） | 仅扩充 `epg_stations.json` 与台库，代码不动 | 每个台实测出声 |
 | C | 251 个有 EPG 的台全接，播放地址改为运行时向云听拉取并刷新 | 新增动态流刷新通道 | 稳定性与合规再评估 |
 
-A 阶段补台的 11 个央广台（static 流已实测 200）：
+A 阶段待补的央广台——流地址已逐个实测（2026-10-21，11 条全返 200 且带 `#EXTM3U`）：
 
-音乐之声 `yyzs`、文艺之声 `wyzs`、神州之声 `szzs`、香港之声 `xgzs`、民族之声 `mzzs`、
-维吾尔语广播 `wygb`、都市/经典音乐 `dszs`、台海/中华之声 `zhzs`、华夏/大湾区 `hxzs`、
-经济之声 `jjzs`、中国之声 `zgzs` —— 统一走 `https://ngcdn001.cnr.cn/live/<code>/index.m3u8`。
+| 官方现名 | 流 code | 备注 |
+|---|---|---|
+| 音乐之声 | `yyzs` | |
+| 文艺之声 | `wyzs` | |
+| 神州之声 | `szzs` | |
+| 香港之声 | `xgzs` | |
+| 民族之声 | `mzzs` | |
+| 维吾尔语广播 | `wygb` | |
+| 经典音乐广播 | `dszs` | 原「都市之声」，code 沿用旧名 |
+| 台海之声 | `zhzs` | 原「中华之声」，code 沿用旧名 |
+| 大湾区之声 | `hxzs` | 原「华夏之声」，code 沿用旧名 |
 
-**404 不可用**：老年之声 `lnpl`、西藏频率 `xzpl`、娱乐广播 `ylgb`、乡村之声 `xwzs/ncgb`。
-其中西藏藏语已有 `satellitepull` 流在库，其余不补。
+上表 9 个台需新增进 `radio_stations.json`。另两档已在库里，不重复补：
+中国之声 `zgzs`（`cnr1`）、经济之声 `jjzs`（`cnr2`）。
+
+> 补台后地区页的「中央台」组会从 8 个涨到 17 个。已确认**不再往下细分**
+> （不拆「央广」/「国际台」两组）：这一组的语义就是「国家级覆盖」，拆细了反而让用户
+> 多一次选择才能找到自己要听的。
+
+**11 条流全部在 `ngcdn001` 上可用**（包括经济之声；台库里 `cnr2` 现写的 `ngcdn002` 也能连通，不改动它）。
+统一模板：`https://ngcdn001.cnr.cn/live/<code>/index.m3u8`。
+
+**实测不可用（404）**：老年之声 `lnpl`、藏语广播 `xzpl`、娱乐广播 `ylgb`、中国乡村之声 `ncgb`；
+`gjzx` 这个 code 不存在（环球资讯广播在库里走的是另一条流，它已经云听 `broadcastId` 匹配上了，不受影响）。
+其中藏语已有 `satellitepull` 流在库，其余不补。
+
+> **硬约束**：流 code 不得凭台名拼音推测。上表 `dszs`/`zhzs`/`hxzs` 三个是历史旧名，
+> 而看起来最直觉的 `gjzx`（环球资讯）实际不存在。新增一个台就得先探测一次。
 
 ## 6. 组件与文件清单
 
@@ -179,7 +207,7 @@ A 阶段补台的 11 个央广台（static 流已实测 200）：
 - `data/remote/YuntingEpgClient.kt` —— OkHttp 签名请求；接口可注入 fake
 - `data/local/EpgDatabase.kt`、`EpgProgramEntity.kt`、`EpgProgramDao.kt`
 - `data/repository/EpgRepository.kt` —— 编排：查缓存 → 按需拉取 → 清洗 → 落库
-- `assets/epg_stations.json` —— 映射表（A 阶段 ~67 条）
+- `assets/epg_stations.json` —— 映射表（A 阶段 65 条）
 - `ui/player/NowOnAirCard.kt` + `EpgDaySheet.kt`
 - `ui/epg/EpgScreen.kt` + `EpgViewModel.kt`
 - `tools/fetch_epg.py` —— 生成/更新映射表、校验台名与台库一致性、输出补台候选
@@ -191,7 +219,7 @@ A 阶段补台的 11 个央广台（static 流已实测 200）：
 - `ui/radio/RadioScreen.kt` —— 节目单入口按钮、搜索占位符
 - `ui/navigation/Screen.kt` / `MainScreen.kt` —— 新增 `epg` 路由
 - `ui/home/HomeViewModel.kt` / `HomeScreen.kt` —— 节目搜索结果分组
-- `assets/radio_stations.json` —— 补 11 个央广台（A 阶段）
+- `assets/radio_stations.json` —— 补 9 个央广台（清单见 §5，A 阶段）
 
 ## 7. 测试策略（TDD）
 
@@ -217,7 +245,7 @@ A 阶段补台的 11 个央广台（static 流已实测 200）：
 
 1. **接口非文档化**：云听随时可能改签名或加鉴权。缓解：所有失败静默降级，功能消失但不影响播放；接口细节集中在 `YuntingEpgClient` 一处，便于替换。
 2. **合规**：这是官方网页端的公开调用路径，不是破解；但无书面授权。缓解：严格限制为单台单日按需请求、不批量、不分发。
-3. **台名匹配误差**：云听台名存在前导空格、别名（台海/中华、大湾区/华夏）。缓解：规范化 + 人工核对 + 构建期闸门；宁可少接不可错接。
+3. **台名匹配误差**：云听台名存在前导空格与历史旧名。旧名歧义已在 §5 定死为官方现名（经典音乐广播/台海之声/大湾区之声）；规范化 + 构建期闸门两道关，宁可少接不可错接。
 4. **补台质量**：新增台必须实测出声，禁止只凭接口返回就入库。
 5. **数据新鲜度**：跨天首次打开必须重新拉取；无网时显示的数据可能是昨天的，UI 必须标注时间。
 6. **`ProgramInfo` 死代码**：`domain/model/Models.kt` 里现有的 `ProgramInfo` 与本期结构不兼容且从未被使用，本期内**删除**，避免两套节目模型并存。

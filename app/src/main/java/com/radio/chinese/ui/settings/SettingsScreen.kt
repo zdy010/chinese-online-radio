@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -472,8 +471,9 @@ private fun ThemePickerDialog(
     onDismiss: () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
-    // 上限取「屏高 70%」与 420dp 的较小值：屏幕矮就跟着矮，不让对话框顶到状态栏
-    val maxHeight = minOf((LocalConfiguration.current.screenHeightDp * 0.7f).dp, 420.dp)
+    // 上限取「屏高 70%」与 420dp 的较小值：屏幕矮就跟着矮，不让对话框顶到状态栏。
+    // 这条公式收进了 Dimens.dialogListMaxHeight，与地区页的省份弹窗共用一份。
+    val maxHeight = Dimens.dialogListMaxHeight(420.dp)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("选择主题") },

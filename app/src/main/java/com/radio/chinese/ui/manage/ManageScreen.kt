@@ -169,7 +169,7 @@ fun ManageScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 24.dp),
+                        .padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapXLarge),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             } else {

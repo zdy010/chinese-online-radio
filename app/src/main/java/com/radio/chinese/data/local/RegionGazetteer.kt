@@ -7,11 +7,20 @@ import kotlinx.serialization.json.Json
 private data class GazetteerRaw(val provinces: List<ProvinceRaw> = emptyList())
 
 @Serializable
-private data class ProvinceRaw(val name: String, val cities: List<String> = emptyList())
+private data class ProvinceRaw(
+    val name: String,
+    val cities: List<String> = emptyList(),
+    /**
+     * 台标缩写、别称、盟与区县：BTV / 羊城 / 锡林郭勒 / 开州 这类写法。
+     * 中国电台很习惯用这些名字而不是省市全名，不补这一层它们就会全部掉进「其他」。
+     */
+    val aliases: List<String> = emptyList(),
+)
 
 /**
  * 省市词表：把「城市 -> 所属省」摊平成一张命中表，供 RegionResolver 从台名/简介反推地区。
  * 省份自身也作为一个键映射到它自己，这样「河南交通广播」这类只含省名的台也能命中（city 留空）。
+ * 别名走同一张表，所以 RegionResolver 不需要为它加任何分支。
  * 解析逻辑独立成纯函数，JVM 单测才能直接校验真词表的合法性（对齐 StationJson 的做法）。
  */
 object RegionGazetteer {
@@ -31,6 +40,7 @@ object RegionGazetteer {
         for (p in raw.provinces) {
             map.putIfAbsent(p.name, p.name)
             for (c in p.cities) map.putIfAbsent(c, p.name)
+            for (a in p.aliases) map.putIfAbsent(a, p.name)
             if (p.cities.size == 1 && p.cities.first() == p.name) municipalities.add(p.name)
         }
         return Data(map, raw.provinces.map { it.name }, municipalities)

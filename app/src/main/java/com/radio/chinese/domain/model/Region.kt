@@ -33,3 +33,15 @@ fun resolveRegion(manual: String?, cached: String?): Region {
     if (!c.isEmpty) return c
     return Region.NONE
 }
+
+/**
+ * 改选省份时算出新的存储串「省|市」。
+ *
+ * 省没变就保留已选城市：地区页的省份弹窗只提供省，若一律写成「省|」，
+ * 用户在设置页选过的城市会被顺手抹掉，`StationSorter.tierOf` 的同市档（tier3）
+ * 随之退化成同省（tier2），首页顺序当场变化——而弹窗就是用当前省高亮的，
+ * 用户很容易把它当「确认」再点一次。
+ * 换省时旧城市属于上一个省，必须清空。
+ */
+fun manualRegionAfterProvinceChange(province: String, current: Region): String =
+    "$province|" + (if (current.province == province) current.city else "")

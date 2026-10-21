@@ -12,6 +12,7 @@ import com.radio.chinese.domain.model.RegionBucket
 import com.radio.chinese.domain.model.StationFilter
 import com.radio.chinese.domain.model.StationRegion
 import com.radio.chinese.domain.model.StationTag
+import com.radio.chinese.domain.model.manualRegionAfterProvinceChange
 import com.radio.chinese.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -116,9 +117,17 @@ class HomeViewModel @Inject constructor(
      */
     val provinceNames: List<String> get() = stationRepository.gazetteer.provinceNames
 
-    /** 地区页改选「本地」省份：写的是与设置页同一份手动地区偏好，首页排序会立即跟着变。 */
+    /**
+     * 地区页改选「本地」省份：写的是与设置页同一份手动地区偏好，首页排序会立即跟着变。
+     *
+     * 只改省、原省不变时保留已选的城市：设置页写的是「省|市」两维，
+     * `StationSorter.tierOf` 的同市档要看 user.city。这里若固定写「省|」，
+     * 用户在地区页弹窗里点一下当前省（弹窗就是用它高亮的，很容易被当成「确认」），
+     * 设置页选过的城市就被抹掉，首页排序从同市退化成同省。
+     */
     fun setManualRegion(province: String) {
-        viewModelScope.launch { preferences.setManualRegion("$province|") }
+        val stored = manualRegionAfterProvinceChange(province, userRegion.value)
+        viewModelScope.launch { preferences.setManualRegion(stored) }
     }
 
     init {

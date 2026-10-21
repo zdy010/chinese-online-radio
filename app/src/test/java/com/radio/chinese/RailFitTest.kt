@@ -27,6 +27,16 @@ class RailFitTest {
         assertTrue(railFits(screenWidthDp = 1280, screenHeightDp = 720, tabCount = 5))
     }
 
+    /**
+     * 钉住真机实测值：Pixel 8a 报 wm size 1280x720 / density 160 时，
+     * dumpsys 里的 mCurrentConfig 是 `w1280dp h636dp`——720 被状态栏与桌面 taskbar
+     * 吃掉 84。这一档必须能进 rail，否则车机档的真实效果根本测不到。
+     */
+    @Test
+    fun `五个页签在实测的 636dp 高视口上装得下`() {
+        assertTrue(railFits(screenWidthDp = 1280, screenHeightDp = 636, tabCount = 5))
+    }
+
     /** 同样的屏高，多一个页签就得多留 92dp：600dp 只够 4 个。 */
     @Test
     fun `五个页签在 600dp 高的车机屏上装不下`() {

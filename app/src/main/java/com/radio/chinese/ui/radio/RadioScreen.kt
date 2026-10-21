@@ -134,7 +134,7 @@ fun RadioScreen(
     }
 }
 
-/** 四个页签的宿主。手机档与车机档共用，避开把 when 复制两遍。 */
+/** 五个页签的宿主。手机档与车机档共用，避开把 when 复制两遍。 */
 @Composable
 private fun RadioPagerHost(
     pagerState: PagerState,

@@ -18,8 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.ui.theme.Dimens
 
 /**
  * 电台管理菜单：检测连接 / 标记无效或恢复 / 删除自定义。
@@ -53,14 +53,14 @@ fun StationActionDialog(
                     )
                     val sourceCount = station.allSources().size
                     if (sourceCount > 1) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(Dimens.GapTiny))
                         Text(
                             text = "共 $sourceCount 个节目源",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(Dimens.GapMedium))
                 }
 
                 // Check button

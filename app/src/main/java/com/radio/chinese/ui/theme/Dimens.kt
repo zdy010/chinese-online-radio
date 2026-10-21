@@ -1,6 +1,7 @@
 package com.radio.chinese.ui.theme
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -69,6 +70,17 @@ object Dimens {
     // 也不能像电台源列表那样压到 160dp——一屏至少要看得到七八个省才方便找
     val RegionPickerMaxHeight: Dp
         @Composable get() = if (car) 400.dp else 320.dp
+
+    /**
+     * 对话框内滚动列表的高度上限：取「屏高 70%」与 [cap] 的较小值。
+     *
+     * 不能只给绝对值：横屏手机只有约 360dp 高，1280x720@240dpi 一类的超宽车机
+     * 也只有约 480dp，固定 400dp 的列表再加标题与按钮就会把「取消」顶出屏幕，
+     * 够不着也点不到。屏幕矮就跟着矮。收进 theme 层是为了让各弹窗共用一条公式。
+     */
+    @Composable
+    fun dialogListMaxHeight(cap: Dp): Dp =
+        minOf((LocalConfiguration.current.screenHeightDp * 0.7f).dp, cap)
 
     // 车机档正文限宽：超宽屏上不让内容从屏幕左拉到右，眼睛要横着找控件
     val CarContentMaxWidth: Dp = 1000.dp

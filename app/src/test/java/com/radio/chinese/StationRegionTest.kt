@@ -2,6 +2,7 @@ package com.radio.chinese
 
 import com.radio.chinese.data.local.RegionGazetteer
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.RegionSection
 import com.radio.chinese.domain.model.StationRegion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -41,18 +42,119 @@ class StationRegionTest {
     }
 
     @Test
-    fun `境外台按 id 与 country 判定，优先于省市推断`() {
+    fun `境外台按国家归类，优先于省市推断`() {
         val buckets = StationRegion.bucketize(
             listOf(
-                st("gl_us_abc", "BBC World Service", "美国"),
+                st("gl_us_abc", "KBS Global", "美国"),
                 st("ad_de_x", "RauteMusik", "德国"),
                 // 名字里带「上海」但国家不是中国，仍应算境外
                 st("gl_gb_sh", "Shanghai Radio", "英国"),
             ),
             g,
         )
-        assertEquals(listOf(StationRegion.OVERSEAS), buckets.map { it.key })
-        assertEquals(3, buckets.single().stations.size)
+        assertEquals(
+            listOf(
+                StationRegion.countryKey("美国"),
+                StationRegion.countryKey("英国"),
+                StationRegion.countryKey("德国"),
+            ).sorted(),
+            buckets.map { it.key }.sorted(),
+        )
+        assertTrue("全部应落在国外段", buckets.all { it.section == RegionSection.FOREIGN })
+    }
+
+    @Test
+    fun `境外台按国家分桶，台数降序`() {
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("gl_us_a", "KBS Global", "美国"),
+                st("gl_us_b", "Voice of America", "美国"),
+                st("gl_gb_a", "BBC World Service", "英国"),
+            ),
+            g,
+        )
+        assertEquals(
+            listOf(StationRegion.countryKey("美国"), StationRegion.countryKey("英国")),
+            buckets.map { it.key },
+        )
+        assertEquals(2, buckets.first().stations.size)
+    }
+
+    @Test
+    fun `country 写成 ISO 两字母码时组名给中文`() {
+        // 真数据里 country 混着 PK / NP / MU 这类码，不翻就把英文缩写糊到界面上
+        val buckets = StationRegion.bucketize(
+            listOf(st("gl_pk_a", "Radio Pakistan", "PK")),
+            g,
+        )
+        assertEquals("巴基斯坦", buckets.single().label)
+        assertEquals(RegionSection.FOREIGN, buckets.single().section)
+    }
+
+    @Test
+    fun `中国段排在国外段之前，本地组紧跟中央台`() {
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("cnr1", "中国之声"),
+                st("zj", "浙江新闻广播"),
+                st("gl_us", "VOA", "美国"),
+            ),
+            g,
+            userProvince = "浙江",
+        )
+        assertEquals(
+            listOf(
+                StationRegion.CENTRAL,
+                StationRegion.LOCAL,
+                StationRegion.provinceKey("浙江"),
+                StationRegion.countryKey("美国"),
+            ),
+            buckets.map { it.key },
+        )
+    }
+
+    @Test
+    fun `台标缩写与别称把品牌台归到对应省`() {
+        // 这几个台的共同点：台名里根本没有省市全名，光靠词表原样推不出来
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("st_BTV", "BTV生活伴音", "中国", "中国的华语电视伴音电台"),
+                st("st_yangcheng", "羊城交通广播"),
+                st("st_xilin", "锡林郭勒汉语广播"),
+                st("st_kaizhou", "开州之声"),
+                st("st_chutian", "楚天交通广播"),
+            ),
+            g,
+        )
+        assertEquals(
+            listOf("内蒙古", "北京", "广东", "重庆", "湖北").sorted(),
+            buckets.map { it.label }.sorted(),
+        )
+        assertTrue("别称台属于中国段", buckets.all { it.section == RegionSection.CN })
+    }
+
+    @Test
+    fun `CCTV 与 CETV 电视伴音进中央台`() {
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("st_cctv1", "CCTV-1综合伴音", "中国", "中国的华语电视伴音电台"),
+                st("st_cetv1", "CETV-1伴音", "中国", "中国的华语电视伴音电台"),
+            ),
+            g,
+        )
+        assertEquals(listOf(StationRegion.CENTRAL), buckets.map { it.key })
+        assertEquals(2, buckets.single().stations.size)
+    }
+
+    @Test
+    fun `中国香港归中国段的香港，不掉进国外段`() {
+        val buckets = StationRegion.bucketize(
+            listOf(st("gl_hk_cfe485780", "香港普通话台", "中国香港")),
+            g,
+        )
+        val only = buckets.single()
+        assertEquals(RegionSection.CN, only.section)
+        assertEquals(StationRegion.provinceKey("香港"), only.key)
     }
 
     @Test
@@ -72,9 +174,87 @@ class StationRegionTest {
     }
 
     @Test
-    fun `country 为空的 gl 台仍算境外`() {
+    fun `country 写成中国香港这类全称时不掉进境外`() {
+        // 真数据里香港台的 country 存的是「中国香港」，不是裸「香港」。
+        // 拿精确集合比对港澳名会把它们判成境外台（2026-10-21 code review 发现），
+        // 用户按地区浏览香港时就找不到这几个台。
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("gl_hk_cfe485780", "香港普通话台", "中国香港"),
+                st("gl_mo_x", "澳门台", "中国澳门"),
+            ),
+            g,
+        )
+        assertTrue("港澳台不能落进国外段", buckets.none { it.section == RegionSection.FOREIGN })
+        assertEquals(
+            listOf(StationRegion.provinceKey("澳门"), StationRegion.provinceKey("香港")),
+            buckets.map { it.key },
+        )
+    }
+
+    @Test
+    fun `国家码形式的 country 仍算国外，并且汉化后各自成组`() {
+        // 放宽成前缀/包含判定后，不能让 PK、NP 这类两字母国家码顺手被放行；
+        // 真数据里 country=PK 有 2 个台，它们确实属于国外
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("gl_pk_a", "Radio Pakistan", "PK"),
+                st("gl_np_a", "Radio Nepal", "NP"),
+            ),
+            g,
+        )
+        assertTrue("PK/NP 不能被判成国内", buckets.all { it.section == RegionSection.FOREIGN })
+        assertEquals(
+            listOf(StationRegion.countryKey("巴基斯坦"), StationRegion.countryKey("尼泊尔")).sorted(),
+            buckets.map { it.key }.sorted(),
+        )
+    }
+
+    @Test
+    fun `country 为空的 gl 台归未标注国家，不混进中国段`() {
         val buckets = StationRegion.bucketize(listOf(st("gl_xx_abc", "Some Radio", "")), g)
-        assertEquals(listOf(StationRegion.OVERSEAS), buckets.map { it.key })
+        assertEquals(listOf(StationRegion.UNKNOWN_COUNTRY), buckets.map { it.key })
+        assertEquals(RegionSection.FOREIGN, buckets.single().section)
+    }
+
+    @Test
+    fun `ad_ 台没有 country 时从 id 里取国家码`() {
+        // ad_ 前缀的台把国家码写在 id 里，这是它们唯一的国家线索；
+        // 原来唯一那个 ad_ 用例带着 country，这条反解分支一次也没被跑到
+        val buckets = StationRegion.bucketize(listOf(st("ad_de_y", "RauteMusik", "")), g)
+        assertEquals(StationRegion.countryKey("德国"), buckets.single().key)
+        assertEquals(RegionSection.FOREIGN, buckets.single().section)
+    }
+
+    @Test
+    fun `认不出的国家码原样显示，不把台弄丢`() {
+        val buckets = StationRegion.bucketize(listOf(st("gl_kk_x", "Unknown Radio", "KK")), g)
+        assertEquals("KK", buckets.single().label)
+        assertEquals(RegionSection.FOREIGN, buckets.single().section)
+    }
+
+    @Test
+    fun `country 写成 ISO 码 CN 时仍算国内`() {
+        // isDomestic 与 ISO2_CN 的口径必须一致：否则 country="CN" 会被判国外，
+        // 在外段里生成一个 label 为「中国」的分组，跟同一页的「中国」段标题自相矛盾
+        val buckets = StationRegion.bucketize(listOf(st("st_cn_x", "某地人民广播", "CN")), g)
+        assertTrue("CN 不能落进国外段", buckets.none { it.section == RegionSection.FOREIGN })
+    }
+
+    @Test
+    fun `国外段同台数时按国名排序`() {
+        // countThenName 是中国省份与国外国家共用的，并列时的 tie-break 两边都要钉住
+        val buckets = StationRegion.bucketize(
+            listOf(
+                st("gl_a1", "A", "英国"), st("gl_a2", "B", "英国"),
+                st("gl_b1", "C", "美国"), st("gl_b2", "D", "美国"),
+            ),
+            g,
+        )
+        assertEquals(
+            listOf(StationRegion.countryKey("美国"), StationRegion.countryKey("英国")),
+            buckets.map { it.key },
+        )
     }
 
     @Test
@@ -99,8 +279,11 @@ class StationRegionTest {
 
     @Test
     fun `无地区线索且非央广的台进其他`() {
-        val buckets = StationRegion.bucketize(listOf(st("st_大象资讯台", "大象资讯台")), g)
+        // 原来拿「大象资讯台」当例子，但「大象」现在是河南的别名，它该被归位。
+        // 换成真数据里确实推不出地区的网络台
+        val buckets = StationRegion.bucketize(listOf(st("st_心灵音乐馆", "心灵音乐馆")), g)
         assertEquals(listOf(StationRegion.OTHER), buckets.map { it.key })
+        assertEquals(RegionSection.CN, buckets.single().section)
     }
 
     @Test
