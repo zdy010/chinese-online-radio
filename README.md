@@ -57,7 +57,7 @@ app/src/main/java/com/radio/chinese/
 
 ## 电台数据
 
-内置电台列表存储于 `assets/radio_stations.json`，包含央广及各省市广播电台的公开流媒体地址。
+内置电台列表存储于 `assets/radio_stations.json`，包含央广及各省市广播电台的公开流媒体地址，以及港台、东南亚华语台与海外公共/独立电台。
 
 支持的流媒体协议：
 - HLS (m3u8)
