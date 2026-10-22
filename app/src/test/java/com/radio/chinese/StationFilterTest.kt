@@ -85,4 +85,38 @@ class StationFilterTest {
         assertEquals(sample.size, StationFilter.apply(sample, null, "", null).size)
         assertEquals(sample.size, StationFilter.apply(sample, null, "   ", null).size)
     }
+
+    // ---- 拼音简称 ----
+
+    private val pinyinSample = listOf(
+        st("zj", "traffic", name = "浙江交通之声"),
+        st("hn", "opera", name = "河南豫剧广播"),
+        st("lin", "music", name = "Linn Jazz"),
+    )
+
+    @Test
+    fun `首字母能搜到中文台名`() {
+        assertEquals(listOf("zj"), StationFilter.apply(pinyinSample, null, "zjjt", null).map { it.id })
+        assertEquals(listOf("zj"), StationFilter.apply(pinyinSample, null, "ZJJT", null).map { it.id })
+    }
+
+    @Test
+    fun `全拼能搜到中文台名`() {
+        assertEquals(
+            listOf("zj"),
+            StationFilter.apply(pinyinSample, null, "zhejiangjiaotong", null).map { it.id },
+        )
+    }
+
+    @Test
+    fun `拼音不介入中文查询`() {
+        // 中文查询走原有路径；若拼音列也参与，`zg` 这种两句词根很容易把全表拉进来
+        assertEquals(listOf("hn"), StationFilter.apply(pinyinSample, null, "豫剧", null).map { it.id })
+        assertTrue(StationFilter.apply(pinyinSample, null, "zhejiang", null).isNotEmpty())
+    }
+
+    @Test
+    fun `英文台名仍按原名命中`() {
+        assertEquals(listOf("lin"), StationFilter.apply(pinyinSample, null, "jazz", null).map { it.id })
+    }
 }

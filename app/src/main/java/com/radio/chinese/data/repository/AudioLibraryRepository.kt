@@ -87,11 +87,14 @@ class AudioLibraryRepository @Inject constructor(
     /**
      * 全源曲目搜索。空/空白查询直接返回空列表——不把它送进 LIKE，
      * 否则模式退化成 `%+%`，等于“匹配全部”。
+     *
+     * 拼音只对纯字母数字的查询生效，与电台侧的`StationFilter`同一套判据：
+     * 用户在电台页与音频库不需要记两套规则。
      */
     suspend fun searchTracks(sourceId: Long?, query: String, limit: Int = 200): List<TrackHit> {
         val pattern = IndexQuery.likePattern(query)
         if (pattern.isEmpty()) return emptyList()
-        return cacheDao.searchTracks(sourceId, pattern, limit).map {
+        return cacheDao.searchTracks(sourceId, pattern, limit, PinyinIndex.isAsciiQuery(query)).map {
             TrackHit(
                 sourceId = it.sourceId, name = it.name, path = it.path,
                 parentPath = it.parentPath, size = it.size
@@ -174,6 +177,10 @@ class AudioLibraryRepository @Inject constructor(
 
     private fun AudioTrack.toEntity(sourceId: Long) = AudioCacheEntity(
         sourceId = sourceId, path = path, parentPath = parentPath,
-        name = name, isFolder = isFolder, size = size
+        name = name, isFolder = isFolder, size = size,
+        // 浏览路径与后台索引写的是同一张表，两边的拼音列必须都填，
+        // 否则用户刚点过的目录反而搜不到
+        pyFull = if (isFolder) "" else PinyinIndex.column(name),
+        pyInitials = if (isFolder) "" else PinyinIndex.initialsColumn(name),
     )
 }

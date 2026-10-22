@@ -6,6 +6,7 @@ import com.radio.chinese.data.entity.AudioCacheEntity
 import com.radio.chinese.domain.IndexCacheWriter
 import com.radio.chinese.domain.IndexRow
 import com.radio.chinese.domain.IndexSourceSync
+import com.radio.chinese.domain.PinyinIndex
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +31,10 @@ class IndexDaoAdapter @Inject constructor(
         cacheDao.insertAll(rows.map {
             AudioCacheEntity(
                 sourceId = sourceId, path = it.path, parentPath = it.parentPath,
-                name = it.name, isFolder = it.isFolder, size = it.size
+                name = it.name, isFolder = it.isFolder, size = it.size,
+                // 目录行不参与曲目搜索，不给它们算变体（一首歌名都长于目录名，白算）
+                pyFull = if (it.isFolder) "" else PinyinIndex.column(it.name),
+                pyInitials = if (it.isFolder) "" else PinyinIndex.initialsColumn(it.name),
             )
         })
     }

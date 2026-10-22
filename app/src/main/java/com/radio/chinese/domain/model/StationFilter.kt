@@ -1,5 +1,8 @@
 package com.radio.chinese.domain.model
 
+import com.radio.chinese.domain.PinyinIndex
+import java.util.concurrent.ConcurrentHashMap
+
 /**
  * 电台列表的三个筛选维度：分类、搜索、标签。彼此正交，可任意组合。
  *
@@ -10,17 +13,40 @@ package com.radio.chinese.domain.model
  */
 object StationFilter {
 
-    /** 搜索词命中的范围：台名、频率、简介、国家、语言、标签中文名。 */
+    /**
+     * 台名的拼音串缓存。每次按键都会对全表重算一遍匹配，508 个台 × 多音字展开
+     * 不适合每次都付。缓存的键用台名而不是 id：拼音只取决于台名，同名台天然共享，
+     * 也不怕自定义电台的 id 与内置台撞车。
+     */
+    private val pinyinCache = ConcurrentHashMap<String, PinyinColumns>()
+
+    private data class PinyinColumns(val full: String, val initials: String)
+
+    private fun pinyinOf(name: String): PinyinColumns = pinyinCache.computeIfAbsent(name) {
+        PinyinColumns(PinyinIndex.column(it), PinyinIndex.initialsColumn(it))
+    }
+
+    /**
+     * 搜索词命中的范围：台名、频率、简介、国家、语言、标签中文名；
+     * 纯字母数字的查询还会再匹一遍台名的拼音全拼与首字母。
+     *
+     * 拼音只对台名生效，不对简介与国家生效：简介是「中国的华语广播电台」这类
+     * 模板句，把它也索引进去会让 `zg` 命中全表。
+     */
     fun matches(station: RadioStation, query: String): Boolean {
         val q = query.trim().lowercase()
         if (q.isEmpty()) return true
         val tagLabels = station.tags.map { StationTag.labelOf(it).lowercase() }
-        return station.name.lowercase().contains(q) ||
+        val hitOriginal = station.name.lowercase().contains(q) ||
             station.frequency.lowercase().contains(q) ||
             station.description.lowercase().contains(q) ||
             station.country.lowercase().contains(q) ||
             station.language.lowercase().contains(q) ||
             tagLabels.any { it.contains(q) || q.contains(it) }
+        if (hitOriginal || !PinyinIndex.isAsciiQuery(q)) return hitOriginal
+        // 列值形如 "|wf|zjjt|"，首尾的竖线挡住跨变体拼接出的假命中
+        val py = pinyinOf(station.name)
+        return q in py.initials || q in py.full
     }
 
     fun apply(

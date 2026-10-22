@@ -232,6 +232,9 @@ dependencies {
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
 
+    // 拼音：搜索简称要做多音字展开，自维护字表不现实
+    implementation(libs.pinyin4j)
+
     // Security (encrypted credential storage)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 

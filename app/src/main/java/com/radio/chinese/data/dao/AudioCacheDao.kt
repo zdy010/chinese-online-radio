@@ -25,18 +25,30 @@ interface AudioCacheDao {
      *
      * pattern 必须是 IndexQuery.likePattern 的产物，不能接裸用户输入：
      * 否则一个 `%` 就是“匹配全部”。目录行不参与搜索。
+     *
+     * [matchPinyin] 由调用方按查询是否纯字母数字决定：中文输入本来就能命中
+     * name，不该再绕一道拼音列。拼音列存的是 `|a|b|` 形态，首尾竖线挡住
+     * 跨变体拼接出的假命中，所以这里可以直接 LIKE。
      */
     @Query(
         """
         SELECT * FROM audio_cache
         WHERE isFolder = 0
           AND (:sourceId IS NULL OR sourceId = :sourceId)
-          AND name LIKE :pattern ESCAPE '\'
+          AND (
+            name LIKE :pattern ESCAPE '\'
+            OR (:matchPinyin AND (pyInitials LIKE :pattern ESCAPE '\' OR pyFull LIKE :pattern ESCAPE '\'))
+          )
         ORDER BY name ASC
         LIMIT :limit
         """
     )
-    suspend fun searchTracks(sourceId: Long?, pattern: String, limit: Int): List<AudioCacheEntity>
+    suspend fun searchTracks(
+        sourceId: Long?,
+        pattern: String,
+        limit: Int,
+        matchPinyin: Boolean = false,
+    ): List<AudioCacheEntity>
 
     /**
      * 每个已爬目录的最旧 cachedAt。进索引的新鲜度判定唯一依据：

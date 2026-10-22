@@ -76,7 +76,10 @@ object AppModule {
             AudioLibraryDatabase::class.java,
             "audio_library_database"
         ).fallbackToDestructiveMigration()
-         .build()
+            // 这个库里有用户配置的来源与凭证：1→2 必须走显式迁移，
+            // 那条 fallback 只该管没写过迁移的升级
+            .addMigrations(AudioLibraryDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
