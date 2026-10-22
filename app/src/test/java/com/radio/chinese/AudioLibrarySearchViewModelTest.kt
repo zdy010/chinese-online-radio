@@ -289,6 +289,24 @@ class AudioLibrarySearchViewModelTest {
     )
 
     /**
+     * 早期索引把「不是文件夹」的都当曲目，歌词与封面可能已经在表里。
+     * 用户重建索引之前，搜索结果必须挡掉这些行，否则装了新版还是能搜到点不响的条目。
+     */
+    @Test fun `搜索结果过滤掉已入库的歌词与封面行`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 3469
+        coEvery { env.repo.searchTracks(null, "花木兰", 200) } returns listOf(
+            TrackHit(1, "花木兰.mp3", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000),
+            TrackHit(1, "花木兰.lrc", "/豫剧/花木兰.lrc", "/豫剧", 1_024),
+            TrackHit(1, "封面.jpg", "/豫剧/cover.jpg", "/豫剧", 20_480),
+        )
+        val vm = build(env)
+        vm.updateSearchQuery("花木兰", carSurface = false)
+        advanceUntilIdle()
+        assertEquals(listOf("花木兰.mp3"), vm.uiState.value.searchResults.map { it.name })
+    }
+
+    /**
      * 结果跳源：browseFolder() 读的是当前 browsingSource，而搜索结果跨多个云盘。
      * 拿错源去列目录，会把 A 盘的目录名当成 B 盘的路径去请求，列出来是空的或错的。
      */

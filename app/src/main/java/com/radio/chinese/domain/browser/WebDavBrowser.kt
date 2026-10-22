@@ -2,6 +2,7 @@ package com.radio.chinese.domain.browser
 
 import com.radio.chinese.domain.AudioBrowser
 import com.radio.chinese.domain.AudioTrack
+import com.radio.chinese.domain.PlayableTrack
 import com.radio.chinese.service.WebDavClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,6 +24,10 @@ class WebDavBrowser(
     override suspend fun listChildren(path: String): Result<List<AudioTrack>> = withContext(Dispatchers.IO) {
         applyCredentials()
         client.listFiles(path)
+            // 目录里的歌词与封面不是曲目：以前只判「不是文件夹」，它们会作为点不响的
+            // 一行混进列表。剔掉不影响取歌词——sidecar 是按曲目名派生路径去请求的，
+            // 本来就不需要这些文件出现在列表里。这里一道闸同时管住目录浏览与索引写入。
+            .filter { it.isFolder || PlayableTrack.isPlayable(it.displayName) }
             .map { file ->
                 AudioTrack(
                     id = file.href,

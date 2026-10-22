@@ -187,7 +187,10 @@ class AudioLibraryViewModel @Inject constructor(
         _state.update { it.copy(searchPhase = phase, askIndexConfirm = ask) }
         if (phase != SearchPhase.Ready && phase != SearchPhase.ReadyStale) return
         val hits = repository.searchTracks(sourceId = null, query = q, limit = 200)
-        _state.update { it.copy(searchResults = IndexQuery.mergeHits(hits)) }
+        // 早期索引把「不是文件夹」的都当曲目，歌词与封面可能已经在表里。
+        // 在用户重建索引之前先把它们挡在结果外，否则装了新版仍能搜到点不响的行。
+        val playable = hits.filter { PlayableTrack.isPlayable(it.name) }
+        _state.update { it.copy(searchResults = IndexQuery.mergeHits(playable)) }
     }
 
     /**
