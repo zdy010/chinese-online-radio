@@ -219,6 +219,12 @@ fun AudioMainScreen(
                         breadcrumbOf = viewModel::breadcrumbFor,
                         isFavorited = viewModel::isFavorited,
                         onPlay = viewModel::playSearchResult,
+                        onOpenFolder = { hit ->
+                            // 先退搜索态再跳：searchQuery 不清掉，跳过去的目录会被这个结果列表盖住，
+                            // 看着就像长按了没反应。它是本屏的局部状态，不在 VM 里。
+                            searchQuery = ""
+                            viewModel.openResultFolder(hit)
+                        },
                         onBuildIndex = viewModel::confirmIndexing,
                         onAddSource = viewModel::showAddDialog,
                         onToggleFavorite = { hit ->

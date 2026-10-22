@@ -1,6 +1,8 @@
 package com.radio.chinese.ui.library
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,14 +18,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,7 +52,11 @@ import com.radio.chinese.ui.theme.Dimens
  *
  * 一切"该显示什么"由 [SearchPhase] 决定，判定在 `IndexQuery.searchPhase` 里且已被单测钉死；
  * 这里只做渲染，不再自己判断有没有索引、在不在建。
+ *
+ * [onOpenFolder] 由宿主负责退出搜索态后再调 VM：searchQuery 是 UI 局部状态，
+ * 不清掉的话目录会被这个结果列表盖住，看着就像长按了没反应。
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SearchResultsList(
     results: List<MergedTrack>,
@@ -56,12 +66,28 @@ fun SearchResultsList(
     breadcrumbOf: (TrackHit) -> String,
     isFavorited: (String) -> Boolean,
     onPlay: (TrackHit) -> Unit,
+    onOpenFolder: (TrackHit) -> Unit,
     onToggleFavorite: (TrackHit) -> Unit,
     onBuildIndex: () -> Unit,
     onAddSource: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val indexedNow = (indexState as? IndexState.Running)?.p?.indexedFiles ?: 0
+
+    // 长按哪行就弹哪行的菜单。用普通 remember：翻页/旋转后不必保留一个未完成的动作菜单
+    var actionHit by remember { mutableStateOf<TrackHit?>(null) }
+
+    actionHit?.let { hit ->
+        TrackFolderDialog(
+            name = hit.name,
+            crumb = breadcrumbOf(hit),
+            onOpen = {
+                actionHit = null
+                onOpenFolder(hit)
+            },
+            onDismiss = { actionHit = null },
+        )
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         HintLine(phase, indexedNow, onBuildIndex)
@@ -127,6 +153,7 @@ fun SearchResultsList(
                                 sourceCount = merged.sources.size,
                                 isFav = isFavorited(primary.path),
                                 onClick = { onPlay(primary) },
+                                onLongClick = { actionHit = primary },
                                 onToggleFav = { onToggleFavorite(primary) }
                             )
                         }
@@ -153,6 +180,7 @@ private fun HintLine(phase: SearchPhase, indexedNow: Int, onBuildIndex: () -> Un
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SearchResultRow(
     name: String,
@@ -160,6 +188,7 @@ private fun SearchResultRow(
     sourceCount: Int,
     isFav: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onToggleFav: () -> Unit,
 ) {
     var favState by remember { mutableStateOf(isFav) }
@@ -168,7 +197,8 @@ private fun SearchResultRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            // 单击仍是起播，长按开动作菜单；不能拆成两个 clickable，后一个会吃掉前一个
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .heightIn(min = Dimens.RowMinHeight)
             .padding(vertical = Dimens.RowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
@@ -206,4 +236,41 @@ private fun SearchResultRow(
             )
         }
     }
+}
+
+/**
+ * 长按搜索结果行弹出的动作菜单，目前只有一项「转到所在目录」。
+ *
+ * 不做成「长按直接跳」是为了跟电台侧的长按范式保持一致，将来加第二项也不用改交互；
+ * 代价是多一步点击。副标题直接把面包屑摆出来，让用户在点之前就看到会跳去哪，
+ * 跳错了也能立刻看出原因。
+ */
+@Composable
+private fun TrackFolderDialog(
+    name: String,
+    crumb: String,
+    onOpen: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(name) },
+        text = {
+            ListItem(
+                headlineContent = { Text("转到所在目录") },
+                supportingContent = {
+                    Text(
+                        text = crumb,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                leadingContent = { Icon(Icons.Default.FolderOpen, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onOpen),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        },
+    )
 }

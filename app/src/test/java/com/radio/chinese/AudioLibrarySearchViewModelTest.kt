@@ -4,6 +4,7 @@ import androidx.media3.common.util.UnstableApi
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.AudioLibraryRepository
 import com.radio.chinese.domain.AudioSource
+import com.radio.chinese.domain.AudioTrack
 import com.radio.chinese.domain.IndexState
 import com.radio.chinese.domain.IndexedProgress
 import com.radio.chinese.domain.TrackHit
@@ -28,6 +29,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -259,5 +263,100 @@ class AudioLibrarySearchViewModelTest {
         assertEquals(400, s.p.indexedFiles)
         assertEquals(5, s.p.pendingDirs)
         assertEquals(2, s.p.skippedDirs)
+    }
+
+    // ── 搜索结果长按「转到所在目录」：跳源找回、返回栈重置 ──
+
+    private val otherSource = AudioSource(2, "曲剧", SourceType.WEBDAV, "https://webdav.123pan.cn/webdav")
+
+    /**
+     * browseSource() 除了 listChildren 还会走 refreshDir 重取根目录；
+     * 不 stub 它的话 relaxed mock 会返回一个转不成 List 的裸对象。
+     */
+    private fun Env.stubBrowse(
+        source1: AudioSource = webdavSource,
+        source2: AudioSource = otherSource,
+    ) {
+        coEvery { repo.listChildren(any(), any(), any()) } returns Result.success(emptyList<AudioTrack>())
+        coEvery { repo.refreshDir(any(), any(), any()) } returns Result.success(emptyList<AudioTrack>())
+        coEvery { repo.getSource(1L) } returns source1
+        coEvery { repo.getSource(2L) } returns source2
+    }
+
+    private fun folderTrack(path: String) = AudioTrack(
+        id = path, name = path.trimEnd('/').substringAfterLast('/'),
+        path = path, isFolder = true, parentPath = "/豫剧",
+    )
+
+    /**
+     * 结果跳源：browseFolder() 读的是当前 browsingSource，而搜索结果跨多个云盘。
+     * 拿错源去列目录，会把 A 盘的目录名当成 B 盘的路径去请求，列出来是空的或错的。
+     */
+    @Test fun `跳目录按结果自带的 sourceId 找回来源，不用当前正在浏览的那个`() = runTest(dispatcher) {
+        val env = Env()
+        env.stubBrowse()
+        val vm = build(env, sources = listOf(webdavSource, otherSource))
+        vm.browseSource(webdavSource)
+        advanceUntilIdle()
+        vm.browseFolder("/豫剧")
+        advanceUntilIdle()
+        vm.openResultFolder(TrackHit(2, "花木兰", "/曲剧/花木兰.mp3", "/曲剧", 8_000_000))
+        advanceUntilIdle()
+        coVerify { env.repo.listChildren(otherSource, "/曲剧", any()) }
+        assertEquals(otherSource, vm.uiState.value.browsingSource)
+    }
+
+    @Test fun `跳过去后路径与内容区状态正确`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.getSource(1L) } returns webdavSource
+        val kids = listOf(folderTrack("/豫剧/花木兰上.mp3"))
+        coEvery { env.repo.listChildren(any(), any(), any()) } returns Result.success(kids)
+        val vm = build(env)
+        vm.openResultFolder(TrackHit(1, "花木兰", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000))
+        advanceUntilIdle()
+        val s = vm.uiState.value
+        assertEquals("/豫剧", s.browsePath)
+        assertEquals(kids, s.browseItems)
+        assertEquals(true, s.showBrowseContent)
+        assertEquals(false, s.isLoading)
+    }
+
+    /**
+     * 从搜索跳进来的，上一级应该是来源列表；
+     * 不重置 history 的话返回键会把用户带回八竿子打不着的旧目录。
+     */
+    @Test fun `跳目录重置返回栈，不把新路径接在旧浏览路径后面`() = runTest(dispatcher) {
+        val env = Env()
+        env.stubBrowse()
+        val vm = build(env)
+        vm.browseSource(webdavSource)
+        advanceUntilIdle()
+        vm.browseFolder("/豫剧")
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.browseHistory.isNotEmpty())
+        vm.openResultFolder(TrackHit(1, "花木兰", "/常香玉/花木兰.mp3", "/常香玉", 8_000_000))
+        advanceUntilIdle()
+        assertEquals(emptyList<String>(), vm.uiState.value.browseHistory)
+    }
+
+    @Test fun `来源已被删除时给错误提示而不是静默失败`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.getSource(99L) } returns null
+        val vm = build(env)
+        vm.openResultFolder(TrackHit(99, "花木兰", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000))
+        advanceUntilIdle()
+        assertNull(vm.uiState.value.browsingSource)
+        assertNotNull(vm.uiState.value.error)
+    }
+
+    @Test fun `列目录失败时走错误通道并收起加载态`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.getSource(1L) } returns webdavSource
+        coEvery { env.repo.listChildren(any(), any(), any()) } returns Result.failure(Exception("403"))
+        val vm = build(env)
+        vm.openResultFolder(TrackHit(1, "花木兰", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000))
+        advanceUntilIdle()
+        assertEquals(false, vm.uiState.value.isLoading)
+        assertNotNull(vm.uiState.value.error)
     }
 }

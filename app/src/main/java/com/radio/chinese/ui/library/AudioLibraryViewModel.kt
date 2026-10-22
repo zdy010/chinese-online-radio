@@ -323,6 +323,50 @@ class AudioLibraryViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 从搜索结果跳到该曲目所在的目录（长按菜单的「转到所在目录」）。
+     *
+     * 三件事必须一起做，少一件的表现都是「点了没反应」：
+     * 1. 按 [TrackHit.sourceId] 找回来源。[browseFolder] 读的是当前 browsingSource，
+     *    而结果列表是多源归并的，拿错源去列目录会得到空或错的内容。
+     * 2. 重置 browseHistory。从搜索跳进来的，上一级应该是来源列表；
+     *    接在用户旧浏览路径后面，返回键会把他带回八竿子打不着的目录。
+     * 3. 打开内容区 showBrowseContent。
+     *
+     * 退出搜索态由 UI 层负责（searchQuery 是 AudioMainScreen 的局部状态），
+     * 不清掉的话目录会被结果列表盖住。
+     *
+     * parentPath 与 browsePath 同为 PROPFIND href 形态（WebDavBrowser 里
+     * AudioTrack.path = file.href、parentPath = 入参 path），所以直接传，无需形态转换。
+     */
+    fun openResultFolder(hit: TrackHit) {
+        viewModelScope.launch {
+            val source = repository.getSource(hit.sourceId)
+            if (source == null) {
+                _state.update { it.copy(error = "该来源已被移除，打不开它里面的目录") }
+                return@launch
+            }
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    browsingSource = source,
+                    showBrowseContent = true,
+                    browsePath = hit.parentPath,
+                    browseHistory = emptyList(),
+                )
+            }
+            val browser = createBrowser(source)
+            repository.listChildren(source, hit.parentPath, browser)
+                .onSuccess { items ->
+                    _state.update { it.copy(isLoading = false, browseItems = items) }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isLoading = false, error = e.message) }
+                }
+        }
+    }
+
     fun browseBack() {
         val history = _state.value.browseHistory
         if (history.isEmpty()) {
