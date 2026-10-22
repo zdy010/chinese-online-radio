@@ -3693,7 +3693,7 @@
     {
       "id": "gl_us_adroitjazzundergro",
       "name": "Adroit Jazz Underground",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://icecast.walmradio.com:8443/jazz",
       "logoUrl": "",
       "frequency": "",
@@ -3788,7 +3788,7 @@
     {
       "id": "gl_us_101smoothjazz",
       "name": "101 SMOOTH JAZZ",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://jking.cdnstream1.com/b22139_128mp3",
       "logoUrl": "",
       "frequency": "",
@@ -3811,7 +3811,7 @@
     {
       "id": "gl_us_classichitsradio70",
       "name": "CLASSIC HITS RADIO 70 80 DiscoFunk ModernSoul Boogie",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://radiopanther.radiolebowski.com/play",
       "logoUrl": "",
       "frequency": "",
@@ -3833,7 +3833,7 @@
     {
       "id": "gl_gb_classicfmuk",
       "name": "Classic FM UK",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://ice-the.musicradio.com/ClassicFMMP3",
       "logoUrl": "",
       "frequency": "",
@@ -3878,7 +3878,7 @@
     {
       "id": "gl_us_yourclassicalrelax",
       "name": "Your Classical - Relax",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://relax.stream.publicradio.org/relax.mp3",
       "logoUrl": "",
       "frequency": "",
@@ -3967,7 +3967,7 @@
     {
       "id": "gl_us_ambientsleepingpil",
       "name": "Ambient Sleeping Pill",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://radio.stereoscenic.com/asp-h",
       "logoUrl": "",
       "frequency": "",
@@ -4076,7 +4076,7 @@
     {
       "id": "gl_gb_radiocaroline",
       "name": "Radio Caroline",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://sc6.radiocaroline.net:8040/;stream.mp3",
       "logoUrl": "",
       "frequency": "",
@@ -4143,7 +4143,7 @@
     {
       "id": "gl_gb_capitalfmlondon",
       "name": "Capital FM London",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://media-ice.musicradio.com/CapitalMP3",
       "logoUrl": "",
       "frequency": "",
@@ -4165,7 +4165,7 @@
     {
       "id": "gl_us_somafmsecretagent1",
       "name": "SomaFM Secret Agent (128k MP3)",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://ice5.somafm.com/secretagent-128-mp3",
       "logoUrl": "",
       "frequency": "",
@@ -4188,7 +4188,7 @@
     {
       "id": "gl_gb_heart80s",
       "name": "Heart 80s",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://media-ssl.musicradio.com/Heart80sMP3",
       "logoUrl": "",
       "frequency": "",
@@ -4216,7 +4216,7 @@
     {
       "id": "gl_us_hardrockheaven",
       "name": "Hard Rock Heaven",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://hydra.cdnstream.com/1521_128",
       "logoUrl": "",
       "frequency": "",
@@ -4308,7 +4308,7 @@
     {
       "id": "gl_us_cryosleep",
       "name": "Cryosleep",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://streams.echoesofbluemars.org:8000/cryosleep",
       "logoUrl": "",
       "frequency": "",
@@ -4330,7 +4330,7 @@
     {
       "id": "gl_es_1000hits80s",
       "name": "1000 HITS 80s",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://c2.auracast.net:8048/stream",
       "logoUrl": "",
       "frequency": "",
@@ -4484,7 +4484,7 @@
     {
       "id": "gl_us_977smoothjazz",
       "name": ".977 Smooth Jazz",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://14543.live.streamtheworld.com:3690/977_SMOOJAZZ_SC",
       "logoUrl": "",
       "frequency": "",
@@ -4689,7 +4689,7 @@
     {
       "id": "gl_gb_heart70s",
       "name": "Heart 70s",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://media-ssl.musicradio.com/Heart70sMP3",
       "logoUrl": "",
       "frequency": "",
@@ -4734,7 +4734,7 @@
     {
       "id": "gl_ch_1fmclassicrockrepl",
       "name": "1.FM - Classic Rock Replay Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://strm112.1.fm/crock_mobile_mp3",
       "logoUrl": "",
       "frequency": "",
@@ -4780,7 +4780,7 @@
     {
       "id": "gl_ch_1fmabsolutecountry",
       "name": "1.FM - Absolute Country Hits Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://strm112.1.fm/acountry_mobile_mp3",
       "logoUrl": "",
       "frequency": "",
@@ -4803,7 +4803,7 @@
     {
       "id": "gl_us_miamibeachradio",
       "name": "Miami Beach Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://streaming.radiostreamlive.com/miamibeachradio_devices",
       "logoUrl": "",
       "frequency": "",
@@ -4825,7 +4825,7 @@
     {
       "id": "gl_us_radioparadiserockm",
       "name": "Radio Paradise Rock Mix 320k AAC",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://stream.radioparadise.com/rock-320",
       "logoUrl": "",
       "frequency": "",
@@ -4889,7 +4889,7 @@
     {
       "id": "gl_gb_classicfm",
       "name": "Classic FM",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://media-ice.musicradio.com/ClassicFMMP3",
       "logoUrl": "",
       "frequency": "",
@@ -4978,7 +4978,7 @@
     {
       "id": "gl_gb_heartdance",
       "name": "Heart Dance",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://media-ssl.musicradio.com/HeartDanceMP3",
       "logoUrl": "",
       "frequency": "",
@@ -5026,7 +5026,7 @@
     {
       "id": "gl_gb_heart90s",
       "name": "Heart 90s",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://media-ssl.musicradio.com/Heart90sMP3",
       "logoUrl": "",
       "frequency": "",
@@ -5261,7 +5261,7 @@
     {
       "id": "gl_us_101smoothjazzmello",
       "name": "101 SMOOTH JAZZ MELLOW MIX",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://streaming.live365.com/b48071_128mp3",
       "logoUrl": "",
       "frequency": "",
@@ -5396,7 +5396,7 @@
     {
       "id": "gl_ch_1fmrockclassicsrad",
       "name": "1.FM - Rock Classics Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://strm112.1.fm/rockclassics_mobile_mp3",
       "logoUrl": "",
       "frequency": "",
@@ -5522,7 +5522,7 @@
     {
       "id": "gl_us_metalrockradio",
       "name": "metal rock radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://kathy.torontocast.com:2800/;",
       "logoUrl": "",
       "frequency": "",
@@ -5720,7 +5720,7 @@
     {
       "id": "gl_us_smoothjazz247",
       "name": "SMOOTH JAZZ 24/7",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://jking.cdnstream1.com/b75154_128mp3",
       "logoUrl": "",
       "frequency": "",
@@ -5845,7 +5845,7 @@
     {
       "id": "gl_us_smoothjazzcom128km",
       "name": "SmoothJazz.com 128k mp3",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://smoothjazz.cdnstream1.com/2585_128.mp3",
       "logoUrl": "",
       "frequency": "",
@@ -5887,7 +5887,7 @@
     {
       "id": "gl_ch_1fmalternativerock",
       "name": "1.FM - Alternative Rock X Hits Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://strm112.1.fm/x_mobile_mp3",
       "logoUrl": "",
       "frequency": "",
@@ -5930,7 +5930,7 @@
     {
       "id": "gl_gb_heartuk",
       "name": "Heart UK",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://media-ice.musicradio.com/HeartUKMP3",
       "logoUrl": "",
       "frequency": "",
@@ -6182,7 +6182,7 @@
     {
       "id": "gl_gb_talksport",
       "name": "TalkSPORT",
-      "category": "world",
+      "category": "sports",
       "streamUrl": "https://radio.talksport.com/stream",
       "logoUrl": "",
       "frequency": "",
@@ -6202,7 +6202,7 @@
     {
       "id": "gl_tw_classicalfm977",
       "name": "Classical 古典音樂台 FM 97.7",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://59.120.88.155:8000/live.mp3",
       "logoUrl": "",
       "frequency": "中国台湾 · 中文",
@@ -6668,7 +6668,7 @@
     {
       "id": "gl_za_classicfm1027",
       "name": "Classic FM 1027",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://edge.iono.fm/xice/49_medium.aac?p=embed",
       "logoUrl": "",
       "frequency": "",
@@ -6690,7 +6690,7 @@
     {
       "id": "gl_us_abidingradioinstru",
       "name": "Abiding Radio - Instrumental",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://streams.abidingradio.com/instrumental",
       "logoUrl": "",
       "frequency": "",
@@ -7944,7 +7944,7 @@
     {
       "id": "gl_tw_c5032e92d",
       "name": "警察廣播電台 - 台北台",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "http://stream.pbs.gov.tw:1935/live/TPS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -7989,7 +7989,7 @@
     {
       "id": "gl_tw_c7d07d2f4",
       "name": "警察廣播電台 - 台中台",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "http://stream.pbs.gov.tw:1935/live/TCS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8012,7 +8012,7 @@
     {
       "id": "gl_tw_fm1049",
       "name": "警察廣播電臺 - 全國治安交通網 FM 104.9",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/PBS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8098,7 +8098,7 @@
     {
       "id": "gl_tw_c1ad852c7",
       "name": "佳音經典音樂網",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://stream.ginnet.cloud/live0119lo-p4rb/_definst_/classic/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8160,7 +8160,7 @@
     {
       "id": "gl_ca_fm961",
       "name": "加拿大中文电台FM.96.1",
-      "category": "world",
+      "category": "news",
       "streamUrl": "https://5b2959fe11444.streamlock.net/radio/fm961.stream/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8266,7 +8266,7 @@
     {
       "id": "gl_tw_fm943",
       "name": "警察廣播電臺 - 臺北分臺 FM 94.3",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/TPS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8310,7 +8310,7 @@
     {
       "id": "gl_tw_fm931",
       "name": "警察廣播電臺 - 高雄分臺 FM 93.1",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/KSS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8334,7 +8334,7 @@
     {
       "id": "gl_tw_1940sshanghaivin",
       "name": "上海麗都廣播電台 1940's Shanghai Vintage Jazz Shidaiqu Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://radio.nitro-server.uk/listen/1940sshanghaioldtimesmusicradio/radio.mp3",
       "logoUrl": "",
       "frequency": "",
@@ -8356,7 +8356,7 @@
     {
       "id": "gl_tw_c03e34ba8",
       "name": "警察廣播電台 - 花蓮台",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "http://stream.pbs.gov.tw:1935/live/HLS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8376,7 +8376,7 @@
     {
       "id": "gl_tw_cf03bcba5",
       "name": "警察廣播電台 - 宜蘭台",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "http://stream.pbs.gov.tw:1935/live/ELS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8396,7 +8396,7 @@
     {
       "id": "gl_tw_fm945",
       "name": "警察廣播電臺 - 臺中分臺 FM 94.5",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/TCS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8420,7 +8420,7 @@
     {
       "id": "gl_tw_am1512",
       "name": "警察廣播電臺 - 新竹分臺 AM 1512",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/SCS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8444,7 +8444,7 @@
     {
       "id": "gl_tw_am1314",
       "name": "警察廣播電臺 - 臺南分臺 AM 1314",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/TNS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8468,7 +8468,7 @@
     {
       "id": "gl_tw_fm943_2",
       "name": "警察廣播電臺 - 臺東分臺 FM 94.3",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/TTS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8492,7 +8492,7 @@
     {
       "id": "gl_tw_fm943_3",
       "name": "警察廣播電臺 - 花蓮分臺 FM 94.3",
-      "category": "world",
+      "category": "traffic",
       "streamUrl": "https://stream.pbs.gov.tw/live/HLS/playlist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8536,7 +8536,7 @@
     {
       "id": "gl_hk_c7ab7c7d7",
       "name": "凤凰卫视中文台",
-      "category": "world",
+      "category": "tv_audio",
       "streamUrl": "http://playtv-live.ifeng.com/live/06OLEGEGM4G_audio.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -8621,7 +8621,7 @@
     {
       "id": "gl_tw_c5e040dd5",
       "name": "台北流行音樂廣播",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://202.39.43.67:1935/live/RA000080/chunklist.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -9580,7 +9580,7 @@
     {
       "id": "gl_gb_bbcradio1",
       "name": "BBC Radio 1",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_01505109/live/ww/bbc_radio_one/bbc_radio_one.isml/bbc_radio_one-audio%3d128000.norewind.m3u8",
       "logoUrl": "",
       "frequency": "英国 · 英语",
@@ -9603,7 +9603,7 @@
     {
       "id": "gl_gb_bbcradio2",
       "name": "BBC Radio 2",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_74208725/live/ww/bbc_radio_two/bbc_radio_two.isml/bbc_radio_two-audio%3d128000.norewind.m3u8",
       "logoUrl": "",
       "frequency": "英国 · 英语",
@@ -9626,7 +9626,7 @@
     {
       "id": "gl_gb_bbcradio3",
       "name": "BBC Radio 3",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_23461179/live/ww/bbc_radio_three/bbc_radio_three.isml/bbc_radio_three-audio%3d128000.norewind.m3u8",
       "logoUrl": "",
       "frequency": "英国 · 英语",
@@ -9671,7 +9671,7 @@
     {
       "id": "gl_gb_bbc5live",
       "name": "BBC Radio 5 Live",
-      "category": "world",
+      "category": "sports",
       "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_89021708/live/ww/bbc_radio_five_live/bbc_radio_five_live.isml/bbc_radio_five_live-audio%3d128000.norewind.m3u8",
       "logoUrl": "",
       "frequency": "英国 · 英语",
@@ -9693,7 +9693,7 @@
     {
       "id": "gl_gb_bbc6music",
       "name": "BBC Radio 6 Music",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://as-hls-ww-live.akamaized.net/pool_81827798/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio%3d320000.norewind.m3u8",
       "logoUrl": "",
       "frequency": "英国 · 英语",
@@ -9716,7 +9716,7 @@
     {
       "id": "gl_fr_fip",
       "name": "FIP",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://icecast.radiofrance.fr/fip-hifi.aac",
       "logoUrl": "",
       "frequency": "法国 · 法语",
@@ -9738,7 +9738,7 @@
     {
       "id": "gl_fr_fipjazz",
       "name": "FIP Jazz",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://icecast.radiofrance.fr/fipjazz-hifi.aac",
       "logoUrl": "",
       "frequency": "法国 · 法语",
@@ -9805,7 +9805,7 @@
     {
       "id": "gl_us_kexp",
       "name": "KEXP",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://live-mp3-128.kexp.org/kexp128.mp3",
       "logoUrl": "",
       "frequency": "美国 · 英语",
@@ -9833,7 +9833,7 @@
     {
       "id": "gl_us_wfmu",
       "name": "WFMU",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://stream0.wfmu.org/freeform-128k",
       "logoUrl": "",
       "frequency": "美国 · 英语",
@@ -9855,7 +9855,7 @@
     {
       "id": "gl_ch_swissjazz",
       "name": "Radio Swiss Jazz",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
       "logoUrl": "",
       "frequency": "瑞士 · 德语",
@@ -9877,7 +9877,7 @@
     {
       "id": "gl_ch_swissclassic",
       "name": "Radio Swiss Classic",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://stream.srg-ssr.ch/m/rsc_de/mp3_128",
       "logoUrl": "",
       "frequency": "瑞士 · 德语",
@@ -9899,7 +9899,7 @@
     {
       "id": "gl_ch_swisspop",
       "name": "Radio Swiss Pop",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://stream.srg-ssr.ch/m/rsp/mp3_128",
       "logoUrl": "",
       "frequency": "瑞士 · 德语",
@@ -9949,7 +9949,7 @@
     {
       "id": "gl_au_abcclassic",
       "name": "ABC Classic",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://mediaserviceslive.akamaized.net/hls/live/2038316/classicfmnsw/index.m3u8",
       "logoUrl": "",
       "frequency": "澳大利亚 · 英语",
@@ -9971,7 +9971,7 @@
     {
       "id": "gl_au_triplej",
       "name": "Triple J",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://abc.streamguys1.com/live/triplejnsw/icecast.audio",
       "logoUrl": "",
       "frequency": "澳大利亚 · 英语",
@@ -10021,7 +10021,7 @@
     {
       "id": "gl_nz_rnzconcert",
       "name": "RNZ Concert",
-      "category": "world",
+      "category": "music",
       "streamUrl": "http://radionz-ice.streamguys.com/concert.mp3",
       "logoUrl": "",
       "frequency": "新西兰 · 英语",
@@ -10043,7 +10043,7 @@
     {
       "id": "gl_us_kcrw",
       "name": "KCRW",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://streams.kcrw.com/kcrw_mp3",
       "logoUrl": "",
       "frequency": "美国 · 英语",
@@ -10115,7 +10115,7 @@
     {
       "id": "gl_it_venice",
       "name": "Venice Classic Radio",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://uk2.streamingpulse.com/ssl/vcr1",
       "logoUrl": "",
       "frequency": "意大利 · 英语",
@@ -10209,7 +10209,7 @@
     {
       "id": "gl_us_dronezone",
       "name": "SomaFM Drone Zone",
-      "category": "world",
+      "category": "music",
       "streamUrl": "https://ice2.somafm.com/dronezone-128-mp3",
       "logoUrl": "",
       "frequency": "美国 · 英语",
@@ -10232,7 +10232,7 @@
     {
       "id": "gl_us_espn",
       "name": "ESPN Radio",
-      "category": "world",
+      "category": "sports",
       "streamUrl": "http://live.amperwave.net/direct/espn-network-48",
       "logoUrl": "",
       "frequency": "美国 · 英语",
