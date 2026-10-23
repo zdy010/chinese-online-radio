@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.audio.AudioMainScreen
 import com.radio.chinese.ui.diagnostics.DiagnosticsScreen
+import com.radio.chinese.ui.epg.EpgScreen
 import com.radio.chinese.ui.keysettings.KeySettingsScreen
 import com.radio.chinese.ui.navigation.Screen
 import com.radio.chinese.ui.player.OperaPlayerScreen
@@ -52,6 +53,16 @@ fun RadioNavGraph(
                 onNavigateToPlayer = { stationId -> navController.navigate(Screen.Player.createRoute(stationId)) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToTag = { tag -> navController.navigate(Screen.Tags.createRoute(tag)) },
+                onNavigateToEpg = { navController.navigate(Screen.Epg.route) },
+            )
+        }
+
+        composable(Screen.Epg.route) {
+            EpgScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPlayer = { stationId ->
+                    navController.navigate(Screen.Player.createRoute(stationId))
+                }
             )
         }
 

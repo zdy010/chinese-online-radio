@@ -3,6 +3,8 @@ package com.radio.chinese.ui.player
 import androidx.media3.common.Player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.radio.chinese.data.repository.EpgRepository
+import com.radio.chinese.data.repository.EpgSnapshot
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
@@ -33,12 +35,25 @@ data class PlayerUiState(
 class PlayerViewModel @Inject constructor(
     private val stationRepository: StationRepository,
     private val favoriteRepository: FavoriteRepository,
+    private val epgRepository: EpgRepository,
     val playerManager: PlayerManager,
     val sleepTimer: SleepTimer
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState
+
+    /**
+     * 当前台的节目单。null 表示这个台没有接入、或一次都没拉到过——UI 整块不渲染。
+     *
+     * 不放进 [PlayerUiState]：那个 state 由播放状态的 combine 重建，节目单与播放无关，
+     * 混进去会逼着每处重建都去回填一份，逻辑反而更脏。
+     */
+    private val _epg = MutableStateFlow<EpgSnapshot?>(null)
+    val epg: StateFlow<EpgSnapshot?> = _epg
+
+    private var epgStationId: String? = null
+    private var epgToken = 0
 
     /** 切台用的电台列表只需一份；用活动列表，标记无效的电台不能被切到 */
     private var allStations: List<RadioStation> = emptyList()
@@ -114,6 +129,26 @@ class PlayerViewModel @Inject constructor(
 
     fun togglePlayPause() {
         playerManager.togglePlayPause()
+    }
+
+    /**
+     * 取某台某天的节目单。页面每过一分钟、以及跨天时各调一次，重复调不会重复请求：
+     * 缓存 6 小时内直接用，失败后 30 秒内节流，都关在 [EpgRepository] 里。
+     *
+     * 不取消上一次的协程：它可能正在写库，取消会把「删了旧行、没插新行」的中间态留给下一分钟。
+     * 用自增 token 只合并结果——只有最后一次调用的结果能落到 UI。
+     */
+    fun loadEpg(stationId: String, date: String) {
+        if (epgStationId != stationId) {
+            // 换了台先清空，否则新台加载完成前会短暂显示上一个台的节目
+            epgStationId = stationId
+            _epg.value = null
+        }
+        val token = ++epgToken
+        viewModelScope.launch {
+            val snapshot = epgRepository.load(stationId, date)
+            if (token == epgToken) _epg.value = snapshot
+        }
     }
 
     fun toggleFavorite() {

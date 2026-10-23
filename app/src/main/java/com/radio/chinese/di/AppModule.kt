@@ -5,10 +5,17 @@ import androidx.room.Room
 import com.radio.chinese.data.dao.*
 import com.radio.chinese.data.local.AudioLibraryDatabase
 import com.radio.chinese.data.local.DownloadedOperaDao
+import com.radio.chinese.data.local.EpgDatabase
+import com.radio.chinese.data.local.EpgProgramDao
+import com.radio.chinese.data.local.EpgStations
 import com.radio.chinese.data.local.OperaDatabase
 import com.radio.chinese.data.local.RadioDatabase
 import com.radio.chinese.data.local.FavoriteDao
+import com.radio.chinese.data.remote.EpgRemoteSource
+import com.radio.chinese.data.remote.YuntingEpgClient
+import com.radio.chinese.data.repository.RoomEpgStore
 import com.radio.chinese.domain.browser.BrowserFactory
+import com.radio.chinese.domain.epg.EpgStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -93,6 +100,48 @@ object AppModule {
 
     @Provides
     fun provideAudioRecentDao(db: AudioLibraryDatabase): AudioRecentDao = db.audioRecentDao()
+
+    // ========== 节目单 ==========
+
+    /**
+     * 独立成库：`radio_database` 开着 fallbackToDestructiveMigration，
+     * 把节目单塞进去会让一次写漏的迁移带走用户的收藏。这里的数据全部可重建。
+     */
+    @Provides
+    @Singleton
+    fun provideEpgDatabase(@ApplicationContext context: Context): EpgDatabase {
+        return Room.databaseBuilder(
+            context,
+            EpgDatabase::class.java,
+            "epg_database"
+        ).fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    fun provideEpgProgramDao(db: EpgDatabase): EpgProgramDao = db.epgProgramDao()
+
+    @Provides
+    @Singleton
+    fun provideEpgStore(db: EpgDatabase, dao: EpgProgramDao): EpgStore = RoomEpgStore(db, dao)
+
+    @Provides
+    @Singleton
+    fun provideEpgRemoteSource(client: YuntingEpgClient): EpgRemoteSource = client
+
+    /**
+     * 映射表只读一次。解析失败就返回空表：节目单功能整体消失，
+     * 但 App 照常启动——一份坏资源不该拦在启动路径上。
+     */
+    @Provides
+    @Singleton
+    @EpgStationMapping
+    fun provideEpgStationMapping(@ApplicationContext context: Context): Map<String, String> {
+        return runCatching {
+            context.assets.open("epg_stations.json").bufferedReader().use { it.readText() }
+        }.map { raw -> EpgStations.parse(raw).associate { it.stationId to it.broadcastId } }
+            .getOrDefault(emptyMap())
+    }
 
     // ========== 后台索引 ==========
 

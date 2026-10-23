@@ -33,6 +33,7 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.radio.chinese.data.local.availabilityToQuality
 import com.radio.chinese.ui.theme.sourceQualityColor
+import com.radio.chinese.domain.epg.EpgQuery
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import com.radio.chinese.ui.common.LoadingState
@@ -42,6 +43,8 @@ import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.common.StationTagChips
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
+import kotlinx.coroutines.delay
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,9 +58,28 @@ fun PlayerScreen(
     val timerActive by viewModel.sleepTimer.isActive.collectAsState()
     val timerRemaining by viewModel.sleepTimer.remainingSeconds.collectAsState()
     var showTimerDialog by remember { mutableStateOf(false) }
+    var showEpgSheet by remember { mutableStateOf(false) }
+
+    // 「正在播出」跟的是排播所用的北京时间：每 60 秒重算一次，离开页面随 produceState 取消，
+    // 不另开定时任务，也不因此发请求（节目单本身有 6 小时缓存）
+    val clock by produceState(initialValue = LocalDateTime.now(EpgQuery.BROADCAST_ZONE)) {
+        while (true) {
+            value = LocalDateTime.now(EpgQuery.BROADCAST_ZONE)
+            delay(60_000L)
+        }
+    }
+    val minute = EpgQuery.minuteOf(clock)
+    val today = clock.toLocalDate().toString()
+    val epg by viewModel.epg.collectAsState()
 
     LaunchedEffect(stationId) {
         viewModel.loadStation(stationId)
+    }
+
+    // 换台或跨天各重取一次；同一台同一天重复调不会多打接口（缓存 + 节流在仓库层）
+    val playingStationId = uiState.station?.id
+    LaunchedEffect(playingStationId, today) {
+        if (playingStationId != null) viewModel.loadEpg(playingStationId, today)
     }
 
     Scaffold(
@@ -187,6 +209,23 @@ fun PlayerScreen(
                     )
                 }
 
+                // 节目单：没接入、拉不到、当天没节目的台整块不渲染，不留占位空白。
+                // 位置在两个分支汇合点之后，宽屏与竖屏各一份就写重了。
+                val snapshot = epg
+                if (snapshot != null) {
+                    Spacer(modifier = Modifier.height(Dimens.GapMedium))
+                    NowOnAirCard(
+                        snapshot = snapshot,
+                        minute = minute,
+                        onClick = { showEpgSheet = true },
+                        modifier = if (isCarSurface()) {
+                            Modifier.widthIn(max = Dimens.CarContentMaxWidth)
+                        } else {
+                            Modifier
+                        }
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(Dimens.GapMedium))
 
                 // Playback Status Indicator
@@ -297,6 +336,18 @@ fun PlayerScreen(
 
                 Spacer(modifier = Modifier.height(Dimens.GapSmall))
             }
+        }
+    }
+
+    // 全天节目单
+    if (showEpgSheet) {
+        val snapshot = epg
+        if (snapshot != null && snapshot.programs.isNotEmpty()) {
+            EpgDaySheet(
+                programs = snapshot.programs,
+                minute = minute,
+                onDismiss = { showEpgSheet = false }
+            )
         }
     }
 

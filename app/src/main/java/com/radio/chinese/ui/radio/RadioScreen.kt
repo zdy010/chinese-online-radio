@@ -6,6 +6,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
@@ -41,6 +42,7 @@ fun RadioScreen(
     onNavigateToPlayer: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToTag: (String?) -> Unit = {},
+    onNavigateToEpg: () -> Unit = {},
 ) {
     // 页签名字必须对得上内容：早期的「地区」页签底下其实是分类网格——当时电台数据里
     // 没有地区/省份字段，点进去看到的与标签无关，只能改名「全部」。
@@ -77,8 +79,15 @@ fun RadioScreen(
         SearchBarRow(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = "搜索电台名称或频率",
+            placeholder = "搜索电台、频率或节目",
             actions = {
+                // 节目单与设置同排：两个都是全屏入口，不该占用筛选条的位置
+                IconButton(
+                    onClick = onNavigateToEpg,
+                    modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                ) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = "节目单")
+                }
                 IconButton(
                     onClick = onNavigateToSettings,
                     modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier

@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.RegionRepository
+import com.radio.chinese.data.repository.EpgRepository
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
+import com.radio.chinese.domain.epg.EpgQuery
+import com.radio.chinese.domain.model.EpgProgram
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.Region
 import com.radio.chinese.domain.model.RegionBucket
@@ -16,6 +19,7 @@ import com.radio.chinese.domain.model.manualRegionAfterProvinceChange
 import com.radio.chinese.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +30,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -38,6 +43,8 @@ data class HomeUiState(
     val selectedCategory: String? = null,
     val selectedTag: String? = null,
     val searchQuery: String = "",
+    /** 节目搜索结果，只在「全部」页分组展示；地区页只做电台过滤，不读这一项 */
+    val programResults: List<EpgProgram> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null
 )
@@ -48,6 +55,7 @@ class HomeViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
     private val preferences: RadioPreferences,
     private val regionRepository: RegionRepository,
+    private val epgRepository: EpgRepository,
     val playerManager: PlayerManager
 ) : ViewModel() {
 
@@ -57,6 +65,7 @@ class HomeViewModel @Inject constructor(
     private val _selectedCategory = MutableStateFlow<String?>(null)
     private val _selectedTag = MutableStateFlow<String?>(null)
     private val _searchQuery = MutableStateFlow("")
+    private val _programResults = MutableStateFlow<List<EpgProgram>>(emptyList())
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
     private val _recentIds = MutableStateFlow<List<String>>(emptyList())
@@ -64,8 +73,9 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         combine(_stations, _favoriteIds, _customIds) { s, f, c -> Triple(s, f, c) },
         combine(_selectedCategory, _searchQuery, _selectedTag) { c, q, t -> Triple(c, q, t) },
-        combine(_isLoading, _error) { a, b -> Pair(a, b) }
-    ) { (stations, favIds, custIds), filterState, (loading, error) ->
+        combine(_isLoading, _error) { a, b -> Pair(a, b) },
+        _programResults
+    ) { (stations, favIds, custIds), filterState, (loading, error), programResults ->
         val (category, query, tag) = filterState
         val filtered = StationFilter.apply(stations, category, query, tag)
         // 分类条/分类网格只列“真的有电台”的分类：全量枚举会把一个都不存在的
@@ -84,6 +94,7 @@ class HomeViewModel @Inject constructor(
             selectedCategory = category,
             selectedTag = tag,
             searchQuery = query,
+            programResults = programResults,
             isLoading = loading,
             error = error
         )
@@ -199,6 +210,27 @@ class HomeViewModel @Inject constructor(
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
+        searchPrograms(query)
+    }
+
+    private var programSearchJob: Job? = null
+
+    /**
+     * 节目搜索只搜本地已缓存的当天节目。
+     *
+     * 全量 72 个台实时搜会在用户每敲一个字时打出几十个请求，远超「单台单日按需」的边界；
+     * 缓存由播放页和节目单页顺手填满，搜不到的台就是还没看过的那几个。
+     */
+    private fun searchPrograms(query: String) {
+        programSearchJob?.cancel()
+        if (query.isBlank()) {
+            _programResults.value = emptyList()
+            return
+        }
+        programSearchJob = viewModelScope.launch {
+            val cached = epgRepository.cachedPrograms(LocalDate.now(EpgQuery.BROADCAST_ZONE).toString())
+            _programResults.value = EpgQuery.search(cached, query).take(MAX_PROGRAM_RESULTS)
+        }
     }
 
     fun playStation(station: RadioStation) {
@@ -238,5 +270,10 @@ class HomeViewModel @Inject constructor(
             stationRepository.markValid(stationId)
             loadData()
         }
+    }
+
+    private companion object {
+        /** 再多的节目结果也会把电台列表挤出首屏；20 行足够翻到目标 */
+        const val MAX_PROGRAM_RESULTS = 20
     }
 }

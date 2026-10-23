@@ -48,15 +48,6 @@ data class Category(
     val icon: String = ""
 )
 
-@Serializable
-data class ProgramInfo(
-    val stationId: String,
-    val title: String,
-    val host: String = "",
-    val startTime: String = "",
-    val endTime: String = ""
-)
-
 data class FavoriteStation(
     val stationId: String,
     val addedTime: Long

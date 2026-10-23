@@ -1,0 +1,366 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-23",
+  "stations": [
+    {
+      "stationId": "cnr1",
+      "broadcastId": "639",
+      "name": "中国之声"
+    },
+    {
+      "stationId": "cnr2",
+      "broadcastId": "640",
+      "name": "经济之声"
+    },
+    {
+      "stationId": "cnr_dszs",
+      "broadcastId": "642",
+      "name": "经典音乐广播"
+    },
+    {
+      "stationId": "cnr_hxzs",
+      "broadcastId": "645",
+      "name": "大湾区之声"
+    },
+    {
+      "stationId": "cnr_mzzs",
+      "broadcastId": "647",
+      "name": "民族之声"
+    },
+    {
+      "stationId": "cnr_szzs",
+      "broadcastId": "644",
+      "name": "神州之声"
+    },
+    {
+      "stationId": "cnr_wygb",
+      "broadcastId": "651",
+      "name": "维吾尔语广播"
+    },
+    {
+      "stationId": "cnr_wyzs",
+      "broadcastId": "648",
+      "name": "文艺之声"
+    },
+    {
+      "stationId": "cnr_xgzs",
+      "broadcastId": "646",
+      "name": "香港之声"
+    },
+    {
+      "stationId": "cnr_yyzs",
+      "broadcastId": "641",
+      "name": "音乐之声"
+    },
+    {
+      "stationId": "cnr_zhzs",
+      "broadcastId": "643",
+      "name": "台海之声"
+    },
+    {
+      "stationId": "fj_news",
+      "broadcastId": "470",
+      "name": "福建新闻广播"
+    },
+    {
+      "stationId": "st_上海交通广播",
+      "broadcastId": "1312",
+      "name": "上海交通广播"
+    },
+    {
+      "stationId": "st_上海新闻广播",
+      "broadcastId": "849",
+      "name": "上海新闻广播"
+    },
+    {
+      "stationId": "st_云南新闻广播",
+      "broadcastId": "591",
+      "name": "云南新闻广播"
+    },
+    {
+      "stationId": "st_云南民族广播",
+      "broadcastId": "596",
+      "name": "云南民族广播"
+    },
+    {
+      "stationId": "st_云南音乐广播",
+      "broadcastId": "592",
+      "name": "云南音乐广播"
+    },
+    {
+      "stationId": "st_内蒙古音乐之声",
+      "broadcastId": "572",
+      "name": "内蒙古音乐之声"
+    },
+    {
+      "stationId": "st_北京交通广播",
+      "broadcastId": "354",
+      "name": "北京交通广播"
+    },
+    {
+      "stationId": "st_北京音乐广播",
+      "broadcastId": "356",
+      "name": "北京音乐广播"
+    },
+    {
+      "stationId": "st_南海之声",
+      "broadcastId": "664",
+      "name": "南海之声"
+    },
+    {
+      "stationId": "st_吉林乡村广播",
+      "broadcastId": "547",
+      "name": "吉林乡村广播"
+    },
+    {
+      "stationId": "st_吉林交通广播",
+      "broadcastId": "546",
+      "name": "吉林交通广播"
+    },
+    {
+      "stationId": "st_吉林新闻综合广播",
+      "broadcastId": "544",
+      "name": "吉林新闻综合广播"
+    },
+    {
+      "stationId": "st_吉林经济广播",
+      "broadcastId": "545",
+      "name": "吉林经济广播"
+    },
+    {
+      "stationId": "st_安徽交通广播",
+      "broadcastId": "603",
+      "name": "安徽交通广播"
+    },
+    {
+      "stationId": "st_安徽经济广播",
+      "broadcastId": "600",
+      "name": "安徽经济广播"
+    },
+    {
+      "stationId": "st_安徽音乐广播",
+      "broadcastId": "601",
+      "name": "安徽音乐广播"
+    },
+    {
+      "stationId": "st_山东交通广播",
+      "broadcastId": "516",
+      "name": "山东交通广播"
+    },
+    {
+      "stationId": "st_山东经典音乐广播",
+      "broadcastId": "703",
+      "name": "山东经典音乐广播"
+    },
+    {
+      "stationId": "st_山东音乐广播",
+      "broadcastId": "702",
+      "name": "山东音乐广播"
+    },
+    {
+      "stationId": "st_广东城市之声",
+      "broadcastId": "491",
+      "name": "广东城市之声"
+    },
+    {
+      "stationId": "st_广东文体广播",
+      "broadcastId": "490",
+      "name": "广东文体广播"
+    },
+    {
+      "stationId": "st_广东新闻广播",
+      "broadcastId": "487",
+      "name": "广东新闻广播"
+    },
+    {
+      "stationId": "st_广东股市广播",
+      "broadcastId": "488",
+      "name": "广东股市广播"
+    },
+    {
+      "stationId": "st_广东音乐之声",
+      "broadcastId": "489",
+      "name": "广东音乐之声"
+    },
+    {
+      "stationId": "st_广州金曲音乐广播",
+      "broadcastId": "730",
+      "name": "广州金曲音乐广播"
+    },
+    {
+      "stationId": "st_广西交通广播",
+      "broadcastId": "585",
+      "name": "广西交通广播"
+    },
+    {
+      "stationId": "st_广西综合广播",
+      "broadcastId": "2054",
+      "name": "广西综合广播"
+    },
+    {
+      "stationId": "st_新疆交通广播",
+      "broadcastId": "623",
+      "name": "新疆交通广播"
+    },
+    {
+      "stationId": "st_新疆新闻广播",
+      "broadcastId": "624",
+      "name": "新疆新闻广播"
+    },
+    {
+      "stationId": "st_江苏健康广播",
+      "broadcastId": "420",
+      "name": "江苏健康广播"
+    },
+    {
+      "stationId": "st_江苏故事广播",
+      "broadcastId": "421",
+      "name": "江苏故事广播"
+    },
+    {
+      "stationId": "st_江苏新闻综合广播",
+      "broadcastId": "412",
+      "name": "江苏新闻综合广播"
+    },
+    {
+      "stationId": "st_江苏财经广播",
+      "broadcastId": "419",
+      "name": "江苏财经广播"
+    },
+    {
+      "stationId": "st_江苏金陵之声",
+      "broadcastId": "417",
+      "name": "江苏金陵之声"
+    },
+    {
+      "stationId": "st_河北交通广播",
+      "broadcastId": "380",
+      "name": "河北交通广播"
+    },
+    {
+      "stationId": "st_河北音乐广播",
+      "broadcastId": "381",
+      "name": "河北音乐广播"
+    },
+    {
+      "stationId": "st_河南交通广播",
+      "broadcastId": "393",
+      "name": "河南交通广播"
+    },
+    {
+      "stationId": "st_河南信息广播",
+      "broadcastId": "1246",
+      "name": "河南信息广播"
+    },
+    {
+      "stationId": "st_河南新闻广播",
+      "broadcastId": "391",
+      "name": "河南新闻广播"
+    },
+    {
+      "stationId": "st_河南经济广播",
+      "broadcastId": "392",
+      "name": "河南经济广播"
+    },
+    {
+      "stationId": "st_海南交通广播",
+      "broadcastId": "542",
+      "name": "海南交通广播"
+    },
+    {
+      "stationId": "st_海南新闻广播",
+      "broadcastId": "541",
+      "name": "海南新闻广播"
+    },
+    {
+      "stationId": "st_海南音乐广播",
+      "broadcastId": "543",
+      "name": "海南音乐广播"
+    },
+    {
+      "stationId": "st_环球资讯广播",
+      "broadcastId": "692",
+      "name": "环球资讯广播"
+    },
+    {
+      "stationId": "st_福州左海之声",
+      "broadcastId": "955",
+      "name": "福州左海之声"
+    },
+    {
+      "stationId": "st_福州新闻广播",
+      "broadcastId": "960",
+      "name": "福州新闻广播"
+    },
+    {
+      "stationId": "st_苏州交通经济广播",
+      "broadcastId": "698",
+      "name": "苏州交通经济广播"
+    },
+    {
+      "stationId": "st_苏州儿童广播",
+      "broadcastId": "695",
+      "name": "苏州儿童广播"
+    },
+    {
+      "stationId": "st_苏州生活广播",
+      "broadcastId": "696",
+      "name": "苏州生活广播"
+    },
+    {
+      "stationId": "st_苏州都市音乐广播",
+      "broadcastId": "697",
+      "name": "苏州都市音乐广播"
+    },
+    {
+      "stationId": "st_西藏汉语广播",
+      "broadcastId": "628",
+      "name": "西藏汉语广播"
+    },
+    {
+      "stationId": "st_西藏藏语广播",
+      "broadcastId": "627",
+      "name": "西藏藏语广播"
+    },
+    {
+      "stationId": "st_贵州综合广播",
+      "broadcastId": "438",
+      "name": "贵州综合广播"
+    },
+    {
+      "stationId": "st_贵州音乐广播",
+      "broadcastId": "435",
+      "name": "贵州音乐广播"
+    },
+    {
+      "stationId": "st_重庆之声",
+      "broadcastId": "1330",
+      "name": "重庆之声"
+    },
+    {
+      "stationId": "st_重庆音乐广播",
+      "broadcastId": "372",
+      "name": "重庆音乐广播"
+    },
+    {
+      "stationId": "st_陕西交通广播",
+      "broadcastId": "563",
+      "name": "陕西交通广播"
+    },
+    {
+      "stationId": "st_陕西农村广播",
+      "broadcastId": "564",
+      "name": "陕西农村广播"
+    },
+    {
+      "stationId": "st_陕西新闻广播",
+      "broadcastId": "559",
+      "name": "陕西新闻广播"
+    },
+    {
+      "stationId": "st_陕西音乐广播",
+      "broadcastId": "561",
+      "name": "陕西音乐广播"
+    }
+  ]
+}

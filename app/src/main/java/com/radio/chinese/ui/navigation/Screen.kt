@@ -8,6 +8,10 @@ sealed class Screen(val route: String) {
     }
     /** 音频库（戏曲）全屏播放页：无参数，状态一律读 PlayerManager */
     data object OperaPlayer : Screen("opera_player")
+
+    /** 节目单：按日看所有接入台的全天排播 */
+    data object Epg : Screen("epg")
+
     data object Settings : Screen("settings")
     data object Manage : Screen("manage")
 

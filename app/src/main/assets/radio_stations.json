@@ -41,6 +41,191 @@
       "language": ""
     },
     {
+      "id": "cnr_yyzs",
+      "name": "音乐之声",
+      "category": "music",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/yyzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 90.0",
+      "description": "中央广播电视总台音乐频率，华语流行音乐为主",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/yyzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "cpop"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "cnr_wyzs",
+      "name": "文艺之声",
+      "category": "arts",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/wyzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 106.6",
+      "description": "中央广播电视总台文艺频率，曲艺评书与文学节目",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/wyzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "storytelling"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "cnr_dszs",
+      "name": "经典音乐广播",
+      "category": "music",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/dszs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "FM 101.8",
+      "description": "中央广播电视总台经典音乐频率，原都市之声",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/dszs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "classical"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "cnr_szzs",
+      "name": "神州之声",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/szzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中央广播电视总台对台广播，闽南话与客家话节目",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/szzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "worldnews"
+      ],
+      "country": "中国",
+      "language": "闽南语"
+    },
+    {
+      "id": "cnr_zhzs",
+      "name": "台海之声",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/zhzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中央广播电视总台对台广播，原中华之声",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/zhzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "worldnews"
+      ],
+      "country": "中国",
+      "language": "华语"
+    },
+    {
+      "id": "cnr_hxzs",
+      "name": "大湾区之声",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/hxzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中央广播电视总台粤港澳大湾区粤语广播，原华夏之声",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/hxzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "localnews"
+      ],
+      "country": "中国",
+      "language": "粤语"
+    },
+    {
+      "id": "cnr_xgzs",
+      "name": "香港之声",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/xgzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中央广播电视总台面向香港的粤语广播",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/xgzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [
+        "localnews"
+      ],
+      "country": "中国",
+      "language": "粤语"
+    },
+    {
+      "id": "cnr_mzzs",
+      "name": "民族之声",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/mzzs/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中央广播电视总台民族语言广播，含蒙古语、藏语、维吾尔语、哈萨克语、朝鲜语",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/mzzs/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [],
+      "country": "中国",
+      "language": "多语种"
+    },
+    {
+      "id": "cnr_wygb",
+      "name": "维吾尔语广播",
+      "category": "news",
+      "streamUrl": "https://ngcdn001.cnr.cn/live/wygb/index.m3u8",
+      "logoUrl": "",
+      "frequency": "",
+      "description": "中央广播电视总台维吾尔语广播",
+      "sources": [
+        {
+          "url": "https://ngcdn001.cnr.cn/live/wygb/index.m3u8",
+          "label": "CNR主源",
+          "bitrate": 0
+        }
+      ],
+      "tags": [],
+      "country": "中国",
+      "language": "维吾尔语"
+    },
+    {
       "id": "zj_news",
       "name": "浙江新闻广播",
       "category": "news",

@@ -62,8 +62,8 @@ KEY = f0fc4c668392f9f9a447e48584c214ee   // 公开在前端 JS 里的常量，�
 // domain/model/EpgProgram.kt
 data class EpgProgram(
     val stationId: String,
-    val date: String,     // yyyy-MM-dd（本地时区）
-    val startMin: Int,    // 当天 00:00 起算的分钟数，0..1440
+    val date: String,     // yyyy-MM-dd（按北京时间切的一天）
+    val startMin: Int,    // 北京时间当天 00:00 起算的分钟数，0..1440
     val endMin: Int,      // 跨天时截断到 1440
     val title: String,
 )
@@ -71,7 +71,8 @@ data class EpgProgram(
 
 时间换算一律在解析层完成，UI 与查询只碰 `Int` 分钟，避免各处重复处理时区：
 
-- `startMin = 毫秒时间戳 → 本地时分 → 小时*60+分钟`
+- **时间基准固定为北京时间（`EpgQuery.BROADCAST_ZONE`），不用 `ZoneId.systemDefault()`**。真机验证发现：排播表是北京零点切一天，拿设备时区去切会把北京零点前的档算成负分钟、再被 `coerceIn` 截成 0，非东八区设备半夜那几档会整段消失或挤到 00:00（单测 `主机时区不是北京时仍按北京时间换算` 钉住了这个回归）。代价是海外用户看到的时刻不是当地时间，因此设备时区 ≠ 东八区时，三处 UI 都要标出「北京时间」。
+- `startMin = 毫秒时间戳 → 北京时间时分 → 小时*60+分钟`
 - `endMin`：若结束时间落在次日（`endTime` 的日期 > `startTime` 的日期），截断为 `1440`
 - 丢弃 `endMin <= startMin` 的坏行（数据清洗，不崩）
 
@@ -114,7 +115,7 @@ suspend fun deleteOlderThan(before: String)
 | 同台 30 秒内重复进入 | 不重复请求（内存节流表） |
 | 日期切换 | 切到哪天就请求哪天，缓存命中则不请求 |
 | 请求失败 | 保留旧缓存；UI 显示"数据截至 MM-dd HH:mm"；无旧缓存则整块隐藏 |
-| 跨天 | 查询以本地当前日期为 key，昨天数据不参与"正在播出"计算 |
+| 跨天 | 查询以北京时间当前日期为 key，昨天数据不参与"正在播出"计算 |
 
 清理：每次启动或首次请求时删除 `date < 今天 - 1` 的行。
 
@@ -135,7 +136,7 @@ suspend fun deleteOlderThan(before: String)
 └────────────────────────────────────────┘
 ```
 
-- 每 60 秒按本地时间重算一次（`produceState` + `delay`，离开页面即取消）。
+- 每 60 秒按北京时间重算一次（`produceState` + `delay`，离开页面即取消）。
 - 点击整块 → `ModalBottomSheet` 全天节目单：当前时段用 `primary` 底色高亮，打开时自动滚到当前项可见。
 - 车机档：行高 ≥ `Dimens.TouchMin`，字号跟随 `MaterialTheme.typography`，不另设固定 sp。
 - 无数据：**整个 composable 不渲染**，不留空白、不显示占位文案。
