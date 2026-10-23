@@ -68,3 +68,6 @@ __pycache__/
 # 但体检工具的原始转储不入库：它是每次重跑都会变的 180KB 测量集，
 # 人读的结论 tools/recheck_report.txt 才是要留在仓里的证据。
 tools/recheck_report.json
+# 同理：云听全站扫描的原始转储（约 900 次请求的产物）只当本地缓存，
+# 结论 tools/epg_match_report.txt 入库。映射表本身在 assets/epg_stations.json。
+tools/epg_scan.json
