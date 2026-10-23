@@ -138,7 +138,9 @@ suspend fun deleteOlderThan(before: String)
 
 - 每 60 秒按北京时间重算一次（`produceState` + `delay`，离开页面即取消）。
 - 点击整块 → `ModalBottomSheet` 全天节目单：当前时段用 `primary` 底色高亮，打开时自动滚到当前项可见。
-- 车机档：行高 ≥ `Dimens.TouchMin`，字号跟随 `MaterialTheme.typography`，不另设固定 sp。
+- 车机档：**整块卡片算一个命中区**，不逐行撑到 `Dimens.TouchMin`——两行点开的是同一个 sheet，
+  按行撑高不会多出一个目标，只会把卡片吹高到把播控按钮顶出首屏（真机已踩到）。
+  字号跟随 `MaterialTheme.typography`，不另设固定 sp。
 - 无数据：**整个 composable 不渲染**，不留空白、不显示占位文案。
 
 ### 4.2 独立节目单页

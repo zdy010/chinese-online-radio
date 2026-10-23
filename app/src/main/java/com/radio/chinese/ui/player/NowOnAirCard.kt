@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.radio.chinese.data.repository.EpgSnapshot
 import com.radio.chinese.domain.epg.EpgQuery
 import com.radio.chinese.ui.theme.Dimens
-import com.radio.chinese.ui.theme.isCarSurface
 
 /**
  * 播放页的「此刻在播 / 下一档」小卡片。点击展开全天节目单。
@@ -121,6 +119,10 @@ private fun rememberLabelWidth(): Dp {
 
 /**
  * 一行：标签 · 时段 · 节目名。两行共用同一个 labelWidth，时段列才能对齐。
+ *
+ * 行高不单独撑到 TouchMin：整块卡片才是唯一可点目标（两行点开的是同一个 sheet），
+ * 按行撑高不会多出一个命中区，只会把卡片吹成两大条空白，在 720dp 高的车机横屏上
+ * 把播控按钮顶出首屏。
  */
 @Composable
 private fun EpgLine(
@@ -131,7 +133,6 @@ private fun EpgLine(
     labelWidth: Dp,
 ) {
     Row(
-        modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
