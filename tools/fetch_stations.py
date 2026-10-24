@@ -51,7 +51,22 @@ RB_UA = "chinese-online-radio-sync/1.0 (+https://github.com/zdy010/chinese-onlin
 
 # 盗版转播/聚合站特征串：实测候选池里出现过 vip1.fhbf9.com + 空白台名 + 带日期路径的 m3u8。
 # 这类内容不是发布方自我公开，不进来也不实测。
-PIRATE_HOSTS = ("fhbf9", "ipipgo", "hykt", "190ip", "tvbus", "8555555", "ddtt9")
+# kuwo（酷我）：它把央广等电台频率挂在自己的 antiserver 上转发，转发方不是内容方，
+# 连“镜像源”都不该加（实测候选：CNR-3 音乐之声 @ antiserver.kuwo.cn）。
+PIRATE_HOSTS = ("fhbf9", "ipipgo", "hykt", "190ip", "tvbus", "8555555", "ddtt9", "kuwo")
+
+# 人工裁决名单：逐条看过台名与来源后判定不收的候选。
+# 写成名单而不是手删 JSON——手删的结果下一轮 mine 会被同一批候选又加回来。
+# 口径：台名（归一后）以首项开头 **且** host 含第二项才剔，免得误杀同名正经台。
+MANUAL_DROP = (
+    ("電台測試2", "125.227.87.206"),            # 台名自己写着“测试”，不是正经电台
+    ("休息音乐", "mediacp.eu"),                  # emoji 台名、发布方不可考
+    ("新闻联播", "infomaniak.ch"),               # 央视栏目名挂在 RFI 转发流上，内容标识混乱
+    ("中央人民廣播電台 經濟之聲", "cnr.cn"),      # 与既有 cnr2 经济之声同内容（繁体写法没并上键）
+    ("神州之聲", "satellitepull.cnr.cn"),        # 与既有 cnr_szzs 神州之声同内容（繁体写法）
+    ("郫都综合广播亚洲音乐965", "asiafm.vip"),     # 台名自称区县台、来源却是另一品牌，发布方无法确认
+    ("CNR-7 粵港澳大灣區之聲", "satellitepull.cnr.cn"),  # 被候选源标成“中国澳门”+繁体台名，走人工精选入库
+)
 
 
 def _pirate(host: str) -> bool:
@@ -184,6 +199,9 @@ def match_key(name: str) -> str:
                 n = head
             break
     n = norm_name(n)
+    # 头部“CNR-<n>”这类台标编号不是频道身份（CETV-1/CETV-2 那种才是），不剥就会
+    # 把“CNR-2 经济之声”与已有的“经济之声”写成两台。
+    n = re.sub(r"^cnr\d+", "", n)
     n = _strip_freq_tail(n)
     for suf in _CJK_SUFFIXES:
         s = norm_name(suf)
@@ -271,6 +289,7 @@ def build_entry(name, category, url, cc, country_zh, bitrate, homepage, taken,
     adult 分类走海外式写法（它们几乎全在境外），但 category 保持 adult 而不是 world，
     免得用户在“世界”标签下撞见不该随便出现的内容。
     """
+    url = store_url(url)
     overseas = (cc or "").upper() != "CN"
     cat = category or "general"
     if overseas or cat in ("world", "adult"):
@@ -346,7 +365,7 @@ def apply_mirror(stations, mirrors: dict, max_sources: int = 3) -> list:
                 continue      # 已被另一个电台持有，不能共用
             if not sources and st.get("streamUrl"):
                 sources = [{"url": st["streamUrl"], "label": "主源", "bitrate": 0}]
-            sources.append({"url": u, "label": "镜像源", "bitrate": 0})
+            sources.append({"url": store_url(u), "label": "镜像源", "bitrate": 0})
             have.add(nu)
             owned[nu] = idx
             added_any = True
@@ -400,6 +419,22 @@ def load_play_failed(path=None) -> set:
     return {norm_url(u) for u in (data.get("urls") or []) if u}
 
 
+def _manual_drop(cand: dict, host: str) -> bool:
+    """人工裁决名单命中判定：台名与 host 两个条件缺一不可。"""
+    nn = norm_name(cand.get("name") or "")
+    for key, host_sub in MANUAL_DROP:
+        k = norm_name(key)
+        if k and nn.startswith(k) and host_sub.lower() in host:
+            return True
+    return False
+
+
+# 拼盘型台名：在聚合平台上出现基本等于“某人把别人的作品拼了一条流”。
+# 官方域名上不适用（官方自己编排的选集是正当内容）。
+# “500首华语经典”这类带量的写法与“合集”同义，实测漏过一批。
+REBLOG_NAME = re.compile(r"\d+\s*首|合集|大全|合辑|拼盘|精选")
+
+
 def drop_reason(cand: dict):
     """候选淘汰原因。必须可解释：静默消失的条目以后没人能复查。
 
@@ -407,16 +442,24 @@ def drop_reason(cand: dict):
       裸 IP    —— 实测挡掉了 Radio Caroline、台北 Hit FM、台中廣播等 47 个可用台，
                   小站长用 IP 托管 Shoutcast 是常态，可用就收
       成人标记 —— 项目规定全球源不过滤成人，改为归入 StationCategory 的 adult
-    仍然排除的：盗版转播 CDN（版权边界）、视频流、码率异常非音频。
+    仍然排除的：盗版转播 CDN（版权边界）、人工裁决名单、聚合平台拼盘名、
+    下划线开头的排序花活台名、视频流、码率异常非音频。
     """
     url = (cand.get("url") or "").strip()
     if not url:
         return "no-url"
     if not url.lower().startswith(("http://", "https://")):
         return "not-http"
+    if (cand.get("name") or "").strip().startswith("_"):
+        return "junk-name"
     host = (cand.get("host") or urlparse(url).netloc).lower()
     if _pirate(host):
         return "pirate-cdn"
+    if _manual_drop(cand, host):
+        return "manual-drop"
+    # 聚合平台 + 拼盘名：内容提供方没在这里发布，平台也只是别人传的列表
+    if is_aggregator(host) and REBLOG_NAME.search(cand.get("name") or ""):
+        return "aggregator-reblog"
     if VIDEO_URL_HINT.search(url):
         return "likely-video"
     try:
@@ -631,6 +674,26 @@ def norm_url(u: str) -> str:
     return re.sub(r"[^a-z0-9:/.\-]", "", base)
 
 
+# 只对单次会话生效的 CDN 参数（实测 satellitepull.cnr.cn 会返回这种变体地址）
+SESSION_PARAMS = ("wssession", "wsipsercert", "wsbindip", "wshash")
+
+
+def store_url(url: str) -> str:
+    """落库地址清洗：剔掉会话参数，其余 query 原样保留。
+
+    wsSession 是 CDN 签给那一次拉流的，写进清单就是埋一颗会过期的雷（实测带/不带
+    会话参数的 playlist 都能播出分片，所以剔掉不损失可用性）。
+    不认识的参数一律留下：猜它们没用就会把真正需要的 region/token 剔掉。
+    """
+    u = (url or "").strip()
+    if "?" not in u:
+        return u
+    base, query = u.split("?", 1)
+    keep = [kv for kv in query.split("&")
+            if kv and kv.split("=", 1)[0].lower() not in SESSION_PARAMS]
+    return f"{base}?{'&'.join(keep)}" if keep else base
+
+
 # 聚合平台域名：流可用，但不是播出机构自己的源，地址生命周期与平台策略绑定，优先级低于官方域名
 AGGREGATOR_HOSTS = ("qingting.fm", "qtfm.cn", "ximalaya.com", "xmcdn.com",
                     "zeno.fm", "streamtheworld.com", "revma.com", "listenoutloud")
@@ -784,7 +847,7 @@ def build_selection(alive, stations, country_map=None, max_new: int = 2000):
         # 大陆台新条目：同一台多个官方入口直接写成 sources[]，一入库就能用上多源切源
         extra = list(fresh[1:4])
         if cc == "CN" and extra:
-            entry["sources"] = [{"url": u, "label": ("主源" if i == 0 else "镜像源"), "bitrate": 0}
+            entry["sources"] = [{"url": store_url(u), "label": ("主源" if i == 0 else "镜像源"), "bitrate": 0}
                                 for i, u in enumerate([fresh[0]] + extra)]
         for u in [fresh[0]] + extra:
             taken_urls.add(norm_url(u))

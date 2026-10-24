@@ -39,6 +39,14 @@ class TestNormName(unittest.TestCase):
         """只剥尾部：CETV-1 与 CETV-2 的头部编号是频道身份，剥了会把四个台合成一个。"""
         self.assertNotEqual(fs.match_key("CETV-1伴音"), fs.match_key("CETV-2伴音"))
 
+    def test_match_key_strips_cnr_channel_number_prefix(self):
+        """CNR-2 经济之声 和 经济之声 是同一个台：这里的头部编号不是频道身份，只是台标写法。"""
+        self.assertEqual(fs.match_key("CNR-2 经济之声"), fs.match_key("经济之声"))
+
+    def test_stripping_cnr_prefix_does_not_collapse_the_family(self):
+        """剥前缀不许把 CNR 若干频率并成一个：编号后面的全名才是身份。"""
+        self.assertNotEqual(fs.match_key("CNR-2 经济之声"), fs.match_key("CNR-3 音乐之声"))
+
     def test_bitrate_parenthetical_is_stripped(self):
         """实测坑：“Techno.FM (320 kbit)”与“Techno.FM”是同一个台。"""
         self.assertEqual(fs.match_key("Techno.FM (320 kbit)"), fs.match_key("Techno.FM"))
@@ -237,6 +245,108 @@ class TestPoolSafety(unittest.TestCase):
             "name": "安徽戏曲广播", "tags": "", "host": "satellitepull.cnr.cn",
             "url": "https://satellitepull.cnr.cn/live/wxahxqgb/playlist.m3u8"}))
 
+    def test_third_party_rebroadcast_of_official_channel_is_pirate(self):
+        """酷我（kuwo）不是央广官方：把别人的频率挂到自己服务器上就是第三方转发，
+
+        触“只收官方公开流”红线，连镜像都不能加。
+        """
+        self.assertEqual(fs.drop_reason({
+            "name": "CNR-3 音乐之声", "tags": "chinese",
+            "host": "antiserver.kuwo.cn",
+            "url": "https://antiserver.kuwo.cn/antiserver/divert.do?channel=radio&type=1"}),
+            "pirate-cdn")
+
+    def test_manual_drop_needs_both_name_and_host(self):
+        """人工裁决名单：台名与 host 同时命中才剔，免得误杀同名正经台。"""
+        self.assertEqual(fs.drop_reason({
+            "name": "電台測試2", "tags": "", "host": "125.227.87.206:8000",
+            "url": "http://125.227.87.206:8000/;stream.mp3"}), "manual-drop")
+        self.assertIsNone(fs.drop_reason({
+            "name": "電台測試2", "tags": "", "host": "official.brtv.cn",
+            "url": "https://official.brtv.cn/live/a.m3u8"}))
+
+    def test_manual_drop_does_not_swallow_normal_station(self):
+        self.assertIsNone(fs.drop_reason({
+            "name": "哈尔滨音乐广播", "tags": "", "host": "stream.hrbtv.net",
+            "url": "https://stream.hrbtv.net/live/a.m3u8"}))
+
+    def test_session_token_candidate_is_dropped_for_manual_intake(self):
+        """央广大湾区之声：候选被标成“中国澳门”，繁体台名也不对，走人工精选而不是自动入库。"""
+        self.assertEqual(fs.drop_reason({
+            "name": "CNR-7 粵港澳大灣區之聲", "tags": "cantonese",
+            "host": "satellitepull.cnr.cn",
+            "url": "https://satellitepull.cnr.cn/live/wxhxzs/playlist.m3u8"}), "manual-drop")
+
+    def test_aggregator_collection_name_is_dropped(self):
+        """聚合平台上叫“合集/大全”的条目：发布方不是内容提供方，而是别人拼的别人的作品。
+
+        实测候选：台名“德云社相声合集”挂在 stream.zeno.fm 上——既不是德云社自己的源，
+        也不是 zeno 的内容，收进来就是拿盗版合集充数。
+        """
+        self.assertEqual(fs.drop_reason({
+            "name": "德云社相声合集", "tags": "talk",
+            "host": "stream.zeno.fm",
+            "url": "https://stream.zeno.fm/yqawwmweq8mtv"}), "aggregator-reblog")
+
+    def test_aggregator_channel_with_its_own_brand_is_kept(self):
+        """同一个平台上的自制频道不能误杀：“雨声轻音乐”就是这个台自己的名字。"""
+        self.assertIsNone(fs.drop_reason({
+            "name": "雨声轻音乐", "tags": "relax",
+            "host": "stream.zeno.fm",
+            "url": "https://stream.zeno.fm/689zc32y4x8uv"}))
+
+    def test_official_host_with_collection_wording_is_not_dropped(self):
+        """这条规则只关平台转发：官方域名上的“合集”节目可能是官方自己编排的。"""
+        self.assertIsNone(fs.drop_reason({
+            "name": "豫剧经典合集", "tags": "chinese",
+            "host": "satellitepull.cnr.cn",
+            "url": "https://satellitepull.cnr.cn/live/wxhnys/playlist.m3u8"}))
+
+    def test_counted_greatest_hits_package_is_dropped(self):
+        """“500首华语经典”这类带量的拼盘名跟“合集”同义，不能漏过。"""
+        self.assertEqual(fs.drop_reason({
+            "name": "500首华语经典", "tags": "chinese",
+            "host": "lhttp.qtfm.cn",
+            "url": "http://lhttp.qtfm.cn/live/9876/64k.mp3"}), "aggregator-reblog")
+
+    def test_leading_underscore_name_is_junk(self):
+        """台名以 _ 开头是列表站的排序花活（把自己顶到首屏），不是真台名。"""
+        self.assertEqual(fs.drop_reason({
+            "name": "_Wawa Radio 101.2 FM", "tags": "chinese",
+            "host": "xn--tmz.xn--6frz82g",
+            "url": "https://xn--tmz.xn--6frz82g/wawa.mp3"}), "junk-name")
+
+
+class TestStoreUrl(unittest.TestCase):
+    """落库地址必须剔掉会话参数：wsSession 是签给那一次请求的，写进清单就是一个会过期的定时炸弹。"""
+
+    def test_drops_session_params_and_keeps_others(self):
+        got = fs.store_url("https://satellitepull.cnr.cn/live/a/playlist.m3u8"
+                           "?wsSession=x-1&wsIPSercert=y&region=keep")
+        self.assertEqual("https://satellitepull.cnr.cn/live/a/playlist.m3u8?region=keep", got)
+
+    def test_plain_url_untouched(self):
+        self.assertEqual("http://a/b.m3u8", fs.store_url("http://a/b.m3u8"))
+
+    def test_build_entry_stores_clean_url(self):
+        e = fs.build_entry(
+            name="中国交通广播", category="traffic",
+            url="https://satellitepull.cnr.cn/live/wxzgjtgb/playlist.m3u8"
+                "?wsSession=28e1&wsIPSercert=f7b6",
+            cc="CN", country_zh="", bitrate=0, homepage="", taken=set(),
+        )
+        self.assertEqual("https://satellitepull.cnr.cn/live/wxzgjtgb/playlist.m3u8",
+                         e["streamUrl"])
+
+    def test_overseas_entry_sources_are_clean_too(self):
+        e = fs.build_entry(
+            name="Sabai 90.4", category="world",
+            url="https://satellitepull.cnr.cn/live/x/playlist.m3u8?wsSession=abc",
+            cc="TH", country_zh="泰国", bitrate=128, homepage="", taken=set(),
+        )
+        self.assertEqual("https://satellitepull.cnr.cn/live/x/playlist.m3u8",
+                         e["sources"][0]["url"])
+
 
     def test_video_resolution_url_is_dropped(self):
         """实测坑：cztv 的 360p 频道能通过分层实测（它真有分片），但它是视频不是声音。"""
@@ -343,6 +453,25 @@ class TestBuildSelection(unittest.TestCase):
         alive = [self._cand("河南戏曲广播", "https://official/a.m3u8")]
         new, mirrors, _ = fs.build_selection(alive, self.STATIONS)
         self.assertEqual((new, mirrors), ([], {}))
+
+    def test_cn_multi_source_entry_strips_session_params_in_sources(self):
+        """大陆台新条目一入库就带 sources[]：每个地址都必须过 store_url。
+
+        只洗 streamUrl 不洗 sources 等于把定时炸弹换个口袋放：播放侧读 sources[0]
+        时拿到的仍是签给那一次拉流的 wsSession。
+        """
+        alive = [
+            self._cand("湖北之声", "https://satellitepull.cnr.cn/live/hubz/playlist.m3u8"
+                        "?wsSession=AAA&wsIPSercert=BBB"),
+            self._cand("湖北之声", "http://ngcdn007.cnr.cn/live/hubz/index.m3u8?wsSession=CCC"),
+        ]
+        new, _mirrors, _ = fs.build_selection(alive, [])
+        self.assertEqual(1, len(new))
+        e = new[0]
+        self.assertEqual("https://satellitepull.cnr.cn/live/hubz/playlist.m3u8", e["streamUrl"])
+        self.assertTrue(e["sources"], "CN 台多入口应写成 sources[]")
+        for s in e["sources"]:
+            self.assertNotIn("wsSession", s["url"], s["url"])
 
     def test_brand_new_station_becomes_entry(self):
         alive = [self._cand("湖北之声", "https://x/y.m3u8")]

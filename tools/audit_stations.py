@@ -28,6 +28,10 @@ STATIONS_JSON = ROOT / "app/src/main/assets/radio_stations.json"
 STATION_KT = ROOT / "app/src/main/java/com/radio/chinese/domain/model/StationCategory.kt"
 VERIFIED = ROOT / ".qtest/rb_verified.json"
 
+# 落库地址与实测地址常常只差一组会话参数（wsSession/wsIPSercert），
+# 不先归一就会把“刚洗过地址的台”误报成“无实测记录”。
+from fetch_stations import store_url  # noqa: E402
+
 FIELDS_REQUIRED = {"id", "name", "category", "streamUrl", "sources"}
 
 
@@ -108,7 +112,9 @@ def audit(stations, live_urls=None, prev_ids=None, baseline=None):
 
     if live_urls is not None and prev_ids is not None:
         new = [s for s in stations if s["id"] not in prev_ids]
-        unverified = sorted({s["id"] for s in new for u in entry_urls(s) if u not in live_urls})
+        measured = {store_url(u) for u in live_urls}
+        unverified = sorted({s["id"] for s in new
+                             for u in entry_urls(s) if store_url(u) not in measured})
         checks.append((f"新增 {len(new)} 台的每个地址都有本次 live 实测", not unverified,
                        f"无实测记录 {unverified[:3]}" if unverified else "全部可追溯"))
     return checks
