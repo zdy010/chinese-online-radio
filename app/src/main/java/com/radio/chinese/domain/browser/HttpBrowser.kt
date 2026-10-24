@@ -7,14 +7,20 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-class HttpBrowser(private val okHttpClient: OkHttpClient) : AudioBrowser {
+class HttpBrowser(
+    private val okHttpClient: OkHttpClient,
+    /** 源自身地址：根浏览时 UI 不传 path，回落到它，才不会产出一条 path="" 的假曲目。 */
+    val sourceUrl: String = "",
+) : AudioBrowser {
 
     override suspend fun listChildren(path: String): Result<List<AudioTrack>> = withContext(Dispatchers.IO) {
-        val isHls = path.endsWith(".m3u8", ignoreCase = true)
+        val url = path.ifBlank { sourceUrl }
+        if (url.isBlank()) return@withContext Result.success(emptyList())
+        val isHls = url.endsWith(".m3u8", ignoreCase = true)
         val track = AudioTrack(
-            id = path.hashCode().toString(),
-            name = path.substringAfterLast("/").substringBefore("?"),
-            path = path,
+            id = url.hashCode().toString(),
+            name = url.substringAfterLast("/").substringBefore("?"),
+            path = url,
             isFolder = false,
             isHlsStream = isHls
         )

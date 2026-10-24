@@ -66,8 +66,8 @@ class BrowserSidecarSource @Inject constructor(
         val source = if (ctx.sourceId == 0L) null else repository.getSource(ctx.sourceId)
         return when (source?.type) {
             SourceType.WEBDAV -> WebDavBrowser(webDavClient, source.url, source.username, source.password)
-            SourceType.M3U -> M3uBrowser(okHttpClient)
-            SourceType.HTTP -> HttpBrowser(okHttpClient)
+            SourceType.M3U -> M3uBrowser(okHttpClient, source.url)
+            SourceType.HTTP -> HttpBrowser(okHttpClient, source.url)
             else -> LocalBrowser(appContext)
         }
     }

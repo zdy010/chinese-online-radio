@@ -38,8 +38,8 @@ class BrowserFactory @Inject constructor(
     fun create(source: AudioSource): AudioBrowser = when (source.type) {
         SourceType.WEBDAV -> WebDavBrowser(browseClient(source), source.url, source.username, source.password)
         SourceType.LOCAL -> LocalBrowser(context)
-        SourceType.M3U -> M3uBrowser(okHttpClient)
-        SourceType.HTTP -> HttpBrowser(okHttpClient)
+        SourceType.M3U -> M3uBrowser(okHttpClient, source.url)
+        SourceType.HTTP -> HttpBrowser(okHttpClient, source.url)
     }
 
     /**

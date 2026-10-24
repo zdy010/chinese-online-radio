@@ -6,19 +6,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import javax.inject.Inject
-import javax.inject.Singleton
 
-class M3uBrowser @Inject constructor(
-    private val okHttpClient: OkHttpClient
+class M3uBrowser(
+    private val okHttpClient: OkHttpClient,
+    /** 源自身地址：根浏览时 UI 不传 path，必须能回落到它，否则就是拿空串去建请求。 */
+    val sourceUrl: String,
 ) : AudioBrowser {
 
+    internal fun playlistUrlFor(path: String): String = path.ifBlank { sourceUrl }
+
     override suspend fun listChildren(path: String): Result<List<AudioTrack>> = withContext(Dispatchers.IO) {
+        val url = playlistUrlFor(path)
+        if (url.isBlank()) {
+            return@withContext Result.failure(IllegalArgumentException("M3U 源没有填清单地址"))
+        }
         try {
-            val request = Request.Builder().url(path).build()
+            val request = Request.Builder().url(url).build()
             val response = okHttpClient.newCall(request).execute()
             val body = response.body?.string() ?: return@withContext Result.failure(Exception("Empty response"))
-            val tracks = parseM3u(body, path)
+            val tracks = parseM3u(body, url)
             Result.success(tracks)
         } catch (e: Exception) {
             Result.failure(e)

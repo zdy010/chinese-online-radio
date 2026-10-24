@@ -6,6 +6,7 @@ import com.radio.chinese.domain.SourceType
 import com.radio.chinese.domain.browser.BrowserFactory
 import com.radio.chinese.service.WebDavClient
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -66,5 +67,47 @@ class BrowserFactoryTest {
         assertNull(f.createForIndexing(AudioSource(2, "歌单", SourceType.M3U, "http://x")))
         assertNull(f.createForIndexing(AudioSource(3, "流", SourceType.HTTP, "http://x")))
         assertNotNull(f.createForIndexing(webdav(4, "u", "p")))
+    }
+
+    /**
+     * 根路径必须能自己落到源地址。
+     *
+     * 用户实测坑：`browseSource` 进入一个源时传的是 `listChildren("")`，而此前
+     * M3U/HTTP 两个浏览器只被注了 OkHttpClient，根不知道 `source.url`：
+     * M3U 会 `Request.Builder().url("")` 直接抛异常（点进去永远“加载失败”），
+     * HTTP 会返回一条 `path=""` 的空曲目（点开不可能播）。
+     */
+    @Test fun `M3U 与 HTTP 浏览器拿到源地址`() {
+        val f = factory(mockk(relaxed = true))
+        val m3u = f.create(AudioSource(5, "歌单", SourceType.M3U, "https://host/show.m3u"))
+            as com.radio.chinese.domain.browser.M3uBrowser
+        assertEquals("https://host/show.m3u", m3u.sourceUrl)
+        val http = f.create(AudioSource(6, "流", SourceType.HTTP, "https://host/live.m3u8"))
+            as com.radio.chinese.domain.browser.HttpBrowser
+        assertEquals("https://host/live.m3u8", http.sourceUrl)
+    }
+
+    @Test fun `M3U 根路径解析成清单地址而不是空 URL`() {
+        val b = com.radio.chinese.domain.browser.M3uBrowser(
+            mockk(relaxed = true), "https://host/show.m3u"
+        )
+        assertEquals("https://host/show.m3u", b.playlistUrlFor(""))
+        assertEquals("https://host/other.m3u", b.playlistUrlFor("https://host/other.m3u"))
+    }
+
+    @Test fun `HTTP 源根路径返回真实直链条目`() = runBlocking {
+        val track = com.radio.chinese.domain.browser.HttpBrowser(
+            mockk(relaxed = true), "https://host/live.m3u8"
+        ).listChildren("").getOrThrow().single()
+        assertEquals("https://host/live.m3u8", track.path)
+        assertEquals(true, track.isHlsStream)
+        assertEquals("live.m3u8", track.name)
+    }
+
+    @Test fun `两个地址都为空时不得伪造曲目`() = runBlocking {
+        val tracks = com.radio.chinese.domain.browser.HttpBrowser(
+            mockk(relaxed = true), ""
+        ).listChildren("").getOrThrow()
+        assertEquals("空地址写进列表就是一个点不响的假行", 0, tracks.size)
     }
 }
