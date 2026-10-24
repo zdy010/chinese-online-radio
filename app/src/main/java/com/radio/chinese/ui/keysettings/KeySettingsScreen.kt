@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.service.CarKeyAction
 import com.radio.chinese.service.KeyBinding
 import com.radio.chinese.service.KeyBindingStore
@@ -31,10 +32,18 @@ private const val CAPTURE_TIMEOUT_MS = 30_000L
 
 @HiltViewModel
 class KeySettingsViewModel @Inject constructor(
-    private val store: KeyBindingStore
+    private val store: KeyBindingStore,
+    private val prefs: RadioPreferences
 ) : ViewModel() {
 
     val bindings = store.bindings
+
+    /** 滚轮/方控上下曲方向与直觉相反时打开；只作用于物理媒体键与系统媒体控件 */
+    val reverseWheel = prefs.reverseWheelDirection
+
+    fun setReverseWheel(enabled: Boolean) {
+        viewModelScope.launch { prefs.setReverseWheelDirection(enabled) }
+    }
 
     fun bind(action: CarKeyAction, binding: KeyBinding) {
         viewModelScope.launch { store.bind(action, binding) }
@@ -64,6 +73,7 @@ fun KeySettingsScreen(
     viewModel: KeySettingsViewModel = hiltViewModel()
 ) {
     val bindings by viewModel.bindings.collectAsState()
+    val reverseWheel by viewModel.reverseWheel.collectAsState(initial = false)
     var recordingFor by remember { mutableStateOf<CarKeyAction?>(null) }
     val candidates by KeyCapture.candidates.collectAsState()
 
@@ -133,6 +143,20 @@ fun KeySettingsScreen(
                     )
                     HorizontalDivider()
                 }
+
+                // 车机滚轮物理旋转方向与直觉相反（用户实测问题 2）：给一个开关把上下曲对调，
+                // 默认关，不改现有正确映射，可随时回退
+                ListItem(
+                    headlineContent = { Text("反转滚轮/方控方向") },
+                    supportingContent = { Text("拨轮方向与预期相反时打开，只对调上一曲/下一曲") },
+                    modifier = Modifier
+                        .carTouchTarget()
+                        .clickable { viewModel.setReverseWheel(!reverseWheel) },
+                    trailingContent = {
+                        Switch(checked = reverseWheel, onCheckedChange = { viewModel.setReverseWheel(it) })
+                    }
+                )
+                HorizontalDivider()
 
                 TextButton(
                     onClick = { viewModel.clearAll() },

@@ -210,7 +210,8 @@ class RadioService : MediaSessionService() {
                 else keyBindings.actionFor(keyEvent.keyCode)?.takeIf { it != CarKeyAction.GO_BACK }
                 val name = "${KeyEvent.keyCodeToString(keyEvent.keyCode)}(${keyEvent.keyCode})"
                 when (bound) {
-                    null -> playerManager.handleMediaSkip(keyEvent.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT)
+                    // 未绑定的物理媒体键=滚轮/方控默认上下曲：走可反转+去抖的 wheel 入口
+                    null -> playerManager.handleWheelSkip(keyEvent.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT)
                     CarKeyAction.PLAY_PAUSE -> {
                         KeyDiagnostics.record("媒体键·自定义", name)
                         playerManager.togglePlayPause()
@@ -241,7 +242,9 @@ class RadioService : MediaSessionService() {
                 else -> return SessionResult.RESULT_SUCCESS
             }
             KeyDiagnostics.record("会话命令", commandLabel(command))
-            playerManager.handleMediaSkip(forward)
+            // 系统媒体控件/外部 controller 的上下曲：与滚轮同源，也走可反转+去抖入口，
+            // 免得开了“反转方向”后通知栏按钮与滚轮方向打架
+            playerManager.handleWheelSkip(forward)
             // 媒体键已在按钮层消费；到这里的是系统媒体控件/外部 controller，拒绝默认 seek
             return SessionResult.RESULT_ERROR_NOT_SUPPORTED
         }

@@ -70,10 +70,21 @@ class MainActivity : ComponentActivity() {
             KeyDiagnostics.record("按键", "${KeyEvent.keyCodeToString(event.keyCode)}(${event.keyCode})")
             KeyCapture.offer(event.keyCode)
             // 录制中只攒候选不执行，否则用户按一下就把自己刚绑的键触发了，界面会乱跳
-            if (!KeyCapture.listening.value && !isMediaKeyCode(event.keyCode)) {
-                keyBindings.actionFor(event.keyCode)?.let { action ->
-                    runCarKeyAction(action)
+            if (!KeyCapture.listening.value) {
+                // 前台（如正在显示迷你播放条）时，车机滚轮的上下曲媒体键会送到 Activity 窗口而不是会话；
+                // 不接住就会“拨了没反应”（用户实测问题 3、5）。后台时键走会话，不会到这里；
+                // 即便前台两处都到，handleWheelSkip 的 400ms 去抖也会挡住重复切台。
+                if (event.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT ||
+                    event.keyCode == KeyEvent.KEYCODE_MEDIA_PREVIOUS
+                ) {
+                    playerManager.handleWheelSkip(event.keyCode == KeyEvent.KEYCODE_MEDIA_NEXT)
                     return true
+                }
+                if (!isMediaKeyCode(event.keyCode)) {
+                    keyBindings.actionFor(event.keyCode)?.let { action ->
+                        runCarKeyAction(action)
+                        return true
+                    }
                 }
             }
         }

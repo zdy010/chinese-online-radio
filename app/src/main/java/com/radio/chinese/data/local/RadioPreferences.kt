@@ -330,6 +330,7 @@ class RadioPreferences @Inject constructor(
 
         // 收听增强：线控播报 + 本地优先
         private val KEY_VOICE_ANNOUNCE = booleanPreferencesKey("voice_announce_enabled")
+        private val KEY_REVERSE_WHEEL = booleanPreferencesKey("reverse_wheel_direction")
         private val KEY_PREFERRED_TTS_ENGINE = stringPreferencesKey("preferred_tts_engine")
         private val KEY_PREFERRED_VOICE = stringPreferencesKey("preferred_voice")
         private val KEY_LOCAL_FIRST = booleanPreferencesKey("local_first_enabled")
@@ -373,6 +374,17 @@ class RadioPreferences @Inject constructor(
     val preferredVoice: Flow<String?> = dataStore.data.map { it[KEY_PREFERRED_VOICE] }
     /** 本地节目排序优先，默认开。 */
     val localFirstEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_LOCAL_FIRST] ?: true }
+
+    /**
+     * 反转滚轮/方控的上下曲方向，默认关。
+     * 车机滚轮物理旋转方向与直觉相反时打开；只作用于物理媒体键（下一曲/上一曲），
+     * 不作用于用户显式绑定的按键与通知栏控件以外的语义。
+     */
+    val reverseWheelDirection: Flow<Boolean> = dataStore.data.map { it[KEY_REVERSE_WHEEL] ?: false }
+
+    suspend fun setReverseWheelDirection(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[KEY_REVERSE_WHEEL] = enabled }
+    }
 
     /**
      * 允许为网络源建立节目索引，默认开。

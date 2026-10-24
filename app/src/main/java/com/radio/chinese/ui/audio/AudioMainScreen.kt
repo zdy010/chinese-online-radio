@@ -42,15 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.OperaMiniPlayerBar
 import com.radio.chinese.ui.common.SurfaceTab
 import com.radio.chinese.ui.common.SurfaceTabBar
-import com.radio.chinese.ui.common.bitrateText
-import com.radio.chinese.ui.common.mediaTimeText
 import com.radio.chinese.ui.library.AddSourceDialog
 import com.radio.chinese.ui.library.AudioLibraryScreen
 import com.radio.chinese.ui.library.AudioLibraryViewModel
@@ -81,11 +78,6 @@ fun AudioMainScreen(
     // 播放状态统一读 PlayerManager：网络与本地最终都经由它播出，
     // 此前同时读 ViewModel 和 PlayerManager 两份，切 Tab 时会出现进度不一致。
     val operaFile by playerManager.operaFile.collectAsState()
-    val operaPlaying by playerManager.isPlaying.collectAsState()
-    val operaPos by playerManager.operaPosition.collectAsState()
-    val operaDur by playerManager.operaDuration.collectAsState()
-    val operaBr by playerManager.operaBitrate.collectAsState()
-    val operaRepeat by playerManager.operaRepeatMode.collectAsState()
 
     var lastBackMs by remember { mutableLongStateOf(0L) }
     val ctx = LocalContext.current
@@ -118,29 +110,9 @@ fun AudioMainScreen(
         contentWindowInsets = NestedWindowInsets,
         bottomBar = {
             if (hasPlayer) {
+                // 迷你条只显示正在播放名称，不占进度条与控件；点整条进全屏播放页控制
                 OperaMiniPlayerBar(
                     title = trackTitle,
-                    timeText = mediaTimeText(operaPos, operaDur),
-                    bitrateText = bitrateText(operaBr),
-                    positionMs = operaPos,
-                    durationMs = operaDur,
-                    isPlaying = operaPlaying,
-                    repeatLabel = when (operaRepeat) {
-                        OperaRepeatMode.ALL -> "列表循环"
-                        OperaRepeatMode.ONE -> "单曲循环"
-                        OperaRepeatMode.RANDOM -> "随机播放"
-                    },
-                    onPlayPause = { playerManager.togglePlayPause() },
-                    onPrevious = { playerManager.playOperaPrevious() },
-                    onNext = { playerManager.playOperaNext() },
-                    onStop = { playerManager.stopOpera() },
-                    onCycleRepeat = { playerManager.cycleOperaRepeatMode() },
-                    onSeek = { playerManager.seekOperaTo(it) },
-                    // 这两个方法早就在 PlayerManager 里，只是从未被任何界面调用；
-                    // 步长显式传 10，与图标上的「10」一致
-                    onSeekForward = { playerManager.seekOperaForward(10) },
-                    onSeekBackward = { playerManager.seekOperaBackward(10) },
-                    // 点标题行/展开图标进全屏播放页；九个快捷控件原样保留
                     onClick = onOpenPlayer
                 )
             }
@@ -153,10 +125,8 @@ fun AudioMainScreen(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 placeholder = when {
-                    // 车机档一律保持原文案：它的渲染必须与改造前一致
-                    carSurface -> "搜索音频"
-                    pagerState.currentPage == 0 -> "搜索本地曲目"
                     onNetworkTab -> "搜索曲目（全部来源）"
+                    pagerState.currentPage == 0 -> "搜索本地曲目"
                     else -> "搜索音频"
                 },
                 actions = {
@@ -177,6 +147,52 @@ fun AudioMainScreen(
             val headerVisible = pagerState.currentPage == 1 && uiState.showBrowseContent
             val headerName = uiState.browsingSource?.name ?: ""
 
+            // 输入即跨源搜索，结果列表顶掉页签内容区；清空即回到原来的目录浏览。
+            // 车机档已与手机档对齐（问题 1）：不再把车机排除在搜索态外。
+            val showSearchResults = searchQuery.isNotBlank() && onNetworkTab
+            val searchResultsArea: @Composable (Modifier) -> Unit = { m ->
+                SearchResultsList(
+                    results = uiState.searchResults,
+                    query = searchQuery,
+                    phase = uiState.searchPhase,
+                    indexState = uiState.indexState,
+                    breadcrumbOf = viewModel::breadcrumbFor,
+                    isFavorited = viewModel::isFavorited,
+                    onPlay = viewModel::playSearchResult,
+                    onOpenFolder = { hit ->
+                        // 先退搜索态再跳：searchQuery 不清掉，跳过去的目录会被这个结果列表盖住，
+                        // 看着就像长按了没反应。它是本屏的局部状态，不在 VM 里。
+                        searchQuery = ""
+                        viewModel.openResultFolder(hit)
+                    },
+                    onBuildIndex = viewModel::confirmIndexing,
+                    onAddSource = viewModel::showAddDialog,
+                    onToggleFavorite = { hit ->
+                        val sourceName = uiState.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
+                        viewModel.toggleFavorite(hit.sourceId, hit.path, hit.name, sourceName)
+                    },
+                    modifier = m
+                )
+            }
+            val pagerArea: @Composable (Modifier) -> Unit = { m ->
+                Column(m) {
+                    BrowseSourceHeader(visible = headerVisible, name = headerName)
+                    AudioPagerHost(
+                        pagerState = pagerState,
+                        playerManager = playerManager,
+                        viewModel = viewModel,
+                        searchQuery = searchQuery,
+                        // 必须是 weight 不能是 fillMaxSize：同列里还有顶部库名行，
+                        // fillMaxSize 会让总高超出父容器，溢出的列表项会盖住下方播放条并抢点击
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            // 内容区：搜索态出结果列表，否则出页签宿主
+            val contentArea: @Composable (Modifier) -> Unit = { m ->
+                if (showSearchResults) searchResultsArea(m) else pagerArea(m)
+            }
+
             val railNav = canHostRail(tabs.size)
             if (railNav) {
                 // 横屏：页签改左侧栏，内容区拿到整屏高度
@@ -188,18 +204,7 @@ fun AudioMainScreen(
                         modifier = Modifier.width(Dimens.RailWidth),
                         useRail = railNav,
                     )
-                    Column(modifier = Modifier.weight(1f)) {
-                        BrowseSourceHeader(visible = headerVisible, name = headerName)
-                        AudioPagerHost(
-                            pagerState = pagerState,
-                            playerManager = playerManager,
-                            viewModel = viewModel,
-                            searchQuery = searchQuery,
-                            // 必须是 weight 不能是 fillMaxSize：同列里还有顶部库名行，
-                            // fillMaxSize 会让总高超出父容器，溢出的列表项会盖住下方播放条并抢点击
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    contentArea(Modifier.weight(1f))
                 }
             } else {
                 SurfaceTabBar(
@@ -208,41 +213,7 @@ fun AudioMainScreen(
                     onSelect = onSelectTab,
                     useRail = railNav,
                 )
-                // 手机档：输入即跨源搜索，结果列表顶掉页签内容区；清空即回到原来的目录浏览。
-                // 车机档不进这个分支，保证它的渲染与改造前一致。
-                if (searchQuery.isNotBlank() && !carSurface && onNetworkTab) {
-                    SearchResultsList(
-                        results = uiState.searchResults,
-                        query = searchQuery,
-                        phase = uiState.searchPhase,
-                        indexState = uiState.indexState,
-                        breadcrumbOf = viewModel::breadcrumbFor,
-                        isFavorited = viewModel::isFavorited,
-                        onPlay = viewModel::playSearchResult,
-                        onOpenFolder = { hit ->
-                            // 先退搜索态再跳：searchQuery 不清掉，跳过去的目录会被这个结果列表盖住，
-                            // 看着就像长按了没反应。它是本屏的局部状态，不在 VM 里。
-                            searchQuery = ""
-                            viewModel.openResultFolder(hit)
-                        },
-                        onBuildIndex = viewModel::confirmIndexing,
-                        onAddSource = viewModel::showAddDialog,
-                        onToggleFavorite = { hit ->
-                            val sourceName = uiState.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
-                            viewModel.toggleFavorite(hit.sourceId, hit.path, hit.name, sourceName)
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                } else {
-                    BrowseSourceHeader(visible = headerVisible, name = headerName)
-                    AudioPagerHost(
-                        pagerState = pagerState,
-                        playerManager = playerManager,
-                        viewModel = viewModel,
-                        searchQuery = searchQuery,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                contentArea(Modifier.weight(1f))
             }
         }
     }

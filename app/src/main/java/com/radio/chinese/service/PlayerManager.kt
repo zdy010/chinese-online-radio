@@ -52,6 +52,10 @@ class PlayerManager @Inject constructor(
     @Volatile
     private var pendingSkipTargetId: String? = null
 
+    /** 上一次物理滚轮切台时刻：前台（Activity）与后台（会话）可能对同一次拨轮各投一次，用它去抖 */
+    @Volatile
+    private var lastWheelSkipAt = 0L
+
     /** 当前正在使用的节目源 */
     private val _currentSource = MutableStateFlow<StationSource?>(null)
     val currentSource: StateFlow<StationSource?> = _currentSource
@@ -409,6 +413,22 @@ class PlayerManager @Inject constructor(
             val target = nextStation(stations, baseId, forward) ?: return@launch
             pendingSkipTargetId = target.id
             announceThen(target.name) { playStation(target) }
+        }
+    }
+
+    /**
+     * 物理滚轮/方控“下一曲/上一曲”的统一入口：
+     * 1) 受“反转滚轮方向”开关影响（车机旋转方向与直觉相反时打开）；
+     * 2) 对同一次拨轮的多路投递（前台 Activity 与后台 MediaSession）做 400ms 去抖，
+     *    避免一拨跨两台。UI 播控按钮走 playNext/playPrevious，不经过这里。
+     */
+    fun handleWheelSkip(isNext: Boolean) {
+        scope.launch {
+            val reverse = runCatching { preferences.reverseWheelDirection.first() }.getOrDefault(false)
+            val now = android.os.SystemClock.uptimeMillis()
+            if (now - lastWheelSkipAt < 400L) return@launch
+            lastWheelSkipAt = now
+            handleMediaSkip(if (reverse) !isNext else isNext)
         }
     }
 

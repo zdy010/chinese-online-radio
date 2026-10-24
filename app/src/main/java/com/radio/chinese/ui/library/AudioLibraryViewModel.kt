@@ -91,9 +91,8 @@ class AudioLibraryViewModel @Inject constructor(
     private val _state = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _state.asStateFlow()
 
-    // 形态由 UI 传进来。默认按车机处理：宁可少做一步，也不能误起后台爬取
-    private var surfaceIsCar = true
-
+    // 形态不再参与搜索/索引门控：2026-10-24 决定车机档与手机档对齐，
+    // 跨源搜索与确认式建索引同样开放给车机（仍靠 networkTab 门控限定在「网络」页签）。
     // 跨源搜索只在「网络」页签生效；本地/收藏/最近页签的搜索框仍然只过滤当页列表
     private var networkTab = false
     private var askedThisSession = false
@@ -126,7 +125,7 @@ class AudioLibraryViewModel @Inject constructor(
                 val query = _state.value.searchQuery
                 lastIndexState = agg
                 _state.update { it.copy(indexState = agg) }
-                if (wasRunning && agg !is IndexState.Running && query.isNotBlank() && !surfaceIsCar && networkTab) {
+                if (wasRunning && agg !is IndexState.Running && query.isNotBlank() && networkTab) {
                     runSearch(query)
                 }
             }
@@ -145,7 +144,7 @@ class AudioLibraryViewModel @Inject constructor(
                 // 源列表一变就重算搜索阶段：用户加完源回到搜索页时，搜索框里的字并未改变，
                 // 只靠“搜索词变化”触发的话，界面会永远停在“还没有可索引的网络来源”（看着就是搜索坏了）。
                 val q = _state.value.searchQuery
-                if (q.isNotBlank() && !surfaceIsCar && networkTab) runSearch(q)
+                if (q.isNotBlank() && networkTab) runSearch(q)
             }
         }
     }
@@ -155,17 +154,16 @@ class AudioLibraryViewModel @Inject constructor(
 
     /**
      * 搜索。两个开关都由 UI 传进来（VM 不能读 CompositionLocal / PagerState）：
-     * 车机档保持“当前目录内过滤”；非「网络」页签也绝不走跨源——否则本地页的
-     * 搜索框会去搜网络曲目（用户实测问题 1）。
+     * 非「网络」页签绝不走跨源——否则本地页的搜索框会去搜网络曲目（用户实测问题 1）。
+     * 车机档与手机档已对齐（2026-10-24）：车机同样走跨源搜索，只是靠 networkTab 门控限定在「网络」页签。
      *
-     * 2026-10-18 决定：**绝不主动建索引**。手机档搜到一半发现本机没索引，
+     * 2026-10-18 决定：**绝不主动建索引**。搜到一半发现本机没索引，
      * 只是请用户确认，不自己起爬。
      */
     fun updateSearchQuery(q: String, carSurface: Boolean, networkTab: Boolean = true) {
-        surfaceIsCar = carSurface
         this.networkTab = networkTab
         _state.update { it.copy(searchQuery = q, searchResults = emptyList()) }
-        if (carSurface || !networkTab || q.isBlank()) {
+        if (!networkTab || q.isBlank()) {
             _state.update { it.copy(searchPhase = SearchPhase.Ready, askIndexConfirm = false) }
             return
         }
@@ -196,13 +194,12 @@ class AudioLibraryViewModel @Inject constructor(
     /**
      * 用户点了“建立索引”（或点了“索引可能已过期，点这里更新”）。
      *
-     * 车机档再卡一道：不能只靠“车机档不渲染这个入口”保证零流量，
-     * 任何一处误接都会静默起爬。网络类型不再是前提（2026-10-18 决定）。
+     * 车机档已对齐手机档（2026-10-24）：不再卡车机零流量这道额外门控，
+     * 索引仍只能由用户在本确认入口主动起，绝不自动起爬。网络类型不再是前提。
      */
     fun confirmIndexing() {
         askedThisSession = true
         _state.update { it.copy(askIndexConfirm = false) }
-        if (surfaceIsCar) return
         viewModelScope.launch {
             if (!preferences.webdavIndexEnabled.first()) return@launch
             val targets = repository.webdavSources()

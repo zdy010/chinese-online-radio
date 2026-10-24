@@ -35,7 +35,6 @@ import com.radio.chinese.ui.common.bitrateText
 import com.radio.chinese.ui.common.mediaTimeText
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
-import com.radio.chinese.ui.theme.usesRailNavigation
 
 /**
  * 音频库（戏曲）全屏播放页。
@@ -139,31 +138,15 @@ fun OperaPlayerScreen(
             OperaSpeedRow(current = speed, onPick = { playerManager.setOperaSpeed(it) })
         }
 
-        if (usesRailNavigation()) {
-            // 车机横屏：左信息+内容，右进度+大控件；±10 秒贴主播放键两侧在 ControlRow 内
-            Row(Modifier.fillMaxSize().padding(padding)) {
-                Column(Modifier.weight(1f)) {
-                    info()
-                    contentArea(Modifier.weight(1f))
-                }
-                Column(
-                    Modifier
-                        .width(Dimens.PlayerSideWidth)
-                        .padding(end = Dimens.ScreenPadding, bottom = Dimens.GapLarge)
-                ) {
-                    slider()
-                    controls()
-                    speedRow()
-                }
-            }
-        } else {
-            Column(Modifier.fillMaxSize().padding(padding)) {
-                info()
-                contentArea(Modifier.weight(1f))
-                slider()
-                controls()
-                speedRow()
-            }
+        // 播控一律排在底部横排：车机横屏原先把进度条+控件+倍速塞在右侧定宽栏里，
+        // 与电台播放页「控件在下方」的直觉不一致，很别扭（用户实测问题 6）。
+        // 唱段内容区拿到整屏宽度，反而比左侧窄栏更好读。
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            info()
+            contentArea(Modifier.weight(1f))
+            slider()
+            controls()
+            speedRow()
         }
     }
 }

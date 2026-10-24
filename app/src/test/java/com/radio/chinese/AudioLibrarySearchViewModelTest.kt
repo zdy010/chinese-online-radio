@@ -91,14 +91,19 @@ class AudioLibrarySearchViewModelTest {
         )
     }
 
-    @Test fun `车机档搜索不做全源查询`() = runTest(dispatcher) {
+    /** 2026-10-24 对齐：车机档与手机档同走跨源搜索，不再只当前目录过滤（用户实测问题 1）。 */
+    @Test fun `车机档也走全源查询（对齐手机端）`() = runTest(dispatcher) {
         val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 3469
+        coEvery { env.repo.searchTracks(null, "花木兰", 200) } returns listOf(
+            TrackHit(1, "花木兰", "/豫剧/花木兰.mp3", "/豫剧", 8_000_000),
+            TrackHit(2, "花木兰", "/常香玉/花木兰.mp3", "/常香玉", 8_000_000),
+        )
         val vm = build(env)
         vm.updateSearchQuery("花木兰", carSurface = true)
         advanceUntilIdle()
-        coVerify(exactly = 0) { env.repo.searchTracks(any(), any(), any()) }
         assertEquals("花木兰", vm.uiState.value.searchQuery)
-        assertEquals(emptyList<Any>(), vm.uiState.value.searchResults)
+        assertEquals(1, vm.uiState.value.searchResults.size)
     }
 
     @Test fun `手机档查询走全源并按 name+size 归并`() = runTest(dispatcher) {
@@ -236,18 +241,20 @@ class AudioLibrarySearchViewModelTest {
     }
 
     /**
-     * 车机档不起爬这条不变量必须在 VM 侧也有测试：
-     * 它不能只靠“车机档根本不渲染这个列表”来保证，否则任何一处误接都会静默失效。
+     * 2026-10-24 对齐：车机档确认后同样起爬（用户选了“对齐手机端全功能”），
+     * 索引仍只能由用户在确认入口主动起，绝不自动起爬。
      */
-    @Test fun `车机档即使误调确认也不起爬`() = runTest(dispatcher) {
+    @Test fun `车机档确认后同样起爬（对齐手机端）`() = runTest(dispatcher) {
         val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 0
         coEvery { env.repo.webdavSources() } returns listOf(webdavSource)
         val vm = build(env)
         vm.updateSearchQuery("花木兰", carSurface = true)
         advanceUntilIdle()
+        assertEquals(true, vm.uiState.value.askIndexConfirm)
         vm.confirmIndexing()
         advanceUntilIdle()
-        verify(exactly = 0) { env.indexer.start(any()) }
+        verify(exactly = 1) { env.indexer.start(webdavSource) }
     }
 
     @Test fun `索引状态跨源聚合后进 uiState`() = runTest(dispatcher) {

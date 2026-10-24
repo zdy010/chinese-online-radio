@@ -10,6 +10,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +44,10 @@ fun StationCover(
 ) {
     val container = MaterialTheme.colorScheme
     val (tileBg, tileFg) = placeholderPalette(container, label)
+    // 图片成功加载后隐藏占位缩字：台标多为带透明通道的 PNG，直接叠在底层台名缩写上，
+    // 透明区会把「中国之声→中国」透出来，看着就是 logo 和电台名称重合（车机档封面更大更明显，用户实测问题 4）。
+    // 加载失败仍保留占位，缺图不会变成空洞灰圈。
+    var imageLoaded by remember(url) { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -48,25 +56,27 @@ fun StationCover(
             .background(tileBg),
         contentAlignment = Alignment.Center
     ) {
-        if (label.isNullOrEmpty()) {
-            Icon(
-                imageVector = Icons.Default.Radio,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(size * 0.45f),
-                tint = tileFg
-            )
-        } else {
-            // 中文台名取前两字（“中国之声”->“中国”），拉丁台名取单词首字母
-            // （“BBC World Service”->“BWS”），避免出现“BB”这种没意义的截断。
-            Text(
-                text = coverAbbreviation(label),
-                style = if (label.length > 4) MaterialTheme.typography.titleSmall
-                else MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = tileFg,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
+        if (!imageLoaded) {
+            if (label.isNullOrEmpty()) {
+                Icon(
+                    imageVector = Icons.Default.Radio,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(size * 0.45f),
+                    tint = tileFg
+                )
+            } else {
+                // 中文台名取前两字（“中国之声”->“中国”），拉丁台名取单词首字母
+                // （“BBC World Service”->“BWS”），避免出现“BB”这种没意义的截断。
+                Text(
+                    text = coverAbbreviation(label),
+                    style = if (label.length > 4) MaterialTheme.typography.titleSmall
+                    else MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = tileFg,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+            }
         }
 
         if (!url.isNullOrBlank()) {
@@ -74,7 +84,9 @@ fun StationCover(
                 model = url,
                 contentDescription = contentDescription,
                 modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false }
             )
         }
     }
