@@ -50,13 +50,15 @@ fun OperaPlayerScreen(
     onNavigateBack: () -> Unit,
     viewModel: OperaPlayerViewModel = hiltViewModel()
 ) {
-    val file by playerManager.operaFile.collectAsState()
-    val playing by playerManager.isPlaying.collectAsState()
-    val pos by playerManager.operaPosition.collectAsState()
-    val dur by playerManager.operaDuration.collectAsState()
-    val br by playerManager.operaBitrate.collectAsState()
-    val repeat by playerManager.operaRepeatMode.collectAsState()
-    val speed by playerManager.operaSpeed.collectAsState()
+    // 播控状态统一从 ViewModel 代理读取，不再直接 collect PlayerManager
+    val playback by viewModel.playbackState.collectAsState()
+    val file = playback.file
+    val playing = playback.isPlaying
+    val pos = playback.position
+    val dur = playback.duration
+    val br = playback.bitrate
+    val repeat = playback.repeatMode
+    val speed = playback.speed
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(

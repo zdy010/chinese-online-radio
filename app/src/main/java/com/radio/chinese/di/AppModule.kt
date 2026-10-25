@@ -14,7 +14,10 @@ import com.radio.chinese.data.local.FavoriteDao
 import com.radio.chinese.data.remote.EpgRemoteSource
 import com.radio.chinese.data.remote.YuntingEpgClient
 import com.radio.chinese.data.repository.RoomEpgStore
+import com.radio.chinese.domain.model.LocationSource
 import com.radio.chinese.domain.browser.BrowserFactory
+import com.radio.chinese.domain.browser.SourceLookup
+import com.radio.chinese.domain.browser.WebDavTransport
 import com.radio.chinese.domain.epg.EpgStore
 import dagger.Module
 import dagger.Provides
@@ -142,6 +145,22 @@ object AppModule {
         }.map { raw -> EpgStations.parse(raw).associate { it.stationId to it.broadcastId } }
             .getOrDefault(emptyMap())
     }
+
+    // ========== 定位 ==========
+
+    @Provides
+    @Singleton
+    fun provideLocationSource(impl: com.radio.chinese.service.AndroidLocationSource): LocationSource = impl
+
+    // ========== Domain 接口绑定（消除分层违例） ==========
+
+    @Provides
+    @Singleton
+    fun provideWebDavTransport(impl: com.radio.chinese.service.WebDavClient): WebDavTransport = impl
+
+    @Provides
+    @Singleton
+    fun provideSourceLookup(impl: com.radio.chinese.data.repository.AudioLibraryRepository): SourceLookup = impl
 
     // ========== 后台索引 ==========
 

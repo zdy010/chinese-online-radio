@@ -1,14 +1,13 @@
 package com.radio.chinese.domain.browser
 
 import android.content.Context
-import com.radio.chinese.data.repository.AudioLibraryRepository
 import com.radio.chinese.domain.AudioBrowser
+import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.SourceType
+import com.radio.chinese.domain.model.OperaPlayContext
 import com.radio.chinese.domain.sidecar.SidecarMediaSource
 import com.radio.chinese.domain.sidecar.decodeTextBytes
 import com.radio.chinese.domain.sidecar.sidecarPath
-import com.radio.chinese.service.OperaPlayContext
-import com.radio.chinese.service.WebDavClient
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,6 +18,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * 按 id 查找音频源的接口（domain 层声明，data 层实现）。
+ * BrowserSidecarSource 只需 getSource(id)，不必依赖整个 AudioLibraryRepository。
+ */
+interface SourceLookup {
+    suspend fun getSource(id: Long): AudioSource?
+}
+
+/**
  * 走各源 AudioBrowser.readSidecar 取附属文件：按候选扩展名逐个试，
  * 命中即返回（先 .lrc 后 .LRC；图片 jpg/png 含大写）。字节按派生路径做小容量 LRU 缓存，
  * 换段回来不重复下载。sourceId=0 是本地直连约定：先经 MediaStore 把
@@ -26,8 +33,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class BrowserSidecarSource @Inject constructor(
-    private val repository: AudioLibraryRepository,
-    private val webDavClient: WebDavClient,
+    private val sourceLookup: SourceLookup,
+    private val webDavClient: WebDavTransport,
     private val okHttpClient: OkHttpClient,
     @ApplicationContext private val appContext: Context
 ) : SidecarMediaSource {
@@ -63,7 +70,7 @@ class BrowserSidecarSource @Inject constructor(
     }
 
     private suspend fun browserFor(ctx: OperaPlayContext): AudioBrowser {
-        val source = if (ctx.sourceId == 0L) null else repository.getSource(ctx.sourceId)
+        val source = if (ctx.sourceId == 0L) null else sourceLookup.getSource(ctx.sourceId)
         return when (source?.type) {
             SourceType.WEBDAV -> WebDavBrowser(webDavClient, source.url, source.username, source.password)
             SourceType.M3U -> M3uBrowser(okHttpClient, source.url)

@@ -1,6 +1,8 @@
 package com.radio.chinese.service
 
 import android.util.Log
+import com.radio.chinese.domain.browser.WebDavFile
+import com.radio.chinese.domain.browser.WebDavTransport
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.OperaCategory
 import com.radio.chinese.domain.model.OperaItem
@@ -8,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import com.radio.chinese.BuildConfig
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Credentials
@@ -29,54 +32,52 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-data class WebDavFile(
-    val href: String,
-    val displayName: String,
-    val isFolder: Boolean,
-    val contentLength: Long = 0,
-    val contentType: String = ""
-) {
-    val fileName: String get() = displayName
-    val fileId: String get() = href
-    val size: Long get() = contentLength
-}
+// WebDavFile 已下移到 domain/browser，此处重导出保持 service 内部与测试兼容。
+typealias WebDavFile = com.radio.chinese.domain.browser.WebDavFile
 
 @Singleton
-class WebDavClient @Inject constructor() {
+class WebDavClient @Inject constructor() : WebDavTransport {
 
     companion object {
         private const val TAG = "WebDavClient"
     }
 
-    /** WebDAV 连接凭证 */
-    var serverUrl: String = ""
+    /** WebDAV 连接凭证。@Volatile 保证多线程读写可见性，RadioService 建 DataSource 时读到一致快照。 */
+    @Volatile override var serverUrl: String = ""
         set(value) { if (field != value) { field = value; clearCache() } }
-    var username: String = ""
+    @Volatile override var username: String = ""
         set(value) { if (field != value) { field = value; clearCache() } }
-    var password: String = ""
+    @Volatile override var password: String = ""
         set(value) { if (field != value) { field = value; clearCache() } }
+
+    /** 原子设置全部凭证（减少中间态窗口）。 */
+    fun setCredentials(url: String, user: String, pass: String) {
+        // 先写密码再写 username：RadioService 判 username.isNotEmpty() 才加 header，
+        // 反序会短暂出现“username 非空但 password 还是旧值”的窗口。
+        password = pass
+        username = user
+        serverUrl = url
+    }
 
     /** 目录列表缓存 */
     private val listFilesCache = java.util.concurrent.ConcurrentHashMap<String, List<WebDavFile>>()
 
     /** 清除缓存（凭证变化时调用） */
-    fun clearCache() { listFilesCache.clear() }
+    override fun clearCache() { listFilesCache.clear() }
 
     private val client by lazy {
-        // 创建信任所有证书的TrustManager（用于开发测试，生产环境应该使用正式的证书验证）
+        // 车机自签 WebDAV 常见：始终信任所有证书（安全收紧应独立立项，用 network_security_config 按域名白名单）
         val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
             override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
             override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         })
-
         val sslContext = SSLContext.getInstance("SSL")
         sslContext.init(null, trustAllCerts, SecureRandom())
-        val sslSocketFactory = sslContext.socketFactory
 
         OkHttpClient.Builder()
-            .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
-            .hostnameVerifier { _, _ -> true } // 信任所有主机名
+            .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -106,10 +107,14 @@ class WebDavClient @Inject constructor() {
         </D:propfind>
     """.trimIndent().toRequestBody(xmlMediaType)
 
-    fun authHeader(): String = Credentials.basic(username, password)
+    /** 一次性快照读取凭证拼接 Authorization 头，避免读到半更新状态。 */
+    override fun authHeader(): String {
+        val u = username
+        val p = password
+        return Credentials.basic(u, p)
+    }
 
-    /** 验证连接是否有效 - 返回详细错误信息 */
-    suspend fun verifyConnection(): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun verifyConnection(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
                 .url(serverUrl)
@@ -149,8 +154,7 @@ class WebDavClient @Inject constructor() {
         }
     }
 
-    /** 列出目录下的文件和文件夹 */
-    suspend fun listFiles(path: String = "/"): List<WebDavFile> = withContext(Dispatchers.IO) {
+    override suspend fun listFiles(path: String): List<WebDavFile> = withContext(Dispatchers.IO) {
         // 先查缓存
         listFilesCache[path]?.let { return@withContext it }
 
@@ -180,8 +184,7 @@ class WebDavClient @Inject constructor() {
         files
     }
 
-    /** 获取文件的下载/流媒体URL */
-    fun getFileUrl(path: String): String {
+    override fun getFileUrl(path: String): String {
         val url = normalizeUrl(path)
         Log.d(TAG, "getFileUrl: path=$path, url=$url")
         return url
@@ -194,7 +197,7 @@ class WebDavClient @Inject constructor() {
      * 显式凭证版 GET：sidecar 取料在 IO 线程上与列表页并发时，不读写单例可变凭证字段——
      * 否则多账号源（123 云盘四个快捷码）会把 B 账号的 Basic 凭证发往 A 主机（终审 I2）。
      */
-    suspend fun getBytes(path: String, serverUrl: String, username: String, password: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+    override suspend fun getBytes(path: String, serverUrl: String, username: String, password: String): Result<ByteArray> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder()
                 .url(normalizeUrl(path, serverUrl))

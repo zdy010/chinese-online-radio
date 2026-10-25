@@ -1,12 +1,11 @@
 package com.radio.chinese.data.local
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-@Serializable
-data class CityPoint(val name: String, val province: String, val lat: Double, val lng: Double)
+// CityPoint 已下移到 domain/model，此处重导出保持兼容。
+typealias CityPoint = com.radio.chinese.domain.model.CityPoint
 
-@Serializable
+@kotlinx.serialization.Serializable
 private data class CityListRaw(val cities: List<CityPoint> = emptyList())
 
 /** 解析离线城市坐标表（供 NearestCityFinder 把设备经纬度映射到最近城市）。 */

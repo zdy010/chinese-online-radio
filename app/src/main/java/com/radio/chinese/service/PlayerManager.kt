@@ -13,7 +13,9 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.OperaAudioFile
+import com.radio.chinese.domain.model.OperaPlayContext
 import com.radio.chinese.domain.model.OperaSpeed
+import com.radio.chinese.domain.model.nextOperaContext
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -84,9 +86,11 @@ class PlayerManager @Inject constructor(
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected
 
-    private var pendingStation: RadioStation? = null
+    // ========== 拆出的专职引擎 ==========
 
-    /** 当前尝试播放的源队列 */
+    private val positionTracker = OperaPositionTracker()
+
+    /** 当前电台队列状态（SourceRotationEngine 集成前保持内联） */
     private var sourceQueue: List<StationSource> = emptyList()
     private var sourceQueueIndex: Int = 0
 
@@ -135,12 +139,10 @@ class PlayerManager @Inject constructor(
     private val _operaMediaMetadata = MutableStateFlow<MediaMetadata?>(null)
     val operaMediaMetadata: StateFlow<MediaMetadata?> = _operaMediaMetadata
 
+    private var pendingStation: RadioStation? = null
     private var pendingOpera: OperaAudioFile? = null
     private var pendingOperaPlaylist: List<OperaAudioFile> = emptyList()
     private var pendingOperaLocalPath: String? = null
-
-    private var operaPositionUpdater: java.lang.Runnable? = null
-    private val operaPositionHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     fun connect() {
         // 后台预热播报引擎，避免首次线控切台才付枚举/冷启动代价（已缓存则直接返回）
@@ -548,6 +550,7 @@ class PlayerManager @Inject constructor(
         val playlist = _operaPlaylist.value
         val idx = _operaIndex.value
         if (playlist.isEmpty() || idx < 0 || idx >= playlist.size - 1) {
+            stopOperaPositionUpdater()
             _isOperaMode.value = false
             return
         }
@@ -632,25 +635,21 @@ class PlayerManager @Inject constructor(
     }
 
     private fun startOperaPositionUpdater() {
-        stopOperaPositionUpdater()
-        val updater = object : java.lang.Runnable {
-            override fun run() {
-                if (!_isOperaMode.value) return
-                val ctrl = controller ?: return
-                if (ctrl.isPlaying) {
-                    _operaPosition.value = ctrl.currentPosition
-                    _operaDuration.value = ctrl.duration.coerceAtLeast(0)
-                }
-                operaPositionHandler.postDelayed(this, 1000)
+        positionTracker.start(
+            reader = {
+                val ctrl = controller ?: return@start null
+                if (!ctrl.isPlaying || !_isOperaMode.value) null
+                else (ctrl.currentPosition to ctrl.duration.coerceAtLeast(0))
+            },
+            onTick = { pos, dur ->
+                _operaPosition.value = pos
+                _operaDuration.value = dur
             }
-        }
-        operaPositionUpdater = updater
-        operaPositionHandler.post(updater)
+        )
     }
 
     private fun stopOperaPositionUpdater() {
-        operaPositionUpdater?.let { operaPositionHandler.removeCallbacks(it) }
-        operaPositionUpdater = null
+        positionTracker.stop()
     }
 
     fun stopOpera() {
@@ -718,17 +717,5 @@ fun nextStation(stations: List<RadioStation>, currentId: String?, forward: Boole
 /** 戏曲播放循环模式。 */
 enum class OperaRepeatMode { ALL, ONE, RANDOM }
 
-/**
- * 戏曲点播上下文：sourceId=0 是约定值，表示本地直连（MediaStore/文件路径，无库记录无鉴权）。
- * 附属文件（歌词/封面）靠它找回浏览器与凭证。
- */
-data class OperaPlayContext(val sourceId: Long, val trackPath: String)
-
-/** 纯函数便于单测：显式 context 优先；内部切段保留 sourceId 只换 trackPath；无路可推时保持旧值。 */
-internal fun nextOperaContext(
-    old: OperaPlayContext?,
-    file: OperaAudioFile,
-    explicit: OperaPlayContext?
-): OperaPlayContext? = explicit ?: old?.let { o ->
-    (file.sourcePath ?: file.downloadUrl)?.let { o.copy(trackPath = it) } ?: o
-}
+// OperaPlayContext 和 nextOperaContext 已下移到 domain/model，此处重导出保持兼容。
+typealias OperaPlayContext = com.radio.chinese.domain.model.OperaPlayContext

@@ -1,5 +1,6 @@
 package com.radio.chinese.data.local
 
+import com.radio.chinese.domain.model.GazetteerData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -24,16 +25,10 @@ private data class ProvinceRaw(
  * 解析逻辑独立成纯函数，JVM 单测才能直接校验真词表的合法性（对齐 StationJson 的做法）。
  */
 object RegionGazetteer {
-    data class Data(
-        val citiesToProvince: Map<String, String>,
-        val provinceNames: List<String>,
-        /** 直辖市（省市同名）：北京/上海/天津/重庆。命中它们时同时填 city，便于按 tier3 匹配。 */
-        val municipalities: Set<String>,
-    )
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    fun parse(text: String): Data {
+    fun parse(text: String): GazetteerData {
         val raw = json.decodeFromString<GazetteerRaw>(text)
         val map = LinkedHashMap<String, String>()
         val municipalities = LinkedHashSet<String>()
@@ -43,6 +38,6 @@ object RegionGazetteer {
             for (a in p.aliases) map.putIfAbsent(a, p.name)
             if (p.cities.size == 1 && p.cities.first() == p.name) municipalities.add(p.name)
         }
-        return Data(map, raw.provinces.map { it.name }, municipalities)
+        return GazetteerData(map, raw.provinces.map { it.name }, municipalities)
     }
 }

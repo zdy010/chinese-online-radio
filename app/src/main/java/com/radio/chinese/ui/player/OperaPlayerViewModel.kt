@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.radio.chinese.domain.sidecar.LrcLine
 import com.radio.chinese.domain.sidecar.LrcParser
 import com.radio.chinese.domain.sidecar.SidecarMediaSource
+import com.radio.chinese.domain.model.OperaAudioFile
+import com.radio.chinese.domain.model.OperaSpeed
 import com.radio.chinese.service.OperaPlayContext
+import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -18,6 +22,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -32,6 +37,20 @@ data class OperaPlayerUiState(
     val currentIndex: Int = -1,
     val coverBytes: ByteArray? = null,
     val coverSource: CoverSource = CoverSource.NONE
+)
+
+/**
+ * 戏曲播放页的合并播控状态（代理 PlayerManager 的 7 条独立 Flow）。
+ * UI 只读这个，不直接依赖 PlayerManager 单例。
+ */
+data class OperaPlaybackState(
+    val file: OperaAudioFile? = null,
+    val isPlaying: Boolean = false,
+    val position: Long = 0L,
+    val duration: Long = 0L,
+    val bitrate: Int = 0,
+    val repeatMode: OperaRepeatMode = OperaRepeatMode.ALL,
+    val speed: Float = OperaSpeed.DEFAULT,
 )
 
 /**
@@ -56,6 +75,34 @@ class OperaPlayerViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(OperaPlayerUiState())
     val uiState: StateFlow<OperaPlayerUiState> = _uiState.asStateFlow()
+
+    /** 合并播控状态：代理 PlayerManager 的 7 条独立 Flow，UI 层不再直接依赖单例。 */
+    val playbackState: StateFlow<OperaPlaybackState> = combine(
+        combine(playerManager.operaFile, playerManager.isPlaying, playerManager.operaPosition) { f, p, pos -> Triple(f, p, pos) },
+        combine(playerManager.operaDuration, playerManager.operaBitrate, playerManager.operaRepeatMode) { d, b, r -> Triple(d, b, r) },
+        playerManager.operaSpeed
+    ) { (file, playing, pos), (dur, br, repeat), speed ->
+        OperaPlaybackState(file, playing, pos, dur, br, repeat, speed)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly,
+        OperaPlaybackState(
+            playerManager.operaFile.value, playerManager.isPlaying.value,
+            playerManager.operaPosition.value, playerManager.operaDuration.value,
+            playerManager.operaBitrate.value, playerManager.operaRepeatMode.value,
+            playerManager.operaSpeed.value,
+        ))
+
+    // ========== 播控动作代理 ==========
+
+    fun togglePlayPause() = playerManager.togglePlayPause()
+    fun playNext() = playerManager.playOperaNext()
+    fun playPrevious() = playerManager.playOperaPrevious()
+    fun seekTo(pos: Long) = playerManager.seekOperaTo(pos)
+    fun seekForward(sec: Long = 10) = playerManager.seekOperaForward(sec)
+    fun seekBackward(sec: Long = 10) = playerManager.seekOperaBackward(sec)
+    fun stop() = playerManager.stopOpera()
+    fun cycleRepeat() = playerManager.cycleOperaRepeatMode()
+    fun setSpeed(speed: Float) = playerManager.setOperaSpeed(speed)
+    fun cycleSpeed() = playerManager.cycleOperaSpeed()
 
     private val keys = combine(playerManager.operaFile, playerManager.operaContext) { file, ctx ->
         (file?.fileId ?: -1L) to ctx

@@ -6,7 +6,7 @@ import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.domain.model.NearestCityFinder
 import com.radio.chinese.domain.model.Region
 import com.radio.chinese.domain.model.resolveRegion
-import com.radio.chinese.service.AndroidLocationSource
+import com.radio.chinese.domain.model.LocationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.first
 class RegionRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: RadioPreferences,
-    private val locationSource: AndroidLocationSource,
+    private val locationSource: LocationSource,
 ) {
     private val cities by lazy {
         CityCoordinates.parse(

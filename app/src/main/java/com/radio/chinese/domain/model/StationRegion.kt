@@ -1,7 +1,5 @@
 package com.radio.chinese.domain.model
 
-import com.radio.chinese.data.local.RegionGazetteer
-
 /** 地区页第一级的两个大段：中国（按省，含港澳台）与国外（按国家）。 */
 enum class RegionSection { CN, FOREIGN }
 
@@ -159,7 +157,7 @@ object StationRegion {
      */
     fun bucketize(
         stations: List<RadioStation>,
-        gazetteer: RegionGazetteer.Data,
+        gazetteer: GazetteerData,
         userProvince: String = "",
     ): List<RegionBucket> {
         val central = mutableListOf<RadioStation>()

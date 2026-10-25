@@ -1,8 +1,8 @@
 package com.radio.chinese
 
 import com.radio.chinese.domain.model.OperaAudioFile
-import com.radio.chinese.service.OperaPlayContext
-import com.radio.chinese.service.nextOperaContext
+import com.radio.chinese.domain.model.OperaPlayContext
+import com.radio.chinese.domain.model.nextOperaContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

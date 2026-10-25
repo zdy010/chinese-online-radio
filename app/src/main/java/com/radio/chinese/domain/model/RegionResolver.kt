@@ -1,7 +1,5 @@
 package com.radio.chinese.domain.model
 
-import com.radio.chinese.data.local.RegionGazetteer
-
 /**
  * 从台名/简介文本反推省/市。全国电台最常见命名是“省名在前 + 市名在后”，
  * 故不能只取位置最靠前的键（那样会总被判成省）。规则：
@@ -10,7 +8,7 @@ import com.radio.chinese.data.local.RegionGazetteer
  * - 无命中 => NONE。纯函数、不碰 Android，单测直接拿真词表跑。
  */
 object RegionResolver {
-    fun infer(text: String, country: String, gazetteer: RegionGazetteer.Data): Region {
+    fun infer(text: String, country: String, gazetteer: GazetteerData): Region {
         if (text.isBlank()) return Region.NONE
         var bestCity: String? = null
         var bestCityPos = Int.MAX_VALUE

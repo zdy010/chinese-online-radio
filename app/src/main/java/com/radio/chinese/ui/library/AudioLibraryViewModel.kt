@@ -294,17 +294,30 @@ class AudioLibraryViewModel @Inject constructor(
 
     // ========== 浏览 ==========
 
+    /**
+     * 浏览操作模板：创建浏览器 → 执行仓库动作 → 统一写回结果。
+     * 5 个浏览入口的唯一差异只在于调用前的状态准备与所用的仓库方法，
+     * 此处把重复的 loading/success/failure 三段收进一个函数。
+     */
+    private suspend fun executeBrowse(
+        source: AudioSource,
+        path: String,
+        action: suspend (AudioSource, String, AudioBrowser) -> Result<List<AudioTrack>>
+    ) {
+        val browser = createBrowser(source)
+        action(source, path, browser)
+            .onSuccess { items ->
+                _state.update { it.copy(isLoading = false, browseItems = items) }
+            }
+            .onFailure { e ->
+                _state.update { it.copy(isLoading = false, error = e.message) }
+            }
+    }
+
     fun browseSource(source: AudioSource) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null, browsingSource = source, showBrowseContent = true, browsePath = "", browseHistory = emptyList()) }
-            val browser = createBrowser(source)
-            repository.refreshDir(source, "", browser)
-                .onSuccess { items ->
-                    _state.update { it.copy(isLoading = false, browseItems = items) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
-                }
+            executeBrowse(source, "") { s, p, b -> repository.refreshDir(s, p, b) }
         }
     }
 
@@ -312,14 +325,7 @@ class AudioLibraryViewModel @Inject constructor(
         val source = _state.value.browsingSource ?: return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, browsePath = path, browseHistory = it.browseHistory + path) }
-            val browser = createBrowser(source)
-            repository.listChildren(source, path, browser)
-                .onSuccess { items ->
-                    _state.update { it.copy(isLoading = false, browseItems = items) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
-                }
+            executeBrowse(source, path) { s, p, b -> repository.listChildren(s, p, b) }
         }
     }
 
@@ -356,14 +362,7 @@ class AudioLibraryViewModel @Inject constructor(
                     browseHistory = emptyList(),
                 )
             }
-            val browser = createBrowser(source)
-            repository.listChildren(source, hit.parentPath, browser)
-                .onSuccess { items ->
-                    _state.update { it.copy(isLoading = false, browseItems = items) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
-                }
+            executeBrowse(source, hit.parentPath) { s, p, b -> repository.listChildren(s, p, b) }
         }
     }
 
@@ -379,29 +378,15 @@ class AudioLibraryViewModel @Inject constructor(
         val source = _state.value.browsingSource ?: return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, browseHistory = prev, browsePath = parentPath) }
-            val browser = createBrowser(source)
-            repository.listChildren(source, parentPath, browser)
-                .onSuccess { items ->
-                    _state.update { it.copy(isLoading = false, browseItems = items) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
-                }
+            executeBrowse(source, parentPath) { s, p, b -> repository.listChildren(s, p, b) }
         }
     }
 
     fun refreshBrowse() {
         val source = _state.value.browsingSource ?: return
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            val browser = createBrowser(source)
-            repository.refreshDir(source, _state.value.browsePath, browser)
-                .onSuccess { items ->
-                    _state.update { it.copy(isLoading = false, browseItems = items, error = null) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message) }
-                }
+            _state.update { it.copy(isLoading = true, error = null) }
+            executeBrowse(source, _state.value.browsePath) { s, p, b -> repository.refreshDir(s, p, b) }
         }
     }
 

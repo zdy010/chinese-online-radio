@@ -3,6 +3,7 @@ package com.radio.chinese
 import androidx.media3.common.MediaMetadata
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.sidecar.SidecarMediaSource
+import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.OperaPlayContext
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.player.CoverSource
@@ -41,6 +42,11 @@ class OperaPlayerViewModelTest {
     private val ctxFlow = MutableStateFlow<OperaPlayContext?>(null)
     private val posFlow = MutableStateFlow(0L)
     private val metaFlow = MutableStateFlow<MediaMetadata?>(null)
+    private val playingFlow = MutableStateFlow(false)
+    private val durFlow = MutableStateFlow(0L)
+    private val brFlow = MutableStateFlow(0)
+    private val repeatFlow = MutableStateFlow(OperaRepeatMode.ALL)
+    private val speedFlow = MutableStateFlow(1.0f)
     private lateinit var pm: PlayerManager
 
     @Before fun setup() {
@@ -49,6 +55,11 @@ class OperaPlayerViewModelTest {
         every { pm.operaContext } returns ctxFlow
         every { pm.operaPosition } returns posFlow
         every { pm.operaMediaMetadata } returns metaFlow
+        every { pm.isPlaying } returns playingFlow
+        every { pm.operaDuration } returns durFlow
+        every { pm.operaBitrate } returns brFlow
+        every { pm.operaRepeatMode } returns repeatFlow
+        every { pm.operaSpeed } returns speedFlow
         // 严格 mockk：seekToLine 会真调到 seekOperaTo，不 stub 会抛
         every { pm.seekOperaTo(any()) } returns Unit
     }

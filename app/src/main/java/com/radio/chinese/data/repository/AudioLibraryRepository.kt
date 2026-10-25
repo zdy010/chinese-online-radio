@@ -4,6 +4,7 @@ import com.radio.chinese.data.CredentialManager
 import com.radio.chinese.data.dao.*
 import com.radio.chinese.data.entity.*
 import com.radio.chinese.domain.*
+import com.radio.chinese.domain.browser.SourceLookup
 import com.radio.chinese.domain.model.IndexQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,7 +18,7 @@ class AudioLibraryRepository @Inject constructor(
     private val favoriteDao: AudioFavoriteDao,
     private val recentDao: AudioRecentDao,
     private val credentialManager: CredentialManager
-) {
+) : SourceLookup {
     // ========== 音频源 ==========
 
     val allSources: Flow<List<AudioSource>> = sourceDao.getAllFlow().map { entities ->
@@ -26,7 +27,7 @@ class AudioLibraryRepository @Inject constructor(
 
     suspend fun getSources(): List<AudioSource> = sourceDao.getAll().map { it.toDomain() }
 
-    suspend fun getSource(id: Long): AudioSource? = sourceDao.getById(id)?.toDomain()
+    override suspend fun getSource(id: Long): AudioSource? = sourceDao.getById(id)?.toDomain()
 
     suspend fun saveSource(name: String, type: SourceType, url: String, username: String, password: String): Long {
         val id = sourceDao.insert(

@@ -5,7 +5,6 @@ import com.radio.chinese.domain.AudioBrowser
 import com.radio.chinese.domain.AudioSource
 import com.radio.chinese.domain.BrowserProvider
 import com.radio.chinese.domain.SourceType
-import com.radio.chinese.service.WebDavClient
 import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.OkHttpClient
 import javax.inject.Inject
@@ -25,15 +24,15 @@ import javax.inject.Singleton
 class BrowserFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient,
-    private val sharedWebDavClient: WebDavClient,
+    private val sharedWebDavClient: WebDavTransport,
 ) : BrowserProvider {
 
-    /** 索引客户端工厂；测试里替换成计数假件。 */
-    internal var indexClientFactory: () -> WebDavClient = { WebDavClient() }
+    /** 索引客户端工厂；由 DI 提供，测试里替换成计数假件。 */
+    internal var indexClientFactory: () -> WebDavTransport = { sharedWebDavClient }
 
-    fun browseClient(source: AudioSource): WebDavClient = sharedWebDavClient
+    fun browseClient(source: AudioSource): WebDavTransport = sharedWebDavClient
 
-    fun indexClient(source: AudioSource): WebDavClient = indexClientFactory()
+    fun indexClient(source: AudioSource): WebDavTransport = indexClientFactory()
 
     fun create(source: AudioSource): AudioBrowser = when (source.type) {
         SourceType.WEBDAV -> WebDavBrowser(browseClient(source), source.url, source.username, source.password)

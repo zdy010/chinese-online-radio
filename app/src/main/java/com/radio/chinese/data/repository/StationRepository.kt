@@ -5,6 +5,7 @@ import com.radio.chinese.data.RegionRepository
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.local.RegionGazetteer
 import com.radio.chinese.data.local.SourceAvailabilityStore
+import com.radio.chinese.domain.model.GazetteerData
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.RegionResolver
 import com.radio.chinese.domain.model.StationFilter
@@ -34,7 +35,7 @@ class StationRepository @Inject constructor(
      * 省市词表：本地优先排序与地区页分组共用同一份，避免两处各读一次 assets、各维护一套命中规则。
      * 首次访问会读盘，调用方应在后台线程触发（HomeViewModel 的 regionBuckets 已 flowOn(Default)）。
      */
-    val gazetteer: RegionGazetteer.Data by lazy {
+    val gazetteer: GazetteerData by lazy {
         RegionGazetteer.parse(
             context.assets.open("region_gazetteer.json").bufferedReader().use { it.readText() }
         )

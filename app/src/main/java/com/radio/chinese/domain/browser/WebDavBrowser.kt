@@ -3,7 +3,6 @@ package com.radio.chinese.domain.browser
 import com.radio.chinese.domain.AudioBrowser
 import com.radio.chinese.domain.AudioTrack
 import com.radio.chinese.domain.PlayableTrack
-import com.radio.chinese.service.WebDavClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -15,7 +14,7 @@ import kotlinx.coroutines.withContext
  * 只有并发爬取的索引器才另建独立实例（`listFilesCache` 的 key 不含源，共用会跨源串数据）。
  */
 class WebDavBrowser(
-    val client: WebDavClient,
+    val client: WebDavTransport,
     val serverUrl: String,
     val username: String,
     val password: String

@@ -9,6 +9,8 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import com.radio.chinese.domain.model.Coords
+import com.radio.chinese.domain.model.LocationSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,11 +20,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
-data class Coords(val lat: Double, val lng: Double)
-
-interface LocationSource {
-    suspend fun currentCoords(): Coords?
-}
+// Coords 和 LocationSource 已下移到 domain/model，此处保留重导出使既有 service 内部引用不破坏。
+typealias Coords = com.radio.chinese.domain.model.Coords
+typealias LocationSource = com.radio.chinese.domain.model.LocationSource
 
 /**
  * 车机多为安卓 10、无 Google Play 服务：走系统 LocationManager，不用 FusedLocation。
