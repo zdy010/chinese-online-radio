@@ -19,6 +19,10 @@ val gitCommitCount: Int by lazy {
     } catch (_: Exception) { 1 }
 }
 
+// 2.0 大版本线的起点提交数：修订号 = 当前提交数 − 该基线，使 2.x 的修订号从 0 重新起算。
+// 定在 200（宣布 2.0.0 时的 HEAD 提交数）；此后每提交一次，修订号自动 +1。
+val version2Base = 200
+
 // Load keystore properties for release signing
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -100,7 +104,8 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = gitCommitCount
-        versionName = "1.0.$gitCommitCount"
+        // 2.0 大版本：主版本 2，次/修订号从 0 重新起算（修订号 = 提交数 − 基线，仍自动递增）
+        versionName = "2.0.${(gitCommitCount - version2Base).coerceAtLeast(0)}"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         setProperty("archivesBaseName", "chinese-online-radio")
     }
