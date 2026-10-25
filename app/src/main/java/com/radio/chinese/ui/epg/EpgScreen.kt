@@ -39,6 +39,7 @@ import com.radio.chinese.domain.epg.EpgQuery
 import com.radio.chinese.ui.common.AppSearchField
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.Dimens
@@ -190,23 +191,21 @@ private fun EpgStationCard(
                 )
                 Spacer(modifier = Modifier.height(Dimens.GapTiny))
                 if (current != null) {
-                    Text(
+                    MarqueeText(
                         text = current.title + " · " +
                             EpgQuery.formatRange(current.startMin, current.endMin),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                 }
                 if (next != null) {
                     Spacer(modifier = Modifier.height(Dimens.GapTiny))
-                    Text(
+                    MarqueeText(
                         text = "接下来 " + EpgQuery.formatMinute(next.startMin) + " " + next.title,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
                 // 旧数据才标注时间；正常刷新不占这一行

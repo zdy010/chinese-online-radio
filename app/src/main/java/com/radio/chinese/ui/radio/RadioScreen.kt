@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Radio
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -81,18 +80,13 @@ fun RadioScreen(
             onValueChange = { searchQuery = it },
             placeholder = "搜索电台、频率或节目",
             actions = {
-                // 节目单与设置同排：两个都是全屏入口，不该占用筛选条的位置
+                // 只留节目单：它是「这一屏内容」的入口；设置是全局一级入口，
+                // 已移到与电台/音频库并列的底部导航，不再挤在搜索行里
                 IconButton(
                     onClick = onNavigateToEpg,
                     modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
                 ) {
                     Icon(Icons.Default.CalendarMonth, contentDescription = "节目单")
-                }
-                IconButton(
-                    onClick = onNavigateToSettings,
-                    modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
-                ) {
-                    Icon(Icons.Default.Settings, contentDescription = "设置")
                 }
             }
         )

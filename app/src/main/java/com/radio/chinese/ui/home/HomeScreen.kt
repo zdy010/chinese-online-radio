@@ -36,9 +36,11 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.ErrorState
 import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.SectionHeader
+import com.radio.chinese.ui.common.StatusChip
 import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.common.StationSubtitleText
@@ -57,6 +59,8 @@ fun HomeScreen(
     showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val epgNowTitles by viewModel.epgNowTitles.collectAsState()
+    val epgStationIds = viewModel.epgStationIds
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
     val playbackState by viewModel.playerManager.playbackState.collectAsState()
@@ -134,7 +138,9 @@ fun HomeScreen(
                                 onNavigateToPlayer(station.id)
                             },
                             onFavoriteClick = { viewModel.toggleFavorite(station.id) },
-                            onLongClick = { actionStation = station }
+                            onLongClick = { actionStation = station },
+                            nowProgram = epgNowTitles[station.id],
+                            hasEpg = station.id in epgStationIds,
                         )
                     }
 
@@ -329,7 +335,9 @@ fun StationListItem(
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onLongClick: (() -> Unit)? = null
+    onLongClick: (() -> Unit)? = null,
+    nowProgram: String? = null,
+    hasEpg: Boolean = false,
 ) {
     // 不传 onLongClick 时保持原来的 clickable：只在需要长按弹菜单的页面才升级，
     // 避免给分类页等复用方添上不需要的长按响应
@@ -378,9 +386,22 @@ fun StationListItem(
                             modifier = Modifier.size(Dimens.GapLarge)
                         )
                     }
+                    // 已接入节目单的台挂一个标记：与此刻有无在播节目无关，空档时也要在
+                    if (hasEpg) {
+                        Spacer(modifier = Modifier.width(Dimens.GapSmall))
+                        StatusChip(text = "单")
+                    }
                 }
                 // 副标题规则在 stationSubtitle 一处定义，与播放器、管理页共用
                 StationSubtitleText(station = station)
+                // 正在播出的节目名：太长时单行走马灯滚动，不折行顶高列表行
+                if (!nowProgram.isNullOrBlank()) {
+                    MarqueeText(
+                        text = "正在播出：$nowProgram",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = Dimens.GapTiny)
+                    )
+                }
             }
 
             // Favorite Button

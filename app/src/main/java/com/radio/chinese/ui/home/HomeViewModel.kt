@@ -8,6 +8,7 @@ import com.radio.chinese.data.repository.EpgRepository
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.epg.EpgQuery
+import com.radio.chinese.domain.epg.nowPlayingTitles
 import com.radio.chinese.domain.model.EpgProgram
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.Region
@@ -20,6 +21,7 @@ import com.radio.chinese.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -69,6 +72,22 @@ class HomeViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
     private val _recentIds = MutableStateFlow<List<String>>(emptyList())
+
+    /**
+     * 列表里那行「正在播出」的标题：stationId → 此刻在播节目名。
+     * 只由本地当天缓存算出，未接入或此刻在空档的台不出现在这里。
+     */
+    private val _epgNowTitles = MutableStateFlow<Map<String, String>>(emptyMap())
+    val epgNowTitles: StateFlow<Map<String, String>> = _epgNowTitles
+
+    /** 接入节目单的台 id 集合，列表据此给台名挂标记。与时间无关，直接来自映射表。 */
+    val epgStationIds: Set<String> get() = epgRepository.stationIds
+
+    // 当天缓存快照：批量补齐后刷新它，每分钟只据它重算标题，不重复打接口
+    private var epgProgramsByStation: Map<String, List<EpgProgram>> = emptyMap()
+    // 快照对应的北京日期：跨过零点后它仍是昨天，据此判断要不要重拉当天
+    private var epgSnapshotDate: String? = null
+    private var epgTicker: Job? = null
 
     val uiState: StateFlow<HomeUiState> = combine(
         combine(_stations, _favoriteIds, _customIds) { s, f, c -> Triple(s, f, c) },
@@ -146,6 +165,7 @@ class HomeViewModel @Inject constructor(
         observeFavorites()
         observeRecentStations()
         observeRegionChanges()
+        startEpgTicker()
     }
 
     /**
@@ -174,6 +194,9 @@ class HomeViewModel @Inject constructor(
                 _stations.value = stationRepository.getActiveStations()
                 _customIds.value = stationRepository.getCustomStations().map { it.id }.toSet()
                 _error.value = null
+                // 台库到手后顺手补齐一次节目单缓存：首次进列表就能看到「正在播出」，
+                // 之后每分钟只重算标题，不再打接口（loadAll 内部命中 6 小时缓存）
+                refreshEpgCache()
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {
@@ -197,6 +220,47 @@ class HomeViewModel @Inject constructor(
                 _recentIds.value = ids
             }
         }
+    }
+
+    /**
+     * 批量补齐接入台的当天节目缓存。与节目单页共用同一份缓存与限流：
+     * loadAll 内部逐台走 [EpgRepository.load]，命中 6 小时 TTL 就不重拉。
+     * 拉完刷新快照并立即重算一次标题，不等下一分钟的 tick。
+     */
+    private fun refreshEpgCache() {
+        val ids = epgRepository.stationIds
+        if (ids.isEmpty()) return
+        viewModelScope.launch {
+            val date = LocalDate.now(EpgQuery.BROADCAST_ZONE).toString()
+            epgRepository.loadAll(ids, date)
+            epgProgramsByStation = epgRepository.cachedPrograms(date).groupBy { it.stationId }
+            epgSnapshotDate = date
+            recomputeEpgTitles()
+        }
+    }
+
+    /**
+     * 每分钟跟一次当前档。节目档按分钟切换，但列表顺序不动——
+     * 与 [com.radio.chinese.ui.epg.EpgViewModel] 同一个取舍：每分钟抖行序会让下滑的手跟丢。
+     * 同一天内只做纯内存重算不发请求；只有跨过北京零点（快照日期落后于今天）才重拉一次当天缓存。
+     */
+    private fun startEpgTicker() {
+        if (epgTicker?.isActive == true) return
+        epgTicker = viewModelScope.launch {
+            while (true) {
+                delay(60_000L)
+                val today = LocalDate.now(EpgQuery.BROADCAST_ZONE).toString()
+                // 跨过北京零点：快照还是昨天的排播，纯重算只会把今天的节目名筛成空，
+                // 必须重拉当天缓存；同一天内则只重算，不打接口。
+                if (today != epgSnapshotDate) refreshEpgCache() else recomputeEpgTitles()
+            }
+        }
+    }
+
+    private fun recomputeEpgTitles() {
+        val date = LocalDate.now(EpgQuery.BROADCAST_ZONE).toString()
+        val minute = EpgQuery.minuteOf(LocalDateTime.now(EpgQuery.BROADCAST_ZONE))
+        _epgNowTitles.value = nowPlayingTitles(epgProgramsByStation, date, minute, epgRepository.stationIds)
     }
 
     fun selectCategory(category: String?) {

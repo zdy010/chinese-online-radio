@@ -19,9 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import com.radio.chinese.domain.epg.EpgQuery
 import com.radio.chinese.domain.model.EpgProgram
+import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.theme.Dimens
 
@@ -107,13 +107,12 @@ private fun EpgDayRow(program: EpgProgram, isCurrent: Boolean) {
             color = content,
             maxLines = 1
         )
-        Text(
+        MarqueeText(
             text = program.title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-            color = content,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                color = content,
+            ),
             modifier = Modifier
                 .padding(start = Dimens.GapLarge)
                 .weight(1f)

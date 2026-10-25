@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Radio
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -141,9 +143,11 @@ fun MainScreen(
     val bottomNavItems = listOf(
         BottomNavItem(Screen.Radio, "电台", Icons.Default.Radio, Icons.Outlined.Radio),
         BottomNavItem(Screen.Audio, "音频库", Icons.Default.LibraryMusic, Icons.Outlined.LibraryMusic),
+        // 设置是全局一级入口，不该挤在搜索行里：与电台/音频库并列为第三个底部项
+        BottomNavItem(Screen.Settings, "设置", Icons.Default.Settings, Icons.Outlined.Settings),
     )
 
-    val showBottomBar = currentRoute in listOf(Screen.Radio.route, Screen.Audio.route)
+    val showBottomBar = currentRoute in listOf(Screen.Radio.route, Screen.Audio.route, Screen.Settings.route)
 
     Scaffold(
         bottomBar = {

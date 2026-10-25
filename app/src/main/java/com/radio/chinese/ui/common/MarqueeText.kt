@@ -22,7 +22,8 @@ import kotlinx.coroutines.isActive
 
 /**
  * 超长文本自动滚动（走马灯效果）
- * 当文本宽度超过容器宽度时自动左右滚动，否则正常显示省略号
+ * 当文本宽度超过容器宽度时单向左推循环（滚到头停一下再回起点重滚，不倒带），
+ * 否则正常显示省略号
  */
 @Composable
 fun MarqueeText(
@@ -81,10 +82,8 @@ private fun MarqueeAnimatingText(text: String, style: TextStyle, textWidthPx: In
                 animationSpec = tween(durationMillis = scrollDuration, easing = LinearEasing)
             )
             delay(pauseMs)
-            offsetAnim.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(durationMillis = scrollDuration, easing = LinearEasing)
-            )
+            // 瞬回起点重新左推，不能倒带回去：倒退那一段文字是从后往前读的，很违和
+            offsetAnim.snapTo(0f)
         }
     }
 

@@ -18,11 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.data.repository.EpgSnapshot
 import com.radio.chinese.domain.epg.EpgQuery
+import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.theme.Dimens
 
 /**
@@ -150,13 +150,12 @@ private fun EpgLine(
             maxLines = 1
         )
         Spacer(modifier = Modifier.width(Dimens.GapSmall))
-        Text(
+        MarqueeText(
             text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (emphasized) FontWeight.Medium else FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (emphasized) FontWeight.Medium else FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
             modifier = Modifier.weight(1f)
         )
     }
