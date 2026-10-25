@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -408,6 +409,8 @@ private fun bucketIcon(bucket: RegionBucket): ImageVector = when {
     bucket.key == StationRegion.CENTRAL -> Icons.Default.AccountBalance
     bucket.key == StationRegion.LOCAL -> Icons.Default.MyLocation
     bucket.key == StationRegion.OTHER -> Icons.Default.MoreHoriz
+    // 电视伴音不是地区，图标必须与省/国家那把图钉分开，否则看上去又是一个普通分组
+    bucket.key == StationRegion.TV_AUDIO -> Icons.Default.Tv
     bucket.section == RegionSection.FOREIGN -> Icons.Default.Language
     else -> Icons.Default.Place
 }

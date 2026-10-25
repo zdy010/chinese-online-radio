@@ -303,4 +303,78 @@ class StationRegionTest {
         )
         assertEquals(listOf("浙江", "湖南"), buckets.map { it.label })
     }
+
+    // ---- 电视伴音独立成组 ----
+    // 以前“湖南卫视伴音”会被词表推成湖南、和湖南的电台排在同一组；CCTV-1 伴音则靠台名
+    // 关键词进中央台。用户要的是：地区页里电视伴音自己一组，且不再在省份里重复出现。
+    // 判定只看 category 一个来源，不再拿台名关键词猜内容类型。
+
+    private fun byCat(id: String, name: String, category: String, country: String = "中国") =
+        RadioStation(id = id, name = name, category = category, description = "", country = country)
+
+    @Test
+    fun `电视伴音独立成组，不再散进省份与中央台`() {
+        val buckets = StationRegion.bucketize(
+            listOf(
+                byCat("st_cctv1", "CCTV-1综合伴音", "tv_audio"),
+                byCat("st_hnws", "湖南卫视伴音", "tv_audio"),
+                byCat("cnr1", "中国之声", "news"),
+                byCat("zjxw", "浙江新闻广播", "news"),
+            ),
+            g,
+        )
+        assertEquals(
+            listOf(
+                StationRegion.CENTRAL,
+                StationRegion.provinceKey("浙江"),
+                StationRegion.TV_AUDIO,
+            ),
+            buckets.map { it.key },
+        )
+        val tv = buckets.last()
+        assertEquals("电视伴音", tv.label)
+        assertEquals(RegionSection.CN, tv.section)
+        assertEquals(listOf("CCTV-1综合伴音", "湖南卫视伴音"), tv.stations.map { it.name }.sorted())
+        assertTrue(
+            "伴音不许同时计入所属省份，否则同一个台在两个分组里都能点到",
+            buckets.first { it.key == StationRegion.provinceKey("浙江") }.stations
+                .none { it.category == "tv_audio" },
+        )
+    }
+
+    @Test
+    fun `没有伴音时不产出空分组`() {
+        val buckets = StationRegion.bucketize(listOf(byCat("zj2", "浙江新闻广播", "news")), g)
+        assertTrue(buckets.none { it.key == StationRegion.TV_AUDIO })
+    }
+
+    @Test
+    fun `写港澳或缺国家的伴音仍进伴音组，不掉进地区或国外段`() {
+        // 凤凰中文台 country=中国香港、另一台 country 空但 id 是 gl_：两者以前
+        // 会被地区页分到「香港」与「国家未标注」；内容形态优先于地域
+        val buckets = StationRegion.bucketize(
+            listOf(
+                byCat("gl_hk_phx", "凤凰中文台", "tv_audio", "中国香港"),
+                byCat("gl_us_no_country", "某外语卫视", "tv_audio", ""),
+            ),
+            g,
+        )
+        assertEquals(listOf(StationRegion.TV_AUDIO), buckets.map { it.key })
+        assertEquals(RegionSection.CN, buckets.single().section)
+        assertEquals(2, buckets.single().stations.size)
+    }
+
+    @Test
+    fun `体育与戏曲分类的 CCTV 伴音仍归中央台`() {
+        // 清单里 CCTV-5体育伴音= sports、CCTV-11戏曲伴音= opera（按内容分类的既定规则），
+        // 它们不是 tv_audio，必须继续走台名关键词进中央台，不能掉进「其他」
+        val buckets = StationRegion.bucketize(
+            listOf(
+                byCat("st_cctv5", "CCTV-5体育伴音", "sports"),
+                byCat("st_cctv11", "CCTV-11戏曲伴音", "opera"),
+            ),
+            g,
+        )
+        assertEquals(listOf(StationRegion.CENTRAL), buckets.map { it.key })
+    }
 }

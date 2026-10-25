@@ -4,6 +4,7 @@ import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.domain.model.TtsProbe
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +23,10 @@ import java.util.Locale
 /**
  * 线控切台语音播报。依赖设备已装的中文 TTS：
  * - 偏好里有 引擎包名+音色名 就用它；否则跨所有引擎按 VoiceScoring 选一个默认最优。
+ * - 候选由 [AndroidVoiceCatalog] 给出，其中包含「不指定引擎、由系统解析默认合成器」与
+ *   「无音色清单但能念中文」两条车机常见路径，不再因枚举不到音色就不播。
  * - 无引擎 / 无中文音色 / 初始化失败 / speak 不回调，一律静默降级（speak 返回 false），绝不卡住切台。
+ * - 解析全失败后进冷却窗口，窗口内不再重跑枚举与多引擎冷绑定；设置页「重新检测」可立即重置。
  * - speak 内部 3.5s 超时兜底，防止引擎挂起。
  */
 @Singleton
@@ -34,17 +38,26 @@ class TtsAnnouncer @Inject constructor(
     @Volatile private var tts: TextToSpeech? = null
     @Volatile private var chosen: TtsOption? = null
     private val engineMutex = Mutex()
+    private val retryGate = TtsProbe.RetryGate(PROBE_COOLDOWN_MS)
 
     private companion object {
         const val SPEAK_TIMEOUT_MS = 3_500L
         const val SPEAK_RATE = 1.1f
+        const val ENGINE_INIT_TIMEOUT_MS = 3_000L
+        const val PROBE_COOLDOWN_MS = 5 * 60 * 1000L
     }
 
     /** 依当前偏好或跨引擎选优，确保一个可用的中文引擎就绪。check-then-act 于互斥锁内，避免并发重复初始化/泄漏。 */
     private suspend fun ensureReady(): TextToSpeech? = engineMutex.withLock {
         (tts?.takeIf { chosen != null })?.let { return@withLock it }
-        val target = resolveOption() ?: return@withLock null
-        val engine = initEngine(target.enginePackage) ?: return@withLock null
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (retryGate.blocked(now)) return@withLock null
+        val target = resolveOption()
+        val engine = target?.let { initEngine(it.enginePackage) }
+        if (target == null || engine == null) {
+            retryGate.block(android.os.SystemClock.elapsedRealtime())
+            return@withLock null
+        }
         runCatching {
             engine.language = Locale.forLanguageTag(target.voice.localeTag)
             target.voice.name.let { vn -> engine.voices?.firstOrNull { it.name == vn }?.let { engine.voice = it } }
@@ -55,6 +68,11 @@ class TtsAnnouncer @Inject constructor(
         chosen = target
         tts = engine
         engine
+    }
+
+    /** 装完引擎或改完可见性后重置，让下一次切台立刻重走完整探测。 */
+    fun resetProbeCooldown() {
+        retryGate.reset()
     }
 
     private suspend fun resolveOption(): TtsOption? {
@@ -69,12 +87,14 @@ class TtsAnnouncer @Inject constructor(
         return options.firstOrNull { it.voice == best }
     }
 
+    /** 空包名候选 = 不指定引擎，由系统按默认合成器解析。 */
     private suspend fun initEngine(pkg: String): TextToSpeech? = withContext(Dispatchers.Default) {
         val deferred = CompletableDeferred<Boolean>()
-        val engine = TextToSpeech(context, { status ->
+        val listener = TextToSpeech.OnInitListener { status ->
             deferred.complete(status == TextToSpeech.SUCCESS)
-        }, pkg)
-        val ok = withTimeoutOrNull(2_000) { deferred.await() } == true
+        }
+        val engine = if (pkg.isBlank()) TextToSpeech(context, listener) else TextToSpeech(context, listener, pkg)
+        val ok = withTimeoutOrNull(ENGINE_INIT_TIMEOUT_MS) { deferred.await() } == true
         if (!ok) {
             runCatching { engine.shutdown() }
             null
@@ -87,8 +107,9 @@ class TtsAnnouncer @Inject constructor(
     }
 
     /** 预热：提前在后台解析引擎/音色并初始化，避免首次切台才付冷启动代价。 */
-    suspend fun warmUp() {
+    suspend fun warmUp(refresh: Boolean = false) {
         if (!preferences.voiceAnnounceEnabled.first()) return
+        if (refresh) retryGate.reset()
         ensureReady()
     }
 

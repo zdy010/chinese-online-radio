@@ -8,7 +8,7 @@ enum class RegionSection { CN, FOREIGN }
  * 只承载分组结果，界面文案由 [label] 提供。
  */
 data class RegionBucket(
-    /** 稳定 key（central / local / other / country:? / province:<省名> / country:<国名>），Compose 列表 key 用 */
+    /** 稳定 key（central / local / other / tv_audio / country:? / province:<省名> / country:<国名>），Compose 列表 key 用 */
     val key: String,
     /** 界面文案：中央台 / 本地 · 浙江 / 浙江 / 美国 / 国家未标注 */
     val label: String,
@@ -24,8 +24,10 @@ data class RegionBucket(
  * [RegionResolver]（「本地优先」排序在用），451 个台里 229 个能直接推出省份。
  * 再加一份手工维护的省份字段，等于给同一件事留两个真相来源，改数据要同步两处。
  *
- * 判定顺序：境外 > 中央 > 省市推断 > 未归类。
- * 境外必须排在最前：197 个 gl_ 台名字是英文，不会命中省市词表，但 country 有值。
+ * 判定顺序：电视伴音 > 境外 > 中央 > 省市推断 > 未归类。
+ * 伴音排在最前：它是内容形态不是地域属性，“云南卫视伴音”以前会被推成云南、
+ * 与云南的电台排同一组，同一个台在两个分组里都能点到。
+ * 境外必须排在最前（在省市推断之前）：197 个 gl_ 台名字是英文，不会命中省市词表，但 country 有值。
  */
 object StationRegion {
     const val CENTRAL = "central"
@@ -33,6 +35,11 @@ object StationRegion {
     const val OTHER = "other"
     /** country 缺失、又靠 gl_ 前缀判为境外的台：没有国家可以分，单独一组不混进中国段 */
     const val UNKNOWN_COUNTRY = "country:?"
+
+    /** 分组 key 与 label 都取自分类枚举，不在这里另写一份“电视伴音”。 */
+    val TV_AUDIO: String get() = StationCategory.TV_AUDIO.key
+
+    fun isTvAudio(station: RadioStation): Boolean = station.category == StationCategory.TV_AUDIO.key
 
     fun provinceKey(province: String): String = "province:$province"
     fun countryKey(country: String): String = "country:$country"
@@ -42,7 +49,9 @@ object StationRegion {
      * 和两百个境外台、电视伴音混在一起，等于没有地区页。
      * cnr/cri 走 id 前缀，其余国际台与中央级电视伴音靠台名里的特征词。
      *
-     * CCTV/CETV 已确认归进中央台，不另开一组：它们确实是国家级覆盖。
+     * CCTV/CETV 这两个词必须继续留着：它们现在只服务**非 tv_audio 分类**的中央级伴音
+     *（清单里 CCTV-5体育伴音= sports、CCTV-11戏曲伴音= opera，是按内容分类定的），
+     * 删了它们就会从中央台掉进「其他」。category=tv_audio 的台已在循环开头另开一组。
      */
     private val CENTRAL_MARKERS = listOf(
         "环球", "南海之声", "世界华声", "粤语国际",
@@ -149,8 +158,8 @@ object StationRegion {
     /**
      * 切分。只返回非空分组；省/国家各自按台数降序（同台数按名）。
      *
-     * 输出分两大段：先中国（中央台、本地、各省、其他），再国外（按国家）。
-     * 港澳台落在中国的省级组里，不与外国并列。
+     * 输出分两大段：先中国（中央台、本地、各省、其他、电视伴音），再国外（按国家）。
+     * 港澳台落在中国的省级组里，不与外国并列；电视伴音不分地区，单独一组。
      *
      * [userProvince] 非空且该省有台时额外产出一个「本地」组，它引用的是同一个省分组里的台，
      * 不会把该省从省份列表摘掉——用户既要点得快的快捷入口，也要能按省逐个浏览。
@@ -163,10 +172,16 @@ object StationRegion {
         val central = mutableListOf<RadioStation>()
         val other = mutableListOf<RadioStation>()
         val unlisted = mutableListOf<RadioStation>()
+        val tvAudio = mutableListOf<RadioStation>()
         val byProvince = LinkedHashMap<String, MutableList<RadioStation>>()
         val byCountry = LinkedHashMap<String, MutableList<RadioStation>>()
 
         for (station in stations) {
+            // 内容形态优先于地域：伴音只进伴音组，不再出现在省份/中央台/国外段里
+            if (isTvAudio(station)) {
+                tvAudio += station
+                continue
+            }
             if (isOverseas(station)) {
                 val country = foreignCountry(station)
                 if (country.isBlank()) unlisted += station
@@ -202,6 +217,12 @@ object StationRegion {
         }
         if (other.isNotEmpty()) {
             buckets += RegionBucket(OTHER, "其他", other.sortedBy { it.name }, RegionSection.CN)
+        }
+        // 伴音不按地区分，放中国段末尾：它不是“一个地区”，排在省份前面会挤掉用户找本地电台的路
+        if (tvAudio.isNotEmpty()) {
+            buckets += RegionBucket(
+                TV_AUDIO, StationCategory.TV_AUDIO.label, tvAudio.sortedBy { it.name }, RegionSection.CN
+            )
         }
 
         // 国外不再打成一个「境外台」大桶：161 个台堆在一起等于没分，

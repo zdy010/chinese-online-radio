@@ -31,5 +31,18 @@ enum class StationCategory(val key: String, val label: String) {
 
         /** 供下拉与筛选条使用，顺序即展示顺序。 */
         fun ordered(): List<Pair<String, String>> = entries.map { it.key to it.label }
+
+        /**
+         * 浏览视图（首页 chips 与分类网格）的顺序：电视伴音置顶。
+         *
+         * 它是「内容形态」而不是又一个节目类型，近六十台混在类型串里很难直达；
+         * 其余类的相对顺序保持不变，免得置顶顺手打乱了用户记住的格子位置。
+         * 不动 [ordered]：那份是管理页/添加电台下拉的取值来源。
+         */
+        fun orderedForBrowse(): List<Pair<String, String>> {
+            val all = ordered()
+            val tv = all.first { it.first == TV_AUDIO.key }
+            return listOf(tv) + all.filterNot { it.first == TV_AUDIO.key }
+        }
     }
 }

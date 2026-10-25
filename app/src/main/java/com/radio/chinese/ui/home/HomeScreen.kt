@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import com.radio.chinese.domain.epg.EpgQuery
 import com.radio.chinese.domain.model.EpgProgram
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.ErrorState
@@ -93,6 +94,17 @@ fun HomeScreen(
         }
     ) { padding ->
         Column(modifier = if (showTopBar) Modifier.padding(padding) else Modifier) {
+            // 电视伴音直达入口：它是内容形态而不是又一个节目类型，近六十台挤在 chips 串里很难一击命中。
+            // 状态只复用 chips 那一份 selectedCategory：再建一个开关会出现“点了卡、chip 不亮”，
+            // 用户以为进错了页；再点一次卡就回到全部，与点当前 chip 的行为一致。
+            val tvKey = StationCategory.TV_AUDIO.key
+            TvAudioEntryCard(
+                count = uiState.stations.count { it.category == tvKey },
+                selected = uiState.selectedCategory == tvKey,
+                onClick = { viewModel.selectCategory(if (uiState.selectedCategory == tvKey) null else tvKey) },
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+
             // Category Chips (无空行)
             CategoryChipsRow(
                 categories = uiState.categories,
@@ -234,6 +246,53 @@ fun HomeScreen(
                 actionStation = null
             }
         )
+    }
+}
+
+/**
+ * 首页顶部的电视伴音直达卡。台数为 0 时整张卡不渲染：
+ * 留一个点进去是空列表的入口，比不给入口更让人困惑。
+ */
+@Composable
+private fun TvAudioEntryCard(count: Int, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    if (count <= 0) return
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .carTouchTarget()
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.CardPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Tv,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(Dimens.IconLarge),
+            )
+            Spacer(modifier = Modifier.width(Dimens.GapMedium))
+            Column(Modifier.weight(1f)) {
+                Text("电视伴音", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    text = "$count 台 · 不区分地区",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // 选中态给个看得见的对勾：只靠底色深浅在车机屏上区分不出来
+            if (selected) {
+                Icon(Icons.Default.Check, contentDescription = "已在看电视伴音", tint = MaterialTheme.colorScheme.primary)
+            }
+        }
     }
 }
 

@@ -131,7 +131,7 @@ class StationRepository @Inject constructor(
     }
 
     fun getCategories(): List<Pair<String, String>> =
-        com.radio.chinese.domain.model.StationCategory.ordered()
+        com.radio.chinese.domain.model.StationCategory.orderedForBrowse()
 
     // ---- 自定义电台 ----
 

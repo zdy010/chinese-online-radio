@@ -22,7 +22,12 @@ import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.local.RegionGazetteer
 import com.radio.chinese.data.RegionRepository
+import com.radio.chinese.domain.model.CandidateSource
+import com.radio.chinese.domain.model.EngineProbe
 import com.radio.chinese.domain.model.Region
+import com.radio.chinese.domain.model.TtsReport
+import com.radio.chinese.domain.model.TtsVerdict
+import com.radio.chinese.domain.model.TtsVerdictLevel
 import com.radio.chinese.domain.model.VoiceScoring
 import com.radio.chinese.service.AndroidVoiceCatalog
 import com.radio.chinese.service.TtsAnnouncer
@@ -87,6 +92,13 @@ class SettingsViewModel @Inject constructor(
     val regionLabel: StateFlow<String> = _regionLabel
     private val _regionMessage = MutableStateFlow<String?>(null)
     val regionMessage: StateFlow<String?> = _regionMessage
+    /** 语音引擎分级诊断：车机上光说“未检测到”无法分辨是没引擎、看不到、还是缺语音包。 */
+    private val _ttsVerdict = MutableStateFlow<TtsVerdict?>(null)
+    val ttsVerdict: StateFlow<TtsVerdict?> = _ttsVerdict
+    private val _ttsReport = MutableStateFlow<TtsReport?>(null)
+    val ttsReport: StateFlow<TtsReport?> = _ttsReport
+    private val _ttsProbing = MutableStateFlow(false)
+    val ttsProbing: StateFlow<Boolean> = _ttsProbing
 
     private val gazetteer by lazy {
         RegionGazetteer.parse(
@@ -154,11 +166,27 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { preferences.preferredVoice.collect { _selectedVoiceName.value = it } }
         viewModelScope.launch { preferences.preferredTtsEngine.collect { _selectedEngine.value = it } }
         viewModelScope.launch { _regionLabel.value = formatRegion(regionRepository.currentUserRegion()) }
+        loadVoiceOptions(force = false)
+    }
+
+    /** 取音色候选与诊断结论；force=true 跳缓存重探（引擎装完、可见性改完后用）。 */
+    private fun loadVoiceOptions(force: Boolean) {
         viewModelScope.launch {
-            val opts = withContext(Dispatchers.Default) { catalog.listOptions().filter { VoiceScoring.isChinese(it.voice) } }
+            _ttsProbing.value = true
+            val opts = withContext(Dispatchers.Default) {
+                val all = if (force) catalog.refreshOptions() else catalog.listOptions()
+                if (force) announcer.resetProbeCooldown()   // 手动检测完允许下次切台立刻重走一次
+                all.filter { VoiceScoring.isChinese(it.voice) }
+            }
             _voiceOptions.value = opts
+            _ttsReport.value = catalog.lastReport()
+            _ttsVerdict.value = catalog.lastVerdict()
+            _ttsProbing.value = false
         }
     }
+
+    /** 设置页「重新检测」：强制重探引擎与音色，并刷新诊断。 */
+    fun redetectVoices() = loadVoiceOptions(force = true)
 
     private fun formatRegion(r: Region): String =
         listOf(r.province, r.city).filter { it.isNotBlank() }.distinct().joinToString(" ")
@@ -573,6 +601,61 @@ private fun getVersionName(): String {
 }
 
 /**
+ * TTS 分级诊断块：把“看不到引擎 / 系统真没引擎 / 绑不上 / 缺中文语音数据 / 引擎不提供音色清单”分开说。
+ * 车机现场不必连 adb 就能判断下一步该做什么；附逐引擎探测明细与重新检测入口。
+ */
+@Composable
+private fun TtsDiagnosisBlock(report: TtsReport?, verdict: TtsVerdict?, probing: Boolean, onRedetect: () -> Unit) {
+    val tone = when (verdict?.level) {
+        TtsVerdictLevel.OK, TtsVerdictLevel.LEGACY_DEFAULT_VOICE -> MaterialTheme.colorScheme.primary
+        null -> MaterialTheme.colorScheme.onSurfaceVariant
+        else -> MaterialTheme.colorScheme.error
+    }
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.GapSmall)
+    ) {
+        Column(Modifier.padding(Dimens.GapSmall)) {
+            Text(
+                verdict?.headline ?: if (probing) "正在检测语音引擎…" else "语音引擎尚未检测",
+                style = MaterialTheme.typography.titleSmall,
+                color = tone,
+            )
+            verdict?.detail?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            report?.let { r ->
+                Text("系统默认引擎：${r.defaultSynthComponent ?: "未设置"}", style = MaterialTheme.typography.bodySmall)
+                Text("按标准 TTS 服务枚举到 ${r.intentQueryCount} 个引擎", style = MaterialTheme.typography.bodySmall)
+                r.engines.forEach { e ->
+                    Text(engineProbeLine(e), style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            OutlinedButton(
+                onClick = onRedetect,
+                enabled = !probing,
+                modifier = Modifier.carTouchTarget().padding(top = Dimens.GapSmall)
+            ) { Text(if (probing) "检测中…" else "重新检测") }
+        }
+    }
+}
+
+/** 单引擎探测行：来源渠道与失败含义相关，必须一并给出。 */
+private fun engineProbeLine(e: EngineProbe): String {
+    val who = if (e.packageLabel.isBlank()) "不指定引擎（系统解析）" else e.packageLabel
+    val from = when (e.source) {
+        CandidateSource.SYSTEM_DEFAULT -> "默认解析"
+        CandidateSource.INTENT_QUERY -> "枚举"
+        CandidateSource.SETTINGS_DEFAULT_SYNTH -> "系统设置项"
+    }
+    if (!e.initOk) return "$who（$from）：绑定失败或超时"
+    val list = if (e.supportsVoiceApi) "音色清单可用，中文 ${e.chineseVoiceCount} 个" else "不提供音色清单"
+    val lang = if (e.chineseLanguageOk) "支持中文" else "不支持中文"
+    return "$who（$from）：$list，$lang"
+}
+
+/**
  * 收听增强分区：线控播报开关 + 引擎×音色试听选择；本地优先开关 + 地区（定位/手动）。
  * 音色列表只展中文候选（避免英文音色刷屏），每项显示「引擎名 · 音色名」，点即试听并写偏好。
  */
@@ -585,6 +668,9 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
     val selectedEngine by viewModel.selectedEngine.collectAsState()
     val regionLabel by viewModel.regionLabel.collectAsState()
     val regionMessage by viewModel.regionMessage.collectAsState()
+    val ttsVerdict by viewModel.ttsVerdict.collectAsState()
+    val ttsReport by viewModel.ttsReport.collectAsState()
+    val ttsProbing by viewModel.ttsProbing.collectAsState()
     var voiceExpanded by remember { mutableStateOf(false) }
     var regionExpanded by remember { mutableStateOf(false) }
     var manualProvince by remember { mutableStateOf("") }
@@ -611,16 +697,23 @@ private fun ListenEnhanceSection(viewModel: SettingsViewModel) {
     if (uiState.voiceAnnounceEnabled) {
         val currentLabel = options.firstOrNull { isSelected(it) }
             ?.let { "${it.engineLabel} · ${it.voice.name}" } ?: "自动（跨引擎选优）"
+        val tip = when {
+            ttsProbing -> "正在检测语音引擎…"
+            options.isEmpty() -> ttsVerdict?.headline ?: "尚未检测到中文语音引擎"
+            else -> "当前：$currentLabel（点选试听）"
+        }
         ListItem(
             headlineContent = { Text("播报音色") },
             supportingContent = {
-                Text(if (options.isEmpty()) "未检测到中文语音引擎" else "当前：$currentLabel（点选试听）")
+                Text(tip)
             },
             leadingContent = { Icon(Icons.Default.Tune, contentDescription = null) },
             modifier = Modifier.carTouchTarget().clickable { voiceExpanded = !voiceExpanded }
         )
         if (voiceExpanded) {
             Column(Modifier.padding(horizontal = Dimens.ScreenPadding)) {
+                // 先把“能不能播、断在哪一环”说清楚，再列可选音色
+                TtsDiagnosisBlock(ttsReport, ttsVerdict, ttsProbing) { viewModel.redetectVoices() }
                 options.forEach { opt ->
                     Row(
                         Modifier.fillMaxWidth().carTouchTarget().clickable { viewModel.previewOption(opt) },
