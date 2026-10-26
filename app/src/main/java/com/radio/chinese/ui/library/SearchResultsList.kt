@@ -45,6 +45,7 @@ import com.radio.chinese.domain.TrackHit
 import com.radio.chinese.domain.model.IndexQuery
 import com.radio.chinese.domain.model.MergedTrack
 import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.theme.Dimens
 
 /**
@@ -70,6 +71,7 @@ fun SearchResultsList(
     onToggleFavorite: (TrackHit) -> Unit,
     onBuildIndex: () -> Unit,
     onAddSource: () -> Unit,
+    playingPath: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val indexedNow = (indexState as? IndexState.Running)?.p?.indexedFiles ?: 0
@@ -154,7 +156,10 @@ fun SearchResultsList(
                                 isFav = isFavorited(primary.path),
                                 onClick = { onPlay(primary) },
                                 onLongClick = { actionHit = primary },
-                                onToggleFav = { onToggleFavorite(primary) }
+                                onToggleFav = { onToggleFavorite(primary) },
+                                // 归并行的任一来源在播就算这行在播：同内容多源时用户看到的是一行
+                                isPlaying = playingPath != null &&
+                                    merged.sources.any { it.path == playingPath },
                             )
                         }
                     }
@@ -190,6 +195,7 @@ private fun SearchResultRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onToggleFav: () -> Unit,
+    isPlaying: Boolean = false,
 ) {
     var favState by remember { mutableStateOf(isFav) }
     LaunchedEffect(isFav) { favState = isFav }
@@ -203,19 +209,26 @@ private fun SearchResultRow(
             .padding(vertical = Dimens.RowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Default.Audiotrack,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(Dimens.IconLarge)
-        )
+        if (isPlaying) {
+            // 与 BrowseScreen 同一个做法：标记占行首图标位，不额外占宽
+            NowPlayingWave(size = Dimens.IconLarge)
+        } else {
+            Icon(
+                imageVector = Icons.Default.Audiotrack,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(Dimens.IconLarge)
+            )
+        }
         Spacer(modifier = Modifier.width(Dimens.GapLarge))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = if (isPlaying) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface,
             )
             // 同内容多来源时标出来：否则用户以为搜到了两首不同的戏
             val sub = if (sourceCount > 1) "$crumb · $sourceCount 个来源" else crumb

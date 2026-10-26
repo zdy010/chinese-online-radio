@@ -16,12 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.radio.chinese.domain.AudioTrack
 import com.radio.chinese.domain.browser.LocalBrowser
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.NowPlayingWave
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,6 +34,9 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager, search
     val scope = rememberCoroutineScope()
     var items by remember { mutableStateOf<List<AudioTrack>>(emptyList()) }
     val filteredItems = items.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
+    // 本地文件起播时 sourcePath 就是文件路径，与这里 AudioTrack.path 同源，直接比对即可
+    val operaFile by playerManager.operaFile.collectAsState()
+    val playingPath = operaFile?.sourcePath ?: operaFile?.downloadUrl
     var isLoading by remember { mutableStateOf(true) }
     var currentFolder by remember { mutableStateOf("") }
     var folderStack by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -133,12 +138,23 @@ fun AudioLocalTab(playerManager: com.radio.chinese.service.PlayerManager, search
                         }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            if (item.isFolder) Icons.Default.Folder else Icons.Default.Audiotrack, null,
-                            tint = if (item.isFolder) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        if (!item.isFolder && item.path == playingPath) {
+                            NowPlayingWave()
+                        } else {
+                            Icon(
+                                if (item.isFolder) Icons.Default.Folder else Icons.Default.Audiotrack, null,
+                                tint = if (item.isFolder) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Spacer(Modifier.width(12.dp))
-                        Text(item.name, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            item.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (!item.isFolder && item.path == playingPath)
+                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
             }

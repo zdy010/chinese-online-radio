@@ -16,6 +16,7 @@ import com.radio.chinese.domain.AudioTrack
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.ErrorState
 import com.radio.chinese.ui.common.LoadingState
+import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.theme.Dimens
 
 @Composable
@@ -26,7 +27,8 @@ fun BrowseScreen(
     onItemClick: (AudioTrack) -> Unit,
     onRefresh: () -> Unit,
     onToggleFavorite: (AudioTrack) -> Unit = {},
-    isFavorited: (String) -> Boolean = { false }
+    isFavorited: (String) -> Boolean = { false },
+    playingPath: String? = null,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         when {
@@ -62,7 +64,8 @@ fun BrowseScreen(
                             item = item,
                             onClick = { onItemClick(item) },
                             isFav = isFavorited(item.path),
-                            onToggleFav = { onToggleFavorite(item) }
+                            onToggleFav = { onToggleFavorite(item) },
+                            isPlaying = !item.isFolder && playingPath != null && item.path == playingPath,
                         )
                     }
                 }
@@ -79,7 +82,13 @@ fun BrowseScreen(
 }
 
 @Composable
-private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, onToggleFav: () -> Unit) {
+private fun BrowseItem(
+    item: AudioTrack,
+    onClick: () -> Unit,
+    isFav: Boolean,
+    onToggleFav: () -> Unit,
+    isPlaying: Boolean = false,
+) {
     var favState by remember { mutableStateOf(isFav) }
     // 外部状态变化时同步进来
     LaunchedEffect(isFav) { favState = isFav }
@@ -92,12 +101,18 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, on
             .padding(vertical = Dimens.RowVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = if (item.isFolder) Icons.Default.Folder else Icons.Default.Audiotrack,
-            contentDescription = null,
-            tint = if (item.isFolder) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(Dimens.IconLarge)
-        )
+        if (isPlaying) {
+            // 播放中的行：把行首的曲目图标换成跳动的彩条。
+            // 放在图标位而不是挤到标题后：不额外占宽，长曲名不会被提前截断
+            NowPlayingWave(size = Dimens.IconLarge)
+        } else {
+            Icon(
+                imageVector = if (item.isFolder) Icons.Default.Folder else Icons.Default.Audiotrack,
+                contentDescription = null,
+                tint = if (item.isFolder) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(Dimens.IconLarge)
+            )
+        }
         Spacer(modifier = Modifier.width(Dimens.GapLarge))
         Column(modifier = Modifier.weight(1f)) {
             // 不再用 MarqueeText(enabled = false)：拿不到滚动收益却仍付两次 subcompose
@@ -105,7 +120,9 @@ private fun BrowseItem(item: AudioTrack, onClick: () -> Unit, isFav: Boolean, on
                 text = item.name,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = if (isPlaying) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface,
             )
             if (!item.isFolder && item.size > 0) {
                 Text(formatSize(item.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -99,7 +99,8 @@ fun AudioLibraryScreen(
                             viewModel.toggleFavorite(source.id, item.path, item.name, source.name)
                         }
                     },
-                    isFavorited = { path -> viewModel.isFavorited(path) }
+                    isFavorited = { path -> viewModel.isFavorited(path) },
+                    playingPath = uiState.playingPath,
                 )
             }
 

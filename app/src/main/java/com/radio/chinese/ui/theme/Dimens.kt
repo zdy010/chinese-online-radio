@@ -44,6 +44,15 @@ object Dimens {
     val IconLarge: Dp = 32.dp
     val MiniPlayerHeight: Dp
         @Composable get() = if (car) 104.dp else 72.dp
+    /**
+     * 细条版迷你播放器总高（用户实测：原条太占地方）。
+     * 手机 44dp 刚好装下 28dp 封面 + 一行曲名 + 一个紧凑播放/暂停按钮；
+     * 车机给到 56dp 而不是 TouchMin(88)——整条撑到 88 会把列表首屏吃掉一条。
+     */
+    val MiniPlayerSlim: Dp
+        @Composable get() = if (car) 56.dp else 44.dp
+    /** 细条里的封面/图标位：CoverTiny(40) 在 44dp 条里会把文字挤到两行 */
+    val CoverMicro: Dp = 28.dp
     val MiniPlayerProgress: Dp = 2.dp
 
     // 进度滑条的命中区高度：手机档沿用原来的 32dp；车机档用 64dp——

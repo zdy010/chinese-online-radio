@@ -82,7 +82,13 @@ private fun PlainShell(
     }
 }
 
-/** 电台版：单行，高 [Dimens.MiniPlayerHeight]。 */
+/**
+ * 电台版：细条单行，高 [Dimens.MiniPlayerSlim]。
+ *
+ * 用户实测原条太占地方，压到 44dp（车机 56dp）。刻意保留播放/暂停按钮：
+ * 它是播放页之外唯一的快捷播控入口，整条删掉就等于把暂停能力一并删了
+ * （没接方控/线控的手机用户会无处暂停）。
+ */
 @Composable
 fun RadioMiniPlayerBar(
     title: String,
@@ -97,19 +103,25 @@ fun RadioMiniPlayerBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Dimens.MiniPlayerHeight - Dimens.GapLarge)
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
+                .height(Dimens.MiniPlayerSlim)
+                .padding(horizontal = Dimens.GapMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            StationCover(url = coverUrl, size = Dimens.CoverTiny, label = title)
-            Spacer(modifier = Modifier.width(Dimens.GapMedium))
-            Column(modifier = Modifier.weight(1f)) {
+            StationCover(url = coverUrl, size = Dimens.CoverMicro, label = title)
+            Spacer(modifier = Modifier.width(Dimens.GapSmall))
+            // 细条只装得下一行：台名与状态并排同一行，副标题不再单独占一行把条顶高
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
+                Spacer(modifier = Modifier.width(Dimens.GapTiny))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -120,11 +132,12 @@ fun RadioMiniPlayerBar(
             }
             IconButton(
                 onClick = onPlayPause,
-                modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                modifier = if (isCarSurface()) Modifier.size(Dimens.MiniPlayerSlim) else Modifier
             ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "暂停播放" else "开始播放"
+                    contentDescription = if (isPlaying) "暂停播放" else "开始播放",
+                    modifier = Modifier.size(Dimens.IconMedium)
                 )
             }
         }
@@ -148,27 +161,27 @@ fun OperaMiniPlayerBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Dimens.MiniPlayerHeight - Dimens.GapLarge)
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
+                .height(Dimens.MiniPlayerSlim)
+                .padding(horizontal = Dimens.GapMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(Dimens.CoverTiny)
+                    .size(Dimens.CoverMicro)
                     .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.MusicNote,
                     contentDescription = null,
-                    modifier = Modifier.size(Dimens.IconMedium),
+                    modifier = Modifier.size(Dimens.IconSmall),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.width(Dimens.GapMedium))
+            Spacer(modifier = Modifier.width(Dimens.GapSmall))
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)

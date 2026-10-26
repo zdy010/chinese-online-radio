@@ -41,6 +41,14 @@ data class LibraryUiState(
 
     // Player state (from PlayerManager)
     val currentTrack: AudioTrack? = null,
+    /**
+     * 正在播放曲目的源内路径，用于给列表行挂「正在播放」波浪标记。
+     *
+     * 不能用 currentTrack 判：currentTrack 只在用户点歌时写，PlayerManager 内部
+     * 上/下一曲不会更新它，切完歌标记会停在旧行上。operaFile.sourcePath 才是单一事实源，
+     * 且与 WebDavBrowser 给出的 AudioTrack.path 同为 PROPFIND href 形态，可直接比对。
+     */
+    val playingPath: String? = null,
     val isPlaying: Boolean = false,
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
@@ -109,7 +117,13 @@ class AudioLibraryViewModel @Inject constructor(
         viewModelScope.launch { playerManager.operaDuration.collect { v -> _state.update { it.copy(durationMs = v) } } }
         viewModelScope.launch { playerManager.operaBitrate.collect { v -> _state.update { it.copy(bitrateBps = v) } } }
         viewModelScope.launch { playerManager.operaFile.collect { file ->
-            if (file != null) _state.update { it.copy(currentTrack = it.currentTrack?.copy(name = file.name)) }
+            // sourcePath 缺失时退回 downloadUrl：两边都是同一串 href/URL，
+            // 只是早期索引行没落 sourcePath，不退回就会漏标记
+            val path = file?.sourcePath ?: file?.downloadUrl
+            _state.update { it.copy(
+                playingPath = path,
+                currentTrack = if (file != null) it.currentTrack?.copy(name = file.name) else it.currentTrack,
+            ) }
         } }
         viewModelScope.launch { playerManager.error.collect { v -> _state.update { it.copy(playError = v) } } }
         // 循环模式的单一事实源在 PlayerManager（它才能真的影响下一首）

@@ -123,21 +123,19 @@ fun OperaPlayerScreen(
                 playing = playing,
                 repeat = repeat,
                 canSeek = dur > 0L,
+                speed = speed,
                 onPlayPause = { playerManager.togglePlayPause() },
                 onPrevious = { playerManager.playOperaPrevious() },
                 onNext = { playerManager.playOperaNext() },
                 onStop = stopAndExit,
                 onCycleRepeat = { playerManager.cycleOperaRepeatMode() },
+                onCycleSpeed = { playerManager.cycleOperaSpeed() },
                 onForward = { playerManager.seekOperaForward(10) },
                 onBackward = { playerManager.seekOperaBackward(10) }
             )
         }
         val contentArea: @Composable (Modifier) -> Unit = { m ->
             OperaContentArea(m, state, onLineClick = { viewModel.seekToLine(it) })
-        }
-        // 倍速只对点播开放：本页就是点播页，电台播放页不给这个控件
-        val speedRow: @Composable () -> Unit = {
-            OperaSpeedRow(current = speed, onPick = { playerManager.setOperaSpeed(it) })
         }
 
         // 播控一律排在底部横排：车机横屏原先把进度条+控件+倍速塞在右侧定宽栏里，
@@ -148,51 +146,6 @@ fun OperaPlayerScreen(
             contentArea(Modifier.weight(1f))
             slider()
             controls()
-            speedRow()
-        }
-    }
-}
-
-/**
- * 倍速档位行。一排直接可点而不是“循环按钮”：
- * 中老年用户看不出“再点一下会到什么速度”，隐藏在一层循环里等于不能用。
- */
-@Composable
-private fun OperaSpeedRow(current: Float, onPick: (Float) -> Unit) {
-    val car = isCarSurface()
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapTiny),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.GapSmall),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "倍速",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        OperaSpeed.STEPS.forEach { s ->
-            val selected = OperaSpeed.normalize(current) == s
-            Surface(
-                shape = RoundedCornerShape(Dimens.GapLarge),
-                color = if (selected) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier
-                    .heightIn(min = if (car) Dimens.TouchMin else 36.dp)
-                    .clip(RoundedCornerShape(Dimens.GapLarge))
-                    .clickable { onPick(s) }
-                    .semantics { contentDescription = "以${OperaSpeed.label(s)}播放" }
-                    .padding(horizontal = Dimens.GapMedium)
-            ) {
-                Text(
-                    text = OperaSpeed.label(s),
-                    style = if (car) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelLarge,
-                    color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = Dimens.GapTiny)
-                )
-            }
         }
     }
 }
@@ -359,11 +312,13 @@ private fun ControlRow(
     playing: Boolean,
     repeat: OperaRepeatMode,
     canSeek: Boolean,
+    speed: Float,
     onPlayPause: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onStop: () -> Unit,
     onCycleRepeat: () -> Unit,
+    onCycleSpeed: () -> Unit,
     onForward: () -> Unit,
     onBackward: () -> Unit
 ) {
@@ -386,6 +341,21 @@ private fun ControlRow(
     val stopBtn = @Composable {
         IconButton(onClick = onStop, modifier = btnMod) {
             Icon(Icons.Default.Close, "停止播放")
+        }
+    }
+    // 倍速合并成一个循环按钮放在控件行上（用户实测：一排五枚档位芯片太抢位置）。
+    // 与当时选芯片的理由（“循环按钮看不出再点会到什么速度”）并不冲突：
+    // 按钮文案就是当前档位，点一下下一档，当前值始终可见。
+    val speedBtn = @Composable {
+        TextButton(
+            onClick = onCycleSpeed,
+            modifier = if (car) Modifier.heightIn(min = Dimens.TouchMin) else Modifier
+        ) {
+            Text(
+                OperaSpeed.label(speed),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
     val seekBackBtn = @Composable {
@@ -434,6 +404,7 @@ private fun ControlRow(
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 repeatBtn()
+                speedBtn()
                 Spacer(Modifier.weight(1f))
                 stopBtn()
             }
@@ -444,6 +415,7 @@ private fun ControlRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeatBtn()
+            speedBtn()
             Spacer(Modifier.weight(1f))
             seekBackBtn()
             prevBtn()

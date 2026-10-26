@@ -171,6 +171,7 @@ fun AudioMainScreen(
                         val sourceName = uiState.sources.firstOrNull { it.id == hit.sourceId }?.name ?: ""
                         viewModel.toggleFavorite(hit.sourceId, hit.path, hit.name, sourceName)
                     },
+                    playingPath = uiState.playingPath,
                     modifier = m
                 )
             }
