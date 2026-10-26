@@ -17,10 +17,11 @@ enum class StationCategory(val key: String, val label: String) {
     OPERA("opera", "戏曲"),
     TV_AUDIO("tv_audio", "电视伴音"),
     WORLD("world", "世界"),
-    GENERAL("general", "综合"),
+    GENERAL("general", "综合");
 
-    /** 成人内容：排最后，不影响其他分类在网格里的既有位置。 */
-    ADULT("adult", "成人");
+    // 成人分类已按用户要求整体下线：清单里的 4 台（ad_de/ad_md/ad_us/ad_nl）已从
+    // radio_stations.json 删除，枚举与图标映射一并移除，不留“点进去空列表”的入口。
+    // 用户自建的 category=adult 电台会经 fromKey 回落成 GENERAL，不会解析失败。
 
     companion object {
         fun fromKey(key: String?): StationCategory = entries.firstOrNull { it.key == key } ?: GENERAL

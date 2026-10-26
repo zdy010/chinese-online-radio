@@ -98,7 +98,7 @@ class HomeViewModel @Inject constructor(
         val (category, query, tag) = filterState
         val filtered = StationFilter.apply(stations, category, query, tag)
         // 分类条/分类网格只列“真的有电台”的分类：全量枚举会把一个都不存在的
-        // 分类（如未加载全球源时的世界/成人）也摆上去，点进去只能看到一个空列表。
+        // 分类（如未加载全球源时的世界）也摆上去，点进去只能看到一个空列表。
         // 标签同一个道理，由 StationFilter.tagsWithCount 保证。
         val usedCategories = stationRepository.getCategories().filter { (id, _) ->
             stations.any { it.category == id }
