@@ -288,13 +288,36 @@ private fun OperaContentArea(
 private fun CoverPage(bytes: ByteArray) {
     // BitmapFactory 对纯 Java/Kotlin 字节流足够；失败解码返回 null 由占位分支兜住
     val bmp = remember(bytes) { BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap() }
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (bmp != null) {
-                Image(
-                    bmp,
-                    contentDescription = "专辑封面",
-                    modifier = Modifier.size(Dimens.CoverLargeMax).clip(RoundedCornerShape(Dimens.GapLarge))
+    // 封面吃满内容区可用空间，不再钉死 Dimens.CoverLargeMax：手机竖屏内容区有五百多 dp 高，
+    // 固定 220dp 的图会在上下各留一大片死白，视觉重心整个塌掉（用户实测「小而不协调」）。
+    // 取宽高里较小者再留边距：正方形不变形，矮屏（车机横屏）也不会被顶出去。
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        val side = minOf(maxWidth * 0.86f, maxHeight * 0.92f).coerceAtLeast(Dimens.CoverSmall)
+        if (bmp != null) {
+            Image(
+                bmp,
+                contentDescription = "专辑封面",
+                modifier = Modifier
+                    .size(side)
+                    .clip(RoundedCornerShape(Dimens.GapLarge))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            )
+        } else {
+            // 解码失败要占住同一块位置：整页留白会让人以为功能坏了，而不是这一张图坏了
+            Box(
+                Modifier
+                    .size(side)
+                    .clip(RoundedCornerShape(Dimens.GapLarge))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.MusicNote, null,
+                    modifier = Modifier.size(Dimens.IconLarge),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

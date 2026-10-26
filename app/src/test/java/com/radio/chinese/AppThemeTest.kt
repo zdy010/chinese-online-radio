@@ -13,11 +13,11 @@ class AppThemeTest {
     fun keysAreUniqueAndGroupsAreComplete() {
         val keys = AppTheme.entries.map { it.key }
         assertEquals("key 必须唯一，否则 fromKey 会命中第一个", keys.size, keys.toSet().size)
-        // 三组各三项，设置页每组正好一屏一组（spec §2）
+        // 四组各三项，设置页每组正好一屏一组（spec §2）
         AppTheme.entries.groupBy { it.group }.forEach { (group, list) ->
             assertEquals("${group.label} 应恰好 3 项", 3, list.size)
         }
-        assertEquals(9, AppTheme.entries.size)
+        assertEquals(12, AppTheme.entries.size)
     }
 
     @Test
@@ -79,9 +79,11 @@ class AppThemeTest {
     fun groupedForPickerKeepsDeclaredOrder() {
         val groups = AppTheme.groupedForPicker()
         assertEquals(
-            listOf(AppThemeGroup.CLASSIC, AppThemeGroup.NIGHT, AppThemeGroup.READABLE),
+            listOf(AppThemeGroup.CLASSIC, AppThemeGroup.NIGHT, AppThemeGroup.READABLE, AppThemeGroup.FASHION),
             groups.map { it.first }
         )
         assertEquals("amber", groups[1].second[2].key)
+        // 时尚浅彩组按声明序：淡粉 → 淡紫 → 雾霾蓝
+        assertEquals(listOf("blush_rose", "lavender", "haze_blue"), groups[3].second.map { it.key })
     }
 }

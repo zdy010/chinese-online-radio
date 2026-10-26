@@ -170,6 +170,43 @@ private val InkGreen = schemeOf(
 )
 
 /**
+ * 时尚浅彩三档：底带一点彩调、主色压深。
+ *
+ * 与「中国红 / 墨绿」的区别在那层极淡的彩底（不是纯白），整屏会显得高级；
+ * 但 primary 必须够深：onPrimary 在亮档恒为白色（见 withAccent），
+ * 拿淡粉淡紫直接做主色，按钮文字就是白底浅字，过不了 4.5:1。
+ */
+private val BlushRose = schemeOf(
+    dark = false,
+    n = Neutral(Color(0xFFFFF7F8), Color(0xFF231A1C), Color(0xFF5B4348)),
+    a = Accent(
+        primary = Color(0xFFA0324E), primaryContainer = Color(0xFFFFD9E1), onPrimaryContainer = Color(0xFF3E0718),
+        secondaryContainer = Color(0xFFF7E2E6), onSecondaryContainer = Color(0xFF2F1A1E),
+        tertiary = Color(0xFF7A4A6E), tertiaryContainer = Color(0xFFF6DDEF), onTertiaryContainer = Color(0xFF2E1228),
+    ),
+)
+
+private val Lavender = schemeOf(
+    dark = false,
+    n = Neutral(Color(0xFFFBF8FF), Color(0xFF1E1A26), Color(0xFF4E4860)),
+    a = Accent(
+        primary = Color(0xFF5B41A8), primaryContainer = Color(0xFFE6DCFF), onPrimaryContainer = Color(0xFF200A50),
+        secondaryContainer = Color(0xFFE9E3F5), onSecondaryContainer = Color(0xFF231C33),
+        tertiary = Color(0xFF7A4F86), tertiaryContainer = Color(0xFFF1DCF6), onTertiaryContainer = Color(0xFF2E1038),
+    ),
+)
+
+private val HazeBlue = schemeOf(
+    dark = false,
+    n = Neutral(Color(0xFFF7FAFD), Color(0xFF181F26), Color(0xFF45505C)),
+    a = Accent(
+        primary = Color(0xFF3A5F82), primaryContainer = Color(0xFFD8E7F6), onPrimaryContainer = Color(0xFF06213A),
+        secondaryContainer = Color(0xFFDFE7EF), onSecondaryContainer = Color(0xFF1B2530),
+        tertiary = Color(0xFF5C6A8A), tertiaryContainer = Color(0xFFDEE3F2), onTertiaryContainer = Color(0xFF1A2340),
+    ),
+)
+
+/**
  * 主题 → 配色。全树唯一的取色出口。
  *
  * 三档经典主题返回 Theme.kt 里的基线实例本身（不是等值重建），
@@ -185,4 +222,7 @@ internal fun AppTheme.resolveColorScheme(dark: Boolean): ColorScheme = when (thi
     AppTheme.HIGH_CONTRAST -> HighContrast
     AppTheme.CHINA_RED -> ChinaRed
     AppTheme.INK_GREEN -> InkGreen
+    AppTheme.BLUSH_ROSE -> BlushRose
+    AppTheme.LAVENDER -> Lavender
+    AppTheme.HAZE_BLUE -> HazeBlue
 }

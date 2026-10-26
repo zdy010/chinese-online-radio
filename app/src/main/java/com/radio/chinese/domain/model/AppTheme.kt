@@ -11,6 +11,7 @@ enum class AppThemeGroup(val label: String) {
     CLASSIC("经典"),
     NIGHT("夜间护眼"),
     READABLE("易读与个性"),
+    FASHION("时尚浅彩"),
 }
 
 /**
@@ -38,6 +39,12 @@ enum class AppTheme(
     HIGH_CONTRAST("high_contrast", "亮白·强对比", "阳光直射屏幕", AppThemeGroup.READABLE, ThemeTone.LIGHT),
     CHINA_RED("china_red", "中国红", "喜欢喜庆配色", AppThemeGroup.READABLE, ThemeTone.LIGHT),
     INK_GREEN("ink_green", "墨绿", "喜欢安静配色", AppThemeGroup.READABLE, ThemeTone.LIGHT),
+
+    // 时尚浅彩：用户点名要淡红/淡紫这类浅底彩调（参考 QQ 音乐主题）。
+    // 主色必须压得够深——primary/onPrimary 走的是白字，浅粉浅紫做主色会直接跌破 4.5:1。
+    BLUSH_ROSE("blush_rose", "淡粉玫瑰", "喜欢柔和粉色", AppThemeGroup.FASHION, ThemeTone.LIGHT),
+    LAVENDER("lavender", "淡紫薰衣草", "喜欢高级紫色", AppThemeGroup.FASHION, ThemeTone.LIGHT),
+    HAZE_BLUE("haze_blue", "雾霾蓝", "喜欢清冷蓝调", AppThemeGroup.FASHION, ThemeTone.LIGHT),
     ;
 
     /**
