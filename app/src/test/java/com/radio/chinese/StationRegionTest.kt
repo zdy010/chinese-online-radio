@@ -365,9 +365,9 @@ class StationRegionTest {
     }
 
     @Test
-    fun `体育与戏曲分类的 CCTV 伴音仍归中央台`() {
-        // 清单里 CCTV-5体育伴音= sports、CCTV-11戏曲伴音= opera（按内容分类的既定规则），
-        // 它们不是 tv_audio，必须继续走台名关键词进中央台，不能掉进「其他」
+    fun `非伴音分类的 CCTV 台仍靠台名关键词进中央台`() {
+        // 清单里的 CCTV 伴音已统一成 tv_audio（走上面的伴音组），关键词现在是兜底：
+        // 自建或后续新增的 sports/opera CCTV 台不能因为不再是 tv_audio 就掉进「其他」
         val buckets = StationRegion.bucketize(
             listOf(
                 byCat("st_cctv5", "CCTV-5体育伴音", "sports"),
@@ -376,5 +376,33 @@ class StationRegionTest {
             g,
         )
         assertEquals(listOf(StationRegion.CENTRAL), buckets.map { it.key })
+    }
+
+    @Test
+    fun `CCTV-5、CCTV-5+、CCTV-11 按 tv_audio 进伴音组，不再留在中央台`() {
+        // 用户要求：这三个台从中央台挪到电视伴音。判定只看 category 一个来源，
+        // 所以清单里它们必须是 tv_audio，否则又会因台名里的 CCTV 落回中央台
+        val buckets = StationRegion.bucketize(
+            listOf(
+                byCat("st_CCTV-5体育伴音", "CCTV-5体育伴音", "tv_audio"),
+                byCat("st_CCTV-5+体育赛事伴音", "CCTV-5+体育赛事伴音", "tv_audio"),
+                byCat("st_CCTV-11戏曲伴音", "CCTV-11戏曲伴音", "tv_audio"),
+                byCat("cnr1", "中国之声", "news"),
+            ),
+            g,
+        )
+        assertEquals(
+            listOf(StationRegion.CENTRAL, StationRegion.TV_AUDIO),
+            buckets.map { it.key },
+        )
+        assertEquals(
+            listOf("CCTV-11戏曲伴音", "CCTV-5+体育赛事伴音", "CCTV-5体育伴音"),
+            buckets.last().stations.map { it.name },
+        )
+        assertEquals(
+            "中央台里不该再出现这三个台",
+            listOf("中国之声"),
+            buckets.first().stations.map { it.name },
+        )
     }
 }

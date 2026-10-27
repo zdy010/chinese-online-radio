@@ -7080,7 +7080,7 @@
     {
       "id": "st_CCTV-5体育伴音",
       "name": "CCTV-5体育伴音",
-      "category": "sports",
+      "category": "tv_audio",
       "streamUrl": "https://piccpndali.v.myalicdn.com/audio/cctv5_2.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -7096,7 +7096,7 @@
     {
       "id": "st_CCTV-5+体育赛事伴音",
       "name": "CCTV-5+体育赛事伴音",
-      "category": "sports",
+      "category": "tv_audio",
       "streamUrl": "https://piccpndali.v.myalicdn.com/audio/cctv5plus_2.m3u8",
       "logoUrl": "",
       "frequency": "",
@@ -7112,7 +7112,7 @@
     {
       "id": "st_CCTV-11戏曲伴音",
       "name": "CCTV-11戏曲伴音",
-      "category": "opera",
+      "category": "tv_audio",
       "streamUrl": "https://piccpndali.v.myalicdn.com/audio/cctv11_2.m3u8",
       "logoUrl": "",
       "frequency": "",

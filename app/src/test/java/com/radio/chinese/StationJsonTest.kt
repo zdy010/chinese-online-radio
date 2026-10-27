@@ -56,6 +56,18 @@ class StationJsonTest {
     }
 
     @Test
+    fun `CCTV 与 CETV 伴音全部归入电视伴音`() {
+        // 用户要求：CCTV-5、CCTV-5+、CCTV-11 从中央台挪到电视伴音。地区页与分类页
+        // 都只看 category，所以这条得钉在数据上：漏改一台，它就会因台名里的 CCTV
+        // 重新出现在中央台，用户看到的就是“只挪了一半”。
+        val stray = stations
+            .filter { it.name.contains("CCTV") || it.name.contains("CETV") }
+            .filter { it.category != StationCategory.TV_AUDIO.key }
+            .map { it.id to it.category }
+        assertTrue("应归电视伴音却是其他分类: $stray", stray.isEmpty())
+    }
+
+    @Test
     fun `country 非空时 language 也必须非空`() {
         val bad = stations.filter { it.country.isNotBlank() && it.language.isBlank() }.map { it.id }
         assertTrue("有国家没语言: $bad", bad.isEmpty())
