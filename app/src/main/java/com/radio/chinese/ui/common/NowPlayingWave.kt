@@ -51,13 +51,16 @@ fun NowPlayingWave(
     val barWidth = side / 8f
     val gap = side / 8f
     val transition = rememberInfiniteTransition(label = "now-playing-wave")
-    // 每根条不同周期 + 不同起始延迟：同频会像一整块在呼吸，错开才像频谱在跳
-    val heights = listOf(380, 520, 440, 620).mapIndexed { i, dur ->
+    // 每根条不同周期 + 不同起始延迟：同频会像一整块在呼吸，错开才像频谱在跳。
+    // 周期 1200~1950ms（RepeatMode.Reverse 下走一个来回是两倍，即 2.4~3.9s）：
+    // 初版 380~620ms 用户实测“太快”，改到 760~1240ms 仍偏快，这是再放慢一档。
+    // 律动只是“在响”的佐证，不该抢读列表的注意力。
+    val heights = listOf(1200, 1650, 1400, 1950).mapIndexed { i, dur ->
         transition.animateFloat(
             initialValue = 0.30f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = dur, delayMillis = i * 90, easing = LinearEasing),
+                animation = tween(durationMillis = dur, delayMillis = i * 280, easing = LinearEasing),
                 repeatMode = RepeatMode.Reverse,
             ),
             label = "wave-bar-$i",
