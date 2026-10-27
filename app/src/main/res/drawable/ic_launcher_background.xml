@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  启动图标背景层：靛蓝 → 紫罗兰 → 品红的对角渐变（用户选的「时尚渐变」方向）。
+
+  为什么用矢量而不是位图：minSdk 26 之后自适应图标全平台可用，矢量在
+  车机 160dpi 与手机 420dpi 上都是同一份数据，不会像 PNG 那样某一档糊掉；
+  换配色只改下面三个 stop，不用重出五张图。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="6"
+                android:startY="102"
+                android:endX="102"
+                android:endY="6">
+                <item android:offset="0.0" android:color="#FF2B1E78" />
+                <item android:offset="0.48" android:color="#FF7A2BE0" />
+                <item android:offset="1.0" android:color="#FFFF2E88" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 左上角一道极淡的高光，纯装饰：让整块渐变不至于像一张纯色贴纸 -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="26"
+                android:centerY="22"
+                android:gradientRadius="72">
+                <item android:offset="0.0" android:color="#33FFFFFF" />
+                <item android:offset="1.0" android:color="#00FFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

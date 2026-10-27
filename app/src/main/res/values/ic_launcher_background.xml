@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#B71C1C</color>
+    <!--
+      启动图标品牌底色。adaptive-icon 的背景已改指 @drawable/ic_launcher_background（渐变），
+      这里只留一个平色给读不了渐变的工具（快捷方式、部分车机 launcher 的取色）。
+      值取渐变中停 #7A2BE0；换主色时两处一起改。旧值 #B71C1C 是上一版红收音机的底。 
+    -->
+    <color name="ic_launcher_background">#7A2BE0</color>
 </resources>

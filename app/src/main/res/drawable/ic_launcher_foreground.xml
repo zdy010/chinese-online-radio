@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  启动图标前景层：一个音符朝右上方发出三道电波。
+
+  主体取自用户选的「收音机 / 电波意象」：音符是内容，三道同心弧是调谐发射，
+  缩到 48px 仍只剩这几个形状，所以刻意不做旋钮、格栅这类会被糊掉细节。
+
+  几何都在 108 的画布坐标里，圆心 (40,68)、半径 22/31/40、跨 15°~75°：
+  整幅图离画布中心 (54,54) 最远约 27，落在自适应图标 66dp 安全区（半径 33）内，
+  圆形/方形/水滴各种遮罩都不会切掉笔锋。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 符干：先画干再画头，头压在干下端，接缝看不出来 -->
+    <path
+        android:pathData="M46.2,67.5L46.2,44"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+
+    <!-- 符头：横向椭圆转 -22°，比正圆更像音符；只转头不转干，干必须保持竖直 -->
+    <group
+        android:name="noteHead"
+        android:pivotX="40"
+        android:pivotY="68"
+        android:rotation="-22">
+        <path
+            android:pathData="M32.4,68a7.6,6.2 0 1,0 15.2,0a7.6,6.2 0 1,0 -15.2,0z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+
+    <!-- 三道电波：由内到外逐渐变细、变淡，做出发射的衰减感 -->
+    <path
+        android:pathData="M61.25,62.31A22,22 0 0,0 45.69,46.75"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M69.94,59.98A31,31 0 0,0 48.02,38.06"
+        android:strokeColor="#F5FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M78.64,57.65A40,40 0 0,0 50.35,29.36"
+        android:strokeColor="#E0FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+</vector>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  主题图标层（Android 13+ 单色图标）：与前景层同一套几何，只保留单一不透明色。
+
+  为什么要单独一份：系统开「主题图标」时会把 <monochrome> 取出来重新染色，
+  缺这一层就会退回默认图标——用户看到的直接是系统灰圆，等于图标白做。
+  渐变在这里是负资产：单色模式下会被压成灰阶，反而糊掉电波的层次。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M46.2,67.5L46.2,44"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+
+    <group
+        android:name="noteHead"
+        android:pivotX="40"
+        android:pivotY="68"
+        android:rotation="-22">
+        <path
+            android:pathData="M32.4,68a7.6,6.2 0 1,0 15.2,0a7.6,6.2 0 1,0 -15.2,0z"
+            android:fillColor="#FF000000" />
+    </group>
+
+    <path
+        android:pathData="M61.25,62.31A22,22 0 0,0 45.69,46.75"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="5.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M69.94,59.98A31,31 0 0,0 48.02,38.06"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M78.64,57.65A40,40 0 0,0 50.35,29.36"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+</vector>
