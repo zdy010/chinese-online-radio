@@ -90,9 +90,34 @@ class PlayerManager @Inject constructor(
 
     private val positionTracker = OperaPositionTracker()
 
-    /** 当前电台队列状态（SourceRotationEngine 集成前保持内联） */
-    private var sourceQueue: List<StationSource> = emptyList()
-    private var sourceQueueIndex: Int = 0
+    /**
+     * 电台多源轮转：队列、失败推进、可用性记录都在引擎里，本类只干
+     * 「拿到一个源就把播放器拨过去」这一件事。
+     *
+     * 此前这套状态在本类内联了一份、引擎里又有一份，两者会漂：
+     * 改了一处忘另一处就是「单测全绿但真机不轮转」。现在只留引擎这一份。
+     */
+    private val rotationEngine = SourceRotationEngine(stationRepository, scope)
+
+    /**
+     * 引擎的决策落地点。做成匿名对象而不是让本类 implements Callbacks：
+     * 那三个回调不该成为 PlayerManager 的公开 API。
+     */
+    private val rotationCallbacks = object : SourceRotationEngine.Callbacks {
+        override fun onRequestPlay(source: StationSource, index: Int, total: Int) {
+            playQueueSource(source, index, total)
+        }
+
+        override fun onAllSourcesExhausted() {
+            _status.value = null
+            _error.value = "所有节目源均无法播放"
+            _playbackState.value = Player.STATE_IDLE
+        }
+
+        override fun onScoresUpdated(scores: List<Pair<StationSource, Float>>) {
+            _sourceScores.value = scores
+        }
+    }
 
     // ========== 戏曲播放状态 ==========
 
@@ -251,15 +276,11 @@ class PlayerManager @Inject constructor(
 
         // 加载该电台的排序节目源
         scope.launch {
-            val sorted = stationRepository.getSortedSources(station.id)
-            sourceQueue = sorted
-            sourceQueueIndex = 0
-            val scores = stationRepository.getSourcesWithScore(station.id)
-            _sourceScores.value = scores
+            rotationEngine.initialize(station.id, rotationCallbacks)
 
             val ctrl = controller
             if (ctrl != null) {
-                tryPlaySource()
+                rotationEngine.startRotation()
             } else {
                 pendingStation = station
                 if (controllerFuture == null) connect()
@@ -274,20 +295,16 @@ class PlayerManager @Inject constructor(
         }
     }
 
-    /** 尝试播放队列中的下一个源 */
-    private fun tryPlaySource() {
-        if (sourceQueueIndex >= sourceQueue.size) {
-            // 所有源都失败了
-            _status.value = null
-            _error.value = "所有节目源均无法播放"
-            _playbackState.value = Player.STATE_IDLE
-            return
-        }
-
-        val source = sourceQueue[sourceQueueIndex]
+    /**
+     * 把播放器拨到引擎选定的那个源。
+     *
+     * 失败推进不在这里做：播放器报错走 onPlayerError → onSourceFailed → 引擎，
+     * 本函数只负责「就这个源，开播」，[index]/[total] 仅用于拼过渡提示。
+     */
+    private fun playQueueSource(source: StationSource, index: Int, total: Int) {
         _currentSource.value = source
         _playbackState.value = Player.STATE_BUFFERING
-        _status.value = "正在尝试节目源 ${source.label.ifEmpty { "${sourceQueueIndex + 1}/${sourceQueue.size}" }}…"
+        _status.value = "正在尝试节目源 ${source.label.ifEmpty { "${index + 1}/$total" }}…"
 
         val ctrl = controller ?: return
         val station = _currentStation.value ?: return
@@ -315,52 +332,36 @@ class PlayerManager @Inject constructor(
 
     private fun startPlayback(station: RadioStation) {
         scope.launch {
-            val sorted = stationRepository.getSortedSources(station.id)
-            sourceQueue = sorted
-            sourceQueueIndex = 0
-            val scores = stationRepository.getSourcesWithScore(station.id)
-            _sourceScores.value = scores
-            tryPlaySource()
+            rotationEngine.initialize(station.id, rotationCallbacks)
+            rotationEngine.startRotation()
         }
     }
 
-    /** 播放成功：记录可用性并提升分数 */
+    /**
+     * 播放成功：可用性记录与分数刷新交给引擎，「最近播放」仍由本类写。
+     * 引擎不该知道用户偏好，为此在回调里再开一条通道不值。
+     */
     private fun onPlaybackSuccess() {
         val station = _currentStation.value ?: return
-        val source = _currentSource.value ?: return
+        if (_currentSource.value == null) return
+        rotationEngine.onCurrentSuccess(station.id)
         scope.launch {
-            stationRepository.recordSourceSuccess(station.id, source.url, 0)
-            // 刷新分数
-            _sourceScores.value = stationRepository.getSourcesWithScore(station.id)
             // 「最近播放」需要跨进程重启存活，此前只存在 ViewModel 内存里
             preferences.addRecentStationId(station.id)
         }
     }
 
-    /** 当前源失败：记录并尝试下一个 */
+    /** 当前源失败：记录失败与推进到下一个都在引擎里 */
     private fun onSourceFailed() {
         val station = _currentStation.value ?: return
-        val source = _currentSource.value ?: return
-        scope.launch {
-            stationRepository.recordSourceFailure(station.id, source.url)
-        }
-        sourceQueueIndex++
-        tryPlaySource()
+        if (_currentSource.value == null) return
+        rotationEngine.onCurrentFailed(station.id)
     }
 
     /** 用户手动切换到指定节目源 */
     fun switchToSource(sourceUrl: String) {
         val station = _currentStation.value ?: return
-        val sources = sourceQueue
-        val idx = sources.indexOfFirst { it.url == sourceUrl }
-        if (idx < 0) return
-
-        sourceQueueIndex = idx
-        // 手动切换时将此源分数设最高
-        scope.launch {
-            stationRepository.setSourceScore(station.id, sourceUrl, 1.0f)
-            tryPlaySource()
-        }
+        rotationEngine.switchTo(station.id, sourceUrl)
     }
 
     fun togglePlayPause() {

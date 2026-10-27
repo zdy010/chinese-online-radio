@@ -6,7 +6,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -21,7 +21,9 @@ import org.junit.Test
  */
 class SourceRotationEngineTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    // 引擎内部用 scope.launch 推进分数写入与起播，Unconfined 让这两步在调用点就地跑完，
+    // 断言才能直接看 recorded 的顺序
+    private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repository: StationRepository
     private lateinit var scope: CoroutineScope
     private lateinit var engine: SourceRotationEngine
@@ -131,5 +133,26 @@ class SourceRotationEngineTest {
         engine.switchTo("st1", "http://c.com/stream")
 
         assertEquals("play:http://c.com/stream@3/3", recorded.last())
+    }
+
+    @Test
+    fun `switchTo writes the score before asking to play`() = runTest {
+        val sources = listOf(
+            StationSource(url = "http://a.com/stream", label = "A"),
+            StationSource(url = "http://b.com/stream", label = "B"),
+        )
+        coEvery { repository.getSortedSources("st1") } returns sources
+        coEvery { repository.getSourcesWithScore("st1") } returns sources.map { it to 1.0f }
+        coEvery { repository.setSourceScore("st1", "http://b.com/stream", 1.0f) } answers {
+            recorded.add("score")
+            Unit
+        }
+
+        engine.initialize("st1", callbacks)
+        engine.switchTo("st1", "http://b.com/stream")
+
+        // 先落分数再开播：反序会让秒失败时的 recordFailure 被 setScore 盖掉，
+        // 下次这个死源又被排到第一个
+        assertEquals(listOf("score", "play:http://b.com/stream@2/2"), recorded.takeLast(2))
     }
 }

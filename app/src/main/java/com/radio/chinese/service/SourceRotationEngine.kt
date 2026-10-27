@@ -67,15 +67,21 @@ class SourceRotationEngine(
         }
     }
 
-    /** 用户手动切到指定 URL 的源。 */
+    /**
+     * 用户手动切到指定 URL 的源。
+     *
+     * 分数写入必须在起播之前完成：新源往往就是那个刚被惩罚过的源，
+     * 若开播与 setSourceScore 并发，它秒失败时 recordFailure 与 setScore(1.0)
+     * 的先后就不确定，手动选择的分数可能反过来抹掉惩罚，下次它又被排到第一个。
+     */
     fun switchTo(stationId: String, sourceUrl: String) {
         val idx = queue.indexOfFirst { it.url == sourceUrl }
         if (idx < 0) return
         index = idx
         scope.launch {
             repository.setSourceScore(stationId, sourceUrl, 1.0f)
+            tryCurrent()
         }
-        tryCurrent()
     }
 
     private fun tryCurrent() {
