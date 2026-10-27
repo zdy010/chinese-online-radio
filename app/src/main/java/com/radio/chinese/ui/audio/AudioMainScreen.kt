@@ -78,6 +78,7 @@ fun AudioMainScreen(
     // 播放状态统一读 PlayerManager：网络与本地最终都经由它播出，
     // 此前同时读 ViewModel 和 PlayerManager 两份，切 Tab 时会出现进度不一致。
     val operaFile by playerManager.operaFile.collectAsState()
+    val operaPlaying by playerManager.isPlaying.collectAsState()
 
     var lastBackMs by remember { mutableLongStateOf(0L) }
     val ctx = LocalContext.current
@@ -110,9 +111,11 @@ fun AudioMainScreen(
         contentWindowInsets = NestedWindowInsets,
         bottomBar = {
             if (hasPlayer) {
-                // 迷你条只显示正在播放名称，不占进度条与控件；点整条进全屏播放页控制
+                // 迷你条只给曲名与一个播放/暂停；点其余区域进全屏播放页控细项
                 OperaMiniPlayerBar(
                     title = trackTitle,
+                    isPlaying = operaPlaying,
+                    onPlayPause = { playerManager.togglePlayPause() },
                     onClick = onOpenPlayer
                 )
             }

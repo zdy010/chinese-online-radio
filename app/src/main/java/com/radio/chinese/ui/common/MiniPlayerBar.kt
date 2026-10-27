@@ -145,15 +145,20 @@ fun RadioMiniPlayerBar(
 }
 
 /**
- * 戏曲版：只显示正在播放的名称。
+ * 戏曲版：封面 + 曲名 + 一个播放/暂停。
  *
- * 用户实测要求迷你条再降高度——不放进度条、不放任何控制按钮，只留“在放什么”。
- * 整条可点，点进去就是全屏播放页（进度、±10、上下段、循环、停止、倍速全在那里）。
- * 因此这里刻意保持最小：封面 + 曲名一行，通栏高度与电台版一致。
+ * 用户实测要求迷你条再降高度，所以不放进度条、也不放上下段/倍速那些；
+ * 但「不点进播放页也能停下来」这个能力得留着——电台版一直有，
+ * 这版没有就是同一类控件在不同页签行为不一致。
+ *
+ * 整条仍可点，点进去就是全屏播放页（进度、±10、上下段、循环、停止、倍速全在那里）；
+ * 按钮自己吃掉点击，不会既暂停又跳页。
  */
 @Composable
 fun OperaMiniPlayerBar(
     title: String,
+    isPlaying: Boolean,
+    onPlayPause: () -> Unit,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -186,6 +191,16 @@ fun OperaMiniPlayerBar(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
+            IconButton(
+                onClick = onPlayPause,
+                modifier = if (isCarSurface()) Modifier.size(Dimens.MiniPlayerSlim) else Modifier
+            ) {
+                Icon(
+                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isPlaying) "暂停播放" else "开始播放",
+                    modifier = Modifier.size(Dimens.IconMedium)
+                )
+            }
         }
     }
 }
