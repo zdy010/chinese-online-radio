@@ -20,6 +20,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.ui.common.EmptyState
+import com.radio.chinese.ui.common.NowPlayingWave
+import com.radio.chinese.ui.common.rememberNowPlaying
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.theme.isCarSurface
 import com.radio.chinese.ui.theme.Dimens
@@ -53,24 +56,39 @@ fun RadioRecentTab(
 
     val padding = PaddingValues(horizontal = Dimens.ScreenPadding)
     val gap = Arrangement.spacedBy(Dimens.ListGap)
+    // 与首页同一套行点击语义：这页以前只跳播放页、不在列表里起播
+    val nowPlaying = rememberNowPlaying(viewModel.playerManager)
+    val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
     val cell: @Composable (RadioStation) -> Unit = { station ->
+        val rowPlaying = nowPlaying.matches(station)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToPlayer(station.id) }
+                .clickable { onRowClick(station) }
                 .padding(vertical = Dimens.RowVerticalPadding)
                 .heightIn(min = Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Default.History,
-                null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(Dimens.IconMedium)
-            )
+            if (rowPlaying) {
+                NowPlayingWave(size = Dimens.IconMedium)
+            } else {
+                Icon(
+                    Icons.Default.History,
+                    null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(Dimens.IconMedium)
+                )
+            }
             Spacer(Modifier.width(Dimens.GapMedium))
             Column(Modifier.weight(1f)) {
-                Text(station.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    station.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (rowPlaying) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                )
                 Text(StationCategory.labelOf(station.category), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

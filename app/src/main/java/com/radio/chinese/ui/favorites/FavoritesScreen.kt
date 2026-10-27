@@ -24,6 +24,7 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
@@ -67,10 +68,6 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    fun playStation(station: RadioStation) {
-        playerManager.playStation(station)
-    }
-
     fun removeFavorite(stationId: String) {
         viewModelScope.launch {
             favoriteRepository.removeFavorite(stationId)
@@ -91,6 +88,8 @@ fun FavoritesScreen(
     val filteredStations = uiState.favoriteStations.filter { searchQuery.isBlank() || it.name.contains(searchQuery, ignoreCase = true) }
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
+    // 与首页同一套行点击语义：点非当前台只起播并留在列表
+    val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -139,10 +138,7 @@ fun FavoritesScreen(
                         station = station,
                         isPlaying = currentStation?.id == station.id && isPlaying,
                         isFavorite = true,
-                        onClick = {
-                            viewModel.playStation(station)
-                            onNavigateToPlayer(station.id)
-                        },
+                        onClick = { onRowClick(station) },
                         onFavoriteClick = { viewModel.removeFavorite(station.id) }
                     )
                 }

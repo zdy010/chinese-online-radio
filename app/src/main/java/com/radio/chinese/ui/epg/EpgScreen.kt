@@ -41,7 +41,10 @@ import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.carTouchTarget
+import com.radio.chinese.ui.common.rememberNowPlaying
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 
@@ -59,6 +62,10 @@ fun EpgScreen(
     viewModel: EpgViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    // 与其他六个电台列表同一套行语义：点非当前台只起播并留在本页，点当前台才进播放页。
+    // 节目单页以前是「点一行就跳全屏」，想连着扫几个台得反复返回，与其他页不一致。
+    val nowPlaying = rememberNowPlaying(viewModel.playerManager)
+    val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -146,10 +153,8 @@ fun EpgScreen(
                             EpgStationCard(
                                 row = row,
                                 minute = state.minute,
-                                onClick = {
-                                    viewModel.play(row.station)
-                                    onNavigateToPlayer(row.station.id)
-                                }
+                                isPlaying = nowPlaying.matches(row.station),
+                                onClick = { onRowClick(row.station) }
                             )
                         }
                     }
@@ -164,6 +169,7 @@ fun EpgScreen(
 private fun EpgStationCard(
     row: EpgRow,
     minute: Int,
+    isPlaying: Boolean,
     onClick: () -> Unit,
 ) {
     val current = EpgQuery.currentAt(row.programs, minute)
@@ -217,14 +223,23 @@ private fun EpgStationCard(
                     )
                 }
             }
-            Icon(
-                Icons.Default.PlayCircle,
-                contentDescription = "播放",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(start = Dimens.GapSmall)
-                    .size(Dimens.IconLarge)
-            )
+            // 在放的那一行把「播放」图标换成跳动的四条彩条：这一页也是列表，
+            // 用户扫到一半忘了自己点在听哪个台时，得靠它定位
+            if (isPlaying) {
+                NowPlayingWave(
+                    size = Dimens.IconLarge,
+                    modifier = Modifier.padding(start = Dimens.GapSmall),
+                )
+            } else {
+                Icon(
+                    Icons.Default.PlayCircle,
+                    contentDescription = "播放",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(start = Dimens.GapSmall)
+                        .size(Dimens.IconLarge)
+                )
+            }
         }
     }
 }

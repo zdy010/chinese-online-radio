@@ -297,12 +297,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun playStation(station: RadioStation) {
-        // 最近播放由 PlayerManager 在真正确认起播成功后写入 DataStore，
-        // 此处不再维护第二份内存列表，避免两个写入源互相覆盖。
-        playerManager.playStation(station)
-    }
-
     fun toggleFavorite(stationId: String) {
         viewModelScope.launch {
             val isFavorite = _favoriteIds.value.contains(stationId)

@@ -40,6 +40,7 @@ import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.common.StatusChip
 import com.radio.chinese.ui.common.StationActionDialog
@@ -67,6 +68,8 @@ fun HomeScreen(
     val playbackState by viewModel.playerManager.playbackState.collectAsState()
     // 长按电台弹出的管理菜单（与节目源管理页同一套交互），方便随时编辑
     var actionStation by remember { mutableStateOf<RadioStation?>(null) }
+    // 行点击统一语义：点非当前台只起播并留在列表，点当前台才进播放页
+    val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -137,10 +140,7 @@ fun HomeScreen(
                             station = station,
                             isPlaying = currentStation?.id == station.id && isPlaying,
                             isFavorite = uiState.favoriteIds.contains(station.id),
-                            onClick = {
-                                viewModel.playStation(station)
-                                onNavigateToPlayer(station.id)
-                            },
+                            onClick = { onRowClick(station) },
                             onFavoriteClick = { viewModel.toggleFavorite(station.id) },
                             onLongClick = { actionStation = station },
                             nowProgram = epgNowTitles[station.id],
@@ -154,10 +154,8 @@ fun HomeScreen(
                     val stationById = if (programs.isEmpty()) emptyMap()
                     else uiState.stations.associateBy { it.id }
                     val onProgramClick: (EpgProgram) -> Unit = { program ->
-                        stationById[program.stationId]?.let { station ->
-                            viewModel.playStation(station)
-                            onNavigateToPlayer(station.id)
-                        }
+                        // 从节目名点进同一个台：也走行点击语义，不在当前台时只起播不跳转
+                        stationById[program.stationId]?.let { onRowClick(it) }
                     }
                     val hasStationResults = uiState.filteredStations.isNotEmpty()
 

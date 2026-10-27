@@ -22,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.ui.common.categoryIcon
 import com.radio.chinese.ui.common.carTouchTarget
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.common.EmptyState
@@ -123,6 +124,8 @@ fun CategoryScreen(
                 .apply(uiState.stations, selectedCategory, searchQuery)
             val currentStation by viewModel.playerManager.currentStation.collectAsState()
             val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
+            // 与首页同一套行点击语义
+            val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
 
             Column(modifier = m) {
                 if (!showTopBar) {
@@ -155,10 +158,7 @@ fun CategoryScreen(
                                 station = station,
                                 isPlaying = currentStation?.id == station.id && isPlaying,
                                 isFavorite = uiState.favoriteIds.contains(station.id),
-                                onClick = {
-                                    viewModel.playStation(station)
-                                    onNavigateToPlayer(station.id)
-                                },
+                                onClick = { onRowClick(station) },
                                 onFavoriteClick = { viewModel.toggleFavorite(station.id) }
                             )
                         }

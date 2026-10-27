@@ -33,6 +33,8 @@ import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.carTouchTarget
+import com.radio.chinese.ui.common.rememberNowPlaying
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.theme.Dimens
@@ -115,6 +117,10 @@ fun TagScreen(
                         modifier = modifier,
                     )
                 } else {
+                    // 与首页同一套行点击语义与波浪标记：这页以前 isPlaying 写死 false、
+                    // 点击只跳播放页不起播，与其他电台列表不一致
+                    val nowPlaying = rememberNowPlaying(viewModel.playerManager)
+                    val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
                     LazyColumn(
                         modifier = modifier.fillMaxSize(),
                         contentPadding = PaddingValues(Dimens.ScreenPadding),
@@ -123,9 +129,9 @@ fun TagScreen(
                         items(stations, key = { it.id }) { station ->
                             StationListItem(
                                 station = station,
-                                isPlaying = false,
+                                isPlaying = nowPlaying.matches(station),
                                 isFavorite = uiState.favoriteIds.contains(station.id),
-                                onClick = { onNavigateToPlayer(station.id) },
+                                onClick = { onRowClick(station) },
                                 onFavoriteClick = { viewModel.toggleFavorite(station.id) },
                             )
                         }

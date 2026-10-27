@@ -57,6 +57,7 @@ import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.carTouchTarget
+import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.HomeUiState
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.home.StationListItem
@@ -88,6 +89,8 @@ fun RegionScreen(
     val userRegion by viewModel.userRegion.collectAsState()
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
+    // 与首页同一套行点击语义：点非当前台只起播并留在列表
+    val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
 
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -159,10 +162,7 @@ fun RegionScreen(
                     isPlaying = isPlaying,
                     showBackRow = !showTopBar,
                     onBack = { selectedKey = null },
-                    onPlay = { station ->
-                        viewModel.playStation(station)
-                        onNavigateToPlayer(station.id)
-                    },
+                    onPlay = { station -> onRowClick(station) },
                     onFavorite = viewModel::toggleFavorite,
                     modifier = m,
                 )

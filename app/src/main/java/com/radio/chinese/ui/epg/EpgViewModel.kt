@@ -57,7 +57,9 @@ data class EpgUiState(
 class EpgViewModel @Inject constructor(
     private val epgRepository: EpgRepository,
     private val stationRepository: StationRepository,
-    private val playerManager: PlayerManager,
+    // 公开给 EpgScreen 的 rememberStationRowOnClick / rememberNowPlaying 用：
+    // 节目单页的行点击语义与波浪标记必须和其余电台列表走同一个判定，不能各写一套
+    val playerManager: PlayerManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(EpgUiState(minute = nowMinute()))
@@ -91,11 +93,6 @@ class EpgViewModel @Inject constructor(
 
     fun updateQuery(query: String) {
         _state.value = _state.value.copy(query = query)
-    }
-
-    /** 点一行 → 起播该台，再跳播放页。栏目顺序与列表一致：先起播，页面打开即是这一台。 */
-    fun play(station: RadioStation) {
-        playerManager.playStation(station)
     }
 
     fun retry() = load(_state.value.selectedDate)
