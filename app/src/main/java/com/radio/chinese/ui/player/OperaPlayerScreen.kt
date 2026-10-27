@@ -307,6 +307,7 @@ private fun LyricPage(state: OperaPlayerUiState, car: Boolean, onLineClick: (Int
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ControlRow(
     playing: Boolean,
@@ -392,22 +393,25 @@ private fun ControlRow(
         }
     }
     if (car) {
-        // 车机档：八个 88dp 按钮单行要 704dp，右侧控件栏装不下——
-        // 拆两行：主控制（±10/上下段/播放）居中，循环与停止分列两端
-        Column(Modifier.fillMaxWidth().padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapSmall)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                seekBackBtn()
-                prevBtn()
-                playBtn()
-                nextBtn()
-                seekFwdBtn()
-            }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                repeatBtn()
-                speedBtn()
-                Spacer(Modifier.weight(1f))
-                stopBtn()
-            }
+        // 车机档：循环与倍速并进主控件行（用户实测：它们单独占一行，下面空出一条谁都不碰的横带）。
+        // 用 FlowRow 而不是 Row：八个 88dp 目标单行要 704dp，density 报 160 的
+        // 1280dp 面板装得下，报 240 的只有 853dp、再遇到窄一档的面板就会把末尾的
+        // 「停止」挤出屏。FlowRow 装得下就是一行，装不下才折行，不会丢控件。
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.GapMedium, vertical = Dimens.GapSmall),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.GapSmall, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(Dimens.GapTiny, Alignment.CenterVertically),
+        ) {
+            repeatBtn()
+            speedBtn()
+            seekBackBtn()
+            prevBtn()
+            playBtn()
+            nextBtn()
+            seekFwdBtn()
+            stopBtn()
         }
     } else {
         Row(

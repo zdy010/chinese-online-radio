@@ -65,7 +65,8 @@ fun RadioRecentTab(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onRowClick(station) }
-                .padding(vertical = Dimens.RowVerticalPadding)
+                // 与 StationListItem 同一竖向节奏（12→8）：最近页与首页行高不一致会看着像两套列表
+                .padding(vertical = Dimens.GapSmall)
                 .heightIn(min = Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
         ) {

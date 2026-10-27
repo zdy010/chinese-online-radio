@@ -26,7 +26,15 @@ fun stationSubtitle(station: RadioStation, categoryLabel: String): String {
     }
 }
 
-/** 手机档与车机档共用的副标题文本；结论为空时整块不渲染，不留空行。 */
+/** 只拿电台本身取副标题文案（分类中文名由枚举兜底），供行内拼接与单独成行两种用法共用。 */
+fun stationSubtitleOf(station: RadioStation): String =
+    stationSubtitle(station, StationCategory.labelOf(station.category))
+
+/**
+ * 副标题单独成行的用法（播放页、管理页）；结论为空时整块不渲染，不留空行。
+ *
+ * 电台列表不用这里：那里频率并到台名后面同一行，见 HomeScreen.StationListItem。
+ */
 @Composable
 fun StationSubtitleText(
     station: RadioStation,
@@ -34,7 +42,7 @@ fun StationSubtitleText(
     style: TextStyle = MaterialTheme.typography.bodySmall,
     textAlign: TextAlign? = null,
 ) {
-    val text = stationSubtitle(station, StationCategory.labelOf(station.category))
+    val text = stationSubtitleOf(station)
     if (text.isBlank()) return
     Text(
         text = text,

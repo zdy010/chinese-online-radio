@@ -35,10 +35,25 @@ object Dimens {
     val ChipGap: Dp = 8.dp
 
     // 高度与命中区：车机档要容得下颠簸中手指与方向盘操作
+    //
+    // RowMinHeight 从 88 收到 72：88 是拿「单行大按钮」的标准套到列表行上，
+    // 而列表行本身就有 1280dp 宽，横向容错早已足够；竖向 88dp 在 720dp 高的
+    // 车机屏上一屏只装得下六行台，用户实测「行太高、找台要翻很久」。
+    // 主操作（播放/暂停/上下段）仍拿满 TouchMin(88)，只把列表行与芯片这类
+    // 「宽目标」降一档。
     val RowMinHeight: Dp
-        @Composable get() = if (car) 88.dp else 56.dp
+        @Composable get() = if (car) 72.dp else 56.dp
     val TouchMin: Dp
         @Composable get() = if (car) 88.dp else 48.dp
+    /**
+     * 次级目标的下限（车机 64dp / 手机 48dp）：芯片、输入框、收藏这类
+     * 「整行宽或一眼能认」的控件拿这一档，主操作（播放/上下段/停止）仍拿 TouchMin。
+     *
+     * 不设这一档会被主操作钉死行高：列表行末尾的收藏键占 88dp 高，
+     * 里面的封面、文字再怎么压都白搭，整行只能跟着长到 88dp。
+     */
+    val TouchSecondary: Dp
+        @Composable get() = if (car) 64.dp else 48.dp
     val IconSmall: Dp = 18.dp
     val IconMedium: Dp = 24.dp
     val IconLarge: Dp = 32.dp
@@ -62,8 +77,10 @@ object Dimens {
 
     // 封面/图标位
     val CoverTiny: Dp = 40.dp
+    // 车机档封面从 72 收到 56：行高下限里真正撑尺寸的不是文字，而是「封面 + 上下内边距」
+    //（72+24=96dp），不收这一项，光把 RowMinHeight 调小也不会变矮。
     val CoverSmall: Dp
-        @Composable get() = if (car) 72.dp else 48.dp
+        @Composable get() = if (car) 56.dp else 48.dp
     val CoverLargeMax: Dp
         @Composable get() = if (car) 320.dp else 220.dp
 

@@ -40,6 +40,21 @@ fun Modifier.carTouchTarget(): Modifier =
     }
 
 /**
+ * 芯片类「宽而浅」目标的命中区：车机档只卡竖向 [Dimens.TouchSecondary]，手机档不加约束。
+ *
+ * 不能直接用 [carTouchTarget]：它同时钉 heightIn 与 widthIn 两个 88dp，
+ * 分类筛选芯片是一排横滚的导航件，竖向撑到 88dp 会把首屏整整吃掉一条，
+ * 而它们的宽度本就远超命中区下限，竖向 64dp 仍是手机档自然高度的两倍。
+ */
+@Composable
+fun Modifier.carChipTarget(): Modifier =
+    if (isCarSurface()) {
+        this.heightIn(min = Dimens.TouchSecondary).widthIn(min = Dimens.TouchMin)
+    } else {
+        this
+    }
+
+/**
  * 纯装饰性状态标签。
  *
  * 此前用 SuggestionChip(onClick = {}) 表达不可点的标签：既是「假按钮」（点了没反应），
@@ -82,7 +97,10 @@ fun AppSearchField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder) },
+        // 占位文案要单独锁行：singleLine 只约束输入值，管不到 placeholder。
+        // 车机档字号下限 1.15 下「搜索电台、频率或节目」会拆成两行，
+        // 叠上下面的高度下限，整个框能长到 150dp（用户实测「搜索框太高」）
+        placeholder = { Text(placeholder, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         leadingIcon = {
             Icon(Icons.Default.Search, contentDescription = null)
         },
@@ -96,10 +114,11 @@ fun AppSearchField(
         singleLine = true,
         shape = MaterialTheme.shapes.extraLarge,
         textStyle = MaterialTheme.typography.bodyMedium,
-        // 手机档 TouchMin=48dp 小于输入框自然高度，此约束不改变手机档；车机档抬到 88dp
+        // 下限取 TouchSecondary（车机 64dp / 手机 48dp）：搜索框是整行宽的目标，
+        // 拿主操作的 88dp 只会把列表顶出首屏，换不到更好的命中精度
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = Dimens.TouchMin)
+            .heightIn(min = Dimens.TouchSecondary)
     )
 }
 

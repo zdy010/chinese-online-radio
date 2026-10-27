@@ -38,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.SectionHeader
+import com.radio.chinese.ui.common.carChipTarget
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.Dimens
@@ -301,7 +302,9 @@ fun SettingsScreen(
                             FilterChip(
                                 selected = uiState.fontScaleKey == option.key,
                                 onClick = { viewModel.setFontScaleKey(option.key) },
-                                label = { Text(option.label) }
+                                label = { Text(option.label) },
+                                // 与分类芯片同一档：车机档竖向 64dp，手机档不加约束
+                                modifier = Modifier.carChipTarget()
                             )
                         }
                     }
@@ -327,8 +330,9 @@ fun SettingsScreen(
                                 selected = uiState.uiMode == mode,
                                 onClick = { viewModel.setUiMode(mode) },
                                 label = { Text(label) },
-                                // 形态误判时这三枚胶囊是唯一的自救入口，命中区不能是最小的
-                                modifier = Modifier.carTouchTarget()
+                                // 形态误判时这三枚胶囊是唯一的自救入口，命中区不能小；
+                                // 但它们是宽目标，拿 carChipTarget(64dp) 就够，不必 88dp
+                                modifier = Modifier.carChipTarget()
                             )
                         }
                     }

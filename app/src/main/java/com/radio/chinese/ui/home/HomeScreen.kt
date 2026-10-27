@@ -23,8 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.Player
@@ -45,8 +47,9 @@ import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.common.StatusChip
 import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.common.StationCover
-import com.radio.chinese.ui.common.StationSubtitleText
+import com.radio.chinese.ui.common.carChipTarget
 import com.radio.chinese.ui.common.carTouchTarget
+import com.radio.chinese.ui.common.stationSubtitleOf
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 
@@ -246,7 +249,9 @@ private fun CategoryChipsRow(
     onCategorySelected: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 车机档把筛选条凑到 88dp 短边；手机档不加约束，避免连 46.9dp 这种现存微差异都被动到
+    // 芯片是「宽而浅」的导航件：车机档走 carChipTarget（竖向 64dp）而不是
+    // carTouchTarget（88dp），88dp 会把首屏整整吃掉一条；手机档不加约束，
+    // 避免连 46.9dp 这种现存微差异都被动到
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
@@ -257,7 +262,7 @@ private fun CategoryChipsRow(
                 selected = selectedCategory == null,
                 onClick = { onCategorySelected(null) },
                 label = { Text("全部") },
-                modifier = Modifier.carTouchTarget()
+                modifier = Modifier.carChipTarget()
             )
         }
         items(categories, key = { "chip-${it.first}" }) { (id, name) ->
@@ -267,7 +272,7 @@ private fun CategoryChipsRow(
                     onCategorySelected(if (selectedCategory == id) null else id)
                 },
                 label = { Text(name) },
-                modifier = Modifier.carTouchTarget()
+                modifier = Modifier.carChipTarget()
             )
         }
     }
@@ -293,7 +298,7 @@ private fun ProgramResultCard(
     ) {
         Row(
             modifier = Modifier
-                .padding(Dimens.CardPadding)
+                .padding(horizontal = Dimens.CardPadding, vertical = Dimens.GapSmall)
                 .fillMaxWidth()
                 .heightIn(min = Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
@@ -354,8 +359,11 @@ fun StationListItem(
         shape = MaterialTheme.shapes.medium
     ) {
         Row(
+            // 竖向内边距从 CardPadding(12) 收到 GapSmall(8)：行高里真正吃掉空间的
+            // 不是文字而是「封面 + 上下内边距」，手机档从 72dp 降到 64dp，
+            // 车机档从 98dp 降到 72dp。横向留白不动，不改变文字与封面的间距观感。
             modifier = Modifier
-                .padding(Dimens.CardPadding)
+                .padding(horizontal = Dimens.CardPadding, vertical = Dimens.GapSmall)
                 .fillMaxWidth()
                 .heightIn(min = Dimens.RowMinHeight),
             verticalAlignment = Alignment.CenterVertically
@@ -373,11 +381,28 @@ fun StationListItem(
             // Station Info
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // 频率并到台名后面同一行（用户实测：频率单独占一行太浪费）。
+                    // 用同一段富文本的两种样式，而不是 Row 里摆两个 Text：
+                    // 两个 Text 会抢宽度，名字一长就把后面的波浪标记与「单」字挤出去；
+                    // 单段富文本是整行一起省略，控件永远留在原位。
+                    val sub = stationSubtitleOf(station)
+                    val nameStyle = MaterialTheme.typography.titleSmall
                     Text(
-                        text = station.name,
-                        style = MaterialTheme.typography.titleSmall,
+                        text = buildAnnotatedString {
+                            withStyle(nameStyle.toSpanStyle()) { append(station.name) }
+                            if (sub.isNotBlank()) {
+                                append("  ")
+                                withStyle(
+                                    MaterialTheme.typography.bodySmall
+                                        .copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        .toSpanStyle()
+                                ) { append(sub) }
+                            }
+                        },
+                        style = nameStyle,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     if (isPlaying) {
                         Spacer(modifier = Modifier.width(Dimens.GapSmall))
@@ -390,9 +415,8 @@ fun StationListItem(
                         StatusChip(text = "单")
                     }
                 }
-                // 副标题规则在 stationSubtitle 一处定义，与播放器、管理页共用
-                StationSubtitleText(station = station)
-                // 正在播出的节目名：太长时单行走马灯滚动，不折行顶高列表行
+                // 正在播出的节目名：太长时单行走马灯滚动，不折行顶高列表行；
+                // 没有节目时整块不渲染，这一行台就只有两行高
                 if (!nowProgram.isNullOrBlank()) {
                     MarqueeText(
                         text = "正在播出：$nowProgram",
@@ -405,7 +429,9 @@ fun StationListItem(
             // Favorite Button
             IconButton(
                 onClick = onFavoriteClick,
-                modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                // 车机档取次级下限 64dp 而不是 88dp：它是行内唯一的 88dp 元件，
+                // 不收这一档，封面与文字压得再狠，行高也会被它钉回 88dp
+                modifier = if (isCarSurface()) Modifier.size(Dimens.TouchSecondary) else Modifier
             ) {
                 Icon(
                     if (isFavorite) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
