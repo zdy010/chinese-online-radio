@@ -3,6 +3,7 @@ package com.radio.chinese.ui.common
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.media3.common.Player
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
 
@@ -31,6 +32,9 @@ fun rememberNowPlaying(playerManager: PlayerManager): NowPlayingState {
  * 点一个不是当前的台：只起播，**留在列表里**。底部迷你条已经能显示在放什么、
  * 也能就地暂停，再自动跳全屏播放页等于每点一个台都要手动返回一次。
  * 点当前正在放的那个台：进播放页——这是用户主动要看细节、要换节目源的手势。
+ * 但「所有节目源均无法播放」之后例外：再点同一个台是用户唯一的重试手势，
+ * 这时候只把播放页打开等于把红色错误继续钉在屏上，必须重新起播
+ * （2026-10-27 断网回归多源轮转时发现）。
  *
  * 直接走 playerManager.playStation：各 VM 上那层只负责转发的 playStation 已删，
  * 七个页面共用同一条起播路径，不会再出现某一页多一道处理。最近播放由 PlayerManager
@@ -44,9 +48,14 @@ fun rememberStationRowOnClick(
     onNavigateToPlayer: (String) -> Unit,
 ): (RadioStation) -> Unit {
     val station by playerManager.currentStation.collectAsState()
+    val error by playerManager.error.collectAsState()
+    val playback = playerManager.playbackState.collectAsState().value
     val currentId = station?.id
     return { target ->
-        if (target.id == currentId) onNavigateToPlayer(target.id)
+        val isCurrent = target.id == currentId
+        // 报错或播放器已停下：这个台需要重新走一遍轮转，不能只当“看详情”
+        val needsRetry = isCurrent && (error != null || playback == Player.STATE_IDLE)
+        if (isCurrent && !needsRetry) onNavigateToPlayer(target.id)
         else playerManager.playStation(target)
     }
 }
