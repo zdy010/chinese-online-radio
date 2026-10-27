@@ -45,8 +45,11 @@ fun NowPlayingWave(
     // 车机档放大一档：16dp 的动效在 10 寸屏 + 行车距离下基本看不出来
     val side = if (isCarSurface()) size * 1.5f else size
     val tint = MaterialTheme.colorScheme.primary
-    val barWidth = side / 6f
-    val gap = side / 6f
+    // 条宽与间隙都取 side/8：四根条 4×side/8 加三道缝 3×side/8 = 7/8·side，稳稳装进 side。
+    // 早先写成 side/6（一根占 1/3·side）时内容宽 4/3·side，第四根被容器裁掉，
+    // 真机上只看得到三根——2026-10-27 真视觉验证发现（不是“渲染慢”，是永远出不来）。
+    val barWidth = side / 8f
+    val gap = side / 8f
     val transition = rememberInfiniteTransition(label = "now-playing-wave")
     // 每根条不同周期 + 不同起始延迟：同频会像一整块在呼吸，错开才像频谱在跳
     val heights = listOf(380, 520, 440, 620).mapIndexed { i, dur ->
