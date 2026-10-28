@@ -3,6 +3,7 @@ package com.radio.chinese.ui.player
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,6 +34,7 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.bitrateText
+import com.radio.chinese.ui.common.mediaClock
 import com.radio.chinese.ui.common.mediaTimeText
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
@@ -150,27 +153,77 @@ fun OperaPlayerScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerSlider(pos: Long, dur: Long, onSeek: (Long) -> Unit) {
     if (dur <= 0L) return // 时长未知时不给可拖 0 的滑条（与迷你条同一防御）
     var isDragging by remember { mutableStateOf(false) }
     var dragMs by remember { mutableLongStateOf(0L) }
-    Slider(
-        value = (if (isDragging) dragMs else pos).toFloat(),
-        onValueChange = { dragMs = it.toLong(); isDragging = true },
-        onValueChangeFinished = { isDragging = false; onSeek(dragMs) },
-        valueRange = 0f..dur.toFloat(),
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = Dimens.SliderTouchHeight)
-            .padding(horizontal = Dimens.GapMedium)
-            .semantics { contentDescription = "播放进度" },
-        colors = SliderDefaults.colors(
-            thumbColor = MaterialTheme.colorScheme.primary,
-            activeTrackColor = MaterialTheme.colorScheme.primary,
-            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+    val shown = if (isDragging) dragMs else pos
+    val frac = (shown.toFloat() / dur.toFloat()).coerceIn(0f, 1f)
+    val active = MaterialTheme.colorScheme.primary
+    val inactive = MaterialTheme.colorScheme.surfaceVariant
+    Column(Modifier.fillMaxWidth().padding(horizontal = Dimens.GapLarge)) {
+        // 自己画细圆角轨道 + 小圆点拇指：Material3 默认拇指是一枚竖胶囊、轨道很细，
+        // 在戏曲页上看着突兀（用户实测“进度条好丑”）。
+        Slider(
+            value = shown.toFloat(),
+            onValueChange = { dragMs = it.toLong(); isDragging = true },
+            onValueChangeFinished = { isDragging = false; onSeek(dragMs) },
+            valueRange = 0f..dur.toFloat(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.SliderTouchHeight)
+                .semantics { contentDescription = "播放进度" },
+            colors = SliderDefaults.colors(
+                thumbColor = active,
+                activeTrackColor = active,
+                inactiveTrackColor = inactive,
+            ),
+            thumb = {
+                Box(
+                    Modifier
+                        .size(14.dp)
+                        .shadow(2.dp, CircleShape)
+                        .background(active, CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                )
+            },
+            track = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(CircleShape)
+                        .background(inactive)
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(frac)
+                            .fillMaxHeight()
+                            .clip(CircleShape)
+                            .background(active)
+                    )
+                }
+            }
         )
-    )
+        // 两端时间：左已播、右总时长，比只在顶部堆一行“0:21 / 4:21”更像播放器
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                mediaClock(shown),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                mediaClock(dur),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 /**
@@ -330,13 +383,17 @@ private fun ControlRow(
         OperaRepeatMode.ONE -> "单曲循环"
         OperaRepeatMode.RANDOM -> "随机播放"
     }
+    // 播放模式改用通用图标（循环/单曲循环/随机），不再占“列表循环”四个字——
+    // 那四个字把同行的“前进 10 秒”顶出了屏（用户实测）。当前模式仍放进 contentDescription，
+    // 无障碍与长按提示不丢。
+    val repeatIcon = when (repeat) {
+        OperaRepeatMode.ALL -> Icons.Default.Repeat
+        OperaRepeatMode.ONE -> Icons.Default.RepeatOne
+        OperaRepeatMode.RANDOM -> Icons.Default.Shuffle
+    }
     val repeatBtn = @Composable {
-        TextButton(
-            onClick = onCycleRepeat,
-            // 车机档循环按钮也要拿满 88dp 命中区（裸 TextButton 只有 48dp，验收脚本会判违规）
-            modifier = if (car) Modifier.heightIn(min = Dimens.TouchMin) else Modifier
-        ) {
-            Text(repeatLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        IconButton(onClick = onCycleRepeat, modifier = btnMod) {
+            Icon(repeatIcon, contentDescription = "$repeatLabel（点按切换）")
         }
     }
     val stopBtn = @Composable {
