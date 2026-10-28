@@ -24,14 +24,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.StationTag
+import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.common.rememberNowPlaying
 import com.radio.chinese.ui.common.rememberStationRowOnClick
@@ -62,6 +65,8 @@ fun TagScreen(
     }
     val current = picked
     val title = current?.let { StationTag.labelOf(it) } ?: "按标签浏览"
+    // 与其他筛选页一致的屏蔽入口：长按行弹动作菜单（用户实测问题 4）
+    var actionStation by remember { mutableStateOf<RadioStation?>(null) }
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -133,12 +138,26 @@ fun TagScreen(
                                 isFavorite = uiState.favoriteIds.contains(station.id),
                                 onClick = { onRowClick(station) },
                                 onFavoriteClick = { viewModel.toggleFavorite(station.id) },
+                                onLongClick = { actionStation = station },
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    actionStation?.let { station ->
+        StationActionDialog(
+            station = station,
+            // 标签页只列有效电台（getActiveStations 已隐去屏蔽项），“恢复为有效”分支不会命中
+            isInvalid = false,
+            isCustom = uiState.customIds.contains(station.id),
+            onDismiss = { actionStation = null },
+            onMarkInvalid = { viewModel.markStationInvalid(station.id); actionStation = null },
+            onMarkValid = { viewModel.restoreStation(station.id); actionStation = null },
+            onDelete = { viewModel.deleteCustomStation(station.id); actionStation = null },
+        )
     }
 }
 

@@ -20,9 +20,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.StationCategory
+import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.ui.common.categoryIcon
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.common.rememberStationRowOnClick
+import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.home.HomeViewModel
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.common.EmptyState
@@ -44,6 +46,8 @@ fun CategoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     // 用 rememberSaveable：页内状态在左右翻页时会重新创建，普通 remember 会把已选分类重置回网格首页
     var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
+    // 与其他筛选页一致的屏蔽入口：长按行弹动作菜单（用户实测问题 4）
+    var actionStation by remember { mutableStateOf<RadioStation?>(null) }
 
     // 页签宿主里 showTopBar=false，TopAppBar 的返回钮不存在；系统返回又会被 RadioScreen 的
     // “双击退出”兜底吃掉——分类列表进得去回不来。这里把返回键接回分类网格。
@@ -159,13 +163,27 @@ fun CategoryScreen(
                                 isPlaying = currentStation?.id == station.id && isPlaying,
                                 isFavorite = uiState.favoriteIds.contains(station.id),
                                 onClick = { onRowClick(station) },
-                                onFavoriteClick = { viewModel.toggleFavorite(station.id) }
+                                onFavoriteClick = { viewModel.toggleFavorite(station.id) },
+                                onLongClick = { actionStation = station },
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    actionStation?.let { station ->
+        StationActionDialog(
+            station = station,
+            // 分类页只列有效电台（屏蔽的已被 getActiveStations 隐去），“恢复为有效”分支不会命中
+            isInvalid = false,
+            isCustom = uiState.customIds.contains(station.id),
+            onDismiss = { actionStation = null },
+            onMarkInvalid = { viewModel.markStationInvalid(station.id); actionStation = null },
+            onMarkValid = { viewModel.restoreStation(station.id); actionStation = null },
+            onDelete = { viewModel.deleteCustomStation(station.id); actionStation = null },
+        )
     }
 }
 

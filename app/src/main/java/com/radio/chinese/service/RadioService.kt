@@ -9,6 +9,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.IntentCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -141,7 +142,7 @@ class RadioService : MediaSessionService() {
             )
         }
 
-        val session = MediaSession.Builder(this, player)
+        val session = MediaSession.Builder(this, SkipTogglePlayer(player))
             .apply {
                 sessionActivityPendingIntent?.let { setSessionActivity(it) }
                 setCallback(buildSessionCallback())
@@ -278,6 +279,32 @@ class RadioService : MediaSessionService() {
         }
         exoPlayer = null
         super.onDestroy()
+    }
+
+    /**
+     * 用户实测问题 5：手机下拉的播放条只有“上一个”，没有“下一个”。
+     *
+     * 根因：本播放器恒为单条直播流，ExoPlayer 不报 COMMAND_SEEK_TO_NEXT 可用（无下一 MediaItem），
+     * Media3 默认通知因此不渲染“下一个”钮（而 PREV 因直播 seek 回起点仍算可用）。而“上/下一个”在
+     * 本应用里是切电台/切曲目，早已在 onPlayerCommandRequest 拦下并走 handleWheelSkip。
+     * 这里用 ForwardingPlayer 向上/下一个命令补进可用集，使默认通知同时渲染两个按钮且可点；
+     * 点下去仍走会话命令拦接，不会真的调 ExoPlayer 的空 seekToNext。
+     */
+    private class SkipTogglePlayer(player: Player) : ForwardingPlayer(player) {
+        override fun isCommandAvailable(command: Int): Boolean =
+            command in SKIP_COMMANDS || super.isCommandAvailable(command)
+
+        override fun getAvailableCommands(): Player.Commands =
+            super.getAvailableCommands().buildUpon().addAll(*SKIP_COMMANDS).build()
+
+        companion object {
+            private val SKIP_COMMANDS = intArrayOf(
+                Player.COMMAND_SEEK_TO_NEXT,
+                Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+                Player.COMMAND_SEEK_TO_PREVIOUS,
+                Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+            )
+        }
     }
 
     companion object {

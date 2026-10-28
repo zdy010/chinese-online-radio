@@ -33,10 +33,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -70,7 +72,10 @@ fun AudioMainScreen(
         SurfaceTab("收藏", Icons.Default.Star),
         SurfaceTab("最近", Icons.Default.History),
     )
-    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    // 页码与搜索词都用 rememberSaveable：从音频库播一条结果进全屏播放页再返回，
+    // 本屏会被重建。普通 remember 把“在第几页、搜了什么”清成初始值，用户就被弹回库主页（用户实测问题 3）。
+    var savedPage by rememberSaveable { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(initialPage = savedPage, pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
     val viewModel: AudioLibraryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -91,11 +96,13 @@ fun AudioMainScreen(
         }
     }
 
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     // 形态判定只有一个源：这里读，往下传布尔给 VM，VM 不自己读 CompositionLocal
     val carSurface = isCarSurface()
     // 跨源搜索只属于「网络」页签；本地/收藏/最近的搜索框继续只做当页过滤（用户实测问题 1）
     val onNetworkTab = pagerState.currentPage == 1
+    // 回写页码，供返回时恢复（rememberPagerState 自己不管导航级持久化）
+    LaunchedEffect(pagerState.currentPage) { savedPage = pagerState.currentPage }
     LaunchedEffect(searchQuery, carSurface, onNetworkTab) {
         viewModel.updateSearchQuery(searchQuery, carSurface, onNetworkTab)
     }
@@ -225,17 +232,24 @@ fun AudioMainScreen(
     // 索引确认框：只能由用户点头才起后台爬取，超时、误操作都不会自己跑
     if (uiState.askIndexConfirm) {
         val webdavCount = uiState.sources.count { it.type == com.radio.chinese.domain.SourceType.WEBDAV }
+        // 同一个确认框兼顾两种情形：从未建索引 vs 索引残缺/过期。后者不重建就会搜不到新内容
+        val stale = uiState.searchPhase == com.radio.chinese.domain.SearchPhase.ReadyStale
         AlertDialog(
             onDismissRequest = viewModel::declineIndexing,
-            title = { Text("尚未建立索引") },
+            title = { Text(if (stale) "索引可能不完整" else "尚未建立索引") },
             text = {
                 Text(
-                    "不建立索引就只能看到当前目录里的曲目。\n" +
-                        "现在为 $webdavCount 个网络源建立索引？可能需要 1–3 分钟，期间可以退出本页。"
+                    if (stale) {
+                        "当前索引可能已过期或有目录没爬完，所以很多曲目搜不到。\n" +
+                            "现在重建这 $webdavCount 个网络源的索引？可能需要 1–3 分钟，期间可以退出本页。"
+                    } else {
+                        "不建立索引就只能看到当前目录里的曲目。\n" +
+                            "现在为 $webdavCount 个网络源建立索引？可能需要 1–3 分钟，期间可以退出本页。"
+                    }
                 )
             },
             confirmButton = {
-                TextButton(onClick = viewModel::confirmIndexing) { Text("建立索引") }
+                TextButton(onClick = viewModel::confirmIndexing) { Text(if (stale) "重建索引" else "建立索引") }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::declineIndexing) { Text("以后再说") }

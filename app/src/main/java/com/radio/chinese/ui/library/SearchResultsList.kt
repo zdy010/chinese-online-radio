@@ -130,41 +130,84 @@ fun SearchResultsList(
                 modifier = Modifier.weight(1f)
             )
 
-            SearchPhase.Ready, SearchPhase.ReadyStale -> {
+            SearchPhase.Ready -> {
                 if (results.isEmpty()) {
-                    // “没搜到”和“还没索引完”是两回事，文案不能混用
+                    // 索引已建好且新鲜，空结果就是真没匹配，不该拿“重建索引”误导用户
                     EmptyState(
                         icon = Icons.Default.Search,
                         title = if (query.isBlank()) "输入曲目名开始搜索"
                         else "没有匹配「$query」的曲目",
-                        hint = if (query.isBlank()) null else "换个关键字试试，或点上面的提示更新索引",
+                        hint = if (query.isBlank()) null else "换个关键字试试",
                         modifier = Modifier.weight(1f)
                     )
                 } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.ListGap),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        // key 必须稳定：行内收藏态是 remember 的，无 key 会把星标串到别的行
-                        items(results, key = { "${it.name}|${it.size}" }) { merged ->
-                            val primary = merged.sources.first()
-                            SearchResultRow(
-                                name = merged.name,
-                                crumb = breadcrumbOf(primary),
-                                sourceCount = merged.sources.size,
-                                isFav = isFavorited(primary.path),
-                                onClick = { onPlay(primary) },
-                                onLongClick = { actionHit = primary },
-                                onToggleFav = { onToggleFavorite(primary) },
-                                // 归并行的任一来源在播就算这行在播：同内容多源时用户看到的是一行
-                                isPlaying = playingPath != null &&
-                                    merged.sources.any { it.path == playingPath },
-                            )
-                        }
-                    }
+                    ResultRows(
+                        results = results, breadcrumbOf = breadcrumbOf, isFavorited = isFavorited,
+                        onPlay = onPlay, onOpenFolderAction = { hit -> actionHit = hit },
+                        onToggleFavorite = onToggleFavorite, playingPath = playingPath,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
+
+            SearchPhase.ReadyStale -> {
+                if (results.isEmpty()) {
+                    // “没搜到”与“还没索引完”两回事；但索引残缺时空结果几乎就是因为没爬全，
+                    // 给一个明确的“重建索引”按钮，不让用户只靠一行不起眼的提示（用户实测问题 1）
+                    EmptyState(
+                        icon = Icons.Default.Search,
+                        title = "没有匹配「$query」的曲目",
+                        hint = "索引可能不完整，重建后能搜到更多；也可换个关键字",
+                        actionLabel = "重建索引",
+                        onAction = onBuildIndex,
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    ResultRows(
+                        results = results, breadcrumbOf = breadcrumbOf, isFavorited = isFavorited,
+                        onPlay = onPlay, onOpenFolderAction = { hit -> actionHit = hit },
+                        onToggleFavorite = onToggleFavorite, playingPath = playingPath,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** 结果行列表：Ready 与 ReadyStale 两阶段共用，只是空结果时的提示不同。 */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ResultRows(
+    results: List<MergedTrack>,
+    breadcrumbOf: (TrackHit) -> String,
+    isFavorited: (String) -> Boolean,
+    onPlay: (TrackHit) -> Unit,
+    onOpenFolderAction: (TrackHit) -> Unit,
+    onToggleFavorite: (TrackHit) -> Unit,
+    playingPath: String?,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.ListGap),
+        modifier = modifier,
+    ) {
+        // key 必须稳定：行内收藏态是 remember 的，无 key 会把星标串到别的行
+        items(results, key = { "${it.name}|${it.size}" }) { merged ->
+            val primary = merged.sources.first()
+            SearchResultRow(
+                name = merged.name,
+                crumb = breadcrumbOf(primary),
+                sourceCount = merged.sources.size,
+                isFav = isFavorited(primary.path),
+                onClick = { onPlay(primary) },
+                onLongClick = { onOpenFolderAction(primary) },
+                onToggleFav = { onToggleFavorite(primary) },
+                // 归并行的任一来源在播就算这行在播：同内容多源时用户看到的是一行
+                isPlaying = playingPath != null &&
+                    merged.sources.any { it.path == playingPath },
+            )
         }
     }
 }

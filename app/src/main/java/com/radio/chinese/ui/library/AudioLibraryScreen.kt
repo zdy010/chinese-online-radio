@@ -139,7 +139,8 @@ fun AudioLibraryScreen(
                         SourceCard(
                             source = source,
                             onClick = { viewModel.browseSource(source) },
-                            onDelete = { viewModel.deleteSource(source.id) }
+                            onDelete = { viewModel.deleteSource(source.id) },
+                            onClearIndex = { viewModel.clearIndex(source.id) }
                         )
                     }
                 }
@@ -154,8 +155,14 @@ fun AudioLibraryScreen(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
+fun SourceCard(
+    source: AudioSource,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    onClearIndex: () -> Unit = {},
+) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showClearConfirm by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
@@ -217,6 +224,16 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
                             onClick()
                         }
                     )
+                    // 只有 WebDAV 源有可重建的索引；其他类型（本地/M3U/HTTP）不列这一项
+                    if (source.type == SourceType.WEBDAV) {
+                        DropdownMenuItem(
+                            text = { Text("清除索引") },
+                            onClick = {
+                                showMenu = false
+                                showClearConfirm = true
+                            }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text("删除") },
                         onClick = {
@@ -241,6 +258,23 @@ fun SourceCard(source: AudioSource, onClick: () -> Unit, onDelete: () -> Unit) {
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) { Text("取消") }
+            }
+        )
+    }
+
+    // 清除索引：只删可重建的缓存，不动源本身与收藏/最近；清完下次搜索会重新询问是否建立
+    if (showClearConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirm = false },
+            title = { Text("清除库索引") },
+            text = { Text("确定清除「${source.name}」的索引缓存吗？\n不会删除来源与收藏，下次搜索会重新提示建立索引。") },
+            confirmButton = {
+                TextButton(onClick = { onClearIndex(); showClearConfirm = false }) {
+                    Text("清除索引", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirm = false }) { Text("取消") }
             }
         )
     }

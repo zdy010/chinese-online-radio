@@ -165,6 +165,7 @@ class HomeViewModel @Inject constructor(
         observeFavorites()
         observeRecentStations()
         observeRegionChanges()
+        observeInvalidChanges()
         startEpgTicker()
     }
 
@@ -176,6 +177,22 @@ class HomeViewModel @Inject constructor(
     private fun observeRegionChanges() {
         viewModelScope.launch {
             regionRepository.currentRegion
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { loadData() }
+        }
+    }
+
+    /**
+     * 屏蔽集（标记无效）一变就重拉列表：列表是 getActiveStations 的一次性快照，
+     * 只在本 VM 自己 markStationInvalid 时刷新。但屏蔽入口现在也在收藏页（另一个 VM）,
+     * 它只写 DataStore、不会叫到这里 loadData——不订阅的话，从收藏页屏蔽后台，
+     * 同一 pager 里翻回主页/分类/地区/标签仍看得到它，直到重启（用户实测问题 4 的反方向）。
+     * drop(1) 跳过初始发射（init 已 loadData），distinctUntilChanged 避免重复重拉。
+     */
+    private fun observeInvalidChanges() {
+        viewModelScope.launch {
+            preferences.invalidStationIds
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { loadData() }

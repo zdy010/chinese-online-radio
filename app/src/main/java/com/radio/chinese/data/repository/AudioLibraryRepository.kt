@@ -45,6 +45,24 @@ class AudioLibraryRepository @Inject constructor(
         sourceDao.deleteById(id)
     }
 
+    /**
+     * 清除库索引（可重建缓存），不动用户收藏/最近播放。
+     *
+     * 同时把受影响 WebDAV 源的 lastSyncAt 归零，让它重新被判为“未索引/已过期”，
+     * 下次搜索就会重新弹“建立索引”——这正是“先建索引再搜索”流程失效后唯一的复位入口。
+     * [sourceId] 为空清全部源，非空只清那一个源。
+     */
+    suspend fun clearIndex(sourceId: Long? = null) {
+        if (sourceId == null) {
+            cacheDao.deleteAll()
+            getSources().filter { it.type == SourceType.WEBDAV }
+                .forEach { sourceDao.updateSyncTime(it.id, 0L) }
+        } else {
+            cacheDao.deleteBySource(sourceId)
+            sourceDao.updateSyncTime(sourceId, 0L)
+        }
+    }
+
     // ========== 浏览 ==========
 
     suspend fun listChildren(source: AudioSource, path: String, browser: AudioBrowser): Result<List<AudioTrack>> {

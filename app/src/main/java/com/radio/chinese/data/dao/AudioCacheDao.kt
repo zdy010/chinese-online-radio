@@ -14,6 +14,10 @@ interface AudioCacheDao {
     @Query("DELETE FROM audio_cache WHERE sourceId = :sourceId")
     suspend fun deleteBySource(sourceId: Long)
 
+    /** 清空整张缓存表（所有源的已索引曲目/目录行）。可重建缓存，不含用户收藏/最近。 */
+    @Query("DELETE FROM audio_cache")
+    suspend fun deleteAll()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<AudioCacheEntity>)
 

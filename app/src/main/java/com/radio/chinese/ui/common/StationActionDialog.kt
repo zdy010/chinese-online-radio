@@ -83,8 +83,8 @@ fun StationActionDialog(
                     )
                 } else {
                     ListItem(
-                        headlineContent = { Text("标记为无效") },
-                        supportingContent = { Text("标记后不在主页显示，但保留记录") },
+                        headlineContent = { Text("屏蔽该电台") },
+                        supportingContent = { Text("标记后在所有电台列表隐去（主页/分类/地区/标签/收藏/最近），但保留记录可恢复") },
                         leadingContent = { Icon(Icons.Default.Warning, null,
                             tint = MaterialTheme.colorScheme.error) },
                         modifier = Modifier.clickable(onClick = onMarkInvalid)

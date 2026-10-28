@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -163,6 +164,18 @@ class SourceIndexer @Inject constructor(
     /** 取消只停任务：已写入的行留着，下次 start 按新鲜度续爬。 */
     fun cancel(sourceId: Long) {
         jobs.remove(sourceId)?.cancel()
+        _states.update { it + (sourceId to IndexState.Idle) }
+    }
+
+    /**
+     * 可等待的取消：join 到任务真正停下才返回。
+     *
+     * clearIndex 必须先等旧爬取完全停了再清库：cancel() 是 fire-and-forget，正在 replaceDir
+     * 提交 Room 事务的那批可能落在 deleteAll 之后回填；更坏的是整轮收尾会 markSynced，
+     * 把刚归零的 lastSyncAt 又写成“新鲜”，清完反而不弹建立提示。
+     */
+    suspend fun cancelAndAwait(sourceId: Long) {
+        jobs.remove(sourceId)?.cancelAndJoin()
         _states.update { it + (sourceId to IndexState.Idle) }
     }
 }

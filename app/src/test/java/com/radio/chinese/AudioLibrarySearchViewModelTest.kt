@@ -384,4 +384,66 @@ class AudioLibrarySearchViewModelTest {
         assertEquals(false, vm.uiState.value.isLoading)
         assertNotNull(vm.uiState.value.error)
     }
+
+    // ── 用户实测问题 1：索引存在但残缺/过期时，空结果必须重新请用户重建 ──
+
+    /**
+     * ReadyStale（有索引但过期/没爬全）且一条没搜到时，不能像“真无匹配”那样只留一行提示。
+     * 必须主动弹重建确认（走同一个确认框），否则“先建索引再搜索”流程看上去就是坏了。
+     */
+    @Test fun `索引残缺为空结果时重新弹出重建确认`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 1200      // 有旧索引
+        coEvery { env.repo.isIndexStale(any()) } returns true      // 但已过期/残缺（默认参必须用 any 匹配）
+        coEvery { env.repo.searchTracks(null, "花木兰", 200) } returns emptyList()
+        val vm = build(env)
+        vm.updateSearchQuery("花木兰", carSurface = false)
+        advanceUntilIdle()
+        assertEquals(SearchPhase.ReadyStale, vm.uiState.value.searchPhase)
+        assertEquals(emptyList<Any>(), vm.uiState.value.searchResults)
+        assertEquals(true, vm.uiState.value.askIndexConfirm)
+        verify(exactly = 0) { env.indexer.start(any()) }          // 只请求，不自动起爬
+    }
+
+    /** 索引新鲜且真无匹配（Ready 空结果）不该误弹重建确认。 */
+    @Test fun `索引新鲜且无匹配时不误弹重建确认`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.indexedTrackCount() } returns 3469
+        coEvery { env.repo.isIndexStale(any()) } returns false
+        coEvery { env.repo.searchTracks(null, "不存在", 200) } returns emptyList()
+        val vm = build(env)
+        vm.updateSearchQuery("不存在", carSurface = false)
+        advanceUntilIdle()
+        assertEquals(SearchPhase.Ready, vm.uiState.value.searchPhase)
+        assertEquals(false, vm.uiState.value.askIndexConfirm)
+    }
+
+    // ── 用户实测问题 2：允许清除库索引 ──
+
+    /** 清除单源索引：先取消该源在跑的爬取，再清缓存；不能反过来，否则边清边写。 */
+    @Test fun `清除索引先取消爬取任务再清缓存`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.getSource(1L) } returns webdavSource
+        val vm = build(env)
+        vm.clearIndex(1L)
+        advanceUntilIdle()
+        coVerify(exactly = 1) { env.indexer.cancelAndAwait(1L) }
+        coVerify(exactly = 1) { env.repo.clearIndex(1L) }
+    }
+
+    /** 清除全部索引后，下一次搜索应重新弹“建立索引”（askedThisSession 被重置）。 */
+    @Test fun `清除索引后搜索重新询问建立`() = runTest(dispatcher) {
+        val env = Env()
+        coEvery { env.repo.webdavSources() } returns listOf(webdavSource)
+        coEvery { env.repo.indexedTrackCount() } returns 0 andThen 0
+        coEvery { env.repo.isIndexStale(any()) } returns true
+        val vm = build(env)
+        vm.clearIndex(null)
+        advanceUntilIdle()
+        vm.updateSearchQuery("花木兰", carSurface = false)
+        advanceUntilIdle()
+        coVerify(exactly = 1) { env.repo.clearIndex(null) }
+        assertEquals(SearchPhase.NotIndexed, vm.uiState.value.searchPhase)
+        assertEquals(true, vm.uiState.value.askIndexConfirm)
+    }
 }

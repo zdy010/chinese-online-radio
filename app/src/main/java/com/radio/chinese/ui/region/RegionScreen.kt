@@ -56,6 +56,7 @@ import com.radio.chinese.domain.model.StationRegion
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.StationActionDialog
 import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.HomeUiState
@@ -94,6 +95,8 @@ fun RegionScreen(
 
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     var pickerOpen by remember { mutableStateOf(false) }
+    // 与其他筛选页一致的屏蔽入口：长按行弹动作菜单（用户实测问题 4）
+    var actionStation by remember { mutableStateOf<RadioStation?>(null) }
 
     // 与分类页同一个理由：页签形态没有顶栏返回钮，系统返回会被首页的「双击退出」吃掉，
     // 进了某个省就再也退不回地区目录。
@@ -164,6 +167,7 @@ fun RegionScreen(
                     onBack = { selectedKey = null },
                     onPlay = { station -> onRowClick(station) },
                     onFavorite = viewModel::toggleFavorite,
+                    onLongPress = { station -> actionStation = station },
                     modifier = m,
                 )
             }
@@ -179,6 +183,19 @@ fun RegionScreen(
                 viewModel.setManualRegion(province)
                 pickerOpen = false
             },
+        )
+    }
+
+    actionStation?.let { station ->
+        StationActionDialog(
+            station = station,
+            // 地区页只列有效电台（getActiveStations 已隐去屏蔽项），“恢复为有效”分支不会命中
+            isInvalid = false,
+            isCustom = uiState.customIds.contains(station.id),
+            onDismiss = { actionStation = null },
+            onMarkInvalid = { viewModel.markStationInvalid(station.id); actionStation = null },
+            onMarkValid = { viewModel.restoreStation(station.id); actionStation = null },
+            onDelete = { viewModel.deleteCustomStation(station.id); actionStation = null },
         )
     }
 }
@@ -318,6 +335,7 @@ private fun RegionStationList(
     onBack: () -> Unit,
     onPlay: (RadioStation) -> Unit,
     onFavorite: (String) -> Unit,
+    onLongPress: (RadioStation) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -355,6 +373,7 @@ private fun RegionStationList(
                         isFavorite = uiState.favoriteIds.contains(station.id),
                         onClick = { onPlay(station) },
                         onFavoriteClick = { onFavorite(station.id) },
+                        onLongClick = { onLongPress(station) },
                     )
                 }
             }

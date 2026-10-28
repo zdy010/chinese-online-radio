@@ -186,12 +186,13 @@ class AudioLibraryViewModel @Inject constructor(
 
     /** 查一次阶段，再决定是“请确认 / 挡结果 / 出结果”。 */
     private suspend fun runSearch(q: String) {
+        val allowIndexing = preferences.webdavIndexEnabled.first()
         val webdavSources = _state.value.sources.count { it.type == SourceType.WEBDAV }
         val phase = IndexQuery.searchPhase(
             indexState = _state.value.indexState,
             indexedCount = repository.indexedTrackCount(),
             askedThisSession = askedThisSession,
-            allowIndexing = preferences.webdavIndexEnabled.first(),
+            allowIndexing = allowIndexing,
             stale = repository.isIndexStale(),
             webdavSourceCount = webdavSources,
         )
@@ -202,7 +203,16 @@ class AudioLibraryViewModel @Inject constructor(
         // 早期索引把「不是文件夹」的都当曲目，歌词与封面可能已经在表里。
         // 在用户重建索引之前先把它们挡在结果外，否则装了新版仍能搜到点不响的行。
         val playable = hits.filter { PlayableTrack.isPlayable(it.name) }
-        _state.update { it.copy(searchResults = IndexQuery.mergeHits(playable)) }
+        val merged = IndexQuery.mergeHits(playable)
+        _state.update { it.copy(searchResults = merged) }
+        // 用户实测问题 1：索引存在但残缺/过期（ReadyStale）时搜不到内容，却被当成“正常无结果”，
+        // 既不弹重建提示也不给手动入口，看上去就是“先建索引再搜索”坏了。
+        // 有源、允许索引、本次会话没问过、又正好一条没搜到时，主动请用户重建（走同一个确认框）。
+        if (phase == SearchPhase.ReadyStale && merged.isEmpty() &&
+            webdavSources > 0 && allowIndexing && !askedThisSession
+        ) {
+            _state.update { it.copy(askIndexConfirm = true) }
+        }
     }
 
     /**
@@ -228,6 +238,27 @@ class AudioLibraryViewModel @Inject constructor(
         askedThisSession = true
         _state.update {
             it.copy(askIndexConfirm = false, searchPhase = SearchPhase.Deferred)
+        }
+    }
+
+    /**
+     * 清除库索引（用户实测问题 2）：把可重建的缓存清空，并先取消在跑的爬取任务，
+     * 否则刚清完又会被旧任务回填。清完把“本次会话已问过”标志重置，
+     * 使搜索重新走“先建索引再搜索”的确认流程。[sourceId] 为空清全部源。
+     */
+    fun clearIndex(sourceId: Long? = null) {
+        viewModelScope.launch {
+            val targets = if (sourceId == null) repository.webdavSources()
+                else listOfNotNull(repository.getSource(sourceId))
+            // 先等旧爬取真正停下再清：否则正在写库的一批会落在 deleteAll 之后，或收尾 markSynced 把时间戳又写新
+            targets.forEach { indexer.cancelAndAwait(it.id) }
+            repository.clearIndex(sourceId)
+            askedThisSession = false
+            // 不手写全局 Idle：单源清除时其他源可能正在跑/已完，用跨源聚合纠正（cancelAndAwait 已把本源置 Idle）
+            _state.update { it.copy(indexState = IndexQuery.aggregate(indexer.states.value.values)) }
+            // 正在搜的话重跑一次：清完 count=0，runSearch 会回到 NotIndexed 重新询问
+            val q = _state.value.searchQuery
+            if (q.isNotBlank() && networkTab) runSearch(q)
         }
     }
 
