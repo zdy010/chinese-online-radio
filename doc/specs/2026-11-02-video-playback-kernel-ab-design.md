@@ -188,6 +188,31 @@ fun setVideoStageMounted(mounted: Boolean)
 - 两条路线的实现差异只在「谁触发探测」，`VideoStage`、闸门、UI 分支均同形，因此可以在计划里先按主路线写，探测结论出来后只改一处触发点。
 - 判定依据与最终采用的路线写进实现计划，不许口头带过。
 
+#### 5.4.1 实测记录（2026-11-02，模拟器 Pixel_9a / media3 1.5.1）
+
+**结论：前提成立，采用主路线，不实现 `probeVideoTrackOnce()`。**
+
+先纠一个错的常量记忆：从设备直接打印 `C.TRACK_TYPE_*` 得 **VIDEO=2、AUDIO=1、TEXT=3、METADATA=5、IMAGE=4、UNKNOWN=-1**（不是 ExoPlayer 2.x 时代那套）。代码按符号引用所受影响，但任何拿数字读日志的地方都要按这套读。
+
+正例（人间卫视，`streamlock.net/bltvhd/bltv1`）—— 在视频轨处于禁用态时仍上报了视频组：
+
+```
+17:06:58.505 D VideoProbe: groups=type=2 n=1 supported=true;type=1 n=1 supported=true;
+                        type=3 n=1 supported=true;type=5 n=1 supported=true disabled=[2]
+```
+
+`type=2` 即视频组且 `supported=true`，而 `disabled=[2]` 说明视频轨类型确实被禁用 —— 两件事同时成立，
+所以 `hasVideoTrack` 可以在不开帷幕、不解码的前提下判出“这流有画面可用”。
+
+反例（北京卫视，`satellitepull.cnr.cn/live/wxbtv`）—— 全程无 `type=2`，与 Python 字节探测一致：
+
+```
+17:06:09.701 D VideoProbe: groups=type=1 n=1 supported=true;type=5 n=1 supported=true disabled=[2]
+```
+
+一正一反说明判据不是假阳；同时验证了 Task 3 的默认禁用真的落到了播放器（`disabled` 里含 2）。
+日志原件：`.superpowers/sdd/.../probe-beijingws.log`、`probe-rentian.log`（ workspace 产物，不入库）。
+
 ### 5.5 `ui/common/VideoStage.kt`
 
 ```kotlin

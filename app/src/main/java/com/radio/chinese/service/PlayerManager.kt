@@ -38,7 +38,8 @@ class PlayerManager @Inject constructor(
     private val preferences: RadioPreferences,
     private val stationRepository: StationRepository,
     private val webDavClient: WebDavClient,
-    private val ttsAnnouncer: TtsAnnouncer
+    private val ttsAnnouncer: TtsAnnouncer,
+    val videoPlayerMount: VideoPlayerMount
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
         // 播报/资产/绑定等外部交互异常不得炸掉主线程；留痕后照常，切台降级为无声
@@ -118,6 +119,14 @@ class PlayerManager @Inject constructor(
             _sourceScores.value = scores
         }
     }
+
+    /**
+     * 当前条目是否带可显示的视频轨。真相来自播放器，不猜 URL、不改数据（spec §2/§5）。
+     *
+     * 只反映「播放器报了什么」，不代表画面已挂载；闸门开关在 `VideoTrackGate`。
+     */
+    private val _hasVideoTrack = MutableStateFlow(false)
+    val hasVideoTrack: StateFlow<Boolean> = _hasVideoTrack
 
     // ========== 戏曲播放状态 ==========
 
@@ -242,6 +251,21 @@ class PlayerManager @Inject constructor(
                         _error.value = null
                     }
                 }
+            }
+
+            override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+                val video = tracks.groups.any {
+                    it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.mediaTrackGroup.length > 0
+                }
+                _hasVideoTrack.value = video
+                // 禁用状态下播放器还不上报视频组，是主路线与兜底路线的分岔点（spec §5.4）
+                val p = videoPlayerMount.player
+                android.util.Log.d(
+                    "VideoProbe",
+                    "groups=" + tracks.groups.joinToString(";") {
+                        "type=${it.type} n=${it.mediaTrackGroup.length} supported=${it.isSupported}"
+                    } + " disabled=" + p?.trackSelectionParameters?.disabledTrackTypes
+                )
             }
 
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {

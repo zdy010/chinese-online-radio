@@ -461,8 +461,10 @@ Run: `adb logcat -c`
 
 Run: `adb logcat -d -s VideoProbe:D`
 
-Expected（主路线成立的样子）：至少一行含 `type=1 n>=1`，且 `disabled=[1, 3]` 之类包含 `1`。
-`C.TRACK_TYPE_VIDEO == 1`。
+Expected（主路线成立的样子）：出现含 `type=2 n>=1` 的行，且 `disabled=` 集合含 `2`。
+
+> **常量以设备为准（已实测修正）**：media3 1.5.1 是 **VIDEO=2、AUDIO=1、TEXT=3、METADATA=5、IMAGE=4、UNKNOWN=-1**。
+> 本步原写“`C.TRACK_TYPE_VIDEO == 1`”是错的（那套是 ExoPlayer 2.x 时代的编号），已按设备打印改正。
 
 - [ ] **Step 5: 反例取样（必须仍无视频，否则判据本身假阳）**
 
@@ -470,14 +472,16 @@ Expected（主路线成立的样子）：至少一行含 `type=1 n>=1`，且 `di
 
 Run: `adb logcat -d -s VideoProbe:D`
 
-Expected：所有行只有 `type=2`（音频），**不出现 `type=1`**。若反例也报了 `type=1`，说明判据不可信，本任务不得通过，停下报告。
+Expected：所有行只有 `type=1`（音频）与 `type=5`（元数据），**不出现 `type=2`**。若反例也报了 `type=2`，说明判据不可信，本任务不得通过，停下报告。
 
 - [ ] **Step 6: 写下裁决并同步进 spec**
 
 把 Step 4/5 的原始日志贴进 `doc/specs/2026-11-02-video-playback-kernel-ab-design.md` 的 §5.4 末尾（新增「实测记录」小节），并明确写一行：
 
-- 若 Step 4 出现 `type=1` → **采用主路线**，Task 5 不实现 `probeVideoTrackOnce()`。
-- 若 Step 4 未出现 `type=1` 而 Step 6 前人工确认该流确有画面 → **采用兜底路线**，Task 5 必须实现 `probeVideoTrackOnce()`，且 `VideoStage` 改为「进入播放页即探测、探测到才常驻挂载」。
+- ~~若 Step 4 未出现 `type=1` 而 Step 6 前人工确认该流确有画面 → 采用兜底路线~~
+
+**实测结论（2026-11-02）：主路线成立。** 人间卫视报了 `type=2 n=1 supported=true` 且同时 `disabled=[2]`；
+北京卫视全程无 `type=2`。原始日志与常量自证过程见 spec §5.4.1。因此 **Task 5 的 Step 4（`probeVideoTrackOnce`）不实施**。
 
 - [ ] **Step 7: 提交**
 
@@ -558,7 +562,10 @@ git commit -m "feat(player): report whether the current item carries a video tra
         _hasVideoTrack.value = false
 ```
 
-- [ ] **Step 4:（仅当 Task 4 判为兜底路线才做）加一拍探测**
+- [ ] **Step 4:（不实施 —— Task 4 已定主路线）加一拍探测**
+
+> Task 4 实测确认禁用态下 `Tracks` 仍上报视频组（spec §5.4.1），所以下面的 `probeVideoTrackOnce()` **不写**。
+> 保留代码文本仅供将来发现新的设备不报情形时取用。
 
 ```kotlin
     /**
@@ -952,7 +959,7 @@ function Dump($tag) {
 - [ ] **Step 2: 写 V2/V3（画面真伪与闸门收回）**
 
 - V2：云盘放一个 mp4，进点播页。取画面区矩形中心，**连抓两帧截图做差分**（不用单阈值判黑），两帧有差异才算真在动 —— 单阈值会把深色画面误判成黑屏，本项目已因此假失败过。
-- V3：退出点播页 3 秒后 `adb logcat -d -s VideoGate:D VideoProbe:D`，断言末行 `disabled=` 集合含 `1`（视频轨重新禁用），且音频仍在播（`isPlaying` 为真）。
+- V3：退出点播页 3 秒后 `adb logcat -d -s VideoGate:D VideoProbe:D`，断言末行 `disabled=` 集合含 `2`（视频轨重新禁用；media3 1.5.1 的 VIDEO=2），且音频仍在播（`isPlaying` 为真）。
 
 - [ ] **Step 3: 写 V4（方控与通知栏）**
 
