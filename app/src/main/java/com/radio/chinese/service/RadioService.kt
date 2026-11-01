@@ -21,6 +21,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import com.radio.chinese.R
 import com.radio.chinese.RadioApp
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.domain.model.VideoTrackGate
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -39,6 +40,10 @@ class RadioService : MediaSessionService() {
 
     @Inject
     lateinit var keyBindings: KeyBindingStore
+
+    /** 视频画面要绑这个播放器实例本身，MediaController 绑不了面 */
+    @Inject
+    lateinit var videoPlayerMount: VideoPlayerMount
 
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
@@ -130,6 +135,12 @@ class RadioService : MediaSessionService() {
                     .setDataSourceFactory(dataSourceFactory)
             )
             .build()
+
+        // 默认不解码视频：没有画面挂载时绝不白耗硬解与电量。这是「只听声行为零回退」的落点。
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, VideoTrackGate.DEFAULT_VIDEO_TRACK_DISABLED)
+            .build()
+        videoPlayerMount.attach(player)
 
         exoPlayer = player
 
@@ -272,6 +283,8 @@ class RadioService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        // 必须先摘表再释放：否则 UI 可能拿到一个已释放的播放器去绑面
+        exoPlayer?.let { videoPlayerMount.detach(it) }
         mediaSession?.run {
             player.release()
             release()
