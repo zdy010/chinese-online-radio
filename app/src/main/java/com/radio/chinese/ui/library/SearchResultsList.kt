@@ -44,6 +44,7 @@ import com.radio.chinese.domain.SearchPhase
 import com.radio.chinese.domain.TrackHit
 import com.radio.chinese.domain.model.IndexQuery
 import com.radio.chinese.domain.model.MergedTrack
+import com.radio.chinese.domain.model.VideoMedia
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.theme.Dimens
@@ -282,6 +283,10 @@ private fun SearchResultRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            // 与 BrowseScreen 同一枚徽标、同一判据：进去之前就能看出这是个带画面的文件
+            if (VideoMedia.looksLikeVideo(name)) {
+                Text("视频", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+            }
         }
         IconButton(onClick = { favState = !favState; onToggleFav() }) {
             Icon(

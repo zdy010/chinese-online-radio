@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.radio.chinese.domain.AudioTrack
+import com.radio.chinese.domain.model.VideoMedia
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.ErrorState
 import com.radio.chinese.ui.common.LoadingState
@@ -129,6 +130,10 @@ private fun BrowseItem(
             }
             if (item.isHlsStream) {
                 Text("HLS 直播流", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary)
+            }
+            // 只标徽标，不改能不能播：真有没有画面仍由播放器运行时的视频轨定（spec §2.3）
+            if (VideoMedia.looksLikeVideo(item.name)) {
+                Text("视频", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
             }
         }
         if (!item.isFolder) {
