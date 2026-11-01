@@ -18,6 +18,7 @@ import com.radio.chinese.domain.model.OperaSpeed
 import com.radio.chinese.domain.model.nextOperaContext
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
+import com.radio.chinese.domain.model.VideoTrackGate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -127,6 +128,10 @@ class PlayerManager @Inject constructor(
      */
     private val _hasVideoTrack = MutableStateFlow(false)
     val hasVideoTrack: StateFlow<Boolean> = _hasVideoTrack
+
+    /** 画面是否挂着。它单一决定视频轨要不要解码（经 [VideoTrackGate]）。 */
+    private val _videoStageMounted = MutableStateFlow(false)
+    val videoStageMounted: StateFlow<Boolean> = _videoStageMounted
 
     // ========== 戏曲播放状态 ==========
 
@@ -290,7 +295,41 @@ class PlayerManager @Inject constructor(
         _playbackState.value = controller?.playbackState ?: Player.STATE_IDLE
     }
 
+    /**
+     * VideoStage 挂载/卸载时调用。幂等：重复 true / 重复 false 不产生副作用。
+     *
+     * 失败只记日志不写 `_error`：`_error` 是播放页唯一的红色情绪通道，
+     * 正常起播不该红框一闪（既有踩坑记录）。
+     */
+    fun setVideoStageMounted(mounted: Boolean) {
+        if (_videoStageMounted.value == mounted) return
+        _videoStageMounted.value = mounted
+        applyVideoTrackGate()
+    }
+
+    private fun applyVideoTrackGate() {
+        scope.launch {
+            val p = videoPlayerMount.player
+            if (p == null) {
+                android.util.Log.w("VideoGate", "播放器尚未建起，闸门待下次挂载再落")
+                return@launch
+            }
+            val decode = VideoTrackGate.shouldDecodeVideo(_videoStageMounted.value)
+            try {
+                p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !decode)
+                    .build()
+            } catch (e: IllegalStateException) {
+                // ExoPlayer 校验 application thread；此处 scope 是 Main，正常不会走到
+                android.util.Log.e("VideoGate", "视频轨闸门写入失败", e)
+            }
+        }
+    }
+
     fun playStation(station: RadioStation) {
+        // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoStageMounted(false)。
+        // 新条目的画面真相要等它的 onTracksChanged，沿用旧结论会让上一个台的画面骗过这一台。
+        _hasVideoTrack.value = false
         // 互斥：清除戏曲状态
         stopOpera()
         pendingSkipTargetId = null   // 目标已落地，清除连按基准
@@ -497,6 +536,8 @@ class PlayerManager @Inject constructor(
      *  @param context 点播上下文（附属文件归属）；内部切歌不传，沿旧源换路径
      */
     fun playOperaFile(file: OperaAudioFile, playlist: List<OperaAudioFile>, localPath: String? = null, context: OperaPlayContext? = null) {
+        // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoStageMounted(false)。
+        _hasVideoTrack.value = false
         // 互斥：停止电台
         _currentStation.value = null
         _isOperaMode.value = true
