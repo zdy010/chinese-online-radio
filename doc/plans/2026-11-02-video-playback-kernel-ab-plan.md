@@ -627,7 +627,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.C
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.radio.chinese.service.PlayerManager
 
@@ -652,14 +652,17 @@ fun VideoStage(
     val mount = playerManager.videoPlayerMount
     val player by mount.playerFlow.collectAsState()
 
-    val playerView = AndroidView(
+    // 本 BOM（compose 2024.12.01）的 AndroidView 不返回视图实例，所以由 factory 自己把实例交给一个 remembered 引用
+    val playerViewRef = remember { mutableStateOf<PlayerView?>(null) }
+
+    AndroidView(
         modifier = modifier,
         factory = { ctx ->
             PlayerView(ctx).apply {
                 useController = false
-                setResizeMode(C.RESIZE_MODE_FIT)   // 自带黑边适配，不拉伸不变形
+                setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT)   // 自带黑边适配，不拉伸不变形
                 setShutterBackgroundColor(AndroidColor.TRANSPARENT)
-            }
+            }.also { playerViewRef.value = it }
         },
         update = { pv ->
             // 只在实例真的变了才写：每次重组都调 setPlayer 会触发重新准备
@@ -667,15 +670,20 @@ fun VideoStage(
         },
     )
 
+    val playerView = playerViewRef.value
+
     // 所有权声明与闸门开关放在副作用阶段，不在 update 里写 StateFlow（那是重组期）
-    DisposableEffect(playerView) {
-        mount.acquireStage(playerView)
-        playerManager.setVideoStageMounted(true)
-        onDispose {
-            // 被后来的 Stage 顶掉时不得去 setPlayer(null)，否则会把新页面的面摘黑
-            if (mount.releaseStage(playerView)) {
-                playerView.player = null
-                playerManager.setVideoStageMounted(false)
+    if (playerView != null) {
+        val pv = playerView
+        DisposableEffect(pv) {
+            mount.acquireStage(pv)
+            playerManager.setVideoStageMounted(true)
+            onDispose {
+                // 被后来的 Stage 顶掉时不得去 setPlayer(null)，否则会把新页面的面摘黑
+                if (mount.releaseStage(pv)) {
+                    pv.player = null
+                    playerManager.setVideoStageMounted(false)
+                }
             }
         }
     }
@@ -692,6 +700,11 @@ fun VideoStage(
 ```
 
 > 若当前 media3 版本没有 `setShutterBackgroundColor`，删掉那一行即可 —— 它只影响快门底色，不参与任何设计判定。
+>
+> **执行时实测修正（Task 6）**：① `RESIZE_MODE_FIT` 不挂在 `androidx.media3.common.C` 上，而在
+> `androidx.media3.ui.AspectRatioFrameLayout` 上（已从 media3-ui 的 classes.jar 常量池核实）；
+> ② 本 BOM 的 `AndroidView` 返回 `Unit` 而不是视图实例（编译器直接报“actual type is kotlin.Unit”），
+> 所以改用 `playerViewRef` 由 factory 交出实例。上面两处代码已按实测结果同步，不再保留错版本。
 
 - [ ] **Step 2: 编译**
 
