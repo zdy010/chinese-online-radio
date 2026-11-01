@@ -33,6 +33,7 @@ import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.ui.common.VideoStage
 import com.radio.chinese.ui.common.bitrateText
 import com.radio.chinese.ui.common.mediaClock
 import com.radio.chinese.ui.common.mediaTimeText
@@ -63,6 +64,10 @@ fun OperaPlayerScreen(
     val repeat = playback.repeatMode
     val speed = playback.speed
     val state by viewModel.uiState.collectAsState()
+    val hasVideo by playerManager.hasVideoTrack.collectAsState()
+    // 封面/歌词能不能唤出：有画面时它们从内容区退到弹窗，所以得先算出可不可用
+    val hasCoverOrLyrics = state.coverBytes != null ||
+        (state.lyricsStatus == LyricsStatus.READY && state.lines.isNotEmpty())
 
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
@@ -102,20 +107,44 @@ fun OperaPlayerScreen(
         }
 
         val info: @Composable () -> Unit = {
-            Column(Modifier.padding(horizontal = Dimens.ScreenPadding)) {
-                Text(f.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                val sub = listOf(f.categoryName, f.operaName).filter { it.isNotEmpty() }.joinToString(" · ")
-                if (sub.isNotEmpty()) {
-                    Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(
+                modifier = Modifier.padding(horizontal = Dimens.ScreenPadding),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(f.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    val sub = listOf(f.categoryName, f.operaName).filter { it.isNotEmpty() }.joinToString(" · ")
+                    if (sub.isNotEmpty()) {
+                        Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    val bt = bitrateText(br)
+                    Text(
+                        text = if (bt != null) "${mediaTimeText(pos, dur)} · $bt" else mediaTimeText(pos, dur),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(Dimens.GapSmall))
                 }
-                val bt = bitrateText(br)
-                Text(
-                    text = if (bt != null) "${mediaTimeText(pos, dur)} · $bt" else mediaTimeText(pos, dur),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(Dimens.GapSmall))
+                // 歌词/封面不跟着画面挤掉，改为唤出：不给第二行播控，守住「播控单行」红线
+                if (hasVideo && hasCoverOrLyrics) {
+                    var sheetOpen by remember { mutableStateOf(false) }
+                    TextButton(
+                        onClick = { sheetOpen = true },
+                        modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchSecondary) else Modifier
+                    ) { Text("歌词") }
+                    if (sheetOpen) {
+                        ModalBottomSheet(onDismissRequest = { sheetOpen = false }) {
+                            OperaContentArea(
+                                // 给一个有界高度：OperaContentArea 内部走 fillMaxSize，
+                                // 弹窗列里不给上限会无限高
+                                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.6f),
+                                state = state,
+                                onLineClick = { viewModel.seekToLine(it) },
+                            )
+                        }
+                    }
+                }
             }
         }
         val slider: @Composable () -> Unit = {
@@ -137,8 +166,14 @@ fun OperaPlayerScreen(
                 onBackward = { playerManager.seekOperaBackward(10) }
             )
         }
+        // 有画面时整块内容区让给视频；无画面时必须走 else 分支——
+        // 让 VideoStage 进组合树再压高度/insets 会改变手机档的像素结果（spec §7 零回退红线）。
         val contentArea: @Composable (Modifier) -> Unit = { m ->
-            OperaContentArea(m, state, onLineClick = { viewModel.seekToLine(it) })
+            if (hasVideo) {
+                VideoStage(playerManager = playerManager, modifier = m)
+            } else {
+                OperaContentArea(m, state, onLineClick = { viewModel.seekToLine(it) })
+            }
         }
 
         // 播控一律排在底部横排：车机横屏原先把进度条+控件+倍速塞在右侧定宽栏里，
