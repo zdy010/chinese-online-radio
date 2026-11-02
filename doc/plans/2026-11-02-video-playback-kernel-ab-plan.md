@@ -892,13 +892,18 @@ git commit -m "feat(library): mark video files in browse and search lists"
 
 - [ ] **Step 3: 两处 CoverBlock 换成同一条分支**
 
-在两个分支前定义一次，避免写重：
+在两个分支前定义一次，避免写重（`coverSize` 是 `Dp`，计划原写 `(Int) -> Unit` 是错的，已按编译器报的类型不匹配改正）：
 
 ```kotlin
-            val mediaVisual: @Composable (Int) -> Unit = { size ->
+            val mediaVisual: @Composable (androidx.compose.ui.unit.Dp) -> Unit = { size ->
                 if (uiState.hasVideoTrack) {
                     Box {
-                        VideoStage(playerManager = playerManager, modifier = Modifier.fillMaxWidth())
+                        // 本页整体在 verticalScroll 里，没有 weight 可用：只给 fillMaxWidth 时
+                        // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。
+                        VideoStage(
+                            playerManager = playerManager,
+                            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                        )
                         // 已经报过有视频轨、但当前源实际没画面时保持占位不 collapse，
                         // 否则整页布局会随轮转来回跳
                         if (!uiState.isPlaying && uiState.playbackState == Player.STATE_BUFFERING) {

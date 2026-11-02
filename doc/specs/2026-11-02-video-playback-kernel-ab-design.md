@@ -292,7 +292,7 @@ mp4 mkv mov webm flv avi mpg mpeg wmv m4v rm rmvb 3gp vob ts m2ts
 |---|---|---|
 | 手机档零回退 | 无视频内容时渲染结果与改造前逐像素一致 | uiautomator bounds 对齐现有基线 + 截图比对 |
 | 车机首屏装得下播控 | 1280x720 恒横屏加画面后，`controls` 行 `bounds.maxY ≤ 720` | uiautomator bounds 断言 |
-| 不给画面固定高度 | 画面一律靠 `weight` 拿空间（已知坑：整块撑 `TouchMin` 会把播控顶出首屏） | 代码审查 + bounds |
+| 不给画面固定高度 | 画面不写死 dp（已知坑：整块撑 `TouchMin` 会把播控顶出首屏）。**执行时修正**：`PlayerScreen` 整体在 `verticalScroll` 列里、没有 `weight` 可用，只给 `fillMaxWidth()` 时 `PlayerView` 量出 0 高（真机实测画面塌成一个点），改用 `aspectRatio(16f/9f)` 随宽度自适应的有界盒；`OperaPlayerScreen` 那侧仍走 `contentArea` 的 `weight(1f)` | 代码审查 + bounds + 真机截图 |
 | 尺寸取值 | `VideoStage` 只准引用 `Dimens` token，圆角取 `Dimens.GapLarge`（与 `CoverPage` 一致），禁裸 dp | 代码审查 |
 | 旋转 | `MainActivity` 无 `configChanges`，靠 `DisposableEffect` 卸载重挂，音频不得断 | 真机 V5 |
 | 迷你条 | `MiniPlayerBar` / 音频库迷你条**不显示画面**，一期排除 | 不在改动清单 |

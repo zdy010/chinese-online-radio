@@ -41,6 +41,8 @@ import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.common.StationTagChips
+import com.radio.chinese.service.PlayerManager
+import com.radio.chinese.ui.common.VideoStage
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.delay
@@ -50,6 +52,7 @@ import java.time.LocalDateTime
 @Composable
 fun PlayerScreen(
     stationId: String,
+    playerManager: PlayerManager,
     onNavigateBack: () -> Unit,
     onNavigateToTag: (String) -> Unit = {},
     viewModel: PlayerViewModel = hiltViewModel()
@@ -164,6 +167,29 @@ fun PlayerScreen(
             ) {
                 // 车机横屏：封面与台名/频率/简介左右并排，把竖向空间留给下面的播控；
                 // 手机档仍按原来的顺序铺开，间距与取值一字不改。
+                //
+                // 有视频轨时把封面换成画面；无视频时必须走 else 分支，
+                // 让 VideoStage 进组合树再压高度会改变手机档的像素结果（spec §7 零回退红线）。
+                val mediaVisual: @Composable (androidx.compose.ui.unit.Dp) -> Unit = { size ->
+                    if (uiState.hasVideoTrack) {
+                        // 本页整体在 verticalScroll 里，没有 weight 可用：只给 fillMaxWidth 时
+                        // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。改用随宽度自适应的
+                        // 16:9 有界盒，既不写死 dp，也不会把下面的播控顶出首屏。
+                        // 不叠「画面准备中」遮罩：真机实测缓冲中的流仍在渲染最后一帧，
+                        // 文字压在画面上是干扰；缓冲状态下方 PlaybackStatusIndicator 已经报了。
+                        VideoStage(
+                            playerManager = playerManager,
+                            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                        )
+                    } else {
+                        CoverBlock(
+                            url = station.logoUrl,
+                            name = station.name,
+                            isPlaying = uiState.isPlaying,
+                            size = size
+                        )
+                    }
+                }
                 if (isCarSurface()) {
                     Row(
                         // 超宽屏上不让内容从左拉到右；widthIn 必须在 fillMaxWidth 之前
@@ -179,12 +205,7 @@ fun PlayerScreen(
                             modifier = Modifier.weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
-                            CoverBlock(
-                                url = station.logoUrl,
-                                name = station.name,
-                                isPlaying = uiState.isPlaying,
-                                size = coverSize
-                            )
+                            mediaVisual(coverSize)
                         }
                         StationInfoBlock(
                             station = station,
@@ -194,12 +215,7 @@ fun PlayerScreen(
                         )
                     }
                 } else {
-                    CoverBlock(
-                        url = station.logoUrl,
-                        name = station.name,
-                        isPlaying = uiState.isPlaying,
-                        size = coverSize
-                    )
+                    mediaVisual(coverSize)
                     Spacer(modifier = Modifier.height(gapAfterCover))
                     StationInfoBlock(
                         station = station,

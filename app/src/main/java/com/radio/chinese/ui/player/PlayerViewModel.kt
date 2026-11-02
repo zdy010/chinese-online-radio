@@ -28,7 +28,9 @@ data class PlayerUiState(
     val isFavorite: Boolean = false,
     val allStations: List<RadioStation> = emptyList(),
     val currentSource: StationSource? = null,
-    val sourceScores: List<Pair<StationSource, Float>> = emptyList()
+    val sourceScores: List<Pair<StationSource, Float>> = emptyList(),
+    /** 当前条目是否带可显示的视频轨。真相来自播放器的 onTracksChanged，不猜 URL */
+    val hasVideoTrack: Boolean = false
 )
 
 @HiltViewModel
@@ -77,8 +79,9 @@ class PlayerViewModel @Inject constructor(
                 combine(
                     playerManager.currentSource,
                     playerManager.sourceScores
-                ) { source, scores -> Pair(source, scores) }
-            ) { station, playInfo, sourceInfo ->
+                ) { source, scores -> Pair(source, scores) },
+                playerManager.hasVideoTrack
+            ) { station, playInfo, sourceInfo, hasVideo ->
                 val (isPlaying, state, err, status) = playInfo
                 val (source, scores) = sourceInfo
                 PlayerUiState(
@@ -91,7 +94,8 @@ class PlayerViewModel @Inject constructor(
                     isFavorite = _uiState.value.isFavorite,
                     currentSource = source,
                     sourceScores = scores,
-                    allStations = allStations
+                    allStations = allStations,
+                    hasVideoTrack = hasVideo
                 )
             }.collect { state ->
                 _uiState.value = state
