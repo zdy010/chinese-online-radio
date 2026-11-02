@@ -315,6 +315,8 @@ class PlayerManager @Inject constructor(
                 return@launch
             }
             val decode = VideoTrackGate.shouldDecodeVideo(_videoStageMounted.value)
+            // 验收 V3 的断点：退出画面后必须重新看到 decode=false（视频轨收闸，不再多解码）
+            android.util.Log.d("VideoGate", "stageMounted=${_videoStageMounted.value} decode=$decode")
             try {
                 p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
                     .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !decode)
