@@ -952,7 +952,7 @@ git commit -m "feat(ui): show video picture on the station player"
 ### Task 10: 验收脚本 + R8 回归 + EGG 交付
 
 **Files:**
-- Create: `.qtest/video_acceptance.ps1`（验收脚本，非产品代码）
+- Create: `tools/video_acceptance.ps1`（验收脚本，非产品代码；原计划的 `.qtest/` 是 git-ignored 目录，放进去提交不进去）
 
 **Interfaces:**
 - Consumes: 前九个任务的全部产出
@@ -1012,7 +1012,7 @@ Run: `.\gradlew.bat :app:assembleRelease`
 - [ ] **Step 9: 提交**
 
 ```bash
-git add .qtest/video_acceptance.ps1
+git add tools/video_acceptance.ps1
 git commit -m "test(ui): add video playback acceptance script"
 ```
 
