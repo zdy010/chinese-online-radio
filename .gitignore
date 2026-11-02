@@ -71,3 +71,9 @@ tools/recheck_report.json
 # 同理：云听全站扫描的原始转储（约 900 次请求的产物）只当本地缓存，
 # 结论 tools/epg_match_report.txt 入库。映射表本身在 assets/epg_stations.json。
 tools/epg_scan.json
+
+# 软著与上架申报材料：本地留档，绝不入库。本仓库是公开 GitHub 仓，
+# 而这里头放的是签章页（手写签名）、本人身份信息、服务器部署笔记，
+# 以及从本地真值源码生成的 source_code_first_30pages.txt ——
+# 已核实它含真实主机 webdav.123pan.cn 且无占位符，一次 `git add doc/` 就会泄露凭证。
+doc/store_assets/
