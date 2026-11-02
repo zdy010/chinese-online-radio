@@ -295,6 +295,20 @@ class PlayerManager @Inject constructor(
         _playbackState.value = controller?.playbackState ?: Player.STATE_IDLE
     }
 
+    /** 上一次真正写过 `trackSelectionParameters` 的那个播放器实例，用来发现“服务重建、播放器换了”。 */
+    private var lastGatedPlayer: androidx.media3.exoplayer.ExoPlayer? = null
+
+    init {
+        // RadioService 被系统回收后会在同进程重建，新播放器默认禁着视频轨，
+        // 而 `_videoStageMounted` 作为单例字段还是 true：只看布尔翻转的话重进播放页会被
+        // 幂等守卫吞掉，画面永远黑着。新实例一到就按当前挂载态重落一次闸门。
+        scope.launch {
+            videoPlayerMount.playerFlow.collect { p ->
+                if (p != null && p !== lastGatedPlayer) applyVideoTrackGate()
+            }
+        }
+    }
+
     /**
      * VideoStage 挂载/卸载时调用。幂等：重复 true / 重复 false 不产生副作用。
      *
@@ -302,7 +316,8 @@ class PlayerManager @Inject constructor(
      * 正常起播不该红框一闪（既有踩坑记录）。
      */
     fun setVideoStageMounted(mounted: Boolean) {
-        if (_videoStageMounted.value == mounted) return
+        val replaced = videoPlayerMount.player !== lastGatedPlayer
+        if (!VideoTrackGate.shouldReapplyGate(_videoStageMounted.value, mounted, replaced)) return
         _videoStageMounted.value = mounted
         applyVideoTrackGate()
     }
@@ -324,7 +339,10 @@ class PlayerManager @Inject constructor(
             } catch (e: IllegalStateException) {
                 // ExoPlayer 校验 application thread；此处 scope 是 Main，正常不会走到
                 android.util.Log.e("VideoGate", "视频轨闸门写入失败", e)
+                return@launch
             }
+            // 只在真的写成功时记账，否则新实例到了会被当成“没换过”而漏重落
+            lastGatedPlayer = p
         }
     }
 

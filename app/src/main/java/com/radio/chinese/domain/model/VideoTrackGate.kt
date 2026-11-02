@@ -17,4 +17,18 @@ object VideoTrackGate {
 
     /** 唯一的闸门决策。`stageMounted = false` 时恒为 false —— 这条是回归守卫的对象。 */
     fun shouldDecodeVideo(stageMounted: Boolean): Boolean = stageMounted
+
+    /**
+     * 闸门要不要重新落地。
+     *
+     * 不能只看挂载布尔的翻转：`RadioService` 被回收后在同一进程重建时，
+     * `@Singleton` 里的挂载态还留着 `true`，而新播放器默认禁着视频轨 ——
+     * 只比布尔会让重进播放页变成 no-op，用户看到「退出重进才好」的黑屏。
+     * 所以换了播放器实例也必须重落。
+     */
+    fun shouldReapplyGate(
+        previousMounted: Boolean,
+        nextMounted: Boolean,
+        playerReplaced: Boolean,
+    ): Boolean = previousMounted != nextMounted || playerReplaced
 }
