@@ -213,6 +213,103 @@ if ($OnlyV -in 0, 6) {
     adb shell wm density reset | Out-Null
 }
 
+# ---------- 全屏与沉浸（对应计划的 V8–V11，本脚本内叫 F1–F5 以免与上面 V7=R8 回归重名）----------
+#
+# 操作纪律（本轮真实踩过三次）：控制层 3 秒自动收起，“唤出 + 点按钮”必须在同一次往返里完成。
+# 拆成两条命令去做必然超窗，得到的会是“按了没反应”的假缺陷。
+
+function Png-Size($path) {
+    # 用 PNG 头取尺寸：screencap 的宽高直接反映当前方向，比 dumpsys 字段可靠
+    $b = [System.IO.File]::ReadAllBytes($path)
+    @{ W = ($b[16] * 16777216) + ($b[17] * 65536) + ($b[18] * 256) + $b[19]
+       H = ($b[20] * 16777216) + ($b[21] * 65536) + ($b[22] * 256) + $b[23] }
+}
+
+function Tap-Fullscreen-Entry {
+    # 按钮坐标从当前 dump 取，不写死（分辨率/密度一变就不准）
+    $btn = Dump-Ui "fbtn" | Where-Object { $_.Descr -eq "全屏" } | Select-Object -First 1
+    if (-not $btn) { return $null }
+    adb shell input tap $btn.CX $btn.CY | Out-Null
+    return $btn
+}
+
+function Shot-Size($tag) {
+    $p = Join-Path $tmp "$tag.png"
+    adb shell screencap -p /sdcard/s.png | Out-Null
+    adb pull /sdcard/s.png $p | Out-Null   # 必须走 pull：PS 的 `>` 会按文本重写 PNG 字节
+    return Png-Size $p
+}
+
+if ($OnlyV -in 0, 7) {
+    # F1（计划 V8）全屏切换不得扰动闸门 —— Amendment 的主判据
+    Enter-Station "人间卫视"
+    $opened = adb logcat -d -s VideoGate:D | Select-String "decode=true"
+    Assert "F1 前置：进入播放页已开闸" ([bool]$opened) "opened=$(@($opened).Count)"
+    adb logcat -c
+    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
+    $btn = Tap-Fullscreen-Entry
+    Assert "F1 全屏按钮存在且可点" ($null -ne $btn) "btn=$($btn.CX),$($btn.CY)"
+    Start-Sleep -Seconds 9
+    $g = @(adb logcat -d -s VideoGate:D)
+    Assert "F1 全屏切换未扰动闸门" ($g.Count -eq 0) "VideoGate 行数=$($g.Count)"
+}
+
+if ($OnlyV -in 0, 8) {
+    # F2（计划 V8 的另一半）方向翻横 + 页面 chrome 消失
+    Enter-Station "人间卫视"
+    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
+    Tap-Fullscreen-Entry | Out-Null
+    Start-Sleep -Seconds 9
+    $sz = Shot-Size "f2"
+    Assert "F2 全屏后横屏" ($sz.W -gt $sz.H) "$($sz.W)x$($sz.H)"
+    $chrome = Dump-Ui "f2ui" | Where-Object { $_.Descr -eq "上一个电台" }
+    Assert "F2 全屏时播控行已收起" (@($chrome).Count -eq 0) "残留=$(@($chrome).Count)"
+}
+
+if ($OnlyV -in 0, 9) {
+    # F3（计划 V9）返回键先退全屏、不退页面
+    Enter-Station "人间卫视"
+    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
+    Tap-Fullscreen-Entry | Out-Null
+    Start-Sleep -Seconds 8
+    adb shell input keyevent 4 | Out-Null
+    Start-Sleep -Seconds 5
+    $sz = Shot-Size "f3"
+    Assert "F3 返回一次已退全屏（回竖屏）" ($sz.H -gt $sz.W) "$($sz.W)x$($sz.H)"
+    $still = Dump-Ui "f3ui" | Where-Object { $_.Descr -eq "上一个电台" }
+    Assert "F3 返回一次仍在播放页" (@($still).Count -ge 1) "播控节点=$(@($still).Count)"
+}
+
+if ($OnlyV -in 0, 10) {
+    # F4（计划 V10）离开页面后方向与闸门复位
+    Enter-Station "人间卫视"
+    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
+    Tap-Fullscreen-Entry | Out-Null
+    Start-Sleep -Seconds 8
+    adb shell input keyevent 4 | Out-Null; Start-Sleep -Seconds 4
+    adb logcat -c
+    adb shell input keyevent 4 | Out-Null
+    Start-Sleep -Seconds 6
+    $last = adb logcat -d -s VideoGate:D | Select-Object -Last 1
+    Assert "F4 离开页面后收闸" ("$last" -match "decode=false") "$($last -replace '\s+',' ')"
+    $sz = Shot-Size "f4"
+    Assert "F4 方向已恢复竖屏" ($sz.H -gt $sz.W) "$($sz.W)x$($sz.H)"
+
+    # F5（计划 V11）sw≥600 大屏翻转成车机档后，退出按钮必须仍在
+    # 注意：smallestScreenWidthDp 是短边，旋转不改变它；只有 sw≥600 的设备会翻转，
+    # 所以用 wm density 160 把这台模拟器变成 sw=1080 来复现。
+    adb shell wm density 160 | Out-Null
+    Enter-Station "人间卫视"
+    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
+    $before = Tap-Fullscreen-Entry
+    Assert "F5 竖屏手机档有全屏按钮" ($null -ne $before) "btn=$($before.CX),$($before.CY)"
+    Start-Sleep -Seconds 9
+    adb shell input tap 1212 540; Start-Sleep -Milliseconds 400
+    $exit = Dump-Ui "f5" | Where-Object { $_.Descr -eq "退出全屏" } | Select-Object -First 1
+    Assert "F5 翻成车机档后退出按钮仍在" ($null -ne $exit) "exit=$($exit.CX),$($exit.CY)"
+    adb shell wm density reset | Out-Null
+}
+
 ""
 "===== 验收汇总 ====="
 $results | Format-Table -AutoSize Check, Result, Detail
