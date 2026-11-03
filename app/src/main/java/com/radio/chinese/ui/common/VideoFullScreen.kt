@@ -41,7 +41,12 @@ fun rememberVideoFullScreen(): VideoFullScreenState {
         val controller: WindowInsetsControllerCompat =
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         if (fullScreen) {
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            // 用固定横屏而不是 SENSOR_LANDSCAPE：sensor 系常量尊重用户的「自动旋转」开关，
+            // 开关关掉时这类请求可能被系统忽略；而「全屏就是横屏」不该跟着那个开关变脸。
+            // 注意：本轮在模拟器上没能把旋转行为验清楚（自动旋转开/关两种状态下各有一次
+            // 不听请求，传感器停在竖屏），只拿到一张横屏实拍为正向证据；
+            // 真机（含关掉自动旋转的用户）上需重跑验收脚本 -OnlyV 8。
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())

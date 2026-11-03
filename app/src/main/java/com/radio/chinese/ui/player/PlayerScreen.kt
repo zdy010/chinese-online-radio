@@ -43,6 +43,7 @@ import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.common.StationTagChips
 import com.radio.chinese.ui.common.VideoStageFrame
 import com.radio.chinese.ui.common.rememberVideoFullScreen
+import com.radio.chinese.domain.model.VideoControlsPolicy
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
@@ -187,7 +188,9 @@ fun PlayerScreen(
                 // 有视频轨时把封面换成画面；无视频时必须走 else 分支，
                 // 让 VideoStage 进组合树再压高度会改变手机档的像素结果（spec §7 零回退红线）。
                 val mediaVisual: @Composable (androidx.compose.ui.unit.Dp) -> Unit = { size ->
-                    if (uiState.hasVideoTrack) {
+                    // 全屏时即使视频轨消失（断流、或方控切到纯音频台）也要保留画面层：
+                    // 退出入口就长在这一层上，层掉了人就锁在横屏沉浸态里。
+                    if (VideoControlsPolicy.showsPictureSurface(uiState.hasVideoTrack, fullScreen.isFullScreen)) {
                         // 本页整体在 verticalScroll 里，没有 weight 可用：只给 fillMaxWidth 时
                         // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。非全屏用随宽度自适应的
                         // 16:9 有界盒；全屏时整屏撑满，滚动容器同时已被摘掉。
@@ -223,22 +226,26 @@ fun PlayerScreen(
                         ) {
                             mediaVisual(coverSize)
                         }
+                        if (VideoControlsPolicy.showsStationDetails(fullScreen.isFullScreen)) {
+                            StationInfoBlock(
+                                station = station,
+                                showDescription = !shortViewport,
+                                onTagClick = onNavigateToTag,
+                                modifier = Modifier.weight(1.2f)
+                            )
+                        }
+                    }
+                } else {
+                    mediaVisual(coverSize)
+                    if (VideoControlsPolicy.showsStationDetails(fullScreen.isFullScreen)) {
+                        Spacer(modifier = Modifier.height(gapAfterCover))
                         StationInfoBlock(
                             station = station,
                             showDescription = !shortViewport,
                             onTagClick = onNavigateToTag,
-                            modifier = Modifier.weight(1.2f)
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                } else {
-                    mediaVisual(coverSize)
-                    Spacer(modifier = Modifier.height(gapAfterCover))
-                    StationInfoBlock(
-                        station = station,
-                        showDescription = !shortViewport,
-                        onTagClick = onNavigateToTag,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
 
                 // 全屏时以下细节区块整块不渲染：画面要独占整屏，而本页全屏态已摘掉滚动容器，

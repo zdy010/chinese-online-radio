@@ -50,4 +50,29 @@ class VideoControlsPolicyTest {
     fun `控制层收起延时是 3 秒`() {
         assertEquals(3000L, VideoControlsPolicy.CONTROLS_AUTO_HIDE_MS)
     }
+
+    /**
+     * 终审 C1：全屏时页面细节区块（台名/频率/简介/标签）必须不渲染。
+     *
+     * 不渲染不是因为它们不好看，而是因为车机档的全屏走的是 Row 左右分栏：
+     * 留着 StationInfoBlock 就吃掉 55% 屏宽，画面只占左侧 45%，
+     * 用户点了「全屏」结果看到半屏画面 + 半屏台名，像应用坏了。
+     */
+    @Test
+    fun `全屏时页面细节区块一律不渲染`() {
+        assertFalse(VideoControlsPolicy.showsStationDetails(isFullScreen = true))
+        assertTrue(VideoControlsPolicy.showsStationDetails(isFullScreen = false))
+    }
+
+    /**
+     * 终审 I1：全屏时即使流断了 / 切到了纯音频台（hasVideoTrack 变 false），
+     * 画面层也必须还在 —— 退出入口长在这一层上，层掉了人就锁在横屏沉浸态里。
+     */
+    @Test
+    fun `全屏时没有视频轨也要保留画面层与退出入口`() {
+        assertTrue(VideoControlsPolicy.showsPictureSurface(hasVideoTrack = false, isFullScreen = true))
+        assertTrue(VideoControlsPolicy.showsPictureSurface(hasVideoTrack = true, isFullScreen = true))
+        assertTrue(VideoControlsPolicy.showsPictureSurface(hasVideoTrack = true, isFullScreen = false))
+        assertFalse(VideoControlsPolicy.showsPictureSurface(hasVideoTrack = false, isFullScreen = false))
+    }
 }

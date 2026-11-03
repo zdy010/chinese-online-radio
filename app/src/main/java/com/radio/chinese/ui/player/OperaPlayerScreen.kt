@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.OperaSpeed
+import com.radio.chinese.domain.model.VideoControlsPolicy
 import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
@@ -182,7 +183,7 @@ fun OperaPlayerScreen(
         // 有画面时整块内容区让给视频；无画面时必须走 else 分支——
         // 让画面组件进组合树再压高度/insets 会改变手机档的像素结果（spec §7 零回退红线）。
         val contentArea: @Composable (Modifier) -> Unit = { m ->
-            if (hasVideo) {
+            if (VideoControlsPolicy.showsPictureSurface(hasVideo, fullScreen.isFullScreen)) {
                 VideoStageFrame(playerManager = playerManager, fullScreen = fullScreen, modifier = m)
             } else {
                 OperaContentArea(m, state, onLineClick = { viewModel.seekToLine(it) })
@@ -193,9 +194,9 @@ fun OperaPlayerScreen(
         // 与电台播放页「控件在下方」的直觉不一致，很别扭（用户实测问题 6）。
         // 唱段内容区拿到整屏宽度，反而比左侧窄栏更好读。
         Column(Modifier.fillMaxSize().padding(if (fullScreen.isFullScreen) PaddingValues() else padding)) {
-            if (!fullScreen.isFullScreen) info()
+            if (VideoControlsPolicy.showsStationDetails(fullScreen.isFullScreen)) info()
             contentArea(Modifier.weight(1f))
-            if (!fullScreen.isFullScreen) {
+            if (VideoControlsPolicy.showsStationDetails(fullScreen.isFullScreen)) {
                 slider()
                 controls()
             }

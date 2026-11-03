@@ -22,4 +22,23 @@ object VideoControlsPolicy {
 
     /** 控制层自动收起延时（毫秒）。 */
     const val CONTROLS_AUTO_HIDE_MS: Long = 3000L
+
+    /**
+     * 页面细节区块（台名/频率/简介/标签/EPG/节目源/播控）要不要渲染。
+     *
+     * 全屏时必须不渲染，不是因为它们不好看：车机档的非全屏布局走的是 Row 左右分栏，
+     * 留着台名块就吃掉一半屏宽，画面只占左半边 —— 用户点了「全屏」结果看到
+     * 半屏画面 + 半屏台名，像应用坏了。
+     */
+    fun showsStationDetails(isFullScreen: Boolean): Boolean = !isFullScreen
+
+    /**
+     * 画面层要不要渲染。
+     *
+     * `isFullScreen` 优先：全屏时即使视频轨消失（直播断流、或方控切到了纯音频台），
+     * 画面层也必须还在 —— 退出入口就长在这一层上。层掉了，人就锁在横屏沉浸态里，
+     * 只剩知道按返回键的人才出得来。
+     */
+    fun showsPictureSurface(hasVideoTrack: Boolean, isFullScreen: Boolean): Boolean =
+        isFullScreen || hasVideoTrack
 }
