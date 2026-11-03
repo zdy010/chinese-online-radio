@@ -41,8 +41,9 @@ import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.StationCover
 import com.radio.chinese.ui.common.StationSubtitleText
 import com.radio.chinese.ui.common.StationTagChips
+import com.radio.chinese.ui.common.VideoStageFrame
+import com.radio.chinese.ui.common.rememberVideoFullScreen
 import com.radio.chinese.service.PlayerManager
-import com.radio.chinese.ui.common.VideoStage
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.delay
@@ -58,6 +59,15 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val fullScreen = rememberVideoFullScreen()
+
+    // 同 OperaPlayerScreen：闸门跟页面意图，不跟 View 生命周期。
+    // 本页画面格嵌在 isCarSurface() 分支里，强制横屏会让分支换位置、AndroidView 重建，
+    // 若闸门跟着 View 走，一进全屏就收闸再开闸 —— 用户看到闪黑。
+    LaunchedEffect(uiState.hasVideoTrack) { playerManager.setVideoPictureWanted(uiState.hasVideoTrack) }
+    DisposableEffect(Unit) {
+        onDispose { playerManager.setVideoPictureWanted(false) }
+    }
     val timerActive by viewModel.sleepTimer.isActive.collectAsState()
     val timerRemaining by viewModel.sleepTimer.remainingSeconds.collectAsState()
     var showTimerDialog by remember { mutableStateOf(false) }
@@ -86,9 +96,10 @@ fun PlayerScreen(
     }
 
     Scaffold(
-        contentWindowInsets = NestedWindowInsets,
+        contentWindowInsets = if (fullScreen.isFullScreen) WindowInsets(0) else NestedWindowInsets,
         topBar = {
-            TopAppBar(
+            // 全屏时顶栏（含返回、收藏、定时）整块不渲染；退出入口交给画面控制层。
+            if (!fullScreen.isFullScreen) TopAppBar(
                 windowInsets = NestedWindowInsets,
                 // 顶栏默认 64dp 高，不把顶栏本身抬到 88dp，里面的按钮就只能拿到 64dp 短边
                 modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
@@ -160,9 +171,14 @@ fun PlayerScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = Dimens.GapHuge, vertical = pageVerticalPadding),
+                    .padding(if (fullScreen.isFullScreen) PaddingValues() else padding)
+                    .then(
+                        // 全屏时摘掉滚动容器：画面要独占整屏，无界高度下 fillMaxSize 会失效
+                        if (fullScreen.isFullScreen) Modifier
+                        else Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = Dimens.GapHuge, vertical = pageVerticalPadding)
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 车机横屏：封面与台名/频率/简介左右并排，把竖向空间留给下面的播控；
@@ -173,13 +189,13 @@ fun PlayerScreen(
                 val mediaVisual: @Composable (androidx.compose.ui.unit.Dp) -> Unit = { size ->
                     if (uiState.hasVideoTrack) {
                         // 本页整体在 verticalScroll 里，没有 weight 可用：只给 fillMaxWidth 时
-                        // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。改用随宽度自适应的
-                        // 16:9 有界盒，既不写死 dp，也不会把下面的播控顶出首屏。
-                        // 不叠「画面准备中」遮罩：真机实测缓冲中的流仍在渲染最后一帧，
-                        // 文字压在画面上是干扰；缓冲状态下方 PlaybackStatusIndicator 已经报了。
-                        VideoStage(
+                        // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。非全屏用随宽度自适应的
+                        // 16:9 有界盒；全屏时整屏撑满，滚动容器同时已被摘掉。
+                        VideoStageFrame(
                             playerManager = playerManager,
-                            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                            fullScreen = fullScreen,
+                            modifier = if (fullScreen.isFullScreen) Modifier.fillMaxSize()
+                                       else Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                         )
                     } else {
                         CoverBlock(
@@ -225,92 +241,96 @@ fun PlayerScreen(
                     )
                 }
 
-                // 节目单：没接入、拉不到、当天没节目的台整块不渲染，不留占位空白。
-                // 位置在两个分支汇合点之后，宽屏与竖屏各一份就写重了。
-                val snapshot = epg
-                if (snapshot != null) {
+                // 全屏时以下细节区块整块不渲染：画面要独占整屏，而本页全屏态已摘掉滚动容器，
+                // 留着它们只会把画面顶出屏。退出入口只有一个，就在画面控制层里。
+                if (!fullScreen.isFullScreen) {
+                    // 节目单：没接入、拉不到、当天没节目的台整块不渲染，不留占位空白。
+                    // 位置在两个分支汇合点之后，宽屏与竖屏各一份就写重了。
+                    val snapshot = epg
+                    if (snapshot != null) {
+                        Spacer(modifier = Modifier.height(Dimens.GapMedium))
+                        NowOnAirCard(
+                            snapshot = snapshot,
+                            minute = minute,
+                            onClick = { showEpgSheet = true },
+                            modifier = if (isCarSurface()) {
+                                Modifier.widthIn(max = Dimens.CarContentMaxWidth)
+                            } else {
+                                Modifier
+                            }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(Dimens.GapMedium))
-                    NowOnAirCard(
-                        snapshot = snapshot,
-                        minute = minute,
-                        onClick = { showEpgSheet = true },
-                        modifier = if (isCarSurface()) {
-                            Modifier.widthIn(max = Dimens.CarContentMaxWidth)
-                        } else {
-                            Modifier
+
+                    // Playback Status Indicator
+                    PlaybackStatusIndicator(
+                        playbackState = uiState.playbackState,
+                        isPlaying = uiState.isPlaying,
+                        error = uiState.error,
+                        status = uiState.status
+                    )
+
+                    // Source Switching
+                    if (uiState.sourceScores.size > 1) {
+                        Spacer(modifier = Modifier.height(Dimens.GapMedium))
+                        SourceSelector(
+                            sources = uiState.sourceScores,
+                            currentSource = uiState.currentSource,
+                            onSwitch = { viewModel.switchToSource(it.url) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(gapBeforeControls))
+
+                    // Playback Controls
+                    Row(
+                        modifier = Modifier
+                            .then(
+                                if (isCarSurface()) Modifier.widthIn(max = Dimens.CarContentMaxWidth)
+                                else Modifier
+                            )
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Previous
+                        IconButton(
+                            onClick = { viewModel.playPrevious() },
+                            modifier = Modifier.size(Dimens.TouchMin)
+                        ) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                contentDescription = "上一个电台",
+                                modifier = Modifier.size(Dimens.IconLarge)
+                            )
                         }
-                    )
-                }
 
-                Spacer(modifier = Modifier.height(Dimens.GapMedium))
+                        // Play/Pause
+                        FilledIconButton(
+                            onClick = { viewModel.togglePlayPause() },
+                            modifier = Modifier.size(Dimens.PlayButtonSize),
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                if (uiState.isPlaying) Icons.Default.Pause
+                                else Icons.Default.PlayArrow,
+                                contentDescription = if (uiState.isPlaying) "暂停播放" else "继续播放",
+                                modifier = Modifier.size(Dimens.PlayIconSize)
+                            )
+                        }
 
-                // Playback Status Indicator
-                PlaybackStatusIndicator(
-                    playbackState = uiState.playbackState,
-                    isPlaying = uiState.isPlaying,
-                    error = uiState.error,
-                    status = uiState.status
-                )
-
-                // Source Switching
-                if (uiState.sourceScores.size > 1) {
-                    Spacer(modifier = Modifier.height(Dimens.GapMedium))
-                    SourceSelector(
-                        sources = uiState.sourceScores,
-                        currentSource = uiState.currentSource,
-                        onSwitch = { viewModel.switchToSource(it.url) }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(gapBeforeControls))
-
-                // Playback Controls
-                Row(
-                    modifier = Modifier
-                        .then(
-                            if (isCarSurface()) Modifier.widthIn(max = Dimens.CarContentMaxWidth)
-                            else Modifier
-                        )
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Previous
-                    IconButton(
-                        onClick = { viewModel.playPrevious() },
-                        modifier = Modifier.size(Dimens.TouchMin)
-                    ) {
-                        Icon(
-                            Icons.Default.SkipPrevious,
-                            contentDescription = "上一个电台",
-                            modifier = Modifier.size(Dimens.IconLarge)
-                        )
-                    }
-
-                    // Play/Pause
-                    FilledIconButton(
-                        onClick = { viewModel.togglePlayPause() },
-                        modifier = Modifier.size(Dimens.PlayButtonSize),
-                        shape = CircleShape
-                    ) {
-                        Icon(
-                            if (uiState.isPlaying) Icons.Default.Pause
-                            else Icons.Default.PlayArrow,
-                            contentDescription = if (uiState.isPlaying) "暂停播放" else "继续播放",
-                            modifier = Modifier.size(Dimens.PlayIconSize)
-                        )
-                    }
-
-                    // Next
-                    IconButton(
-                        onClick = { viewModel.playNext() },
-                        modifier = Modifier.size(Dimens.TouchMin)
-                    ) {
-                        Icon(
-                            Icons.Default.SkipNext,
-                            contentDescription = "下一个电台",
-                            modifier = Modifier.size(Dimens.IconLarge)
-                        )
+                        // Next
+                        IconButton(
+                            onClick = { viewModel.playNext() },
+                            modifier = Modifier.size(Dimens.TouchMin)
+                        ) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                contentDescription = "下一个电台",
+                                modifier = Modifier.size(Dimens.IconLarge)
+                            )
+                        }
                     }
                 }
 
