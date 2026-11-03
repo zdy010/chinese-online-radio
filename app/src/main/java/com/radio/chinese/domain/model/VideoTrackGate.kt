@@ -12,11 +12,17 @@ package com.radio.chinese.domain.model
  */
 object VideoTrackGate {
 
-    /** 出厂默认：没有画面挂载时视频轨必须处于禁用态。 */
+    /** 出厂默认：页面没声明要画面时，视频轨必须处于禁用态。 */
     const val DEFAULT_VIDEO_TRACK_DISABLED: Boolean = true
 
-    /** 唯一的闸门决策。`stageMounted = false` 时恒为 false —— 这条是回归守卫的对象。 */
-    fun shouldDecodeVideo(stageMounted: Boolean): Boolean = stageMounted
+    /**
+     * 唯一的闸门决策。输入是「页面要不要画面」，不是「View 挂没挂载」。
+     *
+     * `pictureWanted = false` 时恒为 false —— 这条是回归守卫的对象：
+     * 一旦有人改成默认要画面，所有只听声的电台都要多解码一路视频，
+     * 耗电、发热、起播耗时全变差，而单测与 UI 回归都看不出来。
+     */
+    fun shouldDecodeVideo(pictureWanted: Boolean): Boolean = pictureWanted
 
     /**
      * 闸门要不要重新落地。

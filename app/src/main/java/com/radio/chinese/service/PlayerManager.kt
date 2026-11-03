@@ -129,9 +129,13 @@ class PlayerManager @Inject constructor(
     private val _hasVideoTrack = MutableStateFlow(false)
     val hasVideoTrack: StateFlow<Boolean> = _hasVideoTrack
 
-    /** 画面是否挂着。它单一决定视频轨要不要解码（经 [VideoTrackGate]）。 */
-    private val _videoStageMounted = MutableStateFlow(false)
-    val videoStageMounted: StateFlow<Boolean> = _videoStageMounted
+    /**
+     * 页面要不要画面。闸门只认它，不认 View 生命周期 ——
+     * 因为 PlayerScreen 的画面格嵌在 isCarSurface() 分支里，旋转会让它重建，
+     * 跟着 View 走就会在进出全屏时把解码器拆一遍（闪黑）。
+     */
+    private val _videoPictureWanted = MutableStateFlow(false)
+    val videoPictureWanted: StateFlow<Boolean> = _videoPictureWanted
 
     // ========== 戏曲播放状态 ==========
 
@@ -300,8 +304,8 @@ class PlayerManager @Inject constructor(
 
     init {
         // RadioService 被系统回收后会在同进程重建，新播放器默认禁着视频轨，
-        // 而 `_videoStageMounted` 作为单例字段还是 true：只看布尔翻转的话重进播放页会被
-        // 幂等守卫吞掉，画面永远黑着。新实例一到就按当前挂载态重落一次闸门。
+        // 而 `_videoPictureWanted` 作为单例字段还是 true：只看布尔翻转的话重进播放页会被
+        // 幂等守卫吞掉，画面永远黑着。新实例一到就按当前意图重落一次闸门。
         scope.launch {
             videoPlayerMount.playerFlow.collect { p ->
                 if (p != null && p !== lastGatedPlayer) applyVideoTrackGate()
@@ -310,15 +314,17 @@ class PlayerManager @Inject constructor(
     }
 
     /**
-     * VideoStage 挂载/卸载时调用。幂等：重复 true / 重复 false 不产生副作用。
+     * 播放页声明「我要看画面 / 我不要了」。幂等：重复值不产生副作用。
      *
+     * 必须在页面离开时传 false，否则视频轨会一直解禁、后台持续解码。
      * 失败只记日志不写 `_error`：`_error` 是播放页唯一的红色情绪通道，
      * 正常起播不该红框一闪（既有踩坑记录）。
      */
-    fun setVideoStageMounted(mounted: Boolean) {
+    fun setVideoPictureWanted(wanted: Boolean) {
+        val previous = _videoPictureWanted.value
         val replaced = videoPlayerMount.player !== lastGatedPlayer
-        if (!VideoTrackGate.shouldReapplyGate(_videoStageMounted.value, mounted, replaced)) return
-        _videoStageMounted.value = mounted
+        if (!VideoTrackGate.shouldReapplyGate(previous, wanted, replaced)) return
+        _videoPictureWanted.value = wanted
         applyVideoTrackGate()
     }
 
@@ -329,9 +335,9 @@ class PlayerManager @Inject constructor(
                 android.util.Log.w("VideoGate", "播放器尚未建起，闸门待下次挂载再落")
                 return@launch
             }
-            val decode = VideoTrackGate.shouldDecodeVideo(_videoStageMounted.value)
-            // 验收 V3 的断点：退出画面后必须重新看到 decode=false（视频轨收闸，不再多解码）
-            android.util.Log.d("VideoGate", "stageMounted=${_videoStageMounted.value} decode=$decode")
+            val decode = VideoTrackGate.shouldDecodeVideo(_videoPictureWanted.value)
+            // 验收 V3/V10 的断点：页面不要画面后必须重新看到 decode=false（视频轨收闸，不再多解码）
+            android.util.Log.d("VideoGate", "pictureWanted=${_videoPictureWanted.value} decode=$decode")
             try {
                 p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
                     .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !decode)
@@ -347,7 +353,7 @@ class PlayerManager @Inject constructor(
     }
 
     fun playStation(station: RadioStation) {
-        // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoStageMounted(false)。
+        // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoPictureWanted(false)。
         // 新条目的画面真相要等它的 onTracksChanged，沿用旧结论会让上一个台的画面骗过这一台。
         _hasVideoTrack.value = false
         // 互斥：清除戏曲状态
@@ -556,7 +562,7 @@ class PlayerManager @Inject constructor(
      *  @param context 点播上下文（附属文件归属）；内部切歌不传，沿旧源换路径
      */
     fun playOperaFile(file: OperaAudioFile, playlist: List<OperaAudioFile>, localPath: String? = null, context: OperaPlayContext? = null) {
-        // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoStageMounted(false)。
+        // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoPictureWanted(false)。
         _hasVideoTrack.value = false
         // 互斥：停止电台
         _currentStation.value = null

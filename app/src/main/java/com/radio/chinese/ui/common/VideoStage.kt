@@ -51,17 +51,17 @@ fun VideoStage(
 
     val playerView = playerViewRef.value
 
-    // 所有权声明与闸门开关放在副作用阶段，不在 update 里写 StateFlow（那是重组期）
+    // 这里只管 View 所有权（谁绑面），不管视频轨闸门 —— 闸门归页面（见 PlayerManager.setVideoPictureWanted）。
+    // 分开是有意的：本页在旋转/全屏时会换布局分支，AndroidView 会重建；
+    // 若闸门跟着 View 生命周期走，一进全屏就收闸再开闸，解码器被拆建，用户看到闪黑。
     if (playerView != null) {
         val pv = playerView
         DisposableEffect(pv) {
             mount.acquireStage(pv)
-            playerManager.setVideoStageMounted(true)
             onDispose {
                 // 被后来的 Stage 顶掉时不得去 setPlayer(null)，否则会把新页面的面摘黑
                 if (mount.releaseStage(pv)) {
                     pv.player = null
-                    playerManager.setVideoStageMounted(false)
                 }
             }
         }
