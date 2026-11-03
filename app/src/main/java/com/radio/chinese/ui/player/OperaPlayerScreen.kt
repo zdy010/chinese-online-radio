@@ -33,7 +33,8 @@ import com.radio.chinese.service.OperaRepeatMode
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.NestedWindowInsets
-import com.radio.chinese.ui.common.VideoStage
+import com.radio.chinese.ui.common.VideoStageFrame
+import com.radio.chinese.ui.common.rememberVideoFullScreen
 import com.radio.chinese.ui.common.bitrateText
 import com.radio.chinese.ui.common.mediaClock
 import com.radio.chinese.ui.common.mediaTimeText
@@ -65,24 +66,36 @@ fun OperaPlayerScreen(
     val speed = playback.speed
     val state by viewModel.uiState.collectAsState()
     val hasVideo by playerManager.hasVideoTrack.collectAsState()
+    val fullScreen = rememberVideoFullScreen()
+
+    // 闸门跟着页面意图走：页面开着且有视频轨就要画面，离开页面立刻收闸。
+    // 不放在 VideoStage 的生命周期里 —— 那会让布局重建（旋转、换分支）拆一遍解码器。
+    LaunchedEffect(hasVideo) { playerManager.setVideoPictureWanted(hasVideo) }
+    DisposableEffect(Unit) {
+        onDispose { playerManager.setVideoPictureWanted(false) }
+    }
     // 封面/歌词能不能唤出：有画面时它们从内容区退到弹窗，所以得先算出可不可用
     val hasCoverOrLyrics = state.coverBytes != null ||
         (state.lyricsStatus == LyricsStatus.READY && state.lines.isNotEmpty())
 
     Scaffold(
-        contentWindowInsets = NestedWindowInsets,
+        contentWindowInsets = if (fullScreen.isFullScreen) WindowInsets(0) else NestedWindowInsets,
         topBar = {
-            TopAppBar(
-                windowInsets = NestedWindowInsets,
-                // 与电台 PlayerScreen 同理：车机档抬顶栏短边到 88dp，返回键才拿得到完整命中区
-                modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
-                title = { Text("正在播放") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack, modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+            if (fullScreen.isFullScreen) {
+                // 全屏：顶栏整块不渲染，返回与退出入口交给画面控制层
+            } else {
+                TopAppBar(
+                    windowInsets = NestedWindowInsets,
+                    // 与电台 PlayerScreen 同理：车机档抬顶栏短边到 88dp，返回键才拿得到完整命中区
+                    modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
+                    title = { Text("正在播放") },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack, modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { padding ->
         val f = file
@@ -167,10 +180,10 @@ fun OperaPlayerScreen(
             )
         }
         // 有画面时整块内容区让给视频；无画面时必须走 else 分支——
-        // 让 VideoStage 进组合树再压高度/insets 会改变手机档的像素结果（spec §7 零回退红线）。
+        // 让画面组件进组合树再压高度/insets 会改变手机档的像素结果（spec §7 零回退红线）。
         val contentArea: @Composable (Modifier) -> Unit = { m ->
             if (hasVideo) {
-                VideoStage(playerManager = playerManager, modifier = m)
+                VideoStageFrame(playerManager = playerManager, fullScreen = fullScreen, modifier = m)
             } else {
                 OperaContentArea(m, state, onLineClick = { viewModel.seekToLine(it) })
             }
@@ -179,11 +192,13 @@ fun OperaPlayerScreen(
         // 播控一律排在底部横排：车机横屏原先把进度条+控件+倍速塞在右侧定宽栏里，
         // 与电台播放页「控件在下方」的直觉不一致，很别扭（用户实测问题 6）。
         // 唱段内容区拿到整屏宽度，反而比左侧窄栏更好读。
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            info()
+        Column(Modifier.fillMaxSize().padding(if (fullScreen.isFullScreen) PaddingValues() else padding)) {
+            if (!fullScreen.isFullScreen) info()
             contentArea(Modifier.weight(1f))
-            slider()
-            controls()
+            if (!fullScreen.isFullScreen) {
+                slider()
+                controls()
+            }
         }
     }
 }
