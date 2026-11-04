@@ -67,7 +67,8 @@ fun OperaPlayerScreen(
     val speed = playback.speed
     val state by viewModel.uiState.collectAsState()
     val hasVideo by playerManager.hasVideoTrack.collectAsState()
-    val fullScreen = rememberVideoFullScreen()
+    // 车机恒横屏：canRotate=false，进全屏只独占内容区、不发方向请求。
+    val fullScreen = rememberVideoFullScreen(canRotate = isCarSurface().not())
 
     // 闸门跟着页面意图走：页面开着且有视频轨就要画面，离开页面立刻收闸。
     // 不放在 VideoStage 的生命周期里 —— 那会让布局重建（旋转、换分支）拆一遍解码器。

@@ -16,7 +16,9 @@ import com.radio.chinese.domain.model.VideoOrientation
 /**
  * 视频全屏态的持有者，也是全应用唯一会改屏幕方向与系统栏的地方。
  *
- * @param canRotate 现在是不是"能真的转"的设备（调用方传 `isCarSurface().not()`）。
+ * @param canRotate 现在是不是“能真的转”的设备（调用方传 `isCarSurface().not()`）。
+ *   **没默认值**：上一版给了 `= true`，漏传不会报错也不会有任何测试能照出来，
+ *   只有真机能照出来 —— 现在漏传就是编译错误。
  *   它**只约束进入全屏时的方向请求**：车机恒横屏，发横屏请求是无意义操作。
  *
  *   退出全屏与离开页面的方向复位**不受它约束**：`isCarSurface()` 会在全屏期间翻转
@@ -39,7 +41,7 @@ class VideoFullScreenState(
 )
 
 @Composable
-fun rememberVideoFullScreen(canRotate: Boolean = true): VideoFullScreenState {
+fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
     val context = LocalContext.current
     // 用 LocalConfiguration 而不是 context.resources：后者不是快照态，转屏后不会重组，
     // 旋转按钮就会拿着一份过期的"当前是横屏"结论。

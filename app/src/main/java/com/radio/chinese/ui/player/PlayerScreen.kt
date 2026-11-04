@@ -60,7 +60,9 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val fullScreen = rememberVideoFullScreen()
+    // 车机恒横屏：canRotate=false，进全屏只独占面板、不发方向请求；
+    // 退出与离开的方向复位在组件内部是无条件的，不依赖这个值。
+    val fullScreen = rememberVideoFullScreen(canRotate = isCarSurface().not())
 
     // 同 OperaPlayerScreen：闸门跟页面意图，不跟 View 生命周期。
     // 本页画面格嵌在 isCarSurface() 分支里，强制横屏会让分支换位置、AndroidView 重建，
@@ -192,13 +194,12 @@ fun PlayerScreen(
                     // 退出入口就长在这一层上，层掉了人就锁在横屏沉浸态里。
                     if (VideoControlsPolicy.showsPictureSurface(uiState.hasVideoTrack, fullScreen.isFullScreen)) {
                         // 本页整体在 verticalScroll 里，没有 weight 可用：只给 fillMaxWidth 时
-                        // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。非全屏用随宽度自适应的
-                        // 16:9 有界盒；全屏时整屏撑满，滚动容器同时已被摘掉。
+                        // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。
+                        // 这里只服务非全屏态（全屏走下面的独占分支），用随宽度自适应的 16:9 有界盒。
                         VideoStageFrame(
                             playerManager = playerManager,
                             fullScreen = fullScreen,
-                            modifier = if (fullScreen.isFullScreen) Modifier.fillMaxSize()
-                                       else Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                         )
                     } else {
                         CoverBlock(
@@ -209,7 +210,16 @@ fun PlayerScreen(
                         )
                     }
                 }
-                if (isCarSurface()) {
+                if (fullScreen.isFullScreen) {
+                    // 全屏独占：不走形态分支。车机上这一步让画面从“Row 左半约 45%”变成整块面板。
+                    // 画面层被移出原组合位置会让 AndroidView 重建，但闸门由页面意图决定（上一轮
+                    // Amendment），不会因此收闸拆解码器 —— 最多重绑一次面。
+                    VideoStageFrame(
+                        playerManager = playerManager,
+                        fullScreen = fullScreen,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else if (isCarSurface()) {
                     Row(
                         // 超宽屏上不让内容从左拉到右；widthIn 必须在 fillMaxWidth 之前
                         modifier = Modifier
