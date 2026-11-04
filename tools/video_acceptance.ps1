@@ -122,11 +122,23 @@ function Shot-Diff($tag, $gapMs) {
 
 Add-Type -AssemblyName System.Drawing
 
-# 环境前置：飞行模式会让所有取样变成「无网络」的假失败（本轮实测踩过）
-if ((adb shell settings get global airplane_mode_on).Trim() -eq "1") {
+# 环境前置：先确认有设备。不守这一步，下面的 `.Trim()` 会在 null 上崩，
+# 报的是“不能对 Null 值表达式调用方法”，看的人以为是脚本 bug，而不是没接设备。
+$devs = @(adb devices | Select-String "\tdevice$")
+if ($devs.Count -eq 0) { throw "没有已连接设备：先起模拟器（emulator -avd Pixel_9a）或插真机再跑" }
+
+# 飞行模式与断网都会让取样变成“无网络”的假失败（本轮实测踩过）。
+# 注意：`svc wifi enable` 不能只放在飞行模式分支里 —— 本轮遇到过
+# airplane_mode_on=0 但 Active default network=none 的情况， wifi 本身也是关的。
+$ap = "$((adb shell settings get global airplane_mode_on))".Trim()
+if ($ap -eq "1") {
     adb shell cmd connectivity airplane-mode disable | Out-Null
-    adb shell svc wifi enable | Out-Null
-    Start-Sleep -Seconds 6
+    adb shell settings put global airplane_mode_on 0 | Out-Null
+}
+adb shell svc wifi enable | Out-Null
+Start-Sleep -Seconds 5
+if (-not (adb shell dumpsys connectivity | Select-String "Active default network: \d+")) {
+    throw "无默认网络（Active default network: none）：等几秒再跑；没有网时所有视频/直播判据都不可信"
 }
 adb shell pm grant $pkg android.permission.POST_NOTIFICATIONS 2>$null | Out-Null
 
@@ -213,10 +225,12 @@ if ($OnlyV -in 0, 6) {
     adb shell wm density reset | Out-Null
 }
 
-# ---------- 全屏与沉浸（对应计划的 V8–V11，本脚本内叫 F1–F5 以免与上面 V7=R8 回归重名）----------
+# ---------- 全屏与旋转入口（本脚本内 F1–F5，对应计划的 V8–V11 与第一批 F6–F12）----------
 #
-# 操作纪律（本轮真实踩过三次）：控制层 3 秒自动收起，“唤出 + 点按钮”必须在同一次往返里完成。
-# 拆成两条命令去做必然超窗，得到的会是“按了没反应”的假缺陷。
+# 操作纪律（2026-11-04 起改了）：控制层现在**常驻**，不再需要“先点画面唤出”。
+# 旧脚本里那些 `input tap 540 350` 是唤出用的，现在留着反而会把按钮收起来，
+# 导致“全屏按钮不存在”的假缺陷 —— 全屏项必须先 dump 再点，不要先 tap。
+# （上一版纪律是反过来的：当时 3 秒自动收起，拆两条命令做必然超窗。）
 
 function Png-Size($path) {
     # 用 PNG 头取尺寸：screencap 的宽高直接反映当前方向，比 dumpsys 字段可靠
@@ -246,7 +260,6 @@ if ($OnlyV -in 0, 7) {
     $opened = adb logcat -d -s VideoGate:D | Select-String "decode=true"
     Assert "F1 前置：进入播放页已开闸" ([bool]$opened) "opened=$(@($opened).Count)"
     adb logcat -c
-    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
     $btn = Tap-Fullscreen-Entry
     Assert "F1 全屏按钮存在且可点" ($null -ne $btn) "btn=$($btn.CX),$($btn.CY)"
     Start-Sleep -Seconds 9
@@ -257,7 +270,6 @@ if ($OnlyV -in 0, 7) {
 if ($OnlyV -in 0, 8) {
     # F2（计划 V8 的另一半）方向翻横 + 页面 chrome 消失
     Enter-Station "人间卫视"
-    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
     Tap-Fullscreen-Entry | Out-Null
     Start-Sleep -Seconds 9
     $sz = Shot-Size "f2"
@@ -269,7 +281,6 @@ if ($OnlyV -in 0, 8) {
 if ($OnlyV -in 0, 9) {
     # F3（计划 V9）返回键先退全屏、不退页面
     Enter-Station "人间卫视"
-    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
     Tap-Fullscreen-Entry | Out-Null
     Start-Sleep -Seconds 8
     adb shell input keyevent 4 | Out-Null
@@ -283,7 +294,6 @@ if ($OnlyV -in 0, 9) {
 if ($OnlyV -in 0, 10) {
     # F4（计划 V10）离开页面后方向与闸门复位
     Enter-Station "人间卫视"
-    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
     Tap-Fullscreen-Entry | Out-Null
     Start-Sleep -Seconds 8
     adb shell input keyevent 4 | Out-Null; Start-Sleep -Seconds 4
@@ -300,11 +310,9 @@ if ($OnlyV -in 0, 10) {
     # 所以用 wm density 160 把这台模拟器变成 sw=1080 来复现。
     adb shell wm density 160 | Out-Null
     Enter-Station "人间卫视"
-    adb shell input tap 540 350; Start-Sleep -Milliseconds 350
     $before = Tap-Fullscreen-Entry
     Assert "F5 竖屏手机档有全屏按钮" ($null -ne $before) "btn=$($before.CX),$($before.CY)"
     Start-Sleep -Seconds 9
-    adb shell input tap 1212 540; Start-Sleep -Milliseconds 400
     $exit = Dump-Ui "f5" | Where-Object { $_.Descr -eq "退出全屏" } | Select-Object -First 1
     Assert "F5 翻成车机档后退出按钮仍在" ($null -ne $exit) "exit=$($exit.CX),$($exit.CY)"
     adb shell wm density reset | Out-Null

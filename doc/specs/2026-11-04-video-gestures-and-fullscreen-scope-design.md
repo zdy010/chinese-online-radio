@@ -103,7 +103,8 @@ object VideoControlsPolicy {
 ### 3.3 旋转按钮的行为（B4 定义清楚）
 
 - 位置：控制层右上角，紧邻全屏按钮；`contentDescription` 用「切换横竖屏」。
-- 行为：只在**全屏态**出现（`showsRotateButton`）。按下时在 `SCREEN_ORIENTATION_SENSOR_PORTRAIT` 与 `SCREEN_ORIENTATION_LANDSCAPE` 之间翻转 `requestedOrientation`，**全屏态保持不变**（页面 chrome 不回来，控制层仍在）—— 因为用户要的是"横着看还是竖着看"，不是"退出全屏"。
+- 行为：只在**全屏态**出现（`showsRotateButton`）。按下时在 `SCREEN_ORIENTATION_PORTRAIT` 与 `SCREEN_ORIENTATION_LANDSCAPE` 之间翻转 `requestedOrientation`，**全屏态保持不变**（页面 chrome 不回来，控制层仍在）—— 因为用户要的是"横看还是竖看"，不是"退出全屏"。
+- 用固定 `PORTRAIT` 而不是 `SENSOR_PORTRAIT`（自审 Minor 6 定案，代码与本文以本节为准）：进入全屏已经用固定 `LANDSCAPE`，两侧语义必须一致 —— 都是"用户显式要求的那一侧"，不受系统自动旋转开关影响。代价：在全屏竖屏态把手机横过来不会自动转横，需再按一次按钮；这是显式选择，不是意外。
 - 退出全屏时统一回到 `UNSPECIFIED`，不残留旋转选择。
 - 不做的事：不给"锁定方向"开关，不持久化上次选的朝向（下次进全屏仍从横屏开始）。
 

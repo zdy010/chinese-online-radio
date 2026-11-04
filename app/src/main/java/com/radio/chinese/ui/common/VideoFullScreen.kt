@@ -48,7 +48,12 @@ fun rememberVideoFullScreen(canRotate: Boolean = true): VideoFullScreenState {
     var fullScreen by rememberSaveable { mutableStateOf(false) }
     var rotateOverride by rememberSaveable { mutableStateOf<VideoOrientation?>(null) }
 
-    LaunchedEffect(fullScreen, rotateOverride, canRotate) {
+    // canRotate 不进 key：它会在全屏期间翻转（sw≥600 设备转一下手机就换形态），
+    // 一旦进了 key，用户在全屏里手动把设备扳回竖屏时，effect 会因 key 变化重跑，
+    // 把「进入全屏要横屏」的请求补发一遍，直接吞掉用户手里的旋转。
+    val canRotateNow by rememberUpdatedState(canRotate)
+
+    LaunchedEffect(fullScreen, rotateOverride) {
         val activity = context as? android.app.Activity
         if (activity == null) {
             android.util.Log.w("VideoFullScreen", "上下文不是 Activity，全屏命令跳过")
@@ -58,7 +63,8 @@ fun rememberVideoFullScreen(canRotate: Boolean = true): VideoFullScreenState {
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         if (fullScreen) {
             // 进入全屏：只有可转设备才发方向请求；用户按过旋转按钮时尊重他的选择
-            if (canRotate) {
+            if (canRotateNow) {
+                // 待真机确认：模拟器虚拟传感器会压过方向请求（见 spec §5.2 已知环境限制）
                 val target = rotateOverride ?: VideoOrientation.Landscape
                 activity.requestedOrientation = when (target) {
                     VideoOrientation.Landscape -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -69,8 +75,8 @@ fun rememberVideoFullScreen(canRotate: Boolean = true): VideoFullScreenState {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
         } else {
-            // 退出全屏：不受 canRotate 约束，永远复位
-            rotateOverride = null
+            // 退出全屏：不受 canRotate 约束，永远复位（rotateOverride 的清理交给 toggle/返回键，
+            // 不在这里写回 null——那会让 key 变化重启 effect，把同一套复位命令再发一遍）
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
@@ -86,16 +92,27 @@ fun rememberVideoFullScreen(canRotate: Boolean = true): VideoFullScreenState {
         }
     }
 
-    BackHandler(enabled = fullScreen) { fullScreen = false }
+    BackHandler(enabled = fullScreen) {
+        rotateOverride = null
+        fullScreen = false
+    }
 
     return remember(fullScreen, isLandscape) {
         VideoFullScreenState(
             isFullScreen = fullScreen,
             isLandscape = isLandscape,
-            toggle = { fullScreen = !fullScreen },
-            // 旋转按钮只在全屏态出现，此处已是全屏；切到与当前相反的一侧
+            toggle = {
+                if (fullScreen) rotateOverride = null
+                fullScreen = !fullScreen
+            },
+            // 以“上一次请求”为事实源，不拿观测到的 isLandscape：设备不理会请求时（折叠屏、
+            // 分屏、部分车机 ROM，以及本项目的模拟器），观测值永远不变，按钮会“按了没反应”；
+            // 转屏动画期内连点也会两下只切一下。那些都是 spec §3.1 自己立的反模式。
             rotate = {
-                rotateOverride = VideoControlsPolicy.nextOrientation(currentLandscape = isLandscape)
+                val current = rotateOverride ?: VideoOrientation.Landscape
+                rotateOverride = VideoControlsPolicy.nextOrientation(
+                    currentLandscape = current == VideoOrientation.Landscape
+                )
             },
         )
     }
