@@ -1,10 +1,26 @@
 package com.radio.chinese.domain.model
 
+/** 旋转按钮要切到的目标方向。枚举而非 ActivityInfo 常量：domain 层不得 import Android。 */
+enum class VideoOrientation { Landscape, Portrait }
+
 /**
  * 视频控制层的决策，纯 Kotlin（不 import Android/media3），因此能在 JVM 测试集里跑。
  * 与 `VideoTrackGate`、`VideoMedia` 同一手法：判定集中在这里，落地是薄胶水。
  */
 object VideoControlsPolicy {
+
+    /** 旋转按钮按下后切到哪个方向：横竖互切。 */
+    fun nextOrientation(currentLandscape: Boolean): VideoOrientation =
+        if (currentLandscape) VideoOrientation.Portrait else VideoOrientation.Landscape
+
+    /**
+     * 旋转按钮该不该出现：只在「手机形态 + 已在全屏」时给。
+     *
+     * 车机恒横屏，按了不会有任何变化 —— 那是“给了控件却不响应”，本项目的反模式。
+     * 手机非全屏时方向归系统与用户自己，应用不插队。
+     */
+    fun showsRotateButton(isCarSurface: Boolean, isFullScreen: Boolean): Boolean =
+        !isCarSurface && isFullScreen
 
     /**
      * 全屏按钮该不该出现。
