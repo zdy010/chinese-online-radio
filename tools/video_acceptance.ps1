@@ -23,7 +23,20 @@ function Get-ScreenSize {
 
 function Dump-Ui($tag) {
     $p = Join-Path $tmp "ui-$tag.xml"
-    adb shell uiautomator dump /sdcard/ui.xml | Out-Null
+    # 必须先删设备上的旧 dump：uiautomator 失败（null root node）时不会写新文件，
+    # 不删就会 pull 到上一次的内容 —— “两次抓出来一模一样”其实是旧产物冒充本次抓取。
+    # 对 F6b/F7 这类“断言节点不存在”的负向判据，这会直接造出假 PASS（缺陷被洗白）。
+    adb shell rm -f /sdcard/ui.xml | Out-Null
+    # 重试再招：窗口动画期会出现 "null root node"（stdout 为空、文件不写），这是环内抖动不是失败。
+    # 但重试必须建立在"先 rm"之上：不删就 pull 到旧文件，那才是本轮真实发生过的假结论。
+    $ok = $false
+    for ($try = 1; $try -le 4; $try++) {
+        $d = adb shell uiautomator dump /sdcard/ui.xml
+        if ("$d" -match "dumped to") { $ok = $true; break }
+        Start-Sleep -Milliseconds 1500
+        adb shell rm -f /sdcard/ui.xml | Out-Null
+    }
+    if (-not $ok) { throw "uiautomator dump 连续 4 次失败（$tag）：宁可不给结论，也不能拿旧 dump 冒充本次抓取" }
     adb pull /sdcard/ui.xml $p | Out-Null
     [xml]$doc = Get-Content $p -Raw -Encoding UTF8
     $out = @()
@@ -36,6 +49,7 @@ function Dump-Ui($tag) {
             X2 = [int]$b[2].Value; Y2 = [int]$b[3].Value
             CX = [int](([int]$b[0].Value + [int]$b[2].Value) / 2)
             CY = [int](([int]$b[1].Value + [int]$b[3].Value) / 2)
+            Scrollable = ($n.scrollable -eq "true")
         }
     }
     return $out
@@ -144,9 +158,12 @@ adb shell pm grant $pkg android.permission.POST_NOTIFICATIONS 2>$null | Out-Null
 
 $results = @()
 
-function Assert($name, $ok, $detail) {
-    $script:results += [pscustomobject]@{ Check = $name; Result = $(if ($ok) { "PASS" } else { "FAIL" }); Detail = $detail }
-    "$name -> $(if ($ok) { 'PASS' } else { 'FAIL' }) :: $detail"
+function Assert($name, $ok, $detail, [switch]$Inconclusive) {
+    # 第三态必须是独立的 Result 值。上一版用 `Assert $true` 冒充“不可判”，
+    # 汇总表里显示 PASS —— 只看汇总或只 grep FAIL 的人会把未验证当成已守住（本轮真实发生过）。
+    $r = if ($Inconclusive) { "INCONCLUSIVE" } elseif ($ok) { "PASS" } else { "FAIL" }
+    $script:results += [pscustomobject]@{ Check = $name; Result = $r; Detail = $detail }
+    "$name -> $r :: $detail"
 }
 
 if ($OnlyV -in 0, 1) {
@@ -247,6 +264,46 @@ function Tap-Fullscreen-Entry {
     return $btn
 }
 
+function Row-Span($tag) {
+    # 用截图量“非背景像素的行跨度”，不用 uiautomator 的节点 bounds：
+    # 本项目已实测 bounds 会裁切失真（忽高忽矮是裁切，稳定偏矮才是缺陷）。
+    # 背景取采样直方图的众数，不取左上角单点 —— 画面真独占时四角都是画面内容。
+    $p = Join-Path $tmp "$tag.png"
+    adb shell rm -f /sdcard/s.png | Out-Null
+    adb shell screencap -p /sdcard/s.png | Out-Null
+    if ((adb shell ls /sdcard/s.png 2>$null) -match "No such file") { throw "screencap 失败（$tag）" }
+    adb pull /sdcard/s.png $p | Out-Null
+    Add-Type -AssemblyName System.Drawing
+    $bmp = [System.Drawing.Bitmap]::FromFile($p)
+    try {
+        $hist = @{}
+        $rows = @()
+        for ($y = 0; $y -lt $bmp.Height; $y += 4) {
+            $line = @()
+            for ($x = 0; $x -lt $bmp.Width; $x += 8) {
+                $c = $bmp.GetPixel($x, $y)
+                $key = "$($c.R),$($c.G),$($c.B)"
+                if ($hist.ContainsKey($key)) { $hist[$key]++ } else { $hist[$key] = 1 }
+                $line += $c
+            }
+            $rows += ,@($y, $line)
+        }
+        $bgKey = ($hist.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 1).Key
+        $bp = $bgKey -split ","
+        $bgR = [int]$bp[0]; $bgG = [int]$bp[1]; $bgB = [int]$bp[2]
+        $top = -1; $bot = -1
+        foreach ($r in $rows) {
+            $y = $r[0]; $diff = $false
+            foreach ($c in $r[1]) {
+                if ([Math]::Abs($c.R - $bgR) + [Math]::Abs($c.G - $bgG) + [Math]::Abs($c.B - $bgB) -gt 40) { $diff = $true; break }
+            }
+            if ($diff) { if ($top -lt 0) { $top = $y }; $bot = $y }
+        }
+        $span = if ($top -lt 0) { 0 } else { ($bot - $top + 4) * 4 }   # 采样步长 4px，换算回真实行高
+        return @{ span = [Math]::Min($span, $bmp.Height); h = $bmp.Height; bg = $bgKey }
+    } finally { $bmp.Dispose() }
+}
+
 function Shot-Size($tag) {
     $p = Join-Path $tmp "$tag.png"
     adb shell screencap -p /sdcard/s.png | Out-Null
@@ -320,41 +377,73 @@ if ($OnlyV -in 0, 10) {
 
 if ($OnlyV -in 0, 11) {
     # ===== 第一批修正的主判据（对应 spec §5.2 F6–F11）=====
-
-    # F6 车机几何下必须有全屏入口 —— 用户报的 bug 本体：上一版这里查不到任何节点
+    # 三条纪律（都是本轮被实测推翻后写下的）：
+    # 1. 几何切换必须放 try/finally：wm size/density 是设备级持久设置，中途 throw 不复位
+    #    会把后续所有判据跑在车机档上。
+    # 2. 不可判必须用 -Inconclusive，不许用 Assert $true 冒充 PASS。
+    # 3. “能不能滚”的信号必须是节点位移，不能是文本集合 —— 播放状态文案本来就在变。
+    adb shell settings put system user_rotation 0 | Out-Null
     adb shell wm density 160 | Out-Null
     adb shell wm size 1280x720 | Out-Null
-    adb shell settings put system user_rotation 0 | Out-Null
+    try {
+
+    # F6 车机几何下必须有全屏入口 —— 用户报的 bug 本体。
+    # 控制层现在常驻，**不要先点画面**（那会把按钮收起来，造出"没有入口"的假缺陷）。
     Enter-Station "人间卫视"
     $car = Dump-Ui "f6" | Where-Object { $_.Descr -eq "全屏" } | Select-Object -First 1
     Assert "F6 车机形态有全屏入口" ($null -ne $car) "btn=$($car.CX),$($car.CY)"
 
     # F6b 车机不该给旋转按钮（恒横屏，给了就是按了没反应）
     $carRot = Dump-Ui "f6r" | Where-Object { $_.Descr -eq "切换横竖屏" } | Select-Object -First 1
-    Assert "F6b 车机不给旋转按钮" ($null -eq $carRot) "误现=$($carRot.CX),$($carRot.CY)"
+    Assert "F6b 车机不给旋转按钮" ($null -eq $carRot) $(if ($carRot) { "误现=$($carRot.CX),$($carRot.CY)" } else { "未误现" })
 
     # F7 车机全屏 = 画面独占面板（C1 那个“半屏画面半屏台名”的守卫）
-    if ($car) { adb shell input tap $car.CX $car.CY | Out-Null }
-    Start-Sleep -Seconds 8
-    $left = Dump-Ui "f7" | Where-Object { $_.Text -like "*人间卫视*" -or $_.Descr -eq "上一个电台" }
-    Assert "F7 车机全屏后细节区块为 0" (@($left).Count -eq 0) "残留=$(@($left).Count)"
-    $mv = Shot-Diff "f7" 1500
-    if (-not $mv.changed) {
-        # 流断时 changed=0 与“全屏弄坏了画面”长得一模一样，必须分流（本轮真实碰到 Source error）
-        $err = adb logcat -d | Select-String "ExoPlaybackException: Source error" | Select-Object -Last 1
-        if ($err) {
-            Assert "F7 画面仍在解码" $true "INCONCLUSIVE：流断了（Source error），不是全屏问题"
-        } else {
-            Assert "F7 画面仍在解码" $false "changed=$($mv.changed) total=$($mv.total)"
-        }
+    if (-not $car) {
+        Assert "F7 车机全屏后细节区块为 0" $false "CASCADE：F6 没拿到入口，进不了全屏" -Inconclusive
+        Assert "F7 画面行跨度占满面板" $false "CASCADE：同上" -Inconclusive
+        Assert "F7 画面仍在解码" $false "CASCADE：同上" -Inconclusive
     } else {
-        Assert "F7 画面仍在解码" $true "changed=$($mv.changed)"
+        # 出帧基线：先在**非全屏**下量一次运动。没这条基线就分不清“流自己冻住了”
+        # 与“全屏这一下打断了画面”——本轮就是这么把前者报成了 FAIL。
+        # （靠状态文案判“有没有出帧”不够格：流冻住时未必会显示缓冲/换源字样）
+        $baseMotion = Shot-Diff "f7base" 1500
+        # 基线：点全屏之前有没有 Source error。没基线就分不开"进全屏前就断了"与
+        # "全屏这一下把流搞断了"，两者在 logcat 里长得一模一样。
+        $errBefore = adb logcat -d | Select-String "ExoPlaybackException: Source error" | Select-Object -Last 1
+        adb shell input tap $car.CX $car.CY | Out-Null
+        Start-Sleep -Seconds 8
+        $f7 = Dump-Ui "f7"
+        $left = $f7 | Where-Object { $_.Text -like "*人间卫视*" -or $_.Descr -eq "上一个电台" }
+        Assert "F7 车机全屏后细节区块为 0" (@($left).Count -eq 0) "残留=$(@($left).Count) 节点总数=$(@($f7).Count)"
+
+        # 画面行跨度用截图量，不用节点 bounds（bounds 会裁切失真）；
+        # 这条不依赖流是否稳定，所以流断的时候它仍然有效。
+        $rs = Row-Span "f7span"
+        Assert "F7 画面行跨度占满面板" (($rs.span / [double]$rs.h) -ge 0.85) "跨度=$($rs.span)/$($rs.h) = $([math]::Round(100 * $rs.span / $rs.h, 1))%"
+
+        $stalled = [bool](Dump-Ui "f7st" | Where-Object { $_.Text -match "缓冲|尝试节目源" })
+        $mv = Shot-Diff "f7" 1500
+        $errNow = adb logcat -d | Select-String "ExoPlaybackException: Source error" | Select-Object -Last 1
+        if (-not $baseMotion.changed) {
+            # 非全屏也静止：这台机器上此刻根本没有帧在动，全屏判据无从对比
+            Assert "F7 画面仍在解码" $false "INCONCLUSIVE：非全屏基线也静止（base=$($baseMotion.changed)/$($baseMotion.total)），流本身未出帧，与换槽无关" -Inconclusive
+        } elseif ($stalled) {
+            Assert "F7 画面仍在解码" $false "流未出帧（状态文案是缓冲/换源），本判据在此不可判" -Inconclusive
+        } elseif ($mv.changed) {
+            Assert "F7 画面仍在解码" $true "changed=$($mv.changed) 基线=$($baseMotion.changed)"
+        } elseif ($errNow -and -not $errBefore) {
+            Assert "F7 画面仍在解码" $false "进全屏后才出现 Source error，需人工分辨是谁先动的手" -Inconclusive
+        } else {
+            Assert "F7 画面仍在解码" $false "基线有帧在动、进全屏后静止且无新增 Source error —— 独占分支可能打断了画面"
+        }
     }
     adb shell input keyevent 4 | Out-Null   # 先退全屏再改几何，否则带着独占态回手机档
     Start-Sleep -Seconds 4
-    adb shell wm size reset | Out-Null
-    adb shell wm density reset | Out-Null
-    Start-Sleep -Seconds 3
+    } finally {
+        adb shell wm size reset | Out-Null
+        adb shell wm density reset | Out-Null
+        Start-Sleep -Seconds 3
+    }
 
     # F9 控制层常驻：进入后等 12 秒（远大于旧的 3 秒阈值）按钮仍在
     Enter-Station "人间卫视"
@@ -363,48 +452,70 @@ if ($OnlyV -in 0, 11) {
     Assert "F9 控制层不再定时自动收起" ($null -ne $still) "btn=$($still.CX),$($still.CY)"
 
     # F10 手机全屏态有旋转按钮，按下后截图宽高互换且仍是全屏
-    if ($still) { adb shell input tap $still.CX $still.CY | Out-Null }
-    Start-Sleep -Seconds 8
-    $rot = Dump-Ui "f10" | Where-Object { $_.Descr -eq "切换横竖屏" } | Select-Object -First 1
-    Assert "F10 手机全屏有旋转按钮" ($null -ne $rot) "btn=$($rot.CX),$($rot.CY)"
-    $szL = Shot-Size "f10land"
-    if ($rot) { adb shell input tap $rot.CX $rot.CY | Out-Null }
-    Start-Sleep -Seconds 6
-    $szP = Shot-Size "f10port"
-    Assert "F10 按旋转后宽高互换" (($szL.W -gt $szL.H) -and ($szP.H -gt $szP.W)) "$($szL.W)x$($szL.H) -> $($szP.W)x$($szP.H)"
-    $afterRot = Dump-Ui "f10b" | Where-Object { $_.Descr -eq "退出全屏" } | Select-Object -First 1
-    Assert "F10 旋转后仍是全屏（退出入口没丢）" ($null -ne $afterRot) ""
+    # 不复用 F9 的旧坐标：那中间隔了一次 Enter-Station 与 12 秒等待，布局可能已被
+    # 缓冲/换源提示推下去。先 dump 再点（本脚本自己刚写下的纪律）。
+    $f10btn = Tap-Fullscreen-Entry
+    if (-not $f10btn) {
+        Assert "F10 手机全屏有旋转按钮" $false "CASCADE：拿不到全屏入口，进不了全屏" -Inconclusive
+        Assert "F10 按旋转后宽高互换" $false "CASCADE：同上" -Inconclusive
+        Assert "F10 旋转后仍是全屏（退出入口没丢）" $false "CASCADE：同上" -Inconclusive
+    } else {
+        Start-Sleep -Seconds 8
+        $rot = Dump-Ui "f10" | Where-Object { $_.Descr -eq "切换横竖屏" } | Select-Object -First 1
+        Assert "F10 手机全屏有旋转按钮" ($null -ne $rot) "btn=$($rot.CX),$($rot.CY)"
+        $szL = Shot-Size "f10land"
+        if ($rot) { adb shell input tap $rot.CX $rot.CY | Out-Null }
+        Start-Sleep -Seconds 6
+        $szP = Shot-Size "f10port"
+        Assert "F10 按旋转后宽高互换" (($szL.W -gt $szL.H) -and ($szP.H -gt $szP.W)) "$($szL.W)x$($szL.H) -> $($szP.W)x$($szP.H)"
+        $afterRot = Dump-Ui "f10b" | Where-Object { $_.Descr -eq "退出全屏" } | Select-Object -First 1
+        Assert "F10 旋转后仍是全屏（退出入口没丢）" ($null -ne $afterRot) ""
+    }
     adb shell input keyevent 4 | Out-Null
     Start-Sleep -Seconds 5
 
     # F11 手机非全屏时从画面区域滑动仍能翻页（B2 基线，也是第二批装拖动手势前的对照）
-    # 必须带对照组：本页在 1080x2424 下本来就不溢出时，没得滚就测不出东西。
-    # 只看“画面内滑动后文本变了”会把“测法无效”报成 App 缺陷（本轮真实踩过）。
+    # 信号必须是“稳定文本的 y 坐标变了”（节点位移），不能是“文本集合变了”：
+    # 播放状态文案（缓冲中/正在尝试节目源）本来就在变，用它当信号会同时造出
+    # 假 FAIL（本轮就是这么把“测法无效”报成缺陷的）与假 PASS。
+    # 另需硬前置：dump 里没有 scrollable=true 的容器时，“没的可滚”要量出来，不能倒推。
     Enter-Station "人间卫视"
     $s = Get-ScreenSize
     $xc = [int]($s.W / 2)
-    $textAll = { param($tag) (Dump-Ui $tag | ForEach-Object { $_.Text }) -join "|" }
 
-    # 对照组：从画面外（下方）上滑
-    $c1 = & $textAll "f11c1"
-    adb shell input swipe $xc ([int]($s.H * 0.78)) $xc ([int]($s.H * 0.28)) 400 | Out-Null
-    Start-Sleep -Seconds 3
-    $c2 = & $textAll "f11c2"
-    $ctrlChanged = ($c1 -ne $c2)
+    $n1 = Dump-Ui "f11n0"
+    $scroller = @($n1 | Where-Object { $_.Scrollable })
+    Assert "F11 前置：本页有可滚容器" ($scroller.Count -ge 1) "scrollable 节点数=$($scroller.Count)（为 0 则本页不溢出，F11 不可判）" -Inconclusive:($scroller.Count -lt 1)
 
-    # 实验组：先滑回顶部，再从画面内上滑
-    adb shell input swipe $xc ([int]($s.H * 0.28)) $xc ([int]($s.H * 0.78)) 400 | Out-Null
-    Start-Sleep -Seconds 2
-    $p1 = & $textAll "f11p1"
-    adb shell input swipe $xc ([int]($s.H * 0.25)) $xc ([int]($s.H * 0.08)) 400 | Out-Null
-    Start-Sleep -Seconds 3
-    $p2 = & $textAll "f11p2"
-    $picChanged = ($p1 -ne $p2)
-
-    if (-not $ctrlChanged) {
-        Assert "F11 从画面内滑动可翻页" $true "INCONCLUSIVE：对照组（画面外）也没变化——本页不溢出，测不出滚动"
+    if ($scroller.Count -lt 1) {
+        Assert "F11 从画面内滑动可翻页" $false "INCONCLUSIVE：无可滚容器，测不出滑动" -Inconclusive
     } else {
-        Assert "F11 从画面内滑动可翻页（不抢滚动）" $picChanged "对照能滚、画面内不能滚则手势层吃了竖直滑动"
+        $sig = { param($nodes)
+            ($nodes | Where-Object { $_.Text -and $_.Text -notmatch "缓冲|尝试节目源|正在播放|正在播出" }
+                    | ForEach-Object { "$($_.Text)@$($_.Y1)" }) -join "|"
+        }
+
+        # 对照组：从画面外（下方）上滑
+        $c1 = & $sig (Dump-Ui "f11c1")
+        adb shell input swipe $xc ([int]($s.H * 0.78)) $xc ([int]($s.H * 0.28)) 400 | Out-Null
+        Start-Sleep -Seconds 4
+        $c2 = & $sig (Dump-Ui "f11c2")
+        $ctrlChanged = ($c1 -ne $c2)
+
+        # 实验组：先滑回顶部并等惯性停（fling 残余会被算进变化），再从画面内上滑
+        adb shell input swipe $xc ([int]($s.H * 0.28)) $xc ([int]($s.H * 0.78)) 400 | Out-Null
+        Start-Sleep -Seconds 5
+        $p1 = & $sig (Dump-Ui "f11p1")
+        adb shell input swipe $xc ([int]($s.H * 0.25)) $xc ([int]($s.H * 0.08)) 400 | Out-Null
+        Start-Sleep -Seconds 4
+        $p2 = & $sig (Dump-Ui "f11p2")
+        $picChanged = ($p1 -ne $p2)
+
+        if (-not $ctrlChanged) {
+            Assert "F11 从画面内滑动可翻页" $false "INCONCLUSIVE：对照组（画面外同距）也没位移——本页实际滑不动" -Inconclusive
+        } else {
+            Assert "F11 从画面内滑动可翻页（不抢滚动）" $picChanged "对照有位移而画面内无位移则手势层吃了竖直滑动"
+        }
     }
 }
 

@@ -216,7 +216,10 @@ fun PlayerScreen(
                 if (fullScreen.isFullScreen && isCarSurface()) {
                     // 车机全屏独占：不走 Row 分栏。这一步让画面从“Row 左半约 45%”变成整块面板。
                     // 车机原本就要在 Row 的 Box(weight) 与顶层之间换槽，重建代价本来就有；
-                    // 手机档不进这个分支，回 mediaVisual 同槽换 modifier，零重建。
+                    // 手机档不进这个分支，回 mediaVisual 同槽换 modifier。
+                    // 【未证实】“同槽换 modifier 不重建 AndroidView”是结构推理 + 上一轮真机经停过的
+                    // 路径；本轮想证它的 F7 解码判据因流未出帧而不可判。surface 销毁是否
+                    // 触发 MediaCodec reset，需看 logcat -s MediaCodecRenderer 的 Surface destroyed。
                     // 画面层被移出原组合位置会让 AndroidView 重建，但闸门由页面意图决定（上一轮
                     // Amendment），不会因此收闸拆解码器 —— 最多重绑一次面。
                     VideoStageFrame(
