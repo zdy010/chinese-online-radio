@@ -33,11 +33,35 @@ spec 暗示但测试不会天然覆盖、真人一定撞上的五条，逐条落
 2. **全屏期间形态判定翻转**：入口消失（Task 1 单测守住）+ 方向不复位把人永久卡在横屏（Task 2 的无条件复位 + Task 6 F8）。
 3. **控制层常驻后，手机非全屏时从画面下滑还能不能翻页** —— 单击检测不应吃掉滚动，但必须实测（Task 6 F11）。
 4. **旋转按钮出现在错误的地方**：车机恒横屏给了就是"按了没反应"，手机非全屏给了会跟系统旋转打架（Task 1 单测 + Task 6 F10）。
-5. **断流/切到纯音频台时退出入口消失**（上一轮 I1 的修复不得回退）—— Task 3 保留 `showsPictureSurface` 语义，Task 6 F12 复验。
+5. **断流/切到纯音频台时退出入口消失**（上一轮 I1 的修复不得回退）—— Task 2 保留 `showsPictureSurface` 语义，Task 5 F12 复验。
 
 ---
 
-### Task 1: VideoControlsPolicy 修订（纯函数 + 单测）
+## 执行顺序修正（计划自审发现，以本节为准）
+
+原划分按“模块”分任务，没按“能不能编译过”分。实际依赖环是：
+`VideoControlsPolicy` → `VideoStageFrame`（唯一消费者）→ `VideoFullScreenState` → 两个播放页。
+照原顺序，改完策略参数与删常量后 `VideoStageFrame` 编译不过，**那一步的“跑测试”根本执行不到** ——
+因为 `testDebugUnitTest` 依赖主源编译。
+
+按下面的顺序做，每个任务结束时自己就是可编译、可跑测的。**任务小节标题已按新编号命名，但正文在文件里仍按原模块顺序排列**（Task 2 的正文在 Task 1 之前）：执行时以本表顺序为准，不要从上往下顺着做。
+
+| 编号 | 内容 |
+|---|---|
+| **Task 1** | `VideoFullScreen` 加 `canRotate: Boolean = true`（带默认值，调用点不动就能编译），加 `isLandscape`/`rotate`，方向复位改为无条件 |
+| **Task 2** | `VideoControlsPolicy`（改参数/新增旋转策略/删常量）**与 `VideoStageFrame` 的改动合并为同一提交**（两者必须同时生效才编译得过） |
+| **Task 3** | `PlayerScreen` 传 `canRotate` + 全屏独占面板 |
+| **Task 4** | `OperaPlayerScreen` 传 `canRotate` 并核对 contentArea |
+| **Task 5** | 真机验收 F6–F12 + 基线重跑 + R8 |
+
+两个具体调整：
+
+1. `rememberVideoFullScreen(canRotate: Boolean)` 带默认值 `= true`（“能转”），使 Task 1 不依赖任何调用点改动即可编译；播放页在 Task 3/4 里显式传 `isCarSurface().not()`。
+2. 原计划里“先做另一个任务的步骤再回来跑本步”的绕法作废 —— 策略与它的唯一消费者当一个提交，不需要绕。
+
+---
+
+### Task 2: VideoControlsPolicy 修订 + VideoStageFrame 控制层（同一提交）
 
 **Files:**
 - Modify: `app/src/main/java/com/radio/chinese/domain/model/VideoControlsPolicy.kt`
@@ -174,7 +198,7 @@ git commit -m "feat(domain): give the fullscreen entry on every surface and add 
 
 ---
 
-### Task 2: VideoFullScreen 接受 canRotate 并把方向复位改成无条件
+### Task 1: VideoFullScreen 接受 canRotate 并把方向复位改成无条件
 
 **Files:**
 - Modify: `app/src/main/java/com/radio/chinese/ui/common/VideoFullScreen.kt`
@@ -381,7 +405,7 @@ git commit -m "feat(ui): keep video controls visible and add rotate entry"
 
 ---
 
-### Task 4: 电台页接入（车机独占面板）
+### Task 3: 电台页接入（车机独占面板）
 
 **Files:**
 - Modify: `app/src/main/java/com/radio/chinese/ui/player/PlayerScreen.kt`
@@ -442,7 +466,7 @@ git commit -m "feat(ui): let the station player fill the panel when fullscreen"
 
 ---
 
-### Task 5: 点播页接入
+### Task 4: 点播页接入
 
 **Files:**
 - Modify: `app/src/main/java/com/radio/chinese/ui/player/OperaPlayerScreen.kt`
@@ -476,7 +500,7 @@ git commit -m "feat(ui): align opera player fullscreen with the surface-aware ga
 
 ---
 
-### Task 6: 真机验收 F6–F12 + 基线重跑
+### Task 5: 真机验收 F6–F12 + 基线重跑
 
 **Files:**
 - Modify: `tools/video_acceptance.ps1`
