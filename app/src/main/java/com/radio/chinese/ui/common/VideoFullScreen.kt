@@ -36,6 +36,7 @@ import com.radio.chinese.domain.model.VideoOrientation
 class VideoFullScreenState(
     val isFullScreen: Boolean,
     val isLandscape: Boolean,
+    val canRotateAtEntry: Boolean,
     val toggle: () -> Unit,
     val rotate: () -> Unit,
 )
@@ -50,12 +51,19 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
     var fullScreen by rememberSaveable { mutableStateOf(false) }
     var rotateOverride by rememberSaveable { mutableStateOf<VideoOrientation?>(null) }
 
+    // 冻结“进入全屏那一刻能不能转”：两个真实场景需要它——
+    // 1. Activity 重建（本清单没声明 density/fontScale，改显示大小会重建）后 rememberSaveable
+    //    把 fullScreen=true 重放出来，而此时设备已在横屏、sw≥600 机型的 isCarSurface() 已翻成
+    //    true —— 若用当前值，方向请求会被跳过，全屏锁向丢失。
+    // 2. 旋转按钮的可见性：用当前形态判，大屏手机一进全屏按钮就消失。
+    var enteredCanRotate by rememberSaveable { mutableStateOf(canRotate) }
+
     // canRotate 不进 key：它会在全屏期间翻转（sw≥600 设备转一下手机就换形态），
     // 一旦进了 key，用户在全屏里手动把设备扳回竖屏时，effect 会因 key 变化重跑，
     // 把「进入全屏要横屏」的请求补发一遍，直接吞掉用户手里的旋转。
     val canRotateNow by rememberUpdatedState(canRotate)
 
-    LaunchedEffect(fullScreen, rotateOverride) {
+    LaunchedEffect(fullScreen, rotateOverride, enteredCanRotate) {
         val activity = context as? android.app.Activity
         if (activity == null) {
             android.util.Log.w("VideoFullScreen", "上下文不是 Activity，全屏命令跳过")
@@ -65,7 +73,7 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         if (fullScreen) {
             // 进入全屏：只有可转设备才发方向请求；用户按过旋转按钮时尊重他的选择
-            if (canRotateNow) {
+            if (enteredCanRotate) {
                 // 待真机确认：模拟器虚拟传感器会压过方向请求（见 spec §5.2 已知环境限制）
                 val target = rotateOverride ?: VideoOrientation.Landscape
                 activity.requestedOrientation = when (target) {
@@ -99,12 +107,18 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
         fullScreen = false
     }
 
-    return remember(fullScreen, isLandscape) {
+    return remember(fullScreen, isLandscape, enteredCanRotate) {
         VideoFullScreenState(
             isFullScreen = fullScreen,
             isLandscape = isLandscape,
+            canRotateAtEntry = enteredCanRotate,
             toggle = {
-                if (fullScreen) rotateOverride = null
+                if (fullScreen) {
+                    rotateOverride = null
+                } else {
+                    // 进入：把当前的可转判定冻结下来，重建/翻转都不再改它
+                    enteredCanRotate = canRotateNow
+                }
                 fullScreen = !fullScreen
             },
             // 以“上一次请求”为事实源，不拿观测到的 isLandscape：设备不理会请求时（折叠屏、

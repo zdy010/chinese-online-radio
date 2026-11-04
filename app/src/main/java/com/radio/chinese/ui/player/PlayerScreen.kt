@@ -195,11 +195,14 @@ fun PlayerScreen(
                     if (VideoControlsPolicy.showsPictureSurface(uiState.hasVideoTrack, fullScreen.isFullScreen)) {
                         // 本页整体在 verticalScroll 里，没有 weight 可用：只给 fillMaxWidth 时
                         // PlayerView 量出来是 0 高（真机实测画面塌成一个点）。
-                        // 这里只服务非全屏态（全屏走下面的独占分支），用随宽度自适应的 16:9 有界盒。
+                        // 非全屏用随宽度自适应的 16:9 有界盒；手机档全屏整屏撑满。
+                        // 手机全屏走同槽换 modifier、不换分支 —— 换分支会让 AndroidView 整棵
+                        // 重建（新 PlayerView、旧 surface 销毁），而这条路径上一轮真机验过。
                         VideoStageFrame(
                             playerManager = playerManager,
                             fullScreen = fullScreen,
-                            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                            modifier = if (fullScreen.isFullScreen) Modifier.fillMaxSize()
+                                       else Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                         )
                     } else {
                         CoverBlock(
@@ -210,8 +213,10 @@ fun PlayerScreen(
                         )
                     }
                 }
-                if (fullScreen.isFullScreen) {
-                    // 全屏独占：不走形态分支。车机上这一步让画面从“Row 左半约 45%”变成整块面板。
+                if (fullScreen.isFullScreen && isCarSurface()) {
+                    // 车机全屏独占：不走 Row 分栏。这一步让画面从“Row 左半约 45%”变成整块面板。
+                    // 车机原本就要在 Row 的 Box(weight) 与顶层之间换槽，重建代价本来就有；
+                    // 手机档不进这个分支，回 mediaVisual 同槽换 modifier，零重建。
                     // 画面层被移出原组合位置会让 AndroidView 重建，但闸门由页面意图决定（上一轮
                     // Amendment），不会因此收闸拆解码器 —— 最多重绑一次面。
                     VideoStageFrame(
@@ -353,8 +358,9 @@ fun PlayerScreen(
 
                 Spacer(modifier = Modifier.height(Dimens.GapLarge))
 
-                // Sleep Timer Indicator
-                if (timerActive) {
+                // Sleep Timer Indicator（全屏时不渲染：上一版靠 fillMaxSize 把它顶出屏外，
+                // 那是依赖测量顺序的侥幸，不是设计）
+                if (timerActive && !fullScreen.isFullScreen) {
                     Spacer(modifier = Modifier.height(Dimens.GapLarge))
                     Surface(
                         shape = RoundedCornerShape(20.dp),

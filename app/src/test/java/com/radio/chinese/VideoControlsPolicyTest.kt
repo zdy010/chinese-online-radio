@@ -33,14 +33,25 @@ class VideoControlsPolicyTest {
     }
 
     @Test
-    fun `旋转按钮只在手机全屏态给`() {
-        // 车机恒横屏：给了就是"按了没反应"，本项目明令避免给了控件却不响应
-        assertFalse(VideoControlsPolicy.showsRotateButton(isCarSurface = true, isFullScreen = true))
-        assertFalse(VideoControlsPolicy.showsRotateButton(isCarSurface = true, isFullScreen = false))
+    fun `旋转按钮只在可转设备的全屏态给`() {
+        // 车机恒横屏：给了就是"按了没反应"
+        assertFalse(VideoControlsPolicy.showsRotateButton(canRotateAtEntry = false, isFullScreen = true))
+        assertFalse(VideoControlsPolicy.showsRotateButton(canRotateAtEntry = false, isFullScreen = false))
         // 手机非全屏：方向归系统与用户，应用不插队
-        assertFalse(VideoControlsPolicy.showsRotateButton(isCarSurface = false, isFullScreen = false))
+        assertFalse(VideoControlsPolicy.showsRotateButton(canRotateAtEntry = true, isFullScreen = false))
         // 手机全屏：横看竖看由用户挑
-        assertTrue(VideoControlsPolicy.showsRotateButton(isCarSurface = false, isFullScreen = true))
+        assertTrue(VideoControlsPolicy.showsRotateButton(canRotateAtEntry = true, isFullScreen = true))
+    }
+
+    /**
+     * 为什么是“进入全屏那一刻能不能转”，而不是“现在是不是车机形态”：
+     * sw≥600 的手机点全屏后强制横屏，形态判定会当场翻成 Car。
+     * 若按当前形态判，旋转按钮会在用户眼前消失，只剩“退出全屏”一条路 ——
+     * 而设备明明还能转。
+     */
+    @Test
+    fun `大屏手机全屏后形态翻转，旋转按钮不得跟着消失`() {
+        assertTrue(VideoControlsPolicy.showsRotateButton(canRotateAtEntry = true, isFullScreen = true))
     }
 
     @Test

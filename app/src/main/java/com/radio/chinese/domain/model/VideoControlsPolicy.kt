@@ -14,13 +14,17 @@ object VideoControlsPolicy {
         if (currentLandscape) VideoOrientation.Portrait else VideoOrientation.Landscape
 
     /**
-     * 旋转按钮该不该出现：只在「手机形态 + 已在全屏」时给。
+     * 旋转按钮该不该出现：只在「可转设备 + 已在全屏」时给。
      *
      * 车机恒横屏，按了不会有任何变化 —— 那是“给了控件却不响应”，本项目的反模式。
      * 手机非全屏时方向归系统与用户自己，应用不插队。
+     *
+     * 入参是 `canRotateAtEntry`（进入全屏那一刻的判定）而不是当前的 `isCarSurface()`：
+     * sw≥600 的手机点全屏后强制横屏，当前形态会当场翻成 Car。按当前形态判的话，
+     * 按钮会在用户眼前消失，只剩「退出全屏」一条路 —— 而设备明明还能转。
      */
-    fun showsRotateButton(isCarSurface: Boolean, isFullScreen: Boolean): Boolean =
-        !isCarSurface && isFullScreen
+    fun showsRotateButton(canRotateAtEntry: Boolean, isFullScreen: Boolean): Boolean =
+        canRotateAtEntry && isFullScreen
 
     /**
      * 全屏入口该不该出现。

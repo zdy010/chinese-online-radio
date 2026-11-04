@@ -17,7 +17,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import com.radio.chinese.domain.model.VideoControlsPolicy
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.theme.Dimens
-import com.radio.chinese.ui.theme.isCarSurface
 
 /**
  * 画面 + 控制层的唯一外壳。`VideoStage` 继续只管绑面，本层只管"要不要给入口"。
@@ -43,7 +42,9 @@ fun VideoStageFrame(
         isFullScreen = fullScreen.isFullScreen,
     )
     val showRotate = VideoControlsPolicy.showsRotateButton(
-        isCarSurface = isCarSurface(),
+        // 用进入全屏那一刻的判定，不用当前形态：大屏手机一进全屏就横屏、
+        // isCarSurface() 会当场翻成 true，按当前形态判按钮会在用户眼前消失。
+        canRotateAtEntry = fullScreen.canRotateAtEntry,
         isFullScreen = fullScreen.isFullScreen,
     )
 
