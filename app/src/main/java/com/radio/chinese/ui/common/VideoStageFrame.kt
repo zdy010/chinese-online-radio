@@ -27,8 +27,9 @@ import com.radio.chinese.ui.theme.Dimens
  *
  * 控制层**常驻**（不再 3 秒自动收起）：上一版定时收起，而"点画面才能唤出"
  * 没有任何提示，不知道要点的人看到的就是"这个 App 没有全屏功能"。
- * 单击用 detectTapGestures：超过 touch slop 后由父级滚动容器接管，因此不抢页面滚动
- * —— 这条由验收 F11 实测守住，不靠推理。
+ * 单击用 detectTapGestures：理论上超过 touch slop 后由父级滚动容器接管，不抢页面滚动，
+ * 但**本仓库尚未在设备上证实这一条**（验收 F11 因唯一带画面的流反复断开而未定）。
+ * 第二批要装拖动手势前必须先用 A/B 定论，不要把它当已验证的事实。
  */
 @Composable
 fun VideoStageFrame(

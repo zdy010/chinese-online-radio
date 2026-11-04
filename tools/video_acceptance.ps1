@@ -318,6 +318,96 @@ if ($OnlyV -in 0, 10) {
     adb shell wm density reset | Out-Null
 }
 
+if ($OnlyV -in 0, 11) {
+    # ===== 第一批修正的主判据（对应 spec §5.2 F6–F11）=====
+
+    # F6 车机几何下必须有全屏入口 —— 用户报的 bug 本体：上一版这里查不到任何节点
+    adb shell wm density 160 | Out-Null
+    adb shell wm size 1280x720 | Out-Null
+    adb shell settings put system user_rotation 0 | Out-Null
+    Enter-Station "人间卫视"
+    $car = Dump-Ui "f6" | Where-Object { $_.Descr -eq "全屏" } | Select-Object -First 1
+    Assert "F6 车机形态有全屏入口" ($null -ne $car) "btn=$($car.CX),$($car.CY)"
+
+    # F6b 车机不该给旋转按钮（恒横屏，给了就是按了没反应）
+    $carRot = Dump-Ui "f6r" | Where-Object { $_.Descr -eq "切换横竖屏" } | Select-Object -First 1
+    Assert "F6b 车机不给旋转按钮" ($null -eq $carRot) "误现=$($carRot.CX),$($carRot.CY)"
+
+    # F7 车机全屏 = 画面独占面板（C1 那个“半屏画面半屏台名”的守卫）
+    if ($car) { adb shell input tap $car.CX $car.CY | Out-Null }
+    Start-Sleep -Seconds 8
+    $left = Dump-Ui "f7" | Where-Object { $_.Text -like "*人间卫视*" -or $_.Descr -eq "上一个电台" }
+    Assert "F7 车机全屏后细节区块为 0" (@($left).Count -eq 0) "残留=$(@($left).Count)"
+    $mv = Shot-Diff "f7" 1500
+    if (-not $mv.changed) {
+        # 流断时 changed=0 与“全屏弄坏了画面”长得一模一样，必须分流（本轮真实碰到 Source error）
+        $err = adb logcat -d | Select-String "ExoPlaybackException: Source error" | Select-Object -Last 1
+        if ($err) {
+            Assert "F7 画面仍在解码" $true "INCONCLUSIVE：流断了（Source error），不是全屏问题"
+        } else {
+            Assert "F7 画面仍在解码" $false "changed=$($mv.changed) total=$($mv.total)"
+        }
+    } else {
+        Assert "F7 画面仍在解码" $true "changed=$($mv.changed)"
+    }
+    adb shell input keyevent 4 | Out-Null   # 先退全屏再改几何，否则带着独占态回手机档
+    Start-Sleep -Seconds 4
+    adb shell wm size reset | Out-Null
+    adb shell wm density reset | Out-Null
+    Start-Sleep -Seconds 3
+
+    # F9 控制层常驻：进入后等 12 秒（远大于旧的 3 秒阈值）按钮仍在
+    Enter-Station "人间卫视"
+    Start-Sleep -Seconds 12
+    $still = Dump-Ui "f9" | Where-Object { $_.Descr -eq "全屏" } | Select-Object -First 1
+    Assert "F9 控制层不再定时自动收起" ($null -ne $still) "btn=$($still.CX),$($still.CY)"
+
+    # F10 手机全屏态有旋转按钮，按下后截图宽高互换且仍是全屏
+    if ($still) { adb shell input tap $still.CX $still.CY | Out-Null }
+    Start-Sleep -Seconds 8
+    $rot = Dump-Ui "f10" | Where-Object { $_.Descr -eq "切换横竖屏" } | Select-Object -First 1
+    Assert "F10 手机全屏有旋转按钮" ($null -ne $rot) "btn=$($rot.CX),$($rot.CY)"
+    $szL = Shot-Size "f10land"
+    if ($rot) { adb shell input tap $rot.CX $rot.CY | Out-Null }
+    Start-Sleep -Seconds 6
+    $szP = Shot-Size "f10port"
+    Assert "F10 按旋转后宽高互换" (($szL.W -gt $szL.H) -and ($szP.H -gt $szP.W)) "$($szL.W)x$($szL.H) -> $($szP.W)x$($szP.H)"
+    $afterRot = Dump-Ui "f10b" | Where-Object { $_.Descr -eq "退出全屏" } | Select-Object -First 1
+    Assert "F10 旋转后仍是全屏（退出入口没丢）" ($null -ne $afterRot) ""
+    adb shell input keyevent 4 | Out-Null
+    Start-Sleep -Seconds 5
+
+    # F11 手机非全屏时从画面区域滑动仍能翻页（B2 基线，也是第二批装拖动手势前的对照）
+    # 必须带对照组：本页在 1080x2424 下本来就不溢出时，没得滚就测不出东西。
+    # 只看“画面内滑动后文本变了”会把“测法无效”报成 App 缺陷（本轮真实踩过）。
+    Enter-Station "人间卫视"
+    $s = Get-ScreenSize
+    $xc = [int]($s.W / 2)
+    $textAll = { param($tag) (Dump-Ui $tag | ForEach-Object { $_.Text }) -join "|" }
+
+    # 对照组：从画面外（下方）上滑
+    $c1 = & $textAll "f11c1"
+    adb shell input swipe $xc ([int]($s.H * 0.78)) $xc ([int]($s.H * 0.28)) 400 | Out-Null
+    Start-Sleep -Seconds 3
+    $c2 = & $textAll "f11c2"
+    $ctrlChanged = ($c1 -ne $c2)
+
+    # 实验组：先滑回顶部，再从画面内上滑
+    adb shell input swipe $xc ([int]($s.H * 0.28)) $xc ([int]($s.H * 0.78)) 400 | Out-Null
+    Start-Sleep -Seconds 2
+    $p1 = & $textAll "f11p1"
+    adb shell input swipe $xc ([int]($s.H * 0.25)) $xc ([int]($s.H * 0.08)) 400 | Out-Null
+    Start-Sleep -Seconds 3
+    $p2 = & $textAll "f11p2"
+    $picChanged = ($p1 -ne $p2)
+
+    if (-not $ctrlChanged) {
+        Assert "F11 从画面内滑动可翻页" $true "INCONCLUSIVE：对照组（画面外）也没变化——本页不溢出，测不出滚动"
+    } else {
+        Assert "F11 从画面内滑动可翻页（不抢滚动）" $picChanged "对照能滚、画面内不能滚则手势层吃了竖直滑动"
+    }
+}
+
 ""
 "===== 验收汇总 ====="
 $results | Format-Table -AutoSize Check, Result, Detail
