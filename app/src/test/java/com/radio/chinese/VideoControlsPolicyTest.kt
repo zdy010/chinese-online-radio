@@ -1,54 +1,52 @@
 package com.radio.chinese
 
 import com.radio.chinese.domain.model.VideoControlsPolicy
+import com.radio.chinese.domain.model.VideoOrientation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * 全屏按钮该不该出现、控制层多久收起。
+ * 全屏/旋转入口该不该出现。
  *
- * 最要紧的是最后那条「车机档但已在全屏 → true」：大屏手机竖屏时不是车机档、有按钮，
- * 点下去强制横屏后 sw≥600 且横屏 会让形态判定跳成车机档。如果那时还按
- * 「车机档不给按钮」走，退出全屏的按钮会自己消失，用户只能靠系统返回键出来。
+ * 最要紧的是「车机形态也必须给全屏入口」那条：上一版把 `!isCarSurface` 写进条件，
+ * 而「界面模式=车机」「sw≥600 且横着拿」「车机恒横屏」三种情况都会判成 Car，
+ * 于是用户在手机上完全看不到这个功能 —— 就是本轮报的 bug。
  */
 class VideoControlsPolicyTest {
 
     @Test
-    fun `车机档非全屏不给进入入口`() {
-        assertFalse(
-            VideoControlsPolicy.showsFullScreenButton(isCarSurface = true, hasVideoTrack = true, isFullScreen = false)
-        )
+    fun `车机形态也必须给全屏入口`() {
+        assertTrue(VideoControlsPolicy.showsFullScreenButton(hasVideoTrack = true, isFullScreen = false))
+        assertTrue(VideoControlsPolicy.showsFullScreenButton(hasVideoTrack = true, isFullScreen = true))
     }
 
     @Test
-    fun `没有视频轨时任何形态都不给按钮`() {
-        assertFalse(
-            VideoControlsPolicy.showsFullScreenButton(isCarSurface = false, hasVideoTrack = false, isFullScreen = false)
-        )
+    fun `没有画面且不在全屏时不给入口`() {
+        assertFalse(VideoControlsPolicy.showsFullScreenButton(hasVideoTrack = false, isFullScreen = false))
     }
 
     @Test
-    fun `手机档有画面才给按钮`() {
-        assertTrue(
-            VideoControlsPolicy.showsFullScreenButton(isCarSurface = false, hasVideoTrack = true, isFullScreen = false)
-        )
+    fun `已在全屏时恒给退出入口`() {
+        assertTrue(VideoControlsPolicy.showsFullScreenButton(hasVideoTrack = false, isFullScreen = true))
     }
 
     @Test
-    fun `已在全屏就必须给退出入口，即使形态跳成了车机档`() {
-        assertTrue(
-            VideoControlsPolicy.showsFullScreenButton(isCarSurface = true, hasVideoTrack = true, isFullScreen = true)
-        )
-        assertTrue(
-            VideoControlsPolicy.showsFullScreenButton(isCarSurface = false, hasVideoTrack = true, isFullScreen = true)
-        )
+    fun `旋转按钮只在手机全屏态给`() {
+        // 车机恒横屏：给了就是"按了没反应"，本项目明令避免给了控件却不响应
+        assertFalse(VideoControlsPolicy.showsRotateButton(isCarSurface = true, isFullScreen = true))
+        assertFalse(VideoControlsPolicy.showsRotateButton(isCarSurface = true, isFullScreen = false))
+        // 手机非全屏：方向归系统与用户，应用不插队
+        assertFalse(VideoControlsPolicy.showsRotateButton(isCarSurface = false, isFullScreen = false))
+        // 手机全屏：横看竖看由用户挑
+        assertTrue(VideoControlsPolicy.showsRotateButton(isCarSurface = false, isFullScreen = true))
     }
 
     @Test
-    fun `控制层收起延时是 3 秒`() {
-        assertEquals(3000L, VideoControlsPolicy.CONTROLS_AUTO_HIDE_MS)
+    fun `旋转按钮在当前横屏时切竖屏当前竖屏时切横屏`() {
+        assertEquals(VideoOrientation.Portrait, VideoControlsPolicy.nextOrientation(currentLandscape = true))
+        assertEquals(VideoOrientation.Landscape, VideoControlsPolicy.nextOrientation(currentLandscape = false))
     }
 
     /**

@@ -23,21 +23,17 @@ object VideoControlsPolicy {
         !isCarSurface && isFullScreen
 
     /**
-     * 全屏按钮该不该出现。
+     * 全屏入口该不该出现。
      *
-     * `isFullScreen` 优先：已在全屏就必须给退出入口。这条不是凑数分支 ——
-     * 大屏手机点全屏后强制横屏，形态判定会跳成车机档，若按「车机档不给按钮」
-     * 处理，按钮会自己消失，用户被锁在全屏里。
-     * 所以「车机档不做全屏」只约束**进入**，不约束**退出**。
+     * 只看“有没有画面”与“是不是已在全屏”，**不再看形态**：上一版加了 `!isCarSurface`，
+     * 而「界面模式=车机」「sw≥600 且横屏」「车机恒横屏」都会判成 Car，
+     * 于是入口在手机上也会凭空消失。车机上「全屏」的含义是画面独占整块面板。
+     *
+     * `isFullScreen` 优先：已在全屏就必须给退出入口 —— 大屏手机点全屏后强制横屏，
+     * 形态判定会当场翻转，若条件里有任何形态判断，按钮会在用户眼前消失。
      */
-    fun showsFullScreenButton(
-        isCarSurface: Boolean,
-        hasVideoTrack: Boolean,
-        isFullScreen: Boolean,
-    ): Boolean = isFullScreen || (!isCarSurface && hasVideoTrack)
-
-    /** 控制层自动收起延时（毫秒）。 */
-    const val CONTROLS_AUTO_HIDE_MS: Long = 3000L
+    fun showsFullScreenButton(hasVideoTrack: Boolean, isFullScreen: Boolean): Boolean =
+        isFullScreen || hasVideoTrack
 
     /**
      * 页面细节区块（台名/频率/简介/标签/EPG/节目源/播控）要不要渲染。
