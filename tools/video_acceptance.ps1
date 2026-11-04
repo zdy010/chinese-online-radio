@@ -4,10 +4,12 @@
 # 依赖：已连接的模拟器/设备、已装好本次 debug 包、`.superpowers\tmp\sdd-ui.ps1` 的节点解析写法。
 # 本脚本不是产品代码；结论一律以真机输出为准，禁止用历史产物冒充本轮结果。
 
-param([int]$OnlyV = 0)
+param([int]$OnlyV = 0, [string]$Pkg = "com.radio.chinese.debug")
 
 $ErrorActionPreference = "Stop"
-$pkg = "com.radio.chinese.debug"
+# 默认跑 debug 包；验 R8 产物时必须显式传 -Pkg com.radio.chinese，
+# 否则判据会静默跑在另一个包（往往是旧包）上，得出与产物无关的结论。
+$pkg = $Pkg
 $tmp = Join-Path (Get-Location) ".qtest\video"
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
 
