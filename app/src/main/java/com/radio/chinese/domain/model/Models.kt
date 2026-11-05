@@ -6,7 +6,17 @@ import kotlinx.serialization.Serializable
 data class StationSource(
     val url: String,
     val label: String = "",
-    val bitrate: Int = 0
+    val bitrate: Int = 0,
+    /**
+     * 分辨率（如 1080p）。刻意不复用 [label]：label 会被写进
+     * 「正在尝试节目源 X…」状态文案与通知栏的 artist 字段，
+     * 把分辨率放这里那些位置才能继续回落到「源 1 / 源 2」。
+     */
+    val quality: String = "",
+    /** 流要求的 User-Agent；空串表示不覆盖。来自 iptv-org 清单 */
+    val userAgent: String = "",
+    /** 流要求的 Referer；空串表示不覆盖 */
+    val referrer: String = "",
 )
 
 @Serializable
@@ -26,6 +36,18 @@ data class RadioStation(
     val country: String = "",
     /** 中文语言名，同上 */
     val language: String = "",
+    /**
+     * 频道别名，参与搜索匹配。iptv 台常有多种写法（如 CCTV 1 / 中央电视台综合频道），
+     * 不存下来用户只能猜台名。
+     */
+    val altNames: List<String> = emptyList(),
+    /**
+     * 成人标记。iptv-org 的 is_nsfw 落在这里。
+     *
+     * 默认 false 是为了老数据零迁移：内置清单与用户自建台（存 DataStore 的 JSON）
+     * 都没有这个字段，去掉默认值会让升级后解析失败 —— 那是“收藏与自建台全空”的量级。
+     */
+    val nsfw: Boolean = false,
 ) {
     /** 获取所有可用节目源（若 sources 为空则用 streamUrl 构造单源） */
     fun allSources(): List<StationSource> {
