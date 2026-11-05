@@ -12,10 +12,18 @@ package com.radio.chinese.domain.model
  */
 object VideoMedia {
 
-    /** 明确按视频对待的扩展名（不含点、已小写）。 */
+    /**
+     * 明确按视频对待的扩展名（不含点、已小写）。
+     *
+     * 分两段记清来历：上一行是初版就有的常见容器；下面几个是核对 media3-extractor 清单时
+     * 补的录像机/老 rip 常见容器（asf、ogv、3g2、f4v、m2v、mts、divx）。
+     * 刻意不含 `mka`（Matroska 音频）与 `mks`（Matroska 字幕），也不含 `m3u8`：
+     * 云盘里的 m3u8 可能是歌单或电台清单，标成视频会误导用户。
+     */
     private val VIDEO_EXTENSIONS = setOf(
         "mp4", "mkv", "mov", "webm", "flv", "avi", "mpg", "mpeg", "wmv",
         "m4v", "rm", "rmvb", "3gp", "vob", "ts", "m2ts",
+        "asf", "ogv", "ogm", "3g2", "f4v", "m2v", "mts", "divx",
     )
 
     /**

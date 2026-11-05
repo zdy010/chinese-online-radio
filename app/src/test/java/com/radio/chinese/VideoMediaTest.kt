@@ -23,6 +23,29 @@ class VideoMediaTest {
         }
     }
 
+    /**
+     * 上一轮核对 media3-extractor 清单时发现的缺口：这几个也是云盘里常见的视频容器，
+     * 但不在名单里，于是列表上不打「视频」标，用户看不出自己能点的是什么。
+     * 徒标准不准不会删掉能播的条目（能不能播由 PlayableTrack 与嗅探决定），
+     * 所以这里用白名单逐个钉住。
+     */
+    @Test
+    fun `录像机与老 rip 常见的视频容器也要命中`() {
+        for (ext in listOf("asf", "ogv", "ogm", "3g2", "f4v", "m2v", "mts", "divx")) {
+            assertTrue(".$ext 应判为视频", VideoMedia.looksLikeVideo("穆桂英挂帅.$ext"))
+            assertTrue(".$ext 大写应判为视频", VideoMedia.looksLikeVideo("穆桂英挂帅.${ext.uppercase()}"))
+        }
+    }
+
+    /**
+     * Matroska 家族里 .mka 是音频、.mks 是字幕，不能因为“看着像 mkv”就标成视频。
+     */
+    @Test
+    fun `matroska 的音频与字幕容器不标视频`() {
+        assertFalse(VideoMedia.looksLikeVideo("唱段.mka"))
+        assertFalse(VideoMedia.looksLikeVideo("花木兰.mks"))
+    }
+
     @Test
     fun `音频与歌词不是视频`() {
         for (ext in listOf("mp3", "m4a", "aac", "wav", "flac", "ogg", "opus", "lrc", "txt", "srt", "jpg")) {
