@@ -11,13 +11,16 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.OperaPlayContext
 import com.radio.chinese.domain.model.OperaSpeed
+import com.radio.chinese.domain.model.PlayCommitGate
 import com.radio.chinese.domain.model.nextOperaContext
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationSource
+import com.radio.chinese.domain.model.StreamHeaderPolicy
 import com.radio.chinese.domain.model.VideoTrackGate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -42,7 +45,7 @@ class PlayerManager @Inject constructor(
     private val ttsAnnouncer: TtsAnnouncer,
     val videoPlayerMount: VideoPlayerMount,
     /** iptv 流的 UA/Referer 查表与写入（见 StreamHeaderStore 的代价说明） */
-    private val iptvRepository: com.radio.chinese.data.repository.IptvStationRepository,
+    private val iptvRepository: IptvStationRepository,
     private val streamHeaderStore: StreamHeaderStore
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
@@ -102,6 +105,12 @@ class PlayerManager @Inject constructor(
      * 此前这套状态在本类内联了一份、引擎里又有一份，两者会漂：
      * 改了一处忘另一处就是「单测全绿但真机不轮转」。现在只留引擎这一份。
      */
+    /**
+     * 起播世代号：拦住"等 header 索引期间已被取代"的旧提交（规则见 [PlayCommitGate]）。
+     * 必须在 rotationEngine 之前初始化 —— 它的 onAllSourcesExhausted 回调要用。
+     */
+    private val commitGate = PlayCommitGate()
+
     private val rotationEngine = SourceRotationEngine(stationRepository, scope)
 
     /**
@@ -114,6 +123,8 @@ class PlayerManager @Inject constructor(
         }
 
         override fun onAllSourcesExhausted() {
+            // 最后一个源也失败了：不让任何还在等 header 索引的协程"复活"再起播一次
+            commitGate.invalidate()
             _status.value = null
             _error.value = "所有节目源均无法播放"
             _playbackState.value = Player.STATE_IDLE
@@ -411,18 +422,33 @@ class PlayerManager @Inject constructor(
             .setMediaMetadata(metadata)
             .build()
 
-        if (iptvRepository.isIptvId(station.id)) {
+        val token = commitGate.next()
+        val isIptv = iptvRepository.isIptvId(station.id)
+        if (isIptv) {
             // iptv：header 索引可能还没加载（6.33MB），必须等它再起播，
-            // 否则那批要 UA/Referer 的流首枪裸发请求（403）。
-            // 电台路径不走这条：把整段搬进协程会给“纯音频零回退”引入一帧调度差。
+            // 否则需要 UA/Referer 的流首枪不带自定义头。等待期间协程会挂起，
+            // 恢复时必须确认自己仍是最新意图（切台/换源/stop 都会另发意图）。
+            // 电台路径保持同步，不把整段搬进协程，避免给"纯音频零回退"引入一帧调度差。
             scope.launch {
-                streamHeaderStore.current = iptvRepository.headersFor(source.url)
+                val headers = iptvRepository.headersFor(source.url)
+                if (!commitGate.isCurrent(token) || controller !== ctrl) return@launch
+                streamHeaderStore.current = StreamHeaderPolicy.resolve(isIptv = true, headers)
+                // 与 RadioService 那行 applied 对照：applied 只证明"值到了工厂"，
+                // commit 证明"这一路真的起播了、且带的是它的 header"。真机 T6 两行都要看。
+                android.util.Log.d(
+                    "IptvHeaders",
+                    "commit id=${station.id} ua=${headers?.userAgent?.isNotBlank() == true} " +
+                        "ref=${headers?.referrer?.isNotBlank() == true}"
+                )
                 commitQueueSource(ctrl, mediaItem, station.id)
             }
         } else {
-            // 非 iptv 台必须显式写 null而不是“不写”：上一个 iptv 台留下的值
-            // 会被带给这个台（与 WebDAV 单例凭证跳源串写同一类）
-            streamHeaderStore.current = null
+            // 非 iptv 台必须显式写 null 而不是"不写"：上一个 iptv 台留下的 UA/Referer
+            // 会串到本台（与 WebDAV 单例凭证跨源串写同一类）。
+            streamHeaderStore.current = StreamHeaderPolicy.resolve(
+                isIptv = false,
+                headers = streamHeaderStore.current,
+            )
             commitQueueSource(ctrl, mediaItem, station.id)
         }
     }
@@ -484,6 +510,8 @@ class PlayerManager @Inject constructor(
     }
 
     fun stop() {
+        // 先让"正在等 header 索引"的那一路失效，否则停止之后它会自己 commit 开播
+        commitGate.invalidate()
         // 清空当前路的 header：残留会把上一个台的 UA/Referer 带给下一个台
         streamHeaderStore.current = null
         controller?.stop()
@@ -591,6 +619,7 @@ class PlayerManager @Inject constructor(
         _currentStation.value = null
         // 戏曲不走 playQueueSource，这里必须自己清：否则上一个 iptv 台的
         // UA/Referer 会被带给云盘音频（与 WebDAV 单例凭证跳源串写同一类）
+        commitGate.invalidate()      // 顺带让仍在等 header 索引的那一路失效
         streamHeaderStore.current = null
         _isOperaMode.value = true
         _error.value = null

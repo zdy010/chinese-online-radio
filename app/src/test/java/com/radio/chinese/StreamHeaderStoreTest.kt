@@ -65,4 +65,23 @@ class StreamHeaderStoreTest {
             "setDefaultRequestProperties" in names,
         )
     }
+
+    /**
+     * spec §6 要求实测的覆盖关系，落到具体依赖版本上的静态守卫。
+     *
+     * media3 1.5.1 的 DefaultHttpDataSource.open() 在写完 defaultRequestProperties 之后，
+     * 只要 Factory.userAgent != null 就再 setRequestProperty("User-Agent", userAgent) 覆盖一次。
+     * 我们只调 setDefaultRequestProperties 一次写全（含 User-Agent），前提是 Factory 默认 UA 为 null。
+     * media3 升级后若默认值变了，这条会红，提示重新验 T6，别把旧结论带过去。
+     */
+    @Test
+    fun `DefaultHttpDataSource Factory 默认不带 userAgent`() {
+        val cls = Class.forName("androidx.media3.datasource.DefaultHttpDataSource\$Factory")
+        val factory = cls.getDeclaredConstructor().newInstance()
+        val field = cls.getDeclaredField("userAgent").apply { isAccessible = true }
+        assertNull(
+            "media3 升级后 Factory 默认 UA 不再是 null：map 里的 User-Agent 会被覆盖，需重验 T6",
+            field.get(factory),
+        )
+    }
 }

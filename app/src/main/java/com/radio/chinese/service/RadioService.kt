@@ -120,32 +120,37 @@ class RadioService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        // 动态 Auth：仅在 WebDAV 凭据已设置时添加，避免干扰 HTTP/M3U 等公开资源
+        // 动态 Auth：仅在 WebDAV 凭据已设置、且当前不是 iptv 路时添加。
+        // iptv 清单里有大量第三方主机与裸 IP，把 Basic 凭证随每个分片请求发过去等于外泄。
         val dataSourceFactory = DataSource.Factory {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(30000)
-            // 请求头必须**合成一张 map 一次写入**。setDefaultRequestProperties 是覆盖语义
-            // 而不是累加，分两次调（一次给 WebDAV、一次给 iptv）后写的会把先写的抹掉；
-            // 而 User-Agent 本身就是一个 header，setUserAgent 与它同时用谁赢也未经实测。
-            // 合并成一次调用把这两个不确定性都消掉，并且保留下面那行诊断日志给真机 T6。
+            // 请求头必须**合成一张 map 一次写入**：setDefaultRequestProperties 是
+            // clearAndSet（覆盖）语义，分两次调后写的会把先写的整批抹掉。
+            val sh = streamHeaderStore.current
             val requestProps = linkedMapOf<String, String>()
-            if (webDavClient.username.isNotEmpty()) {
+            if (sh == null && webDavClient.username.isNotEmpty()) {
                 requestProps["Authorization"] = webDavClient.authHeader()
             }
-            val sh = streamHeaderStore.current
             if (sh != null) {
                 if (sh.userAgent.isNotBlank()) requestProps["User-Agent"] = sh.userAgent
                 if (sh.referrer.isNotBlank()) requestProps["Referer"] = sh.referrer
-                // 诊断日志：真机 T6 靠它断言两个值真的到了工厂。
-                // 上一批就是因为把“已验证”写给下一行注释而不是实测，才让这类静默失效混过验收。
+            }
+            if (requestProps.isNotEmpty()) {
+                httpFactory.setDefaultRequestProperties(requestProps)
+            }
+            // 一次写全的依据（media3 1.5.1 字节码核实，非推测）：Factory() 构造时 userAgent
+            // 字段保持 null；DefaultHttpDataSource.open() 写完 defaultRequestProperties 后，
+            // 只在 userAgent != null 时再 setRequestProperty("User-Agent", userAgent) 覆盖一次。
+            // 因此 map 里的 User-Agent 会原样发出，无需碰未经实测的 setUserAgent。
+            // 依赖升级后 StreamHeaderStoreTest 的对应断言会红，提示重验；真机 T6 仍是最终判据。
+            // 诊断日志只证明"值配置到了工厂"，起播的是哪一路由 PlayerManager 的 commit 行对照。
+            if (sh != null) {
                 android.util.Log.d(
                     "IptvHeaders",
                     "applied ua=${sh.userAgent.isNotBlank()} ref=${sh.referrer.isNotBlank()} props=${requestProps.size}"
                 )
-            }
-            if (requestProps.isNotEmpty()) {
-                httpFactory.setDefaultRequestProperties(requestProps)
             }
             DefaultDataSource.Factory(this, httpFactory).createDataSource()
         }
