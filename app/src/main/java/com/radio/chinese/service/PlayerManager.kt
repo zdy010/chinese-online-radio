@@ -555,7 +555,13 @@ class PlayerManager @Inject constructor(
             }
             // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台。
             // 页面注册过基准（iptv 页）时优先用它 —— 见 SkipBase 与 spec V11。
-            val stations = SkipBase.resolve(skipBase, stationRepository.getActiveStations())
+            // 基准非空就别再查电台表：省一次挂起，也避免挂起期间页面切走后
+            // 仍拿着"按键那一刻"的基准落地；裁决仍然只由 SkipBase 做一次。
+            val registered = skipBase
+            val radioActive = if (registered.isNullOrEmpty()) {
+                stationRepository.getActiveStations()
+            } else emptyList()
+            val stations = SkipBase.resolve(registered, radioActive)
             // 查询期间用户可能切进戏曲模式，落地前以最新状态为准
             if (_isOperaMode.value) {
                 val name = peekOperaTargetName(forward)
