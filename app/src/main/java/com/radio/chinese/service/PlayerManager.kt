@@ -19,6 +19,7 @@ import com.radio.chinese.domain.model.OperaSpeed
 import com.radio.chinese.domain.model.PlayCommitGate
 import com.radio.chinese.domain.model.nextOperaContext
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.SkipBase
 import com.radio.chinese.domain.model.StationSource
 import com.radio.chinese.domain.model.StreamHeaderPolicy
 import com.radio.chinese.domain.model.VideoTrackGate
@@ -61,6 +62,17 @@ class PlayerManager @Inject constructor(
     /** 连按保护：一次切台已解析但尚未起播（播报挂起中）时的目标 id，供下一次按键以它为基准。 */
     @Volatile
     private var pendingSkipTargetId: String? = null
+
+    /**
+     * 切台基准（spec V11）。由当前页注册：iptv 页注册自己的可见集合，
+     * 电台页不注册 → 回落电台活动列表，行为与改造前一致。
+     * 规则本身在 [SkipBase]（domain 纯函数），这里只存与取。
+     */
+    @Volatile private var skipBase: List<RadioStation>? = null
+
+    fun setSkipBase(list: List<RadioStation>?) { skipBase = list }
+
+    fun clearSkipBase() { skipBase = null }
 
     /** 上一次物理滚轮切台时刻：前台（Activity）与后台（会话）可能对同一次拨轮各投一次，用它去抖 */
     @Volatile
@@ -541,8 +553,9 @@ class PlayerManager @Inject constructor(
                 announceThen(name) { if (forward) playOperaNext() else playOperaPrevious() }
                 return@launch
             }
-            // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台
-            val stations = stationRepository.getActiveStations()
+            // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台。
+            // 页面注册过基准（iptv 页）时优先用它 —— 见 SkipBase 与 spec V11。
+            val stations = SkipBase.resolve(skipBase, stationRepository.getActiveStations())
             // 查询期间用户可能切进戏曲模式，落地前以最新状态为准
             if (_isOperaMode.value) {
                 val name = peekOperaTargetName(forward)
