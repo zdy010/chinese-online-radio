@@ -71,6 +71,22 @@ class IptvModelFieldsTest {
     }
 
     /**
+     * 用户自建电台走的是**另一条解析路径**：StationRepository.getCustomStations()
+     * 用 kotlinx 生成的 deserializer 读 DataStore 里的 JSON，而不是 StationJson 的手写解析。
+     * 两条路径的默认值机制不同源，所以必须各测一次：只测 StationJson 的话，
+     * 将来谁把默认值去掉，自建台会整批从管理页消失、收藏里那几条点不开，
+     * 而测试只会红在一条名字与场景不符的用例上。
+     */
+    @Test
+    fun `DataStore 里的老自建台 JSON 必须解出默认值`() {
+        val legacy = """[{"id":"custom_1","name":"我的台","category":"news","streamUrl":"https://a/b.mp3","sources":[]}]"""
+        val st = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            .decodeFromString<List<RadioStation>>(legacy).single()
+        assertFalse(st.nsfw)
+        assertTrue(st.altNames.isEmpty())
+    }
+
+    /**
      * 资源路径按项目已有写法试两个候选：单元测试的工作目录通常是模块目录（app/），
      * 不同 Gradle 版本可能差一层 —— 写死一个路径会得到“找不到文件”的假失败。
      * （StationJsonTest / EpgStationsTest / RegionGazetteerTest 都是这个模式）

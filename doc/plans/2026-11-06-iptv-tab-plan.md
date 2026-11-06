@@ -89,8 +89,9 @@ class IptvModelFieldsTest {
 
     @Test
     fun `新字段都有默认值，老 JSON 照解`() {
-        val legacy = """[{"id":"cnr","name":"中国之声","category":"news","streamUrl":"http://a/b"}]"""
-        val list = Json { ignoreUnknownKeys = true }.decodeFromString<List<RadioStation>>(legacy)
+        // 形状跟生产一致：radio_stations.json 顶层是 {"stations":[...]} 包装对象，不是裸数组
+        val legacy = """{"stations":[{"id":"cnr","name":"中国之声","category":"news","streamUrl":"http://a/b"}]}"""
+        val list = StationJson.parse(legacy)
         assertEquals(1, list.size)
         assertEquals("", list[0].altNames.joinToString())
         assertFalse(list[0].nsfw)
@@ -101,8 +102,8 @@ class IptvModelFieldsTest {
         // 与生产同一份资源：路径相对项目根，测试在 JVM 上跑，直接读文件系统
         val f = java.io.File("app/src/main/assets/radio_stations.json")
         assertTrue("找不到 $f", f.exists())
-        val raw = f.readText()
-        val parsed = Json { ignoreUnknownKeys = true }.decodeFromString<List<RadioStation>>(raw)
+        val raw = f.readText(Charsets.UTF_8)
+        val parsed = StationJson.parse(raw)
         assertTrue("真实清单解析出来是空", parsed.isNotEmpty())
         // 老数据没有这些字段 → 必须是默认值，不能是 null/异常
         assertTrue(parsed.none { it.nsfw })
@@ -373,7 +374,7 @@ if ($still.Count -gt 0) { throw "消歧后仍有 $($still.Count) 组重名（首
 # --- 8 写盘前最后一道：条数下限 ---
 if (@($rec).Count -lt 10000) { throw "最终记录只有 $(@($rec).Count) 条，低于下限 10000" }
 
-$json = ConvertTo-Json @($rec) -Depth 6 -Compress
+$json = ConvertTo-Json @{ stations = $rec } -Depth 6 -Compress   # 包装对象，与 radio_stations.json 同形状
 Set-Content -Path $assets -Value $json -Encoding utf8
 
 # --- 9 审计线索：非官方域名条目 ---
@@ -438,7 +439,7 @@ class IptvAssetsGateTest {
     private val json by lazy {
         val f = File("app/src/main/assets/iptv_channels.json")
         assertTrue("清单不存在：先跑 pwsh -NoProfile -File tools/iptv_sync.ps1", f.exists())
-        Json { ignoreUnknownKeys = true }.decodeFromString<List<RadioStation>>(f.readText())
+        StationJson.parse(f.readText(Charsets.UTF_8))
     }
 
     @Test
@@ -516,6 +517,7 @@ git commit -m "feat(iptv): add build-time iptv-org sync tool and the generated c
 ```kotlin
 package com.radio.chinese
 
+import com.radio.chinese.domain.model.IptvAdult
 import com.radio.chinese.domain.model.IptvCategory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -555,9 +557,14 @@ class IptvCategoryTest {
         assertEquals(IptvCategory.otherLabel, IptvCategory.labelOf(""))
     }
 
+    /**
+     * 断言的是**关系**不是字面量。上一版写 `assertEquals("xxx", IptvCategory.ADULT.key)` ——
+     * 全文没引用 IptvAdult，谁改了 adultCategoryKey 这条照样绿，
+     * 而失效后果是 xxx 分类频道在开关关着时直接露出来（V2 唯一的默认隐藏闸门）。
+     */
     @Test
     fun `成人分类的 key 与 IptvAdult 用的是同一个字`() {
-        assertEquals("xxx", IptvCategory.ADULT.key)
+        assertEquals(IptvAdult.adultCategoryKey, IptvCategory.ADULT.key)
     }
 
     @Test
@@ -618,7 +625,8 @@ enum class IptvCategory(val key: String, val label: String) {
     SPORTS("sports", "体育"),
     TRAVEL("travel", "旅行"),
     WEATHER("weather", "天气"),
-    ADULT("xxx", "成人");
+    // 常量只有一个出处：依赖单向指向 IptvAdult，不在这里复写一份字面量
+    ADULT(IptvAdult.adultCategoryKey, "成人");
 
     companion object {
         const val otherLabel: String = "其他"
@@ -696,14 +704,15 @@ class IptvStationRepositoryTest {
         return IptvStationRepository(ctx)
     }
 
+    // 包装对象形状：仓库走 StationJson.parse，与内置电台清单同一个解析器
     private val sample = """
-        [
+        {"stations":[
           {"id":"iptv:CCTV1.cn","name":"CCTV 1","category":"general","streamUrl":"http://a/1.m3u8",
            "sources":[{"url":"http://a/1.m3u8","label":"","quality":"1080p",
                         "userAgent":"UA-X","referrer":"http://ref.example"}]},
           {"id":"iptv:plain.cn","name":"Plain","category":"general","streamUrl":"http://b/2.m3u8",
            "sources":[{"url":"http://b/2.m3u8","label":"","quality":"","userAgent":"","referrer":""}]}
-        ]
+        ]}
     """.trimIndent()
 
     @Test
@@ -812,7 +821,9 @@ class IptvStationRepository @Inject constructor(
         mutex.withLock {
             loaded ?: runCatching {
                 val raw = context.assets.open(ASSET).bufferedReader().use { it.readText() }
-                json.decodeFromString<List<RadioStation>>(raw)
+                // 与内置电台清单同一个解析器、同一种包装形状：另起一个 decodeFromString
+                // 就是第二套真相，新字段会在这条路径上静默丢
+                StationJson.parse(raw)
             }.getOrElse {
                 android.util.Log.w(TAG, "iptv 清单读取失败，退化为空表：${it.message}")
                 emptyList()
@@ -941,8 +952,7 @@ class IptvLookupFallbackTest {
         every { iptv.isIptvId(any()) } answers { firstArg<String>().startsWith("iptv:") }
         every { iptv.byId("iptv:CCTV1.cn") } returns
             com.radio.chinese.domain.model.RadioStation(id = "iptv:CCTV1.cn", name = "CCTV 1", category = "general")
-        val r = repo(iptv, """[{"id":"cnr","name":"中国之声","category":"news"}]""")
-
+        val r = repo(iptv, """{"stations":[{"id":"cnr","name":"中国之声","category":"news"}]}""")
         assertEquals("CCTV 1", r.getStationById("iptv:CCTV1.cn")?.name)
         assertEquals("中国之声", r.getStationById("cnr")?.name)
         assertNull(r.getStationById("nope"))
@@ -955,7 +965,7 @@ class IptvLookupFallbackTest {
         val never = mockk<IptvStationRepository>()
         every { never.isIptvId(any()) } returns false
         // byId 若被调用就炸：证明电台查找不会每次都过一遍 12k 条
-        val r = repo(iptv, """[{"id":"cnr","name":"中国之声","category":"news"}]""")
+        val r = repo(iptv, """{"stations":[{"id":"cnr","name":"中国之声","category":"news"}]}""")
         assertEquals("中国之声", r.getStationById("cnr")?.name)
         assertTrue("电台列表被掺进 iptv", r.getAllStations().none { it.id.startsWith("iptv:") })
     }
