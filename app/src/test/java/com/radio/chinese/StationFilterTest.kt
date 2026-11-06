@@ -4,6 +4,7 @@ import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationTag
 import com.radio.chinese.domain.model.StationFilter
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -118,5 +119,39 @@ class StationFilterTest {
     @Test
     fun `英文台名仍按原名命中`() {
         assertEquals(listOf("lin"), StationFilter.apply(pinyinSample, null, "jazz", null).map { it.id })
+    }
+
+    /**
+     * iptv 台常有多种写法（CCTV 1 / 中央电视台综合频道 / CCTV-1），
+     * 不匹配别名就只能猜台名。拼音仍只对台名生效，不把别名也拼进拼音列：
+     * 别名多是英文全称，展开后会把假命中面铺大。
+     */
+    @Test
+    fun `别名参与搜索匹配`() {
+        val st = RadioStation(
+            id = "iptv:CCTV1.cn", name = "CCTV 1", category = "general",
+            altNames = listOf("中央电视台综合频道", "CCTV-1"),
+        )
+        assertTrue(StationFilter.matches(st, "中央电视台综合频道"))
+        assertTrue(StationFilter.matches(st, "cctv-1"))
+        assertTrue(StationFilter.matches(st, "CCTV 1"))
+        assertFalse(StationFilter.matches(st, "不存在的写法"))
+    }
+
+    /**
+     * 电台页与 iptv 页必须共用这一套规则。项目里已有一句同样的约束
+     * （CategoryScreen：“筛选规则不在这页里重写一遍，否则两页搜出不同结果”），
+     * 这条是它的可执行版本：iptv 页不许自造第二套过滤。
+     */
+    @Test
+    fun `两页对同一 query 走同一套判定`() {
+        val list = listOf(
+            RadioStation(id = "a", name = "音乐台", category = "music"),
+            RadioStation(id = "iptv:b", name = "电影台", category = "general",
+                altNames = listOf("影视频道")),
+        )
+        assertEquals(listOf("iptv:b"), StationFilter.apply(list, null, "影视", null).map { it.id })
+        assertEquals(listOf("a"), StationFilter.apply(list, null, "音乐", null).map { it.id })
+        assertEquals(2, StationFilter.apply(list, null, "", null).size)
     }
 }

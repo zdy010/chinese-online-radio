@@ -27,17 +27,21 @@ object StationFilter {
     }
 
     /**
-     * 搜索词命中的范围：台名、频率、简介、国家、语言、标签中文名；
+     * 搜索词命中的范围：台名、**别名**、频率、简介、国家、语言、标签中文名；
      * 纯字母数字的查询还会再匹一遍台名的拼音全拼与首字母。
      *
-     * 拼音只对台名生效，不对简介与国家生效：简介是「中国的华语广播电台」这类
-     * 模板句，把它也索引进去会让 `zg` 命中全表。
+     * 拼音只对台名生效，不对简介、国家与别名生效：简介是「中国的华语广播电台」这类
+     * 模板句，把它也索引进去会让 `zg` 命中全表；别名多是英文全称，展开拼音同样会
+     * 把假命中面铺大。
+     *
+     * 别名是 iptv 台引进的（CCTV 1 / 中央电视台综合频道 / CCTV-1）：不匹配就只能猜写法。
      */
     fun matches(station: RadioStation, query: String): Boolean {
         val q = query.trim().lowercase()
         if (q.isEmpty()) return true
         val tagLabels = station.tags.map { StationTag.labelOf(it).lowercase() }
         val hitOriginal = station.name.lowercase().contains(q) ||
+            station.altNames.any { it.lowercase().contains(q) } ||
             station.frequency.lowercase().contains(q) ||
             station.description.lowercase().contains(q) ||
             station.country.lowercase().contains(q) ||

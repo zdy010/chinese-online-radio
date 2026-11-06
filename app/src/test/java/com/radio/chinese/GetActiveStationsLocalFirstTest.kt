@@ -28,7 +28,13 @@ class GetActiveStationsLocalFirstTest {
     private fun st(id: String) = RadioStation(id = id, name = id, category = "general")
 
     private fun repo(prefs: RadioPreferences, regionRepo: RegionRepository): StationRepository =
-        StationRepository(mockk<Context>(relaxed = true), prefs, mockk<SourceAvailabilityStore>(relaxed = true), regionRepo)
+        StationRepository(
+            mockk<Context>(relaxed = true), prefs,
+            mockk<SourceAvailabilityStore>(relaxed = true), regionRepo,
+            // iptv 回落用的仓库：本测试不触发它（查的都是电台 id），给个 relaxed mock 就够。
+            // 不给默认值而在这里显式传，是为了让"漏注入"停在编译错误而不是静默无回落。
+            mockk<com.radio.chinese.data.repository.IptvStationRepository>(relaxed = true),
+        )
 
     @Test fun `开关开且有用户地区时套用排序`() = runBlocking {
         val input = listOf(st("a"), st("b"))
