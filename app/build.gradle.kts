@@ -170,6 +170,19 @@ android {
         compose = true
     }
 
+    /*
+     * 纯 JVM 单测里调用 android.jar 的方法（如 android.util.Log）默认直接抛
+     * "not mocked"。仓库里多处降级路径靠一行 Log.w 留现场线索（如 iptv 清单读取失败），
+     * 为了不把日志从生产代码里删掉而开这个开关。
+     *
+     * 代价要写清：开了以后，误在 JVM 测里调 Android API 不再报错而是拿到默认值，
+     * 可能掩盖另一类问题。所以：测业务逻辑请优先测 domain 纯函数（不依赖 Android），
+     * 真依赖 Android 行为的部分归真机验收，不要拿这个开关当"Android API 可以在单测里用"的许可证。
+     */
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     defaultConfig {
         // Enable easter egg for local builds (controlled by local.properties)
         val localPropsFile = rootProject.file("local.properties")
