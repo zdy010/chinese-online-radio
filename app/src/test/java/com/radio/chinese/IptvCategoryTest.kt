@@ -15,7 +15,7 @@ class IptvCategoryTest {
 
     /**
      * 这份 id 清单是 2026-11-06 从 categories.json 实测抄下来的 30 个。
-     * 抄录本身不可靠，所以另有一条直接读 categories.json 的用例兜底。
+     * 抄录本身不可靠，所以另有一条直接读真实 assets 的用例兜底。
      */
     @Test
     fun `覆盖 iptv-org 全部 30 个分类 id`() {
@@ -29,7 +29,10 @@ class IptvCategoryTest {
         val mine = IptvCategory.entries.map { it.key }.toSet()
         val missing = upstream.filterNot { it in mine }
         assertTrue("枚举漏了 $missing", missing.isEmpty())
-        assertEquals("枚举条目数与上游不一致", 30, mine.size)
+        // 双向差集：不写死 30 这个字面量，否则上游加第 31 个分类、枚举与数据都跟上了，
+        // 这条还会以“枚举条目数与上游不一致”的措辞报错（而两者其实是一致的）
+        val extra = mine.filterNot { it in upstream }
+        assertTrue("枚举里有上游没有的 key：$extra", extra.isEmpty())
     }
 
     /**
@@ -38,22 +41,28 @@ class IptvCategoryTest {
      * 抄错时第一条红，上游新增分类时第二条红。
      *
      * 覆盖边界（实测，不是推测）：清单里实际只出现 29 个分类，`xxx` 一条都没有
-     * （上游 354 个 xxx 频道全都没有流）。所以**这条盖不住 `xxx`**：
-     * 删掉 ADULT 条目只会让上面那条红，不会让这条红。
+     * （上游 354 个 xxx 频道全都没有流）。所以**这条盖不住 `xxx`**。
+     *
+     * 清单已随 Task 2 入库，缺文件就是异常而不是“还没生成”：
+     * 上一版用 `?: return` 静默跳过，把下面那条“数据非空”哨兵隔成了不可达，
+     * 工具输出格式一改（比如不再 -Compress，变成 `"tags": []` 带空格）就没人报警。
      */
     @Test
     fun `真实清单里出现的每个分类都能翻出中文标签`() {
         val f = listOf(
             File("src/main/assets/iptv_channels.json"),
             File("app/src/main/assets/iptv_channels.json"),
-        ).firstOrNull { it.exists() } ?: return   // 清单尚未生成时跳过，不制造假红
+        ).firstOrNull { it.exists() }
+            ?: throw AssertionError("缺 iptv_channels.json：它应随 Task 2 入库，先跑 pwsh -File tools/iptv_sync.ps1")
         val text = f.readText(Charsets.UTF_8)
+        // 字符集不能只写 [a-z_]：上游加一个 shop24 或 general-news 就会被静默丢弃，
+        // 而这条守卫恰好是靠“丢弃后的集合”做判断的 —— 不会红
         val used = Regex("\"tags\":\\[([^\\]]*)\\]").findAll(text)
-            .flatMap { m -> Regex("\"([a-z_]+)\"").findAll(m.groupValues[1]) }
+            .flatMap { m -> Regex("\"([a-z0-9_-]+)\"").findAll(m.groupValues[1]) }
             .map { it.groupValues[1] }.toSet()
-        assertTrue("清单里没有分类数据", used.isNotEmpty())
-        val unmapped = used.filter { IptvCategory.labelOf(it) == IptvCategory.otherLabel }
-        assertTrue("有分类翻不出中文：$unmapped", unmapped.isEmpty())
+        assertTrue("清单里一个分类都没提取到：正则失配或工具改了输出格式", used.isNotEmpty())
+        val unmapped = used.filterNot { IptvCategory.isKnown(it) }
+        assertTrue("有分类不在枚举里：$unmapped", unmapped.isEmpty())
     }
 
     @Test
@@ -80,10 +89,14 @@ class IptvCategoryTest {
         assertEquals(IptvAdult.adultCategoryKey, IptvCategory.ADULT.key)
     }
 
+    /**
+     * 顺序敏感的比较：上一版两边都 .toSet()，而 ordered() 就是 entries.map{...}，
+     * 两边取集后**由构造恒真** —— 把枚举整体逆序也不会红。
+     * 名字叫“顺序就是展示顺序”却测不了顺序，比不测更坑人。
+     */
     @Test
-    fun `ordered 的顺序就是展示顺序且不含空 key`() {
-        val keys = IptvCategory.ordered().map { it.first }
-        assertTrue(keys.none { it.isBlank() })
-        assertEquals(IptvCategory.entries.map { it.key }.toSet(), keys.toSet())
+    fun `ordered 的顺序就是声明顺序且不含空 key`() {
+        assertEquals(IptvCategory.entries.map { it.key }, IptvCategory.ordered().map { it.first })
+        assertTrue(IptvCategory.ordered().map { it.first }.none { it.isBlank() })
     }
 }

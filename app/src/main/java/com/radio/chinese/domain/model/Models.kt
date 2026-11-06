@@ -30,7 +30,17 @@ data class RadioStation(
     val description: String = "",
     val website: String = "",
     val sources: List<StationSource> = emptyList(),
-    /** 标签 key 列表，取值必须能在 [StationTag] 里查到。只存 key，避免中文文案与数据两头飘 */
+    /**
+     * 标签 key 列表。只存 key，避免中文文案与数据两头飘。
+     *
+     * **词表按来源分两套**（不是当初那句“必须能在 StationTag 里查到”）：
+     * 电台台（含自建台）的取值在 [StationTag] 内；iptv 台（id 以 `iptv:` 开头）的取值在
+     * [IptvCategory] 内。`kids` 与 `weather` 两个 key 在两套词表里重名，**靠 id 前缀区分**。
+     *
+     * 不能混用的理由不是洁癖：StationFilter、TagScreen、HomeViewModel、
+     * ManageViewModel.sanitizeTags 四处都按 StationTag 把关并丢弃词表外的 key，
+     * iptv 的 tags 流进那些路径会被静默清空。
+     */
     val tags: List<String> = emptyList(),
     /** 中文国家/地区名。此前被塞在 [frequency] 里当副标题用，现还原为独立字段 */
     val country: String = "",

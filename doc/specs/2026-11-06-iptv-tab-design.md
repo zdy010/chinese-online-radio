@@ -195,7 +195,9 @@ enum class IptvCategory(val key: String, val label: String) {
     NEWS("news", "新闻"), OUTDOOR("outdoor", "户外"), PUBLIC("public", "公共"),
     RELAX("relax", "休闲"), RELIGIOUS("religious", "宗教"), SCIENCE("science", "科学"),
     SERIES("series", "剧集"), SHOP("shop", "购物"), SPORTS("sports", "体育"),
-    TRAVEL("travel", "旅行"), WEATHER("weather", "天气"), ADULT("xxx", "成人");
+    TRAVEL("travel", "旅行"), WEATHER("weather", "天气"), ADULT(IptvAdult.adultCategoryKey, "成人");
+        // ADULT 的 key 不复写字面量：常量只能有一个出处。本行早期写的是 ADULT("xxx", ...)，
+        // 那会让下一个照 spec 执行的人把已修好的单一出处改回去（Task 1 审查 I-2 修的就是这个）。
 
     companion object {
         /** 未知 key 回落「其他」，不抛异常：上游随时可能加新分类 */
@@ -301,6 +303,14 @@ BottomNavItem(Screen.Settings,"设置",   …),
 ### 7.2 iptv 页内部（V5）
 
 顶部搜索框 + 四宫格入口（分类 / 国家 / 最近 / 收藏），**不平铺全量列表**。
+
+**分类入口盖不到全部记录（Task 3 审查 I-2，实测）**：清单里有 **3,557 条记录 tags 为空**
+（含全部 2,096 条 direct 记录与 1,461 条无分类频道）。按 tags 聚合的分类入口永远到不了它们，
+它们只能靠搜索 / 国家 / 最近 / 收藏到达。这是数据形状决定的，不是 bug；
+但**不得把分类入口当成“能逛完整个库”的导航**，也不得为了补这个洞而发明一个
+有 3,557 条的「其他」格子（那会把入口区顶满，真正有内容的分类反而看不到）。
+另：分组必须**先翻译成中文标签再聚合**，否则上游新增两个未抄录分类时两个格子都叫「其他」，
+列表按标签做 key 会直接抛 "Key was already used" 闪退。
 
 **搜索必须复用 `StationFilter`（review I1）**：`HomeViewModel` L99 用的就是它，而 `CategoryScreen` 里留着一条注释明令「筛选规则不在这页里重写一遍，否则两页搜出不同结果」。做法是给 `StationFilter` 增加对 `altNames` 的匹配（V12），iptv 页调 `StationFilter.apply(iptvVisible, category=null, query)`。初版我写的"内存过滤 name/alt_names/country"是自造第二套规则，且声称匹配一个 §2 里根本没入库的字段。
 

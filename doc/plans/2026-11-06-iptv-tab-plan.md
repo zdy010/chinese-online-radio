@@ -1554,11 +1554,15 @@ class IptvViewModel @Inject constructor(
             recents = recentIds.mapNotNull { id -> mine.firstOrNull { it.id == id } },
             categories = visible
                 .flatMap { it.tags }
-                .groupingBy { it }
+                // 先翻译成中文标签再分组，而不是先按 key 分组再翻译：
+                // 上游新增两个未抄录的分类时，两个 key 会都翻成「其他」，
+                // 而列表 items 的 key = "cat-${it.first}" 会重复，直接抛
+                // "Key was already used" 闪退（Task 3 审查 I-2）
+                .groupingBy { IptvCategory.labelOf(it) }
                 .eachCount()
                 .entries
                 .sortedByDescending { it.value }
-                .map { IptvCategory.labelOf(it.key) to it.value },
+                .map { it.key to it.value },
             countries = visible
                 .map { it.country }
                 .filter { it.isNotBlank() }
