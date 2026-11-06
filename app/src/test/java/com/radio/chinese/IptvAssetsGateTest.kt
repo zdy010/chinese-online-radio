@@ -86,18 +86,28 @@ class IptvAssetsGateTest {
         assertTrue("带别名的条目只有 $withAlias 个，工具可能没读 alt_names", withAlias > 100)
     }
 
-    /** header 必须真的入库：不入库的话那批流会大面积 403，而没有任何测试会红。 */
+    /**
+     * header 必须真的入库：不入库的话那批流会大面积 403，而没有任何测试会红。
+     *
+     * 阈值取实测基线（2026-11-06：带 header 的流远多于 50）而不是 `> 0`：
+     * `> 0` 只能防“整字段不写”，防不了“只丢一半”。丢一半同样会有一大批台点不响。
+     */
     @Test
-    fun `至少有一部分流带 userAgent 或 referrer`() {
+    fun `带 header 的流不少于基线`() {
         val withHeader = list.flatMap { it.sources }.count { it.userAgent.isNotBlank() || it.referrer.isNotBlank() }
-        assertTrue("带 header 的流只有 $withHeader 条，工具可能没读 user_agent/referrer", withHeader > 0)
+        assertTrue("带 header 的流只有 $withHeader 条，基线至少 50；工具可能只读了一部分", withHeader >= 50)
     }
 
-    /** 成人条目必须存在（否则 V2 的隐藏开关是个空功能），且数量与上游标记吻合。 */
+    /**
+     * 成人条目必须存在（否则 V2 的隐藏开关是个空功能）。
+     *
+     * 实测上游 374 个 is_nsfw 频道里**只有 3 条流**，所以这里只能钉“至少 1 条”；
+     * 它实质是“那几条还在不在”的哨兵，不能当成“隐藏了几百个频道”的证据。
+     */
     @Test
     fun `成人条目存在且能被 IptvAdult 认出`() {
         val adults = list.count { IptvAdult.isAdult(it) }
-        assertTrue("成人条目为 0，隐藏开关将无意义", adults > 0)
+        assertTrue("成人条目为 0，隐藏开关将无意义", adults >= 1)
     }
 
     /** 国家名必须是中文或英文原名，不能是裸码 —— 裸码说明 ISO2_CN 与 countries.json 都没命中。 */

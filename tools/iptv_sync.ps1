@@ -69,6 +69,11 @@ $iso = @{}
 $srcText = Get-Content "app/src/main/java/com/radio/chinese/domain/model/StationRegion.kt" -Raw -Encoding UTF8
 foreach ($m in [regex]::Matches($srcText, '"([A-Z]{2})"\s*to\s*"([^"]+)"')) { $iso[$m.Groups[1].Value] = $m.Groups[2].Value }
 if ($iso["CN"] -ne "中国") { throw "从 StationRegion.kt 读 ISO2_CN 失败（CN≠中国）。不要在此硬编码，改那边或修正则" }
+# 只验 CN 不够：将来若 StationRegion 里新增另一张"两个大写字母 to 中文串"的映射，
+# 这个正则会静默多抓一批，而 CN 仍对 —— 多验几个常见码把这类污染拉红。
+foreach ($probe in @(@("US","美国"), @("JP","日本"), @("GB","英国"))) {
+    if ($iso[$probe[0]] -ne $probe[1]) { throw "ISO2_CN 读取异常：$($probe[0]) 应为 $($probe[1])，实为 '$($iso[$probe[0]])'" }
+}
 "ISO2_CN 读到 $($iso.Count) 个码"
 $ctyName = @{}
 foreach ($c in $cty) { $ctyName[[string]$c.code] = [string]$c.name }
@@ -123,13 +128,16 @@ foreach ($k in $byChannel.Keys) {
         if ([string]::IsNullOrWhiteSpace($u)) { continue }
         if ($u -notmatch '^https?://') { continue }
         # [string] 把上游的 null 归一成空串；不转的话 null 会变成字符串 "null" 并被当成有效 UA 发出去
-        $srcs += @{ url = $u; label = ""; quality = [string]$s.quality
+        # [ordered] 不是风格问题：普通 @{} 是哈希表，ConvertTo-Json 按它的内部枚举顺序输出键，
+        # 而 PowerShell 7 的字符串哈希跳进程随机化 —— 不固定键序的话，即使记录内容完全一致，
+        # 两次生成的字节也不同（实测过：条数相同、SHA-256 不同）。
+        $srcs += [ordered]@{ url = $u; label = ""; quality = [string]$s.quality
                    userAgent = [string]$s.user_agent; referrer = [string]$s.referrer }
     }
     if ($srcs.Count -eq 0) { continue }
     $desc = if ([string]::IsNullOrWhiteSpace([string]$c.network)) { [string]$c.name } else { [string]$c.network }
     if (-not [string]::IsNullOrWhiteSpace([string]$c.replaced_by)) { $desc += "（上游标记已被 $($c.replaced_by) 替换）" }
-    [void]$rec.Add(@{
+    [void]$rec.Add([ordered]@{
         id = "iptv:$k"; name = ChannelName $c ([System.Uri]$srcs[0].url).Host
         altNames = @(@($c.alt_names | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
         category = "general"; streamUrl = $srcs[0].url; sources = $srcs
@@ -145,10 +153,10 @@ foreach ($d in $direct) {
     $h = try { ([System.Uri]$u).Host } catch { 'unknown' }
     $dn = DirectName $u
     if ([string]::IsNullOrWhiteSpace($dn)) { $dn = $h }
-    [void]$rec.Add(@{
+    [void]$rec.Add([ordered]@{
         id = "iptv:direct:$($h):$(Sha1Short $u)"
         name = $dn; altNames = @(); category = "general"; streamUrl = $u
-        sources = @(@{ url = $u; label = ""; quality = [string]$d.quality
+        sources = @([ordered]@{ url = $u; label = ""; quality = [string]$d.quality
                        userAgent = [string]$d.user_agent; referrer = [string]$d.referrer })
         website = ""; description = ""; country = ""; language = ""
         nsfw = $false; logoUrl = ""; tags = @()
@@ -156,6 +164,11 @@ foreach ($d in $direct) {
 }
 
 "=== 7 重名消歧：同名追加短 host，仍重则追加序号 ==="
+# 排序不是美化，是可重复性的前提：PowerShell 7 走 .NET 的随机化字符串哈希，
+# 所以 $byChannel.Keys 的枚举顺序跳进程不同。不排序的话每次重跑都会把整份 6.33 MB
+# 频道部分重排，并把 #i 归属在两条同名片段间翻转 —— 一次真实的上游改动会被
+# 几百万字符的重排 diff 淹没，review 与回归都做不了。
+$rec = @($rec | Sort-Object { $_.id })
 # 两级而不是抛错：实测同一 host 下会有多条流取名完全相同（包括两条都是空名的频道），
 # 只追加 host 分不开。但绝不允许静默输出一份重名清单 —— 重名会让用户无法区分两行。
 $dupes = @($rec | Group-Object { $_.name } | Where-Object { $_.Count -gt 1 } | ForEach-Object { $_.Name })
@@ -191,7 +204,11 @@ if (@($rec | Where-Object { [string]::IsNullOrWhiteSpace($_.name) }).Count -gt 0
 if (@($rec).Count -lt 10000) { throw "最终记录只有 $(@($rec).Count) 条，低于下限 10000" }
 
 # 包装对象形状，与 radio_stations.json 一致（StationJson.parse 只认这个形状）
-$json = ConvertTo-Json @{ stations = $rec } -Depth 6 -Compress
+# 顶层也固定键序，否则整份文件的开头字节会逐进程变化。
+# 注意：[ordered] 不能直接写在命令参数位置（PowerShell 会报“找不到接受自变量的位置参数”），
+# 必须先赋值给变量再传给 ConvertTo-Json。
+$wrapper = [ordered]@{ stations = $rec }
+$json = ConvertTo-Json $wrapper -Depth 6 -Compress
 Set-Content -Path $assets -Value $json -Encoding utf8
 if ((Get-Item $assets).Length -lt 1MB) { throw "生成的 json 只有 $((Get-Item $assets).Length) 字节，明显不对" }
 
@@ -218,12 +235,14 @@ if (-not $SkipAudit) {
     $head = @(
         "# iptv 非官方域名条目清单",
         "",
-        "由 `tools/iptv_sync.ps1` 生成，**勿手改**。生成时刻：$(Get-Date -Format 'yyyy-MM-dd HH:mm')",
+        "由 tools/iptv_sync.ps1 生成，**勿手改**。",
         "",
         "这些条目的流主机名与该台官方站点**不同主域**（或该台根本没有 website）。",
         "按项目红线「电台音频源仅收录官方公开流」，它们不属于官方公开流 —— 常见形态是裸 IP 与境外机房转播。",
         "",
         "spec V1 决定全收（用户签字），本文件是审计线索，不是功能开关。",
+        "",
+        "生成时刻见本文件的最后一次提交信息，不写进正文（否则每次重跑都必改一行，制造无意义 diff）。",
         "",
         "| 频道 | 官方站点 | 流主机 |",
         "|---|---|---|"
