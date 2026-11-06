@@ -254,7 +254,7 @@ private fun EntryGrid(
             }
         }
         item {
-            EntryCard(Icons.Default.Public, "国家/地区", "$countryCount 个国家 · $total 个频道") {
+            EntryCard(Icons.Default.Public, "国家/地区", "$countryCount 个国家/地区") {
                 onOpen("countries")
             }
         }

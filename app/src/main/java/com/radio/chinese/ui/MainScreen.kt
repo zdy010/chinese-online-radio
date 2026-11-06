@@ -158,7 +158,9 @@ fun MainScreen(
     // 不在 IptvScreen 的 onDispose 里清：从浏览页跳到 iptv 播放页时浏览页也会 dispose，
     // 那会把基准清掉，滚轮又切回电台（T12）。这里以路由为准，只有一个清理点。
     LaunchedEffect(currentRoute) {
-        if (currentRoute != Screen.Iptv.route && currentRoute != Screen.IptvPlayer.route) {
+        // 只在切回其它一级 tab 时清：播放页（含 Task 8 过渡用的通用 Player 页）虽然
+        // 也"离开了 iptv tab"，但仍在播 iptv 台，那里清掉基准会让滚轮切回电台（T12）。
+        if (currentRoute in listOf(Screen.Radio.route, Screen.Audio.route, Screen.Settings.route)) {
             playerManager.clearSkipBase()
         }
     }
