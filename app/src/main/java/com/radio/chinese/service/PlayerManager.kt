@@ -68,14 +68,16 @@ class PlayerManager @Inject constructor(
      * 电台页不注册 → 回落电台活动列表，行为与改造前一致。
      * 规则本身在 [SkipBase]（domain 纯函数），这里只存与取。
      */
-    @Volatile private var skipBase: List<RadioStation>? = null
+    private val _skipBase = MutableStateFlow<List<RadioStation>?>(null)
+    /** 播放页订阅它取频道号与上下台基准；[handleMediaSkip] 读同一份值，不存第二份 */
+    val skipBaseFlow: StateFlow<List<RadioStation>?> = _skipBase
 
-    fun setSkipBase(list: List<RadioStation>?) { skipBase = list }
+    fun setSkipBase(list: List<RadioStation>?) { _skipBase.value = list }
 
-    fun clearSkipBase() { skipBase = null }
+    fun clearSkipBase() { _skipBase.value = null }
 
     /** 供 iptv 播放页的上下台按钮读取：与方控滚轮是同一个基准集合（V11），不另算一份 */
-    fun currentSkipBase(): List<RadioStation> = skipBase ?: emptyList()
+    fun currentSkipBase(): List<RadioStation> = _skipBase.value.orEmpty()
 
     /** 上一次物理滚轮切台时刻：前台（Activity）与后台（会话）可能对同一次拨轮各投一次，用它去抖 */
     @Volatile
@@ -560,7 +562,7 @@ class PlayerManager @Inject constructor(
             // 页面注册过基准（iptv 页）时优先用它 —— 见 SkipBase 与 spec V11。
             // 基准非空就别再查电台表：省一次挂起，也避免挂起期间页面切走后
             // 仍拿着"按键那一刻"的基准落地；裁决仍然只由 SkipBase 做一次。
-            val registered = skipBase
+            val registered = _skipBase.value
             val radioActive = if (registered.isNullOrEmpty()) {
                 stationRepository.getActiveStations()
             } else emptyList()

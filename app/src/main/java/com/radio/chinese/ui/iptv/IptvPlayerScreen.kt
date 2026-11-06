@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
@@ -78,7 +78,8 @@ fun IptvPlayerScreen(
 
     // 上下台与方控滚轮读**同一个**基准集合（V11）：这个集合由 iptv 页注册，
     // 电台页不注册时为空，播放页不会自己另算一份电台列表。
-    val base = playerManager.currentSkipBase()
+    val baseState by playerManager.skipBaseFlow.collectAsState()
+    val base = baseState.orEmpty()
     val index = base.indexOfFirst { it.id == station?.id }
     var showSources by remember { mutableStateOf(false) }
 
@@ -99,7 +100,7 @@ fun IptvPlayerScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                         }
                     },
                 )
@@ -166,10 +167,12 @@ fun IptvPlayerScreen(
                     Box {
                         IconButton(
                             onClick = { showSources = true },
+                            // 轮转队列还没建好时别弹一个空菜单：那表现为"点了没反应"
+                            enabled = sourceScores.isNotEmpty(),
                             modifier = Modifier.size(Dimens.TouchMin),
                         ) {
                             Icon(
-                                Icons.Default.List,
+                                Icons.AutoMirrored.Filled.List,
                                 contentDescription = "节目源",
                                 modifier = Modifier.size(Dimens.IconLarge),
                             )
