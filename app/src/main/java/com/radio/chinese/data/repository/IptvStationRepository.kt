@@ -31,22 +31,35 @@ class IptvStationRepository @Inject constructor(
 ) {
     private val mutex = Mutex()
 
-    @Volatile private var loaded: List<RadioStation>? = null
-    @Volatile private var headerIndex: Map<String, StreamHeaders>? = null
+    /**
+     * 清单与 header 索引的**单一快照**。
+     *
+     * 为什么不是一个 `List` 加一个 `Map` 两个 volatile 字段：两条写不是原子的。
+     * 先发布 `loaded` 再建 `headerIndex` 的话，中间那个窗口里走锁外快路径的调用者
+     * 会读到“表已就绪、索引还是 null”，而 headersFor 把 null 当“这条流不需要 header”
+     * —— 症状是那批要 UA/Referer 的流首枪 403，无日志、无测试会红（Task 4 审查 I-1）。
+     * 合并成一个不可变对象后，这类“局部就绪”在结构上无法出现；
+     * Task 5/6 再往里加索引也不会复发。
+     */
+    private class Snapshot(val stations: List<RadioStation>, val headers: Map<String, StreamHeaders>)
 
-    suspend fun all(): List<RadioStation> = loaded ?: withContext(Dispatchers.IO) {
+    @Volatile private var snapshot: Snapshot? = null
+
+    suspend fun all(): List<RadioStation> = snapshot?.stations ?: load().stations
+
+    private suspend fun load(): Snapshot = withContext(Dispatchers.IO) {
         mutex.withLock {
-            loaded ?: runCatching {
+            snapshot ?: runCatching {
                 val raw = context.assets.open(ASSET).bufferedReader().use { it.readText() }
-                StationJson.parse(raw)
+                val list = StationJson.parse(raw)
+                // 索引在快照内部建完再一次性发布：不存在“已能看到清单但看不到索引”的时刻
+                Snapshot(list, buildHeaderIndex(list))
             }.getOrElse {
-                // 退化但不静默：这行日志是"iptv 页空白"唯一的现场线索
-                android.util.Log.w(TAG, "iptv 清单读取失败，退化为空表：${it.message}")
-                emptyList()
-            }.also {
-                loaded = it
-                headerIndex = buildHeaderIndex(it)
-            }
+                // 退化但不静默：这行日志是"iptv 页空白"唯一的现场线索。
+                // 用 it 而不是 it.message：OOM 这类 Error 的 message 常常是 null，只打 message 等于没打。
+                android.util.Log.w(TAG, "iptv 清单读取失败，退化为空表：$it")
+                Snapshot(emptyList(), emptyMap())
+            }.also { snapshot = it }
         }
     }
 
@@ -73,8 +86,8 @@ class IptvStationRepository @Inject constructor(
      */
     suspend fun headersFor(url: String): StreamHeaders? {
         if (url.isBlank()) return null
-        all()   // 确保索引已建
-        return headerIndex?.get(url)
+        val s = snapshot ?: load()      // 确保快照已建（含索引）
+        return s.headers[url]
     }
 
     private fun buildHeaderIndex(list: List<RadioStation>): Map<String, StreamHeaders> {

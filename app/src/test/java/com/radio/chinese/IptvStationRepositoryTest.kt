@@ -4,6 +4,7 @@ import android.content.Context
 import com.radio.chinese.data.repository.IptvStationRepository
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -47,11 +48,25 @@ class IptvStationRepositoryTest {
         assertEquals("CCTV 1", r.byId("iptv:CCTV1.cn")?.name)
     }
 
+    /**
+     * 这是一条**代价**断言，不是结果断言。
+     *
+     * 上一版只断言了 `byId("cnr")` 返回 null —— 变异检验：把仓库里的前缀守卫整行删掉，
+     * 这 9 条测试仍然全绿（因为样例里没有非前缀 id，走完 12k 全表扫还是返回 null）。
+     * 而 spec §10.1 要钉的是“非前缀 id 不去查 iptv 仓库”：Task 5 接上回落之后，
+     * 守卫掉了就表现为电台页/通知栏点回/上下台每次查台都要过 12,419 条 —— 不报错、不红测。
+     * 所以必须验“根本没打开过 assets”。
+     */
     @Test
     fun `byId 对非前缀 id 不查表`() = runTest {
-        val r = repoWith(sample)
+        val ctx = mockk<Context>()
+        every { ctx.assets.open("iptv_channels.json") } returns
+            java.io.ByteArrayInputStream(sample.toByteArray())
+        val r = IptvStationRepository(ctx)
         assertNull(r.byId("cnr"))
         assertNull(r.byId(""))
+        // 关键：不能为了“不可能命中”的 id 付 6.33MB 的加载代价
+        verify(exactly = 0) { ctx.assets.open(any()) }
     }
 
     @Test
