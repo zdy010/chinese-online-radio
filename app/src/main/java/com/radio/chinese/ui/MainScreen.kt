@@ -6,7 +6,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material.icons.outlined.Radio
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
@@ -24,6 +26,7 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.audio.AudioMainScreen
 import com.radio.chinese.ui.diagnostics.DiagnosticsScreen
 import com.radio.chinese.ui.epg.EpgScreen
+import com.radio.chinese.ui.iptv.IptvScreen
 import com.radio.chinese.ui.keysettings.KeySettingsScreen
 import com.radio.chinese.ui.navigation.Screen
 import com.radio.chinese.ui.player.OperaPlayerScreen
@@ -56,6 +59,16 @@ fun RadioNavGraph(
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToTag = { tag -> navController.navigate(Screen.Tags.createRoute(tag)) },
                 onNavigateToEpg = { navController.navigate(Screen.Epg.route) },
+            )
+        }
+
+        composable(Screen.Iptv.route) {
+            IptvScreen(
+                playerManager = playerManager,
+                // Task 8 先落通用播放页（它已有视频闸门）；Task 9 换成无参的专用 iptv 播放页
+                onNavigateToPlayer = { stationId ->
+                    navController.navigate(Screen.Player.createRoute(stationId))
+                },
             )
         }
 
@@ -141,14 +154,27 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // 切台基准（spec V11）由 iptv 页注册、离开 iptv 页时清除。
+    // 不在 IptvScreen 的 onDispose 里清：从浏览页跳到 iptv 播放页时浏览页也会 dispose，
+    // 那会把基准清掉，滚轮又切回电台（T12）。这里以路由为准，只有一个清理点。
+    LaunchedEffect(currentRoute) {
+        if (currentRoute != Screen.Iptv.route && currentRoute != Screen.IptvPlayer.route) {
+            playerManager.clearSkipBase()
+        }
+    }
+
     val bottomNavItems = listOf(
         BottomNavItem(Screen.Radio, "电台", Icons.Default.Radio, Icons.Outlined.Radio),
+        // iptv 插在电台与音频库之间：它是"另一个内容源"，不是电台的一个分类
+        BottomNavItem(Screen.Iptv, "iptv", Icons.Default.Tv, Icons.Outlined.Tv),
         BottomNavItem(Screen.Audio, "音频库", Icons.Default.LibraryMusic, Icons.Outlined.LibraryMusic),
         // 设置是全局一级入口，不该挤在搜索行里：与电台/音频库并列为第三个底部项
         BottomNavItem(Screen.Settings, "设置", Icons.Default.Settings, Icons.Outlined.Settings),
     )
 
-    val showBottomBar = currentRoute in listOf(Screen.Radio.route, Screen.Audio.route, Screen.Settings.route)
+    val showBottomBar = currentRoute in listOf(
+        Screen.Radio.route, Screen.Iptv.route, Screen.Audio.route, Screen.Settings.route,
+    )
 
     Scaffold(
         bottomBar = {

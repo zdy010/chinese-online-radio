@@ -25,6 +25,7 @@ internal class SettingsPreferences(private val store: DataStore<Preferences>) {
         val KEY_FONT_SCALE = stringPreferencesKey("font_scale")
         val KEY_UI_MODE = intPreferencesKey("ui_mode")
         val KEY_BOOT_AUTOSTART = booleanPreferencesKey("boot_auto_start")
+        val KEY_IPTV_ADULT = booleanPreferencesKey("iptv_adult_enabled")
     }
 
     val theme: Flow<AppTheme> = store.data
@@ -39,8 +40,12 @@ internal class SettingsPreferences(private val store: DataStore<Preferences>) {
 
     val bootAutoStart: Flow<Boolean> = store.data.map { it[KEY_BOOT_AUTOSTART] ?: false }
 
+    /** 默认 false：开关没被显式打开过就绝不把成人频道放进列表与搜索 */
+    val iptvAdultEnabled: Flow<Boolean> = store.data.map { it[KEY_IPTV_ADULT] ?: false }
+
     suspend fun setThemeKey(key: String) { store.edit { it[KEY_THEME_KEY] = key } }
     suspend fun setFontScaleKey(key: String) { store.edit { it[KEY_FONT_SCALE] = key } }
     suspend fun setUiMode(mode: Int) { store.edit { it[KEY_UI_MODE] = mode } }
     suspend fun setBootAutoStart(enabled: Boolean) { store.edit { it[KEY_BOOT_AUTOSTART] = enabled } }
+    suspend fun setIptvAdultEnabled(enabled: Boolean) { store.edit { it[KEY_IPTV_ADULT] = enabled } }
 }
