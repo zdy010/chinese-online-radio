@@ -26,6 +26,7 @@ import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.audio.AudioMainScreen
 import com.radio.chinese.ui.diagnostics.DiagnosticsScreen
 import com.radio.chinese.ui.epg.EpgScreen
+import com.radio.chinese.ui.iptv.IptvPlayerScreen
 import com.radio.chinese.ui.iptv.IptvScreen
 import com.radio.chinese.ui.keysettings.KeySettingsScreen
 import com.radio.chinese.ui.navigation.Screen
@@ -65,10 +66,15 @@ fun RadioNavGraph(
         composable(Screen.Iptv.route) {
             IptvScreen(
                 playerManager = playerManager,
-                // Task 8 先落通用播放页（它已有视频闸门）；Task 9 换成无参的专用 iptv 播放页
-                onNavigateToPlayer = { stationId ->
-                    navController.navigate(Screen.Player.createRoute(stationId))
-                },
+                // 专用播放页是无参数路由：状态一律读 PlayerManager（与 OperaPlayer 同构）
+                onNavigateToPlayer = { _ -> navController.navigate(Screen.IptvPlayer.route) },
+            )
+        }
+
+        composable(Screen.IptvPlayer.route) {
+            IptvPlayerScreen(
+                playerManager = playerManager,
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 

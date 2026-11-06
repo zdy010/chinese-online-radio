@@ -58,6 +58,7 @@ data class SettingsUiState(
     val fontScaleKey: String = FontScaleOption.STANDARD.key,
     val uiMode: Int = 0,
     val bootAutoStart: Boolean = false,
+    val iptvAdultEnabled: Boolean = false,
     val voiceAnnounceEnabled: Boolean = true,
     val localFirstEnabled: Boolean = true
 )
@@ -131,6 +132,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(bootAutoStart = enabled)
             }
         }
+        viewModelScope.launch {
+            preferences.iptvAdultEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(iptvAdultEnabled = enabled)
+            }
+        }
         observeListenEnhance()
     }
 
@@ -155,6 +161,12 @@ class SettingsViewModel @Inject constructor(
     fun setBootAutoStart(enabled: Boolean) {
         viewModelScope.launch {
             preferences.setBootAutoStart(enabled)
+        }
+    }
+
+    fun setIptvAdultEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.setIptvAdultEnabled(enabled)
         }
     }
 
@@ -374,6 +386,24 @@ fun SettingsScreen(
                     .clickable {
                         viewModel.setBootAutoStart(!uiState.bootAutoStart)
                     }
+            )
+
+            HorizontalDivider()
+
+            // iptv 成人频道：默认关，打开后 iptv 列表与搜索才含成人条目（spec V2）
+            ListItem(
+                headlineContent = { Text("显示成人频道（iptv）") },
+                supportingContent = { Text("默认关闭。开启后 iptv 列表与搜索会出现成人内容") },
+                leadingContent = { Icon(Icons.Default.Tv, contentDescription = null) },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.iptvAdultEnabled,
+                        onCheckedChange = { viewModel.setIptvAdultEnabled(it) }
+                    )
+                },
+                modifier = Modifier
+                    .carTouchTarget()
+                    .clickable { viewModel.setIptvAdultEnabled(!uiState.iptvAdultEnabled) }
             )
 
             HorizontalDivider()

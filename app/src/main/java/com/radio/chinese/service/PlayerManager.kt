@@ -74,6 +74,9 @@ class PlayerManager @Inject constructor(
 
     fun clearSkipBase() { skipBase = null }
 
+    /** 供 iptv 播放页的上下台按钮读取：与方控滚轮是同一个基准集合（V11），不另算一份 */
+    fun currentSkipBase(): List<RadioStation> = skipBase ?: emptyList()
+
     /** 上一次物理滚轮切台时刻：前台（Activity）与后台（会话）可能对同一次拨轮各投一次，用它去抖 */
     @Volatile
     private var lastWheelSkipAt = 0L
