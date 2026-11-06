@@ -45,6 +45,10 @@ class RadioService : MediaSessionService() {
     @Inject
     lateinit var videoPlayerMount: VideoPlayerMount
 
+    /** iptv 流的 UA/Referer：与下面 WebDAV 动态 Auth 同一个手法（工厂里读单例当前值） */
+    @Inject
+    lateinit var streamHeaderStore: StreamHeaderStore
+
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
 
@@ -121,8 +125,27 @@ class RadioService : MediaSessionService() {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(30000)
+            // 请求头必须**合成一张 map 一次写入**。setDefaultRequestProperties 是覆盖语义
+            // 而不是累加，分两次调（一次给 WebDAV、一次给 iptv）后写的会把先写的抹掉；
+            // 而 User-Agent 本身就是一个 header，setUserAgent 与它同时用谁赢也未经实测。
+            // 合并成一次调用把这两个不确定性都消掉，并且保留下面那行诊断日志给真机 T6。
+            val requestProps = linkedMapOf<String, String>()
             if (webDavClient.username.isNotEmpty()) {
-                httpFactory.setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
+                requestProps["Authorization"] = webDavClient.authHeader()
+            }
+            val sh = streamHeaderStore.current
+            if (sh != null) {
+                if (sh.userAgent.isNotBlank()) requestProps["User-Agent"] = sh.userAgent
+                if (sh.referrer.isNotBlank()) requestProps["Referer"] = sh.referrer
+                // 诊断日志：真机 T6 靠它断言两个值真的到了工厂。
+                // 上一批就是因为把“已验证”写给下一行注释而不是实测，才让这类静默失效混过验收。
+                android.util.Log.d(
+                    "IptvHeaders",
+                    "applied ua=${sh.userAgent.isNotBlank()} ref=${sh.referrer.isNotBlank()} props=${requestProps.size}"
+                )
+            }
+            if (requestProps.isNotEmpty()) {
+                httpFactory.setDefaultRequestProperties(requestProps)
             }
             DefaultDataSource.Factory(this, httpFactory).createDataSource()
         }

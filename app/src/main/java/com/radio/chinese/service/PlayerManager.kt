@@ -40,7 +40,10 @@ class PlayerManager @Inject constructor(
     private val stationRepository: StationRepository,
     private val webDavClient: WebDavClient,
     private val ttsAnnouncer: TtsAnnouncer,
-    val videoPlayerMount: VideoPlayerMount
+    val videoPlayerMount: VideoPlayerMount,
+    /** iptv 流的 UA/Referer 查表与写入（见 StreamHeaderStore 的代价说明） */
+    private val iptvRepository: com.radio.chinese.data.repository.IptvStationRepository,
+    private val streamHeaderStore: StreamHeaderStore
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
         // 播报/资产/绑定等外部交互异常不得炸掉主线程；留痕后照常，切台降级为无声
@@ -408,6 +411,24 @@ class PlayerManager @Inject constructor(
             .setMediaMetadata(metadata)
             .build()
 
+        if (iptvRepository.isIptvId(station.id)) {
+            // iptv：header 索引可能还没加载（6.33MB），必须等它再起播，
+            // 否则那批要 UA/Referer 的流首枪裸发请求（403）。
+            // 电台路径不走这条：把整段搬进协程会给“纯音频零回退”引入一帧调度差。
+            scope.launch {
+                streamHeaderStore.current = iptvRepository.headersFor(source.url)
+                commitQueueSource(ctrl, mediaItem, station.id)
+            }
+        } else {
+            // 非 iptv 台必须显式写 null而不是“不写”：上一个 iptv 台留下的值
+            // 会被带给这个台（与 WebDAV 单例凭证跳源串写同一类）
+            streamHeaderStore.current = null
+            commitQueueSource(ctrl, mediaItem, station.id)
+        }
+    }
+
+    /** 真正提交给播放器的一段。从 playQueueSource 拆出来只为让上面能分同步/异步两条路。 */
+    private fun commitQueueSource(ctrl: MediaController, mediaItem: MediaItem, stationId: String) {
         ctrl.stop()
         ctrl.clearMediaItems()
         ctrl.setMediaItem(mediaItem)
@@ -415,7 +436,7 @@ class PlayerManager @Inject constructor(
         ctrl.play()
 
         scope.launch {
-            preferences.setLastPlayedStationId(station.id)
+            preferences.setLastPlayedStationId(stationId)
         }
     }
 
@@ -463,6 +484,8 @@ class PlayerManager @Inject constructor(
     }
 
     fun stop() {
+        // 清空当前路的 header：残留会把上一个台的 UA/Referer 带给下一个台
+        streamHeaderStore.current = null
         controller?.stop()
     }
 
@@ -566,6 +589,9 @@ class PlayerManager @Inject constructor(
         _hasVideoTrack.value = false
         // 互斥：停止电台
         _currentStation.value = null
+        // 戏曲不走 playQueueSource，这里必须自己清：否则上一个 iptv 台的
+        // UA/Referer 会被带给云盘音频（与 WebDAV 单例凭证跳源串写同一类）
+        streamHeaderStore.current = null
         _isOperaMode.value = true
         _error.value = null
         _status.value = null
