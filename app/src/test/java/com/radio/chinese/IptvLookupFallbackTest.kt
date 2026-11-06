@@ -8,8 +8,10 @@ import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -75,16 +77,23 @@ class IptvLookupFallbackTest {
 
     /**
      * 电台查找不该每次都过一遍 12k 条。
-     * 用"iptv 仓库一旦被问就炸"来钉这条：结果断言看不出手腕（两个都是 null）。
+     *
+     * 上一版这条是完全空转的：它查的是 `cnr`，而 `cnr` **命中电台表**；
+     * Kotlin 的 `?:` 惰性求值，左侧非 null 时右侧根本不执行，那个“被问就炸”的桩
+     * 从未被碰过 —— 审查员把守卫整行删掉，5 条全绿。现在查一个电台表里**没有**的
+     * 非前缀 id，才会走到守卫那一步。
+     *
+     * 另外用 spyk 而不是纯 mockk：`isIptvId` 必须跑生产实现，否则就是在测试里
+     * 重写一遍 `startsWith`，改了生产语义也不会红。
      */
     @Test
     fun `非前缀 id 不去问 iptv 仓库`() = runTest {
-        val iptv = mockk<IptvStationRepository>()
-        every { iptv.isIptvId(any()) } answers { firstArg<String>().startsWith("iptv:") }
-        // byId 是 suspend：用 every 调它编译不过，必须 coEvery
+        val iptv = spyk(iptvWith("iptv:CCTV1.cn", "CCTV 1"))
         coEvery { iptv.byId(any()) } throws AssertionError("非前缀 id 不该来问 iptv 仓库")
         val r = repo(iptv, radioJson())
-        assertEquals("中国之声", r.getStationById("cnr")?.name)
+        // 必须是电台表里也没有的 id：否则短路，永远测不到守卫
+        assertNull(r.getStationById("nope"))
+        coVerify(exactly = 0) { iptv.byId(any()) }
     }
 
     /**
@@ -98,9 +107,19 @@ class IptvLookupFallbackTest {
         assertTrue("getActiveStations 被掺进 iptv", r.getActiveStations().none { it.id.startsWith("iptv:") })
     }
 
+    /**
+     * 前缀未命中时**必须问过** iptv 仓库。
+     *
+     * 上一版只断言“返回 null”：两种变异（删回落 / 删守卫）都不红，因为它对
+     * “根本没接线”和“接线正确但查不到”两种情况给出同一个结论。现在配对 I-1：
+     * 非前缀未命中不许问（exactly 0），前缀未命中必须问（exactly 1），
+     * 守卫两侧都有牙齿。
+     */
     @Test
-    fun `iptv 条目不存在时返回 null 而不是抛`() = runTest {
-        val r = repo(iptvWith("iptv:Here.cn", "Here"), radioJson())
+    fun `前缀未命中时必须问过 iptv 仓库`() = runTest {
+        val iptv = spyk(iptvWith("iptv:Here.cn", "Here"))
+        val r = repo(iptv, radioJson())
         assertNull(r.getStationById("iptv:Gone.cn"))
+        coVerify(exactly = 1) { iptv.byId("iptv:Gone.cn") }
     }
 }

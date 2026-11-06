@@ -31,9 +31,14 @@ class GetActiveStationsLocalFirstTest {
         StationRepository(
             mockk<Context>(relaxed = true), prefs,
             mockk<SourceAvailabilityStore>(relaxed = true), regionRepo,
-            // iptv 回落用的仓库：本测试不触发它（查的都是电台 id），给个 relaxed mock 就够。
-            // 不给默认值而在这里显式传，是为了让"漏注入"停在编译错误而不是静默无回落。
-            mockk<com.radio.chinese.data.repository.IptvStationRepository>(relaxed = true),
+            // iptv 回落用的仓库：本测试不触发它（只调 applyLocalPriority）。
+            // 但不能用 relaxed mock：relaxed 下 byId() 会返回一个非 null 的假 RadioStation，
+            // 这个 helper 一旦被复用到任何查台测试，“查不存在的台”就会变成
+            // “永远查得到一个不存在的台”—— 与本轮 preferences relaxed mock 喂空同一类坑。
+            io.mockk.mockk<com.radio.chinese.data.repository.IptvStationRepository> {
+                io.mockk.every { isIptvId(any()) } answers { firstArg<String>().startsWith("iptv:") }
+                io.mockk.coEvery { byId(any()) } returns null
+            },
         )
 
     @Test fun `开关开且有用户地区时套用排序`() = runBlocking {

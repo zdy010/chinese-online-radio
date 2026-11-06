@@ -139,12 +139,18 @@ class StationFilterTest {
     }
 
     /**
-     * 电台页与 iptv 页必须共用这一套规则。项目里已有一句同样的约束
-     * （CategoryScreen：“筛选规则不在这页里重写一遍，否则两页搜出不同结果”），
-     * 这条是它的可执行版本：iptv 页不许自造第二套过滤。
+     * 名字要配得上能力：上一版这条叫“两页对同一 query 走同一套判定”，
+     * 但它不引用任何页面代码 —— Task 8 的 IptvViewModel 里写一段自己的
+     * `filter { it.name.contains(q) }`，它照样绿。所以改回它真正测的东西，
+     * 跳页一致则挂到 Task 8 的验收项（在那一页真断言）。
+     *
+     * 顺便记下审查查到的四处自造匹配（都是既有代码，不是本提交引入）：
+     * FavoritesScreen（只比台名）、RadioRecentTab（只比台名）、EpgViewModel（台名+节目名）、
+     * StationRepository.searchStations（无别名/国家/标签/拼音，且全仓无调用点）。
+     * 收藏与最近一旦接入 iptv 条目，这两页搜不到别名而首页搜得到 —— Task 8 必须一并处理。
      */
     @Test
-    fun `两页对同一 query 走同一套判定`() {
+    fun `别名参与匹配且 apply 委托 matches`() {
         val list = listOf(
             RadioStation(id = "a", name = "音乐台", category = "music"),
             RadioStation(id = "iptv:b", name = "电影台", category = "general",
