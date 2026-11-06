@@ -47,13 +47,19 @@
 | 全库频道 / 全库流 | 31,744 / 18,458 |
 | 有流且有频道元数据的频道 | 10,338 |
 | **无频道元数据的流（direct）** | **2,097 条**。注意不是 1,941：差的 156 条是 `channel` 字段有值但 channels.json 里查不到该 id。另：两次探针分别得到 2,096 与 2,097（差 1 条，空字串与 null 的判定差异），**以工具输出为准**，不拿我手算的数当结论 |
-| **入库记录总数** | **约 12,435** = 10,338 频道记录 + 约 2,097 direct 记录（direct 同名不合并，但会加 host 后缀消歧，见 §2.2） |
-| `is_nsfw=true` 频道 | 374（V2 收录但默认隐藏） |
+| **入库记录总数** | **实测 12,419** = 10,337 频道记录 + 2,082 direct 记录（与估算 12,435 差 16 条：部分频道没有合法 http(s) 流，被工具剔除） |
+| 空名频道 | 存在（实测）：部分 iptv-org 频道 `name` 为空，工具必须兜底到 network / 流 host / 频道 id，否则列表出空白行 |
+| `is_nsfw=true` 频道 | 374 个标记，但**其中只有 3 条流**（实测）→ 真正入库的成人记录只有 **2 条**（Tele Posadas.ar / Retroclub.ar，分类是 general/music） |
+| `xxx` 分类频道 | 354 个，**被流引用的 = 0 条** → 入库清单里根本不会出现 `tags` 含 `xxx` 的条目 |
 | `replaced_by` 非空 | 639（上游标记已替换/下线） |
-| json 体积 | 5.25 MB 未压缩 → **850 KB 压缩后（15.8%）**；APK 6.14 MB → 预计约 **6.97 MB** |
+| json 体积 | 实测 **6.33 MB 未压缩**（包装形状 + 字段比估算时全）；APK 增量与压缩率以验收实测为准 |
 | iptv 分类码 | **30 个**：`auto, animation, business, classic, comedy, cooking, culture, documentary, education, entertainment, family, general, interactive, kids, legislative, lifestyle, movies, music, news, outdoor, public, relax, religious, science, series, shop, sports, travel, weather, xxx`（无空 id） |
 | iptv 国家码 | 250 个 |
-| direct 流取名可用率 | 分层取名后 **2,097/2,097 有名**，去重 **1,660 种**；剩余高频重名是 `master`×174、`manifest`×50、`live`×40、`hls`×36 |
+| direct 流取名可用率 | 分层取名后 **2,097/2,097 有名**，去重 **1,660 种**；剩余高频重名是 `master`×174、`manifest`×50、`live`×40、`hls`×36。工具实测需两级消歧（追加 host 后再加序号）才能做到全库名字唯一：375 组靠 host 分开，122 组靠序号 |
+
+> 上面两行把 V2 的实际作用面说清了：**成人开关今天只管 2 条记录**。
+> 逻辑仍必须做（上游随时会加流），但验收时不能拿“隐藏了几百个频道”当预期，
+> T9 只能验那 2 条的有无。
 
 ### 真实字段名（探针核实）
 

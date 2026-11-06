@@ -77,3 +77,8 @@ tools/epg_scan.json
 # 以及从本地真值源码生成的 source_code_first_30pages.txt ——
 # 已核实它含真实主机 webdav.123pan.cn 且无占位符，一次 `git add doc/` 就会泄露凭证。
 doc/store_assets/
+
+# iptv 清单由 tools/iptv_sync.ps1 生成，但必须入库（与 radio_stations.json 同等对待：
+# 它是运行时读取的产品数据，不是中间产物）。上面 L52 的全局 *.json 会把它静默拦住，
+# 造成“提交成功但文件不在仓库里”，别人拉下来闸门测试必炸（本轮真实撞过一次）。
+!app/src/main/assets/iptv_channels.json
