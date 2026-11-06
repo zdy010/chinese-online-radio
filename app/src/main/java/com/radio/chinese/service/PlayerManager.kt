@@ -526,6 +526,9 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    /** 按 id 起播解析失败时给一条可见错误：通知栏点回/媒体键恢复不该"点了没反应"（spec §10.1） */
+    fun reportError(message: String) { _error.value = message }
+
     fun stop() {
         // 先让"正在等 header 索引"的那一路失效，否则停止之后它会自己 commit 开播
         commitGate.invalidate()
