@@ -2,10 +2,15 @@ package com.radio.chinese.ui.navigation
 
 sealed class Screen(val route: String) {
     data object Radio : Screen("radio")
+    /** iptv：iptv-org 公开直播流清单，一级入口，位于电台与音频库之间 */
+    data object Iptv : Screen("iptv")
     data object Audio : Screen("audio")
     data object Player : Screen("player/{stationId}") {
         fun createRoute(stationId: String) = "player/$stationId"
     }
+    /** iptv 专用播放页：无参数，状态一律读 PlayerManager（与 OperaPlayer 同构） */
+    data object IptvPlayer : Screen("iptv_player")
+
     /** 音频库（戏曲）全屏播放页：无参数，状态一律读 PlayerManager */
     data object OperaPlayer : Screen("opera_player")
 

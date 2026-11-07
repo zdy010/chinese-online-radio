@@ -14,6 +14,14 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!--
+      电视：无触屏、支持遥控器。
+      touchscreen 不声明 required=false 时，Google Play 会把本应用从 TV 设备上过滤掉；
+      leanback 声明为 false 表示「不强制要求 Leanback 环境」，手机/车机照常装。
+    -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+
     <!-- 安卓11+ 枚举设备上的 TTS 引擎（不止默认那个）需显式声明可见性 -->
     <queries>
         <intent>
@@ -24,6 +32,7 @@
     <application
         android:name=".RadioApp"
         android:allowBackup="true"
+        android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -41,6 +50,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <!-- TV 首页入口：没有这个 category，Leanback 启动器里根本看不到本应用 -->
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 

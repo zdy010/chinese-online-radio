@@ -58,6 +58,9 @@ data class SettingsUiState(
     val fontScaleKey: String = FontScaleOption.STANDARD.key,
     val uiMode: Int = 0,
     val bootAutoStart: Boolean = false,
+    val iptvAdultEnabled: Boolean = false,
+    val iptvAllLanguages: Boolean = false,
+    val playabilityHideThreshold: Int = 0,
     val voiceAnnounceEnabled: Boolean = true,
     val localFirstEnabled: Boolean = true
 )
@@ -131,6 +134,21 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(bootAutoStart = enabled)
             }
         }
+        viewModelScope.launch {
+            preferences.iptvAdultEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(iptvAdultEnabled = enabled)
+            }
+        }
+        viewModelScope.launch {
+            preferences.iptvAllLanguages.collect { enabled ->
+                _uiState.value = _uiState.value.copy(iptvAllLanguages = enabled)
+            }
+        }
+        viewModelScope.launch {
+            preferences.playabilityHideThreshold.collect { threshold ->
+                _uiState.value = _uiState.value.copy(playabilityHideThreshold = threshold)
+            }
+        }
         observeListenEnhance()
     }
 
@@ -155,6 +173,24 @@ class SettingsViewModel @Inject constructor(
     fun setBootAutoStart(enabled: Boolean) {
         viewModelScope.launch {
             preferences.setBootAutoStart(enabled)
+        }
+    }
+
+    fun setIptvAdultEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.setIptvAdultEnabled(enabled)
+        }
+    }
+
+    fun setIptvAllLanguages(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.setIptvAllLanguages(enabled)
+        }
+    }
+
+    fun setPlayabilityHideThreshold(threshold: Int) {
+        viewModelScope.launch {
+            preferences.setPlayabilityHideThreshold(threshold)
         }
     }
 
@@ -246,6 +282,7 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showHideDialog by remember { mutableStateOf(false) }
     // 隐藏入口：连点「关于」7 次解锁「按键诊断」（上车排查方控的后门，寻常使用碰不到）
     var aboutTapCount by rememberSaveable { mutableIntStateOf(0) }
 
@@ -375,6 +412,100 @@ fun SettingsScreen(
                         viewModel.setBootAutoStart(!uiState.bootAutoStart)
                     }
             )
+
+            HorizontalDivider()
+
+            // iptv 语言：默认只显示中文与英语，其他语言要在这里显式打开
+            ListItem(
+                headlineContent = { Text("显示其他语言频道（iptv）") },
+                supportingContent = { Text("默认关闭，只显示中文与英语频道。开启后显示西班牙语、阿拉伯语、俄语等频道") },
+                leadingContent = { Icon(Icons.Default.Language, contentDescription = null) },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.iptvAllLanguages,
+                        onCheckedChange = { viewModel.setIptvAllLanguages(it) }
+                    )
+                },
+                modifier = Modifier
+                    .carTouchTarget()
+                    .clickable { viewModel.setIptvAllLanguages(!uiState.iptvAllLanguages) }
+            )
+
+            HorizontalDivider()
+
+            // iptv 成人频道：默认关，打开后 iptv 列表与搜索才含成人条目（spec V2）
+            ListItem(
+                headlineContent = { Text("显示成人频道（iptv）") },
+                supportingContent = { Text("默认关闭。开启后 iptv 列表与搜索会出现成人内容") },
+                leadingContent = { Icon(Icons.Default.Tv, contentDescription = null) },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.iptvAdultEnabled,
+                        onCheckedChange = { viewModel.setIptvAdultEnabled(it) }
+                    )
+                },
+                modifier = Modifier
+                    .carTouchTarget()
+                    .clickable { viewModel.setIptvAdultEnabled(!uiState.iptvAdultEnabled) }
+            )
+
+            HorizontalDivider()
+
+            // 可用性：连续失败达到阈值后隐藏（默认关，不改变现有列表）
+            ListItem(
+                headlineContent = { Text("隐藏连续失败的频道（iptv）") },
+                supportingContent = {
+                    Text(
+                        if (uiState.playabilityHideThreshold == 0) {
+                            "关闭：失败频道仍然显示，只是台名变红"
+                        } else {
+                            "连续失败 ${uiState.playabilityHideThreshold} 次后从列表与搜索中隐藏"
+                        }
+                    )
+                },
+                leadingContent = { Icon(Icons.Default.VisibilityOff, contentDescription = null) },
+                modifier = Modifier
+                    .carTouchTarget()
+                    .clickable { showHideDialog = true }
+            )
+
+            if (showHideDialog) {
+                AlertDialog(
+                    onDismissRequest = { showHideDialog = false },
+                    title = { Text("隐藏连续失败的频道") },
+                    text = {
+                        Column {
+                            listOf(
+                                0 to "关闭（只着色，不隐藏）",
+                                3 to "连续失败 3 次",
+                                5 to "连续失败 5 次",
+                                8 to "连续失败 8 次",
+                            ).forEach { (value, label) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.setPlayabilityHideThreshold(value)
+                                            showHideDialog = false
+                                        }
+                                        .padding(vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    RadioButton(
+                                        selected = uiState.playabilityHideThreshold == value,
+                                        onClick = null,
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(label)
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showHideDialog = false }) { Text("完成") }
+                    },
+                )
+            }
 
             HorizontalDivider()
 

@@ -57,7 +57,15 @@ fun SurfaceTabBar(
                             modifier = Modifier.size(Dimens.IconLarge)
                         )
                     },
-                    label = { Text(tab.label, style = MaterialTheme.typography.titleSmall) },
+                    // 强制单行：大字体 / 窄 rail 下两个汉字会被折成上下两行，看着像竖排标签
+                    label = {
+                        Text(
+                            tab.label,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    },
                     // M3 的 rail 项目宽度固定 80dp，不铺满就凑不到 88dp 短边
                     modifier = Modifier
                         .fillMaxWidth()
@@ -71,7 +79,16 @@ fun SurfaceTabBar(
                 Tab(
                     selected = currentPage == index,
                     onClick = { onSelect(index) },
-                    text = { Text(tab.label) }
+                    // 6 个页签平分宽度时，默认字号 + 自动换行会把「中国」折成上下两个字。
+                    // 小一号字 + 禁止换行，保证任何字体缩放下都是横排两字。
+                    text = {
+                        Text(
+                            tab.label,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
                 )
             }
         }

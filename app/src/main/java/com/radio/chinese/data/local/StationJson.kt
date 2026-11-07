@@ -34,7 +34,16 @@ object StationJson {
                     val x = src as? JsonObject ?: return@mapNotNull null
                     val url = x.string("url")
                     if (url.isBlank()) null
-                    else StationSource(url = url, label = x.string("label"), bitrate = x.string("bitrate").toIntOrNull() ?: 0)
+                    else StationSource(
+                        url = url,
+                        label = x.string("label"),
+                        bitrate = x.string("bitrate").toIntOrNull() ?: 0,
+                        // 下面三个都是 iptv 用的可选字段：老清单里没有 → string() 返回空串，
+                        // 正好是默认值，不需要区分“没写”与“写了空”
+                        quality = x.string("quality"),
+                        userAgent = x.string("userAgent"),
+                        referrer = x.string("referrer"),
+                    )
                 } ?: emptyList(),
                 logoUrl = o.string("logoUrl"),
                 frequency = o.string("frequency"),
@@ -43,7 +52,12 @@ object StationJson {
                 tags = o["tags"]?.asArray()?.mapNotNull { (it as? JsonPrimitive)?.content }
                     ?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList(),
                 country = o.string("country"),
+                region = o.string("region"),
                 language = o.string("language"),
+                altNames = o["altNames"]?.asArray()?.mapNotNull { (it as? JsonPrimitive)?.content }
+                    ?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList(),
+                // iptv 清单里成人频道靠这个字段隐藏；缺字段一律当 false，不能当 true
+                nsfw = (o["nsfw"] as? JsonPrimitive)?.content?.trim()?.toBooleanStrictOrNull() ?: false,
             )
         }
     }

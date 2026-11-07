@@ -1,9 +1,12 @@
 package com.radio.chinese.ui.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -38,11 +41,17 @@ fun VideoStageFrame(
     playerManager: PlayerManager,
     fullScreen: VideoFullScreenState,
     modifier: Modifier = Modifier,
+    /**
+     * iptv 页传 true：流还没出画面（视频轨未上报）时也要能看到全屏入口。
+     * 否则用户看到的就是"这个播放页没有全屏"，而不是"这个流还没起来"。
+     */
+    alwaysShowFullScreen: Boolean = false,
 ) {
     val hasVideo by playerManager.hasVideoTrack.collectAsState()
     val interactive = VideoControlsPolicy.showsFullScreenButton(
         hasVideoTrack = hasVideo,
         isFullScreen = fullScreen.isFullScreen,
+        alwaysShow = alwaysShowFullScreen,
     )
     val showRotate = VideoControlsPolicy.showsRotateButton(
         // 用进入全屏那一刻的判定，不用当前形态：大屏手机一进全屏就横屏、
@@ -64,7 +73,9 @@ fun VideoStageFrame(
                     .matchParentSize()
                     .pointerInput(Unit) { detectTapGestures { controlsVisible = !controlsVisible } }
             )
-            if (controlsVisible) {
+            // 全屏态恒留退出入口：点画面收起控件后 orientation 被 configChanges 吃掉、
+            // 不会重建 composition，否则「退出全屏」会一直消失只剩系统返回键。
+            if (controlsVisible || fullScreen.isFullScreen) {
                 if (showRotate) {
                     IconButton(
                         onClick = {
@@ -74,11 +85,14 @@ fun VideoStageFrame(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .offset(x = -Dimens.TouchMin)   // 与全屏按钮并排，不重叠
-                            .size(Dimens.TouchMin),
+                            .size(Dimens.TouchMin)
+                            // 半透明黑底 + 白图标：画面可能很亮，深色图标会看不见（用户实测"没有全屏"）
+                            .background(Color.Black.copy(alpha = 0.45f), CircleShape),
                     ) {
                         Icon(
                             imageVector = Icons.Default.ScreenRotation,
                             contentDescription = "切换横竖屏",
+                            tint = Color.White,
                         )
                     }
                 }
@@ -89,12 +103,14 @@ fun VideoStageFrame(
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(Dimens.TouchMin),
+                        .size(Dimens.TouchMin)
+                        .background(Color.Black.copy(alpha = 0.45f), CircleShape),
                 ) {
                     Icon(
                         imageVector = if (fullScreen.isFullScreen) Icons.Default.FullscreenExit
                                       else Icons.Default.Fullscreen,
                         contentDescription = if (fullScreen.isFullScreen) "退出全屏" else "全屏",
+                        tint = Color.White,
                     )
                 }
             }

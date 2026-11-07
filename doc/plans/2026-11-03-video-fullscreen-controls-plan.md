@@ -283,7 +283,18 @@ Expected: 编译失败，`Unknown name 'pictureWanted'`（或 `No parameter with
 
 `applyVideoTrackGate()` 内两处 `_videoStageMounted.value` 全换成 `_videoPictureWanted.value`（日志文案同步：`"pictureWanted=${_videoPictureWanted.value} decode=$decode"`）。
 
-- [ ] **Step 5: VideoStage 不再开关闸**
+- [ ] **Step 5: 清掉旧名字的残留提法（否则注释会比代码先过期）**
+
+改名后以下四处注释仍在说旧名字，逐个改掉：
+
+- `PlayerManager.kt` 约 L302-303（init 块里“`_videoStageMounted` 作为单例字段还是 true”）→ 改说 `_videoPictureWanted`
+- `PlayerManager.kt` 约 L350（`playStation` 里“收闸只发生在 setVideoStageMounted(false)”）→ 改 `setVideoPictureWanted(false)`
+- `PlayerManager.kt` 约 L559（`playOperaFile` 里同一句）→ 同上
+- `VideoTrackGateTest.kt` 约 L33-34（注释里的 `_videoStageMounted` 与 `setVideoStageMounted(true)`）→ 改成新名字
+
+**故意保留不动**：`VideoTrackGate.shouldReapplyGate(previousMounted, nextMounted, playerReplaced)` 的参数名不改。理由：语义上它比的是“闸门上一次状态 vs 这一次想要的状态”，`previous/next` 仍成立；而改它要连带动 6 处具名实参，是零行为收益的改动面积。若后来人认为名字误导，单独一次重命名提交做。
+
+- [ ] **Step 6: VideoStage 不再开关闸**
 
 `ui/common/VideoStage.kt` 中把 `DisposableEffect(playerView) { ... }` 块里的两行闸门调用删掉，只留 View 所有权：
 
@@ -303,15 +314,15 @@ Expected: 编译失败，`Unknown name 'pictureWanted'`（或 `No parameter with
     }
 ```
 
-- [ ] **Step 6: 编译 + 全量单测**
+- [ ] **Step 7: 编译 + 全量单测**
 
 Run: `.\gradlew.bat :app:assembleDebug`
-Expected: BUILD SUCCESSFUL。若报 `Unresolved reference: setVideoStageMounted`，说明还有调用点没迁完 —— 逐个改成 `setVideoPictureWanted`（当前只有 `VideoStage.kt` 一处，本任务 Step 5 已处理）。
+Expected: BUILD SUCCESSFUL。若报 `Unresolved reference: setVideoStageMounted`，说明还有调用点没迁完 —— 逐个改成 `setVideoPictureWanted`（预检已确认全库只有 `VideoStage.kt` 两处调用，本任务 Step 6 已处理）。
 
 Run: `.\gradlew.bat :app:testDebugUnitTest`
 Expected: 全绿（`VideoTrackGateTest` 4 条 + 既有用例）
 
-- [ ] **Step 7: 提交**
+- [ ] **Step 8: 提交**
 
 ```bash
 git add app/src/main/java/com/radio/chinese/domain/model/VideoTrackGate.kt app/src/test/java/com/radio/chinese/VideoTrackGateTest.kt app/src/main/java/com/radio/chinese/service/PlayerManager.kt app/src/main/java/com/radio/chinese/ui/common/VideoStage.kt

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -22,6 +23,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +43,12 @@ import com.radio.chinese.ui.common.ErrorState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.domain.model.IptvBrief
+import com.radio.chinese.domain.model.StationDisplayName
+import com.radio.chinese.ui.common.LocalEpgInline
+import com.radio.chinese.ui.common.focusRing
 import com.radio.chinese.ui.common.NowPlayingWave
+import com.radio.chinese.ui.common.playabilityNameColor
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.common.SectionHeader
@@ -64,8 +72,7 @@ fun HomeScreen(
     showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val epgNowTitles by viewModel.epgNowTitles.collectAsState()
-    val epgStationIds = viewModel.epgStationIds
+    // EPG 状态改由 RadioPagerHost 通过 LocalEpgInline 提供，这里不再各自订阅
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
     val playbackState by viewModel.playerManager.playbackState.collectAsState()
@@ -146,8 +153,6 @@ fun HomeScreen(
                             onClick = { onRowClick(station) },
                             onFavoriteClick = { viewModel.toggleFavorite(station.id) },
                             onLongClick = { actionStation = station },
-                            nowProgram = epgNowTitles[station.id],
-                            hasEpg = station.id in epgStationIds,
                         )
                     }
 
@@ -343,9 +348,15 @@ fun StationListItem(
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
-    nowProgram: String? = null,
-    hasEpg: Boolean = false,
 ) {
+    // EPG 由电台页签宿主通过 Local 统一提供：地区/分类/收藏/最近/标签页复用本组件时
+    // 不用各自记得传参，也不会再出现「只有全部页有节目单」。
+    val epg = LocalEpgInline.current
+    val hasEpg = station.id in epg.stationIds
+    val nowProgram = epg.nowTitles[station.id]
+    val epgPrograms = epg.expanded[station.id]
+    val epgMinute = epg.minute
+    val onEpgToggle: (() -> Unit)? = if (hasEpg) { { epg.onToggle(station.id) } } else null
     // 不传 onLongClick 时保持原来的 clickable：只在需要长按弹菜单的页面才升级，
     // 避免给分类页等复用方添上不需要的长按响应
     val itemModifier = modifier
@@ -355,9 +366,11 @@ fun StationListItem(
             else it.clickable(onClick = onClick)
         }
     Card(
-        modifier = itemModifier,
+        // 电视/车机上方向键移焦点时必须有可见反馈：手机档点按后的短暂高亮也无害
+        modifier = itemModifier.focusRing(MaterialTheme.shapes.medium),
         shape = MaterialTheme.shapes.medium
     ) {
+        Column {
         Row(
             // 竖向内边距从 CardPadding(12) 收到 GapSmall(8)：行高里真正吃掉空间的
             // 不是文字而是「封面 + 上下内边距」，手机档从 72dp 降到 64dp，
@@ -369,11 +382,14 @@ fun StationListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Station Logo：缺 logo 时不再是一片空白，而是有底色的收音机图标
+            // 占位缩字跟随显示名：中文台名会让封面取前两字（「少儿频道」→「少儿」），
+            // 用原名「Jiangxi Children's Channel」则会得到 JCC，和旁边的中文台名对不上
+            val displayName = StationDisplayName.of(station)
             StationCover(
                 url = station.logoUrl,
                 size = Dimens.CoverSmall,
-                label = station.name,
-                contentDescription = station.name
+                label = displayName,
+                contentDescription = displayName
             )
 
             Spacer(modifier = Modifier.width(Dimens.GapMedium))
@@ -385,11 +401,17 @@ fun StationListItem(
                     // 用同一段富文本的两种样式，而不是 Row 里摆两个 Text：
                     // 两个 Text 会抢宽度，名字一长就把后面的波浪标记与「单」字挤出去；
                     // 单段富文本是整行一起省略，控件永远留在原位。
-                    val sub = stationSubtitleOf(station)
+                    // iptv 的简介单独一行（下面走马灯），不挤在台名后面
+                    val sub = if (station.id.startsWith("iptv:")) "" else stationSubtitleOf(station)
                     val nameStyle = MaterialTheme.typography.titleSmall
+                    // 台名按可用性着色：未知分数返回 null，保持默认色。
+                    // 必须在 buildAnnotatedString 外取：那个 lambda 不是 @Composable
+                    val stationNameColor = playabilityNameColor(station.id)
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(nameStyle.toSpanStyle()) { append(station.name) }
+                            withStyle(
+                                nameStyle.copy(color = stationNameColor ?: Color.Unspecified).toSpanStyle()
+                            ) { append(StationDisplayName.of(station)) }
                             if (sub.isNotBlank()) {
                                 append("  ")
                                 withStyle(
@@ -415,13 +437,45 @@ fun StationListItem(
                         StatusChip(text = "单")
                     }
                 }
+                // iptv 简介单独一行：走马灯，太长也不折行顶高列表
+                if (station.id.startsWith("iptv:")) {
+                    val brief = IptvBrief.of(station)
+                    if (brief.isNotBlank()) {
+                        MarqueeText(
+                            text = brief,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier.padding(top = Dimens.GapTiny),
+                        )
+                    }
+                }
                 // 正在播出的节目名：太长时单行走马灯滚动，不折行顶高列表行；
                 // 没有节目时整块不渲染，这一行台就只有两行高
-                if (!nowProgram.isNullOrBlank()) {
+                // 展开节目单时不再显示这一行：下面面板已有完整的「正在播出 + 时间」，重复只顶高行
+                if (!nowProgram.isNullOrBlank() && epgPrograms == null) {
                     MarqueeText(
                         text = "正在播出：$nowProgram",
-                        style = MaterialTheme.typography.bodySmall,
+                        // 主色：这一行是「有没有 EPG」的唯一视觉线索，灰色小字太容易漏看
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.primary
+                        ),
                         modifier = Modifier.padding(top = Dimens.GapTiny)
+                    )
+                }
+            }
+
+            // 节目单按钮：只给真的接入节目单的台，展开后再点收起
+            if (hasEpg && onEpgToggle != null) {
+                IconButton(
+                    onClick = onEpgToggle,
+                    modifier = if (isCarSurface()) Modifier.size(Dimens.TouchSecondary) else Modifier
+                ) {
+                    Icon(
+                        Icons.Default.Schedule,
+                        contentDescription = if (epgPrograms != null) "收起节目单" else "节目单",
+                        tint = if (epgPrograms != null) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -441,5 +495,92 @@ fun StationListItem(
                 )
             }
         }
+        // 行内展开：当前档 + 下一档。面板自己消费点击，否则点节目单会冒泡到行、顺手起播
+        if (epgPrograms != null) {
+            EpgInlinePanel(programs = epgPrograms, minute = epgMinute)
+        }
+        }
+    }
+}
+
+/**
+ * 列表行内展开的节目单。
+ *
+ * 只给两档：用户在这里判断"现在值不值得点进去"，全天节目单由播放页的 sheet 负责。
+ * 面板本身消费点击（`detectTapGestures`），不让它冒泡成"起播这一台"。
+ */
+@Composable
+private fun EpgInlinePanel(programs: List<EpgProgram>, minute: Int) {
+    val current = EpgQuery.currentAt(programs, minute)
+    val next = EpgQuery.nextAfter(programs, minute)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) { detectTapGestures { } }
+            .padding(
+                start = Dimens.CardPadding,
+                end = Dimens.CardPadding,
+                bottom = Dimens.GapSmall
+            )
+    ) {
+        if (current == null && next == null) {
+            Text(
+                text = "今天已无节目",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            return@Column
+        }
+        if (current != null) {
+            EpgInlineLine(
+                label = "正在播出",
+                leading = EpgQuery.formatRange(current.startMin, current.endMin),
+                title = current.title,
+                emphasized = true
+            )
+        }
+        if (next != null) {
+            if (current != null) Spacer(modifier = Modifier.height(Dimens.GapTiny))
+            EpgInlineLine(
+                label = "接下来",
+                leading = EpgQuery.formatMinute(next.startMin),
+                title = next.title,
+                emphasized = false
+            )
+        }
+    }
+}
+
+@Composable
+private fun EpgInlineLine(
+    label: String,
+    leading: String,
+    title: String,
+    emphasized: Boolean,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(56.dp)
+        )
+        if (leading.isNotBlank()) {
+            Text(
+                text = leading,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(Dimens.GapSmall))
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (emphasized) FontWeight.SemiBold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

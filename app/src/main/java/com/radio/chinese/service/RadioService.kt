@@ -45,6 +45,10 @@ class RadioService : MediaSessionService() {
     @Inject
     lateinit var videoPlayerMount: VideoPlayerMount
 
+    /** iptv 流的 UA/Referer：与下面 WebDAV 动态 Auth 同一个手法（工厂里读单例当前值） */
+    @Inject
+    lateinit var streamHeaderStore: StreamHeaderStore
+
     private var mediaSession: MediaSession? = null
     private var exoPlayer: ExoPlayer? = null
 
@@ -116,13 +120,40 @@ class RadioService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        // 动态 Auth：仅在 WebDAV 凭据已设置时添加，避免干扰 HTTP/M3U 等公开资源
+        // 动态 Auth：只在 WebDAV 凭据已设置、且当前不是 iptv 路时添加。
+        // 判据必须是显式的 isIptv —— 绝大多数 iptv 流没有自定义头，`current == null` 不代表不是 iptv。
         val dataSourceFactory = DataSource.Factory {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(30000)
-            if (webDavClient.username.isNotEmpty()) {
-                httpFactory.setDefaultRequestProperties(mapOf("Authorization" to webDavClient.authHeader()))
+                // iptv 有大量第三方中转会 https→http，media3 默认不跟跨协议跳转，不开这一步会直接进多源回退
+                .setAllowCrossProtocolRedirects(true)
+            // 请求头必须**合成一张 map 一次写入**：setDefaultRequestProperties 是
+            // clearAndSet（覆盖）语义，分两次调后写的会把先写的整批抹掉。
+            val sh = streamHeaderStore.current
+            val isIptv = streamHeaderStore.isIptv
+            val requestProps = RequestHeaders.build(
+                headers = sh,
+                isIptv = isIptv,
+                webDavUser = webDavClient.username,
+                webDavAuth = if (webDavClient.username.isNotEmpty()) webDavClient.authHeader() else "",
+            )
+            if (requestProps.isNotEmpty()) {
+                httpFactory.setDefaultRequestProperties(requestProps)
+            }
+            // 一次写全的依据（media3 1.5.1 字节码核实，非推测）：Factory() 构造时 userAgent
+            // 字段保持 null；DefaultHttpDataSource.open() 写完 defaultRequestProperties 后，
+            // 只在 userAgent != null 时再 setRequestProperty("User-Agent", userAgent) 覆盖一次。
+            // 因此 map 里的 User-Agent 会原样发出，无需碰未经实测的 setUserAgent。
+            // 依赖升级后 StreamHeaderStoreTest 的对应断言会红，提示重验；真机 T6 仍是最终判据。
+            // 诊断日志只证明"值配置到了工厂"，起播的是哪一路由 PlayerManager 的 commit 行对照。
+            // sh == null 但 isIptv 也要打：T6 要能区分"这条路没有自定义头"与"根本不是 iptv 路"
+            if (sh != null || isIptv) {
+                android.util.Log.d(
+                    "IptvHeaders",
+                    "applied ua=${sh?.userAgent?.isNotBlank() == true} " +
+                        "ref=${sh?.referrer?.isNotBlank() == true} iptv=$isIptv props=${requestProps.size}"
+                )
             }
             DefaultDataSource.Factory(this, httpFactory).createDataSource()
         }

@@ -1,6 +1,5 @@
 package com.radio.chinese.ui.radio
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,18 +11,15 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.RadioStation
-import com.radio.chinese.domain.model.StationCategory
 import com.radio.chinese.ui.common.EmptyState
-import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.rememberNowPlaying
 import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.HomeViewModel
+import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.theme.isCarSurface
 import com.radio.chinese.ui.theme.Dimens
 
@@ -59,40 +55,17 @@ fun RadioRecentTab(
     // 与首页同一套行点击语义：这页以前只跳播放页、不在列表里起播
     val nowPlaying = rememberNowPlaying(viewModel.playerManager)
     val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
+    val uiState by viewModel.uiState.collectAsState()
     val cell: @Composable (RadioStation) -> Unit = { station ->
-        val rowPlaying = nowPlaying.matches(station)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onRowClick(station) }
-                // 与 StationListItem 同一竖向节奏（12→8）：最近页与首页行高不一致会看着像两套列表
-                .padding(vertical = Dimens.GapSmall)
-                .heightIn(min = Dimens.RowMinHeight),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (rowPlaying) {
-                NowPlayingWave(size = Dimens.IconMedium)
-            } else {
-                Icon(
-                    Icons.Default.History,
-                    null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(Dimens.IconMedium)
-                )
-            }
-            Spacer(Modifier.width(Dimens.GapMedium))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    station.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (rowPlaying) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface,
-                )
-                Text(StationCategory.labelOf(station.category), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
+        // 与首页共用同一套行组件：以前这里手写一个只有台名的简化行，
+        // 结果最近页看不到 EPG、封面、收藏和可用性评分，用户以为「EPG 没做」
+        StationListItem(
+            station = station,
+            isPlaying = nowPlaying.matches(station),
+            isFavorite = uiState.favoriteIds.contains(station.id),
+            onClick = { onRowClick(station) },
+            onFavoriteClick = { viewModel.toggleFavorite(station.id) },
+        )
     }
 
     if (isCarSurface()) {

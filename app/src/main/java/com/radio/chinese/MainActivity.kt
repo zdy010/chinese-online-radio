@@ -2,6 +2,7 @@ package com.radio.chinese
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -13,15 +14,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.data.repository.PlayabilityStore
 import com.radio.chinese.service.CarKeyAction
 import com.radio.chinese.service.KeyBindingStore
 import com.radio.chinese.service.KeyCapture
 import com.radio.chinese.service.KeyDiagnostics
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.MainScreen
+import com.radio.chinese.ui.common.LocalPlayability
 import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.ChineseRadioTheme
 import com.radio.chinese.ui.theme.FontScaleOption
+import com.radio.chinese.ui.theme.isTv
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -37,6 +41,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var keyBindings: KeyBindingStore
 
+    @Inject
+    lateinit var playabilityStore: PlayabilityStore
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* No-op, notification is optional */ }
@@ -44,6 +51,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // 电视恒横屏。放在这里而不是主题里：部分盒子的 HDMI 传感器会把方向来回报成
+        // portrait，跟 Theme 的 windowOrientation 打架；显式请求一次最稳。
+        if (isTv()) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
         requestNotificationPermission()
 
@@ -54,12 +64,18 @@ class MainActivity : ComponentActivity() {
             val fontScaleKey by preferences.fontScaleKey.collectAsState(initial = FontScaleOption.STANDARD.key)
             val uiMode by preferences.uiMode.collectAsState(initial = 0)
 
+            // 分数变化时重建 lambda，CompositionLocal 才会让列表项重组
+            val playabilityRev by playabilityStore.revision.collectAsState()
+            val scoreOf = remember(playabilityRev) { { id: String -> playabilityStore.scoreOf(id) } }
+
             ChineseRadioTheme(
                 theme = theme,
                 fontScale = FontScaleOption.fromKey(fontScaleKey).factor,
                 uiMode = uiMode
             ) {
-                MainScreen(playerManager = playerManager)
+                CompositionLocalProvider(LocalPlayability provides scoreOf) {
+                    MainScreen(playerManager = playerManager)
+                }
             }
         }
     }

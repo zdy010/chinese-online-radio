@@ -26,7 +26,10 @@ class StationRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val preferences: RadioPreferences,
     private val sourceAvailabilityStore: SourceAvailabilityStore,
-    private val regionRepository: RegionRepository
+    private val regionRepository: RegionRepository,
+    // 只用于 getStationById 的 iptv 回落。不给默认值：漏传会退化成
+    // “通知栏点回 iptv 台时静默无反应”，那比编译错误难查得多。
+    private val iptvRepository: IptvStationRepository,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private var builtInStations: List<RadioStation>? = null
@@ -113,9 +116,21 @@ class StationRepository @Inject constructor(
         }
     }
 
-    suspend fun getStationById(id: String): RadioStation? {
-        return getAllStations().find { it.id == id }
-    }
+    /**
+     * 按 id 查台。
+     *
+     * 主路径不命中的 iptv 前缀 id 回落到 iptv 仓库：需要它的是
+     * PlayerViewModel.loadStation（路由 player/{stationId}、通知栏点回、媒体键恢复、
+     * 进程死亡重建都走这里），而它拿到 null 时是 `if (station != null)` 静默不动作 ——
+     * 不回落的症状不是崩溃，是“点了没反应”，编译与单测都抓不到。
+     *
+     * 非前缀 id 不去问 iptv 仓库：电台侧每次查台都过 12,419 条是白付的代价。
+     * getAllStations()/getActiveStations()/searchStations() 保持只返回电台：
+     * iptv 条目掺进来会同时拖慢并改语义首页/分类/地区/EPG/检测（spec V5/V9）。
+     */
+    suspend fun getStationById(id: String): RadioStation? =
+        getAllStations().find { it.id == id }
+            ?: if (iptvRepository.isIptvId(id)) iptvRepository.byId(id) else null
 
     suspend fun getStationsByCategory(category: String): List<RadioStation> {
         return getActiveStations().filter { it.category == category }

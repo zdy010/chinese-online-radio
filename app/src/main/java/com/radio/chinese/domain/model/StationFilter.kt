@@ -27,22 +27,29 @@ object StationFilter {
     }
 
     /**
-     * 搜索词命中的范围：台名、频率、简介、国家、语言、标签中文名；
+     * 搜索词命中的范围：台名、**别名**、频率、简介、国家、语言、标签中文名；
      * 纯字母数字的查询还会再匹一遍台名的拼音全拼与首字母。
      *
-     * 拼音只对台名生效，不对简介与国家生效：简介是「中国的华语广播电台」这类
-     * 模板句，把它也索引进去会让 `zg` 命中全表。
+     * 拼音只对台名生效，不对简介、国家与别名生效：简介是「中国的华语广播电台」这类
+     * 模板句，把它也索引进去会让 `zg` 命中全表；别名多是英文全称，展开拼音同样会
+     * 把假命中面铺大。
+     *
+     * 别名是 iptv 台引进的（CCTV 1 / 中央电视台综合频道 / CCTV-1）：不匹配就只能猜写法。
      */
     fun matches(station: RadioStation, query: String): Boolean {
         val q = query.trim().lowercase()
         if (q.isEmpty()) return true
         val tagLabels = station.tags.map { StationTag.labelOf(it).lowercase() }
         val hitOriginal = station.name.lowercase().contains(q) ||
+            station.altNames.any { it.lowercase().contains(q) } ||
             station.frequency.lowercase().contains(q) ||
             station.description.lowercase().contains(q) ||
             station.country.lowercase().contains(q) ||
+            // 省份也参与搜索：用户按"江西"找台时，JEL 经济生活频道这类台名里没有省名的也要能出来
+            station.region.lowercase().contains(q) ||
             station.language.lowercase().contains(q) ||
-            tagLabels.any { it.contains(q) || q.contains(it) }
+            // 空标签必须挡掉：q.contains("") 恒为真，一条空 tag 就能让搜索命中所有台
+            tagLabels.any { it.isNotEmpty() && (it.contains(q) || q.contains(it)) }
         if (hitOriginal || !PinyinIndex.isAsciiQuery(q)) return hitOriginal
         // 列值形如 "|wf|zjjt|"，首尾的竖线挡住跨变体拼接出的假命中
         val py = pinyinOf(station.name)

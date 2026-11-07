@@ -11,13 +11,18 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.radio.chinese.data.local.RadioPreferences
+import com.radio.chinese.data.repository.IptvStationRepository
+import com.radio.chinese.data.repository.PlayabilityStore
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.OperaPlayContext
 import com.radio.chinese.domain.model.OperaSpeed
+import com.radio.chinese.domain.model.PlayCommitGate
 import com.radio.chinese.domain.model.nextOperaContext
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.SkipBase
 import com.radio.chinese.domain.model.StationSource
+import com.radio.chinese.domain.model.StreamHeaderPolicy
 import com.radio.chinese.domain.model.VideoTrackGate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -40,7 +46,12 @@ class PlayerManager @Inject constructor(
     private val stationRepository: StationRepository,
     private val webDavClient: WebDavClient,
     private val ttsAnnouncer: TtsAnnouncer,
-    val videoPlayerMount: VideoPlayerMount
+    val videoPlayerMount: VideoPlayerMount,
+    /** iptv 流的 UA/Referer 查表与写入（见 StreamHeaderStore 的代价说明） */
+    private val iptvRepository: IptvStationRepository,
+    private val streamHeaderStore: StreamHeaderStore,
+    /** 台级可用性评分：列表着色与"连续失败隐藏"用；源级排序仍由 SourceAvailabilityStore 承担 */
+    private val playabilityStore: PlayabilityStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
         // 播报/资产/绑定等外部交互异常不得炸掉主线程；留痕后照常，切台降级为无声
@@ -55,6 +66,25 @@ class PlayerManager @Inject constructor(
     /** 连按保护：一次切台已解析但尚未起播（播报挂起中）时的目标 id，供下一次按键以它为基准。 */
     @Volatile
     private var pendingSkipTargetId: String? = null
+
+    /**
+     * 切台基准（spec V11）。由当前页注册：iptv 页注册自己的可见集合，
+     * 电台页不注册 → 回落电台活动列表，行为与改造前一致。
+     * 规则本身在 [SkipBase]（domain 纯函数），这里只存与取。
+     */
+    private val _skipBase = MutableStateFlow<List<RadioStation>?>(null)
+    /** 播放页订阅它取频道号与上下台基准；[handleMediaSkip] 读同一份值，不存第二份 */
+    val skipBaseFlow: StateFlow<List<RadioStation>?> = _skipBase
+
+    fun setSkipBase(list: List<RadioStation>?) { _skipBase.value = list }
+
+    fun clearSkipBase() { _skipBase.value = null }
+
+    /** 供 iptv 播放页的上下台按钮读取：与方控滚轮是同一个基准集合（V11），不另算一份 */
+    fun currentSkipBase(): List<RadioStation> = _skipBase.value.orEmpty()
+
+    /** 成功评分的防抖任务：READY 后稳定 3 秒才记成功，避免"秒失败"的台被记成可用 */
+    private var playabilityJob: Job? = null
 
     /** 上一次物理滚轮切台时刻：前台（Activity）与后台（会话）可能对同一次拨轮各投一次，用它去抖 */
     @Volatile
@@ -99,6 +129,12 @@ class PlayerManager @Inject constructor(
      * 此前这套状态在本类内联了一份、引擎里又有一份，两者会漂：
      * 改了一处忘另一处就是「单测全绿但真机不轮转」。现在只留引擎这一份。
      */
+    /**
+     * 起播世代号：拦住"等 header 索引期间已被取代"的旧提交（规则见 [PlayCommitGate]）。
+     * 必须在 rotationEngine 之前初始化 —— 它的 onAllSourcesExhausted 回调要用。
+     */
+    private val commitGate = PlayCommitGate()
+
     private val rotationEngine = SourceRotationEngine(stationRepository, scope)
 
     /**
@@ -111,6 +147,11 @@ class PlayerManager @Inject constructor(
         }
 
         override fun onAllSourcesExhausted() {
+            // 最后一个源也失败了：不让任何还在等 header 索引的协程"复活"再起播一次
+            commitGate.invalidate()
+            playabilityJob?.cancel()   // 成功计时作废，别让刚到的 READY 在失败后又记成功
+            // 一次播放尝试只记一次失败：这个回调是"整个队列耗尽"，不是每个源各调一次
+            _currentStation.value?.let { playabilityStore.reportFailure(it.id) }
             _status.value = null
             _error.value = "所有节目源均无法播放"
             _playbackState.value = Player.STATE_IDLE
@@ -316,9 +357,15 @@ class PlayerManager @Inject constructor(
     /**
      * 播放页声明「我要看画面 / 我不要了」。幂等：重复值不产生副作用。
      *
-     * 必须在页面离开时传 false，否则视频轨会一直解禁、后台持续解码。
-     * 失败只记日志不写 `_error`：`_error` 是播放页唯一的红色情绪通道，
-     * 正常起播不该红框一闪（既有踩坑记录）。
+     * **不要用延迟任务落地收闸**：实测在后台 1.5 秒后重写 `trackSelectionParameters`
+     * 会让 `DefaultAudioSink` 抛 `UnexpectedDiscontinuityException`（音频时间戳跳跃），
+     * 进而打断后台播放、走到「所有节目源均无法播放」。
+     *
+     * iptv 播放页 ↔ 列表（迷你条）之间由调用方保证**根本不调这个方法**（见 MainScreen）：
+     * 这一段的轨道参数一次都不动，音频不打断、画面随 PlayerView 移除立即消失。
+     * 真正的收闸点是切到其它一级 tab / 换成电台台 —— 那时本来就要换媒体。
+     *
+     * 失败只记日志不写 `_error`：`_error` 是播放页唯一的红色情绪通道。
      */
     fun setVideoPictureWanted(wanted: Boolean) {
         val previous = _videoPictureWanted.value
@@ -329,12 +376,15 @@ class PlayerManager @Inject constructor(
     }
 
     private fun applyVideoTrackGate() {
+        val p = videoPlayerMount.player
+        if (p == null) {
+            android.util.Log.w("VideoGate", "播放器尚未建起，闸门待下次挂载再落")
+            return
+        }
+        // 同步记账：原先 lastGatedPlayer 在协程末尾才赋值，同值连调时第二次会把
+        // 「异步还没更新」误判成换了播放器（replaced=true），重复排队重写轨道参数。
+        lastGatedPlayer = p
         scope.launch {
-            val p = videoPlayerMount.player
-            if (p == null) {
-                android.util.Log.w("VideoGate", "播放器尚未建起，闸门待下次挂载再落")
-                return@launch
-            }
             val decode = VideoTrackGate.shouldDecodeVideo(_videoPictureWanted.value)
             // 验收 V3/V10 的断点：页面不要画面后必须重新看到 decode=false（视频轨收闸，不再多解码）
             android.util.Log.d("VideoGate", "pictureWanted=${_videoPictureWanted.value} decode=$decode")
@@ -345,14 +395,15 @@ class PlayerManager @Inject constructor(
             } catch (e: IllegalStateException) {
                 // ExoPlayer 校验 application thread；此处 scope 是 Main，正常不会走到
                 android.util.Log.e("VideoGate", "视频轨闸门写入失败", e)
-                return@launch
+                // 写失败就撤销记账，允许下一次重落，避免新播放器被当成「没换过」
+                lastGatedPlayer = null
             }
-            // 只在真的写成功时记账，否则新实例到了会被当成“没换过”而漏重落
-            lastGatedPlayer = p
         }
     }
 
     fun playStation(station: RadioStation) {
+        // 切台立刻作废上一个台的"成功计时"，否则它会在 3 秒后给旧台记一次成功
+        playabilityJob?.cancel()
         // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoPictureWanted(false)。
         // 新条目的画面真相要等它的 onTracksChanged，沿用旧结论会让上一个台的画面骗过这一台。
         _hasVideoTrack.value = false
@@ -408,6 +459,42 @@ class PlayerManager @Inject constructor(
             .setMediaMetadata(metadata)
             .build()
 
+        val token = commitGate.next()
+        val isIptv = iptvRepository.isIptvId(station.id)
+        if (isIptv) {
+            // iptv：header 索引可能还没加载（6.33MB），必须等它再起播，
+            // 否则需要 UA/Referer 的流首枪不带自定义头。等待期间协程会挂起，
+            // 恢复时必须确认自己仍是最新意图（切台/换源/stop 都会另发意图）。
+            // 电台路径保持同步，不把整段搬进协程，避免给"纯音频零回退"引入一帧调度差。
+            scope.launch {
+                val headers = iptvRepository.headersFor(source.url)
+                if (!commitGate.isCurrent(token) || controller !== ctrl) return@launch
+                // 必须先置 isIptv 再起播：工厂靠它决定要不要带 WebDAV 凭据
+                streamHeaderStore.isIptv = true
+                streamHeaderStore.current = StreamHeaderPolicy.resolve(isIptv = true, headers)
+                // 与 RadioService 那行 applied 对照：applied 只证明"值到了工厂"，
+                // commit 证明"这一路真的起播了、且带的是它的 header"。真机 T6 两行都要看。
+                android.util.Log.d(
+                    "IptvHeaders",
+                    "commit id=${station.id} ua=${headers?.userAgent?.isNotBlank() == true} " +
+                        "ref=${headers?.referrer?.isNotBlank() == true}"
+                )
+                commitQueueSource(ctrl, mediaItem, station.id)
+            }
+        } else {
+            // 非 iptv 台必须显式写 null 而不是"不写"：上一个 iptv 台留下的 UA/Referer
+            // 会串到本台（与 WebDAV 单例凭证跨源串写同一类）。
+            streamHeaderStore.isIptv = false
+            streamHeaderStore.current = StreamHeaderPolicy.resolve(
+                isIptv = false,
+                headers = streamHeaderStore.current,
+            )
+            commitQueueSource(ctrl, mediaItem, station.id)
+        }
+    }
+
+    /** 真正提交给播放器的一段。从 playQueueSource 拆出来只为让上面能分同步/异步两条路。 */
+    private fun commitQueueSource(ctrl: MediaController, mediaItem: MediaItem, stationId: String) {
         ctrl.stop()
         ctrl.clearMediaItems()
         ctrl.setMediaItem(mediaItem)
@@ -415,7 +502,7 @@ class PlayerManager @Inject constructor(
         ctrl.play()
 
         scope.launch {
-            preferences.setLastPlayedStationId(station.id)
+            preferences.setLastPlayedStationId(stationId)
         }
     }
 
@@ -434,6 +521,15 @@ class PlayerManager @Inject constructor(
         val station = _currentStation.value ?: return
         if (_currentSource.value == null) return
         rotationEngine.onCurrentSuccess(station.id)
+        // 台级评分防抖：READY 后立刻报错的台（码率切换、分片 404）不该被记成功。
+        // 稳定 3 秒仍停在同一台且仍是 READY 才记；切台/stop 会 cancel 掉这次计时。
+        playabilityJob?.cancel()
+        playabilityJob = scope.launch {
+            delay(3000)
+            if (_currentStation.value?.id == station.id && _playbackState.value == Player.STATE_READY) {
+                playabilityStore.reportSuccess(station.id)
+            }
+        }
         scope.launch {
             // 「最近播放」需要跨进程重启存活，此前只存在 ViewModel 内存里
             preferences.addRecentStationId(station.id)
@@ -462,7 +558,16 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    /** 按 id 起播解析失败时给一条可见错误：通知栏点回/媒体键恢复不该"点了没反应"（spec §10.1） */
+    fun reportError(message: String) { _error.value = message }
+
     fun stop() {
+        // 先让"正在等 header 索引"的那一路失效，否则停止之后它会自己 commit 开播
+        commitGate.invalidate()
+        playabilityJob?.cancel()
+        // 清空当前路的 header：残留会把上一个台的 UA/Referer 带给下一个台
+        streamHeaderStore.isIptv = false
+        streamHeaderStore.current = null
         controller?.stop()
     }
 
@@ -490,8 +595,15 @@ class PlayerManager @Inject constructor(
                 announceThen(name) { if (forward) playOperaNext() else playOperaPrevious() }
                 return@launch
             }
-            // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台
-            val stations = stationRepository.getActiveStations()
+            // 用活动列表（已含本地优先序）：节目源管理里标记无效的电台不参与切台。
+            // 页面注册过基准（iptv 页）时优先用它 —— 见 SkipBase 与 spec V11。
+            // 基准非空就别再查电台表：省一次挂起，也避免挂起期间页面切走后
+            // 仍拿着"按键那一刻"的基准落地；裁决仍然只由 SkipBase 做一次。
+            val registered = _skipBase.value
+            val radioActive = if (registered.isNullOrEmpty()) {
+                stationRepository.getActiveStations()
+            } else emptyList()
+            val stations = SkipBase.resolve(registered, radioActive)
             // 查询期间用户可能切进戏曲模式，落地前以最新状态为准
             if (_isOperaMode.value) {
                 val name = peekOperaTargetName(forward)
@@ -500,6 +612,8 @@ class PlayerManager @Inject constructor(
             }
             // 无正在播放时保持既有 no-op（不擅自起播首台）
             val current = _currentStation.value ?: return@launch
+            // iptv 台在播但基准为空（进程重建、直接恢复播放页）：不要回落到电台列表把用户切走
+            if (iptvRepository.isIptvId(current.id) && registered.isNullOrEmpty()) return@launch
             // 连按保护：播报挂起期间 _currentStation 尚未更新，第二次按键基于“待落地目标”继续前推，避免回到同一台
             val baseId = pendingSkipTargetId ?: current.id
             val target = nextStation(stations, baseId, forward) ?: return@launch
@@ -566,6 +680,11 @@ class PlayerManager @Inject constructor(
         _hasVideoTrack.value = false
         // 互斥：停止电台
         _currentStation.value = null
+        // 戏曲不走 playQueueSource，这里必须自己清：否则上一个 iptv 台的
+        // UA/Referer 会被带给云盘音频（与 WebDAV 单例凭证跳源串写同一类）
+        commitGate.invalidate()      // 顺带让仍在等 header 索引的那一路失效
+        streamHeaderStore.isIptv = false
+        streamHeaderStore.current = null
         _isOperaMode.value = true
         _error.value = null
         _status.value = null

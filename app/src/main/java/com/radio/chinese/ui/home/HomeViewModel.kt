@@ -83,6 +83,36 @@ class HomeViewModel @Inject constructor(
     /** 接入节目单的台 id 集合，列表据此给台名挂标记。与时间无关，直接来自映射表。 */
     val epgStationIds: Set<String> get() = epgRepository.stationIds
 
+    /**
+     * 行内展开的节目单：台 id → 当天节目。
+     * 只保留一台：同时展开多台会把列表高度撑到要滑很久，且用户看的是"这台现在播什么"。
+     */
+    private val _epgExpanded = MutableStateFlow<Map<String, List<EpgProgram>>>(emptyMap())
+    val epgExpandedPrograms: StateFlow<Map<String, List<EpgProgram>>> = _epgExpanded
+
+    /** 当前分钟（北京时间）。展开面板据此判断"正在播出"是哪一档，每分钟随 ticker 更新。 */
+    private val _epgMinute = MutableStateFlow(0)
+    val epgMinute: StateFlow<Int> = _epgMinute
+
+    /** 点行右侧的节目单按钮：已展开则收起，否则展开并确保这一台的节目已就绪 */
+    fun toggleEpgExpand(stationId: String) {
+        if (_epgExpanded.value.containsKey(stationId)) {
+            _epgExpanded.value = emptyMap()
+            return
+        }
+        val date = LocalDate.now(EpgQuery.BROADCAST_ZONE).toString()
+        val cached = epgProgramsByStation[stationId].orEmpty()
+        if (cached.isNotEmpty()) {
+            _epgExpanded.value = mapOf(stationId to cached)
+            return
+        }
+        // 批量缓存还没覆盖到这台（冷启动刚进页面）：按需单台拉一次，与节目单页同一条合规边界
+        viewModelScope.launch {
+            val snapshot = epgRepository.load(stationId, date)
+            _epgExpanded.value = mapOf(stationId to snapshot?.programs.orEmpty())
+        }
+    }
+
     // 当天缓存快照：批量补齐后刷新它，每分钟只据它重算标题，不重复打接口
     private var epgProgramsByStation: Map<String, List<EpgProgram>> = emptyMap()
     // 快照对应的北京日期：跨过零点后它仍是昨天，据此判断要不要重拉当天
@@ -277,7 +307,15 @@ class HomeViewModel @Inject constructor(
     private fun recomputeEpgTitles() {
         val date = LocalDate.now(EpgQuery.BROADCAST_ZONE).toString()
         val minute = EpgQuery.minuteOf(LocalDateTime.now(EpgQuery.BROADCAST_ZONE))
+        _epgMinute.value = minute
         _epgNowTitles.value = nowPlayingTitles(epgProgramsByStation, date, minute, epgRepository.stationIds)
+        // 展开面板跟着换档：用同一份内存缓存重算，不额外请求
+        val expanded = _epgExpanded.value.keys
+        if (expanded.isNotEmpty()) {
+            _epgExpanded.value = expanded.associateWith { id ->
+                epgProgramsByStation[id]?.filter { it.date == date }.orEmpty()
+            }
+        }
     }
 
     fun selectCategory(category: String?) {

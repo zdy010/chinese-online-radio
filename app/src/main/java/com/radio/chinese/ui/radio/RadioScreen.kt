@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.category.CategoryScreen
+import com.radio.chinese.ui.common.EpgInlineState
+import com.radio.chinese.ui.common.LocalEpgInline
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.SurfaceTab
 import com.radio.chinese.ui.common.SurfaceTabBar
@@ -149,6 +151,15 @@ private fun RadioPagerHost(
     scope: CoroutineScope,
     modifier: Modifier = Modifier
 ) {
+    // 五个页签共用一份 EPG 状态：列表行自己读 Local，不再靠每个页面记得传参
+    val epgState = EpgInlineState(
+        nowTitles = homeViewModel.epgNowTitles.collectAsState().value,
+        stationIds = homeViewModel.epgStationIds,
+        expanded = homeViewModel.epgExpandedPrograms.collectAsState().value,
+        minute = homeViewModel.epgMinute.collectAsState().value,
+        onToggle = homeViewModel::toggleEpgExpand,
+    )
+    CompositionLocalProvider(LocalEpgInline provides epgState) {
     HorizontalPager(state = pagerState, modifier = modifier) { page ->
         when (page) {
             // 页签顺序：0 地区 / 1 全部 / 2 分类 / 3 收藏 / 4 最近。
@@ -169,6 +180,7 @@ private fun RadioPagerHost(
             3 -> FavoritesScreen(showTopBar = false, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
                 onNavigateBack = { scope.launch { pagerState.animateScrollToPage(1) } })
             4 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer, searchQuery = searchQuery)
+        }
         }
     }
 }

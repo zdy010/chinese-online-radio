@@ -47,13 +47,20 @@
 | 全库频道 / 全库流 | 31,744 / 18,458 |
 | 有流且有频道元数据的频道 | 10,338 |
 | **无频道元数据的流（direct）** | **2,097 条**。注意不是 1,941：差的 156 条是 `channel` 字段有值但 channels.json 里查不到该 id。另：两次探针分别得到 2,096 与 2,097（差 1 条，空字串与 null 的判定差异），**以工具输出为准**，不拿我手算的数当结论 |
-| **入库记录总数** | **约 12,435** = 10,338 频道记录 + 约 2,097 direct 记录（direct 同名不合并，但会加 host 后缀消歧，见 §2.2） |
-| `is_nsfw=true` 频道 | 374（V2 收录但默认隐藏） |
+| **入库记录总数** | **实测 12,419** = 10,337 频道记录 + 2,082 direct 记录（与估算 12,435 差 16 条：部分频道没有合法 http(s) 流，被工具剔除）。工具重跑后实测拆分为 10,337 + 2,096 = **12,419**，以每次输出为准 |
+| 真正带 header 的流 | 实测 **1,266 个 url**（只 UA 925、只 Referer 183、两者都有 158），占全部 18,438 条流的 6.9%。这就是 Task 6 那条通路要服务的全部对象，也是“只 UA 或只 Referer 都必须生效”的依据 |
+| 空名频道 | 存在（实测）：部分 iptv-org 频道 `name` 为空，工具必须兜底到 network / 流 host / 频道 id，否则列表出空白行 |
+| `is_nsfw=true` 频道 | 374 个标记，但**其中只有 3 条流**（实测）→ 真正入库的成人记录只有 **2 条**（Tele Posadas.ar / Retroclub.ar，分类是 general/music） |
+| `xxx` 分类频道 | 354 个，**被流引用的 = 0 条** → 入库清单里根本不会出现 `tags` 含 `xxx` 的条目 |
 | `replaced_by` 非空 | 639（上游标记已替换/下线） |
-| json 体积 | 5.25 MB 未压缩 → **850 KB 压缩后（15.8%）**；APK 6.14 MB → 预计约 **6.97 MB** |
+| json 体积 | 实测 **6.33 MB 未压缩**（包装形状 + 字段比估算时全）；APK 增量与压缩率以验收实测为准 |
 | iptv 分类码 | **30 个**：`auto, animation, business, classic, comedy, cooking, culture, documentary, education, entertainment, family, general, interactive, kids, legislative, lifestyle, movies, music, news, outdoor, public, relax, religious, science, series, shop, sports, travel, weather, xxx`（无空 id） |
 | iptv 国家码 | 250 个 |
-| direct 流取名可用率 | 分层取名后 **2,097/2,097 有名**，去重 **1,660 种**；剩余高频重名是 `master`×174、`manifest`×50、`live`×40、`hls`×36 |
+| direct 流取名可用率 | 分层取名后 **2,097/2,097 有名**，去重 **1,660 种**；剩余高频重名是 `master`×174、`manifest`×50、`live`×40、`hls`×36。工具实测需两级消歧（追加 host 后再加序号）才能做到全库名字唯一：375 组靠 host 分开，122 组靠序号 |
+
+> 上面两行把 V2 的实际作用面说清了：**成人开关今天只管 2 条记录**。
+> 逻辑仍必须做（上游随时会加流），但验收时不能拿“隐藏了几百个频道”当预期，
+> T9 只能验那 2 条的有无。
 
 ### 真实字段名（探针核实）
 
@@ -189,7 +196,9 @@ enum class IptvCategory(val key: String, val label: String) {
     NEWS("news", "新闻"), OUTDOOR("outdoor", "户外"), PUBLIC("public", "公共"),
     RELAX("relax", "休闲"), RELIGIOUS("religious", "宗教"), SCIENCE("science", "科学"),
     SERIES("series", "剧集"), SHOP("shop", "购物"), SPORTS("sports", "体育"),
-    TRAVEL("travel", "旅行"), WEATHER("weather", "天气"), ADULT("xxx", "成人");
+    TRAVEL("travel", "旅行"), WEATHER("weather", "天气"), ADULT(IptvAdult.adultCategoryKey, "成人");
+        // ADULT 的 key 不复写字面量：常量只能有一个出处。本行早期写的是 ADULT("xxx", ...)，
+        // 那会让下一个照 spec 执行的人把已修好的单一出处改回去（Task 1 审查 I-2 修的就是这个）。
 
     companion object {
         /** 未知 key 回落「其他」，不抛异常：上游随时可能加新分类 */
@@ -295,6 +304,14 @@ BottomNavItem(Screen.Settings,"设置",   …),
 ### 7.2 iptv 页内部（V5）
 
 顶部搜索框 + 四宫格入口（分类 / 国家 / 最近 / 收藏），**不平铺全量列表**。
+
+**分类入口盖不到全部记录（Task 3 审查 I-2，实测）**：清单里有 **3,557 条记录 tags 为空**
+（含全部 2,096 条 direct 记录与 1,461 条无分类频道）。按 tags 聚合的分类入口永远到不了它们，
+它们只能靠搜索 / 国家 / 最近 / 收藏到达。这是数据形状决定的，不是 bug；
+但**不得把分类入口当成“能逛完整个库”的导航**，也不得为了补这个洞而发明一个
+有 3,557 条的「其他」格子（那会把入口区顶满，真正有内容的分类反而看不到）。
+另：分组必须**先翻译成中文标签再聚合**，否则上游新增两个未抄录分类时两个格子都叫「其他」，
+列表按标签做 key 会直接抛 "Key was already used" 闪退。
 
 **搜索必须复用 `StationFilter`（review I1）**：`HomeViewModel` L99 用的就是它，而 `CategoryScreen` 里留着一条注释明令「筛选规则不在这页里重写一遍，否则两页搜出不同结果」。做法是给 `StationFilter` 增加对 `altNames` 的匹配（V12），iptv 页调 `StationFilter.apply(iptvVisible, category=null, query)`。初版我写的"内存过滤 name/alt_names/country"是自造第二套规则，且声称匹配一个 §2 里根本没入库的字段。
 

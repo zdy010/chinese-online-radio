@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.repository.EpgRepository
 import com.radio.chinese.data.repository.EpgSnapshot
 import com.radio.chinese.data.repository.FavoriteRepository
+import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.domain.model.StationLoadFailure
 import com.radio.chinese.domain.model.StationSource
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.timer.SleepTimer
@@ -127,6 +129,13 @@ class PlayerViewModel @Inject constructor(
             val station = stationRepository.getStationById(stationId)
             if (station != null) {
                 playerManager.playStation(station)
+            } else {
+                // 通知栏点回 / 媒体键恢复 / 进程重建都走这条：解析失败必须可见，
+                // 否则症状是"点了没反应、播放页停在旧台"，编译与单测都抓不到
+                //（spec §10.1 / 设计自审 C1）。
+                playerManager.reportError(
+                    StationLoadFailure.messageFor(stationId.startsWith(IptvStationRepository.PREFIX))
+                )
             }
         }
     }

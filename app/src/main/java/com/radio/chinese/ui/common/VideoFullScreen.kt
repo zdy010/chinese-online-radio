@@ -12,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.radio.chinese.domain.model.VideoControlsPolicy
 import com.radio.chinese.domain.model.VideoOrientation
+import com.radio.chinese.ui.theme.isTv
 
 /**
  * 视频全屏态的持有者，也是全应用唯一会改屏幕方向与系统栏的地方。
@@ -85,9 +86,8 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
         } else {
-            // 退出全屏：不受 canRotate 约束，永远复位（rotateOverride 的清理交给 toggle/返回键，
-            // 不在这里写回 null——那会让 key 变化重启 effect，把同一套复位命令再发一遍）
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            // 退出全屏：不受 canRotate 约束，永远复位；电视上复位成「仍横屏」（见 resetOrientation）
+            resetOrientation(activity)
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
     }
@@ -96,7 +96,7 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
     DisposableEffect(Unit) {
         onDispose {
             val activity = context as? android.app.Activity ?: return@onDispose
-            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            resetOrientation(activity)
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
                 .show(WindowInsetsCompat.Type.systemBars())
         }
@@ -131,5 +131,19 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
                 )
             },
         )
+    }
+}
+
+/**
+ * 退出全屏 / 离开播放页时的方向复位。
+ *
+ * 电视恒横屏：复位成 `UNSPECIFIED` 会把 `MainActivity.onCreate` 的锁定解掉，
+ * 部分盒子按 HDMI 传感器上报的方向把整个界面翻成竖屏。
+ */
+private fun resetOrientation(activity: android.app.Activity) {
+    activity.requestedOrientation = if (activity.isTv()) {
+        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+    } else {
+        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 }

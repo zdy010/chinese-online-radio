@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.radio.chinese.domain.model.IptvBrief
+import com.radio.chinese.domain.model.IptvLanguage
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationCategory
 
@@ -17,7 +19,15 @@ import com.radio.chinese.domain.model.StationCategory
  * 真频率 > 国家 · 语言 > 只有国家 > 只有语言 > 分类中文名 > 空串（调用方不渲染该行）。
  */
 fun stationSubtitle(station: RadioStation, categoryLabel: String): String {
-    val place = listOf(station.country, station.language).filter { it.isNotBlank() }.joinToString(" · ")
+    // iptv 没有频率，"国家 · 语言"信息量太小；用「国家 · 分类 · 语言」当简介（V14）
+    if (station.id.startsWith(com.radio.chinese.data.repository.IptvStationRepository.PREFIX)) {
+        return IptvBrief.of(station)
+    }
+    // language 在 iptv 侧是过滤标记（zho/eng/country:xxx），必须经 displayName 归一，
+    // 否则列表会出现 "日本 · country:jpn" 这种内部值
+    val place = listOf(station.country, IptvLanguage.displayName(station.language))
+        .filter { it.isNotBlank() }
+        .joinToString(" · ")
     return when {
         station.frequency.isNotBlank() -> station.frequency.trim()
         place.isNotBlank() -> place
