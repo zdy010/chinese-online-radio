@@ -25,6 +25,9 @@ import com.radio.chinese.ui.common.LocalEpgInline
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.SurfaceTab
 import com.radio.chinese.ui.common.SurfaceTabBar
+import com.radio.chinese.ui.common.TvNineKeySearchDialog
+import com.radio.chinese.ui.common.TvSearchEntry
+import com.radio.chinese.ui.theme.isTvSurface
 import com.radio.chinese.ui.favorites.FavoritesScreen
 import com.radio.chinese.ui.home.HomeScreen
 import com.radio.chinese.ui.home.HomeViewModel
@@ -75,23 +78,50 @@ fun RadioScreen(
         else { lastBackMs = now; android.widget.Toast.makeText(ctx, "再按一次退出", android.widget.Toast.LENGTH_SHORT).show() }
     }
 
+    var showTvSearch by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        // 搜索栏 + 设置：与音频库页共用 SearchBarRow，两屏顶部排版对齐
-        SearchBarRow(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = "搜索电台、频率或节目",
-            actions = {
-                // 只留节目单：它是「这一屏内容」的入口；设置是全局一级入口，
-                // 已移到与电台/音频库并列的底部导航，不再挤在搜索行里
+        // 搜索栏 + 设置：与音频库页共用 SearchBarRow，两屏顶部排版对齐。
+        // 电视没有键盘，换成九键拼音首字母入口（软键盘用方向键选字母太慢）。
+        if (isTvSurface()) {
+            TvSearchEntry(onOpen = { showTvSearch = true }) {
                 IconButton(
                     onClick = onNavigateToEpg,
-                    modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                    modifier = Modifier.size(Dimens.TouchMin)
                 ) {
                     Icon(Icons.Default.CalendarMonth, contentDescription = "节目单")
                 }
             }
-        )
+        } else {
+            SearchBarRow(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = "搜索电台、频率或节目",
+                actions = {
+                    // 只留节目单：它是「这一屏内容」的入口；设置是全局一级入口，
+                    // 已移到与电台/音频库并列的底部导航，不再挤在搜索行里
+                    IconButton(
+                        onClick = onNavigateToEpg,
+                        modifier = if (isCarSurface()) Modifier.size(Dimens.TouchMin) else Modifier
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = "节目单")
+                    }
+                }
+            )
+        }
+
+        if (showTvSearch) {
+            val tvStations by homeViewModel.uiState.collectAsState()
+            TvNineKeySearchDialog(
+                stations = tvStations.stations,
+                onDismiss = { showTvSearch = false },
+                onSelect = { station ->
+                    showTvSearch = false
+                    playerManager.playStation(station)
+                    onNavigateToPlayer(station.id)
+                },
+            )
+        }
 
         val onSelectTab: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
         // 页签数要算进去：5 个条目在矮车机屏上 rail 装不下，得退回顶部横条

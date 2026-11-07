@@ -12,7 +12,15 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.canHostRail
@@ -38,6 +46,17 @@ fun SurfaceTabBar(
     modifier: Modifier = Modifier,
     useRail: Boolean = canHostRail(tabs.size),
 ) {
+    // TV 上默认焦点若停在第一个页签，按 OK 会切走（当前选中的可能不是第一个）。
+    // 只在首次组合时把焦点放到当前页签：跟着 currentPage 反复请求会抢走用户的方向键导航。
+    val focusRequesters = remember(tabs.size) { List(tabs.size) { FocusRequester() } }
+    var initialFocusPlaced by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(tabs.size) {
+        if (!initialFocusPlaced && currentPage in tabs.indices) {
+            runCatching { focusRequesters[currentPage].requestFocus() }
+            initialFocusPlaced = true
+        }
+    }
+
     if (useRail) {
         // 内层不能再算一遍系统栏：外层 Scaffold 已把状态栏与导航栏算进 padding 了，
         // NavigationRail 的默认 insets 会再加一次，凭空吃掉四五十 dp——
@@ -70,6 +89,7 @@ fun SurfaceTabBar(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = Dimens.TouchMin)
+                        .focusRequester(focusRequesters[index])
                 )
             }
         }
@@ -79,6 +99,7 @@ fun SurfaceTabBar(
                 Tab(
                     selected = currentPage == index,
                     onClick = { onSelect(index) },
+                    modifier = Modifier.focusRequester(focusRequesters[index]),
                     // 6 个页签平分宽度时，默认字号 + 自动换行会把「中国」折成上下两个字。
                     // 小一号字 + 禁止换行，保证任何字体缩放下都是横排两字。
                     text = {
