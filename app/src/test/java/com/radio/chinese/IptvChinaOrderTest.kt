@@ -27,6 +27,32 @@ class IptvChinaOrderTest {
     }
 
     @Test
+    fun `台号 10 11 排在 9 之后而不是 1 之后`() {
+        val data = (12 downTo 1).map { st("iptv:CCTV$it.cn", "CCTV-$it") }
+        assertEquals(
+            (1..12).map { "CCTV-$it" },
+            IptvChinaOrder.sorted(data).map { it.name },
+        )
+    }
+
+    @Test
+    fun `带后缀的 CCTV 变体整体后置，不打断主频道序列`() {
+        val data = listOf(
+            st("iptv:CCTV4America.cn", "CCTV-4 America"),
+            st("iptv:CCTV11.cn", "CCTV-11"),
+            st("iptv:CCTV2.cn", "CCTV-2"),
+            st("iptv:CCTV5Plus.cn", "CCTV-5+"),
+            st("iptv:CCTV10.cn", "CCTV-10"),
+            st("iptv:CCTV1.cn", "CCTV-1"),
+            st("iptv:CCTV4K.cn", "CCTV-4K"),
+        )
+        assertEquals(
+            listOf("CCTV-1", "CCTV-2", "CCTV-10", "CCTV-11", "CCTV-4 America", "CCTV-4K", "CCTV-5+"),
+            IptvChinaOrder.sorted(data).map { it.name },
+        )
+    }
+
+    @Test
     fun `名称里没有 CCTV 的不会抢在中央台前面`() {
         val data = listOf(
             st("iptv:x.cn", "央视综合", "全国"),
