@@ -50,12 +50,20 @@ class RadioPreferences @Inject constructor(
     /** 其他语言频道开关。默认关：只显示中文与英语频道 */
     val iptvAllLanguages: Flow<Boolean> = settings.iptvAllLanguages
 
+    /** 连续失败达到该次数后隐藏；0 = 不隐藏 */
+    val playabilityHideThreshold: Flow<Int> = settings.playabilityHideThreshold
+
+    /** 可用性评分 JSON（只存有播放记录的键），由 PlayabilityStore 读写 */
+    val playabilityJson: Flow<String> = settings.playabilityJson
+
     suspend fun setThemeKey(key: String) = settings.setThemeKey(key)
     suspend fun setFontScaleKey(key: String) = settings.setFontScaleKey(key)
     suspend fun setUiMode(mode: Int) = settings.setUiMode(mode)
     suspend fun setBootAutoStart(enabled: Boolean) = settings.setBootAutoStart(enabled)
     suspend fun setIptvAdultEnabled(enabled: Boolean) = settings.setIptvAdultEnabled(enabled)
     suspend fun setIptvAllLanguages(enabled: Boolean) = settings.setIptvAllLanguages(enabled)
+    suspend fun setPlayabilityHideThreshold(threshold: Int) = settings.setPlayabilityHideThreshold(threshold)
+    suspend fun setPlayabilityJson(json: String) = settings.setPlayabilityJson(json)
 
     // ========== Playback 域 ==========
     val lastPlayedStationId: Flow<String?> = playback.lastPlayedStationId

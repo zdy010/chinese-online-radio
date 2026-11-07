@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.IptvStationRepository
+import com.radio.chinese.data.repository.PlayabilityStore
 import com.radio.chinese.data.repository.StationRepository
 import com.radio.chinese.domain.model.OperaAudioFile
 import com.radio.chinese.domain.model.OperaPlayContext
@@ -30,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -47,7 +49,9 @@ class PlayerManager @Inject constructor(
     val videoPlayerMount: VideoPlayerMount,
     /** iptv 流的 UA/Referer 查表与写入（见 StreamHeaderStore 的代价说明） */
     private val iptvRepository: IptvStationRepository,
-    private val streamHeaderStore: StreamHeaderStore
+    private val streamHeaderStore: StreamHeaderStore,
+    /** 台级可用性评分：列表着色与"连续失败隐藏"用；源级排序仍由 SourceAvailabilityStore 承担 */
+    private val playabilityStore: PlayabilityStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, e ->
         // 播报/资产/绑定等外部交互异常不得炸掉主线程；留痕后照常，切台降级为无声
@@ -78,6 +82,9 @@ class PlayerManager @Inject constructor(
 
     /** 供 iptv 播放页的上下台按钮读取：与方控滚轮是同一个基准集合（V11），不另算一份 */
     fun currentSkipBase(): List<RadioStation> = _skipBase.value.orEmpty()
+
+    /** 成功评分的防抖任务：READY 后稳定 3 秒才记成功，避免"秒失败"的台被记成可用 */
+    private var playabilityJob: Job? = null
 
     /** 上一次物理滚轮切台时刻：前台（Activity）与后台（会话）可能对同一次拨轮各投一次，用它去抖 */
     @Volatile
@@ -142,6 +149,9 @@ class PlayerManager @Inject constructor(
         override fun onAllSourcesExhausted() {
             // 最后一个源也失败了：不让任何还在等 header 索引的协程"复活"再起播一次
             commitGate.invalidate()
+            playabilityJob?.cancel()   // 成功计时作废，别让刚到的 READY 在失败后又记成功
+            // 一次播放尝试只记一次失败：这个回调是"整个队列耗尽"，不是每个源各调一次
+            _currentStation.value?.let { playabilityStore.reportFailure(it.id) }
             _status.value = null
             _error.value = "所有节目源均无法播放"
             _playbackState.value = Player.STATE_IDLE
@@ -384,6 +394,8 @@ class PlayerManager @Inject constructor(
     }
 
     fun playStation(station: RadioStation) {
+        // 切台立刻作废上一个台的"成功计时"，否则它会在 3 秒后给旧台记一次成功
+        playabilityJob?.cancel()
         // 注意：不动视频轨闸门。画面挂载期间换源/换段应保持解禁，收闸只发生在 setVideoPictureWanted(false)。
         // 新条目的画面真相要等它的 onTracksChanged，沿用旧结论会让上一个台的画面骗过这一台。
         _hasVideoTrack.value = false
@@ -501,6 +513,15 @@ class PlayerManager @Inject constructor(
         val station = _currentStation.value ?: return
         if (_currentSource.value == null) return
         rotationEngine.onCurrentSuccess(station.id)
+        // 台级评分防抖：READY 后立刻报错的台（码率切换、分片 404）不该被记成功。
+        // 稳定 3 秒仍停在同一台且仍是 READY 才记；切台/stop 会 cancel 掉这次计时。
+        playabilityJob?.cancel()
+        playabilityJob = scope.launch {
+            delay(3000)
+            if (_currentStation.value?.id == station.id && _playbackState.value == Player.STATE_READY) {
+                playabilityStore.reportSuccess(station.id)
+            }
+        }
         scope.launch {
             // 「最近播放」需要跨进程重启存活，此前只存在 ViewModel 内存里
             preferences.addRecentStationId(station.id)
@@ -535,6 +556,7 @@ class PlayerManager @Inject constructor(
     fun stop() {
         // 先让"正在等 header 索引"的那一路失效，否则停止之后它会自己 commit 开播
         commitGate.invalidate()
+        playabilityJob?.cancel()
         // 清空当前路的 header：残留会把上一个台的 UA/Referer 带给下一个台
         streamHeaderStore.isIptv = false
         streamHeaderStore.current = null
