@@ -45,7 +45,7 @@ import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.domain.model.IptvBrief
 import com.radio.chinese.domain.model.StationDisplayName
-import com.radio.chinese.ui.common.MarqueeText
+import com.radio.chinese.ui.common.LocalEpgInline
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.playabilityNameColor
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
@@ -71,11 +71,7 @@ fun HomeScreen(
     showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val epgNowTitles by viewModel.epgNowTitles.collectAsState()
-    val epgStationIds = viewModel.epgStationIds
-    // 行内展开的节目单：同一时间只有一台
-    val epgExpanded by viewModel.epgExpandedPrograms.collectAsState()
-    val epgMinute by viewModel.epgMinute.collectAsState()
+    // EPG 状态改由 RadioPagerHost 通过 LocalEpgInline 提供，这里不再各自订阅
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
     val playbackState by viewModel.playerManager.playbackState.collectAsState()
@@ -156,13 +152,6 @@ fun HomeScreen(
                             onClick = { onRowClick(station) },
                             onFavoriteClick = { viewModel.toggleFavorite(station.id) },
                             onLongClick = { actionStation = station },
-                            nowProgram = epgNowTitles[station.id],
-                            hasEpg = station.id in epgStationIds,
-                            epgPrograms = epgExpanded[station.id],
-                            epgMinute = epgMinute,
-                            onEpgToggle = if (station.id in epgStationIds) {
-                                { viewModel.toggleEpgExpand(station.id) }
-                            } else null,
                         )
                     }
 
@@ -358,13 +347,15 @@ fun StationListItem(
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
-    nowProgram: String? = null,
-    hasEpg: Boolean = false,
-    /** 非空表示这一行已展开节目单；空列表是"展开了但今天没有节目" */
-    epgPrograms: List<EpgProgram>? = null,
-    epgMinute: Int = 0,
-    onEpgToggle: (() -> Unit)? = null,
 ) {
+    // EPG 由电台页签宿主通过 Local 统一提供：地区/分类/收藏/最近/标签页复用本组件时
+    // 不用各自记得传参，也不会再出现「只有全部页有节目单」。
+    val epg = LocalEpgInline.current
+    val hasEpg = station.id in epg.stationIds
+    val nowProgram = epg.nowTitles[station.id]
+    val epgPrograms = epg.expanded[station.id]
+    val epgMinute = epg.minute
+    val onEpgToggle: (() -> Unit)? = if (hasEpg) { { epg.onToggle(station.id) } } else null
     // 不传 onLongClick 时保持原来的 clickable：只在需要长按弹菜单的页面才升级，
     // 避免给分类页等复用方添上不需要的长按响应
     val itemModifier = modifier
@@ -463,7 +454,10 @@ fun StationListItem(
                 if (!nowProgram.isNullOrBlank() && epgPrograms == null) {
                     MarqueeText(
                         text = "正在播出：$nowProgram",
-                        style = MaterialTheme.typography.bodySmall,
+                        // 主色：这一行是「有没有 EPG」的唯一视觉线索，灰色小字太容易漏看
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.primary
+                        ),
                         modifier = Modifier.padding(top = Dimens.GapTiny)
                     )
                 }
