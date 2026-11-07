@@ -527,8 +527,12 @@ if ($OnlyT -in 0, 10) {
         }
         $pp = @($pn | Where-Object { $_.Descr -match '^(暂停|继续)播放$' }) | Select-Object -First 1
         if ($pp) { $ys += $pp.Y1 }
-        $singleRow = ($ys.Count -eq 4 -and @($ys | Select-Object -Unique).Count -le 1)
-        Assert "T10 车机档播控单行" $singleRow "命中=$($ys.Count)/4 Y=$($ys -join ',')"
+        # 同一 Row 里图标按钮与带文字按钮的高度会差十来个像素，判"单行"看 Y 跨度而不是完全相等
+        $span = if ($ys.Count -gt 0) {
+            ($ys | Measure-Object -Maximum).Maximum - ($ys | Measure-Object -Minimum).Minimum
+        } else { 999 }
+        $singleRow = ($ys.Count -eq 4 -and $span -le 24)
+        Assert "T10 车机档播控单行" $singleRow "命中=$($ys.Count)/4 Y=$($ys -join ',') 跨度=$span"
     } finally {
         # 必须放 finally：中途抛错把设备留在车机档，后续所有判据都会红
         adb shell wm size reset | Out-Null
