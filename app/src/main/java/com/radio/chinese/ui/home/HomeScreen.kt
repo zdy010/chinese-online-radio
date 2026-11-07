@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,7 @@ import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.NowPlayingWave
+import com.radio.chinese.ui.common.playabilityNameColor
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.common.SectionHeader
@@ -387,9 +389,14 @@ fun StationListItem(
                     // 单段富文本是整行一起省略，控件永远留在原位。
                     val sub = stationSubtitleOf(station)
                     val nameStyle = MaterialTheme.typography.titleSmall
+                    // 台名按可用性着色：未知分数返回 null，保持默认色。
+                    // 必须在 buildAnnotatedString 外取：那个 lambda 不是 @Composable
+                    val stationNameColor = playabilityNameColor(station.id)
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(nameStyle.toSpanStyle()) { append(station.name) }
+                            withStyle(
+                                nameStyle.copy(color = stationNameColor ?: Color.Unspecified).toSpanStyle()
+                            ) { append(station.name) }
                             if (sub.isNotBlank()) {
                                 append("  ")
                                 withStyle(

@@ -4,6 +4,7 @@ import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.domain.model.IptvAdult
 import com.radio.chinese.domain.model.IptvCategory
 import com.radio.chinese.domain.model.IptvLanguage
+import com.radio.chinese.domain.model.PlayabilityScore
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationFilter
 
@@ -32,6 +33,9 @@ object IptvViewLogic {
         allLanguagesEnabled: Boolean,
         favoriteIds: List<String>,
         recentIds: List<String>,
+        /** 连续失败达到该次数后隐藏；0 = 不隐藏 */
+        hideThreshold: Int = 0,
+        scoreOf: (String) -> Int = { PlayabilityScore.UNKNOWN },
     ): IptvLists {
         // 收藏与最近是电台 / iptv 共用的 id 集合，按前缀先把电台 id 挡在外面。
         // 绝不从 StationRepository.getAllStations() 解析：那里面没有 iptv 条目，
@@ -43,8 +47,13 @@ object IptvViewLogic {
         // 默认只留中文/英语频道（V13）。分类计数、收藏、最近都基于 allowed，不留旁路。
         // 成人频道不受语言过滤：实测两条成人台恰好是西语（country:grn,spa），
         // 这里若也按语言剔，打开成人开关后仍然一条都看不到，开关等于假的。
-        val allowed = if (allLanguagesEnabled) adultOk
+        var allowed = if (allLanguagesEnabled) adultOk
         else adultOk.filter { IptvAdult.isAdult(it) || IptvLanguage.isPreferred(it.language) }
+        // 连续失败达到阈值就隐藏（0 = 不隐藏）。与成人/语言同一份 allowed，
+        // 收藏与最近一起过滤，避免"列表里没有、收藏页却能看到"。
+        if (hideThreshold > 0) {
+            allowed = allowed.filterNot { PlayabilityScore.isHidden(scoreOf(it.id), hideThreshold) }
+        }
         val byId = allowed.associateBy { it.id }
         val favSet = favoriteIds.toSet()
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.radio.chinese.data.local.RadioPreferences
 import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.IptvStationRepository
+import com.radio.chinese.data.repository.PlayabilityStore
 import com.radio.chinese.domain.model.RadioStation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,7 @@ class IptvViewModel @Inject constructor(
     private val repository: IptvStationRepository,
     private val favoriteRepository: FavoriteRepository,
     private val preferences: RadioPreferences,
+    private val playabilityStore: PlayabilityStore,
 ) : ViewModel() {
 
     private val _all = MutableStateFlow<List<RadioStation>>(emptyList())
@@ -66,9 +68,12 @@ class IptvViewModel @Inject constructor(
         },
         _favoriteIds,
         preferences.radioRecentStationIds,
-    ) { input, favIds, recentIds ->
+        // revision 只用来触发重算：分数变了，隐藏阈值可能把某些台剔掉
+        combine(preferences.playabilityHideThreshold, playabilityStore.revision) { t, _ -> t },
+    ) { input, favIds, recentIds, hideThreshold ->
         val lists = IptvViewLogic.build(
             input.all, input.query, input.adult, input.allLanguages, favIds.toList(), recentIds,
+            hideThreshold, { id -> playabilityStore.scoreOf(id) },
         )
         IptvUiState(
             visible = lists.visible,
