@@ -23,9 +23,11 @@ class StationFilterTest {
         freq: String = "",
         country: String = "",
         lang: String = "",
+        region: String = "",
     ) = RadioStation(
         id = id, name = name, category = cat, streamUrl = "https://a/$id",
-        frequency = freq, country = country, language = lang, tags = tags.toList(),
+        frequency = freq, country = country, language = lang, region = region,
+        tags = tags.toList(),
     )
 
     private val sample = listOf(
@@ -34,6 +36,27 @@ class StationFilterTest {
         st("3", "music", "jazz", name = "Linn Jazz", country = "英国", lang = "英语"),
         st("4", "opera", "unknown_tag_key", name = "脏数据台"),
     )
+
+    @Test
+    fun `搜索匹配省份`() {
+        // 台名里没有省名的也要能被「江西」搜到：用户按省找台是自然行为
+        val data = listOf(
+            st("a", "general", name = "经济生活频道", region = "江西"),
+            st("b", "general", name = "都市频道", region = "江西"),
+            st("c", "general", name = "少儿频道", region = "安徽"),
+        )
+        assertEquals(listOf("a", "b"), StationFilter.apply(data, null, "江西").map { it.id })
+    }
+
+    @Test
+    fun `空标签不会让搜索命中所有台`() {
+        // 脏数据里有空 tag key 时，q.contains("") 恒为真会把整张表都搜出来
+        val data = listOf(
+            st("a", "general", "", name = "有脏标签台"),
+            st("b", "general", "music", name = "音乐台"),
+        )
+        assertTrue(StationFilter.apply(data, null, "江西").isEmpty())
+    }
 
     @Test
     fun `标签与分类同时生效`() {

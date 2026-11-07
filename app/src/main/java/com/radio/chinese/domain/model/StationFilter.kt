@@ -45,8 +45,11 @@ object StationFilter {
             station.frequency.lowercase().contains(q) ||
             station.description.lowercase().contains(q) ||
             station.country.lowercase().contains(q) ||
+            // 省份也参与搜索：用户按"江西"找台时，JEL 经济生活频道这类台名里没有省名的也要能出来
+            station.region.lowercase().contains(q) ||
             station.language.lowercase().contains(q) ||
-            tagLabels.any { it.contains(q) || q.contains(it) }
+            // 空标签必须挡掉：q.contains("") 恒为真，一条空 tag 就能让搜索命中所有台
+            tagLabels.any { it.isNotEmpty() && (it.contains(q) || q.contains(it)) }
         if (hitOriginal || !PinyinIndex.isAsciiQuery(q)) return hitOriginal
         // 列值形如 "|wf|zjjt|"，首尾的竖线挡住跨变体拼接出的假命中
         val py = pinyinOf(station.name)
