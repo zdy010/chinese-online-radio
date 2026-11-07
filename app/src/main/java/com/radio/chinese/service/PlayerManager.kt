@@ -449,6 +449,8 @@ class PlayerManager @Inject constructor(
             scope.launch {
                 val headers = iptvRepository.headersFor(source.url)
                 if (!commitGate.isCurrent(token) || controller !== ctrl) return@launch
+                // 必须先置 isIptv 再起播：工厂靠它决定要不要带 WebDAV 凭据
+                streamHeaderStore.isIptv = true
                 streamHeaderStore.current = StreamHeaderPolicy.resolve(isIptv = true, headers)
                 // 与 RadioService 那行 applied 对照：applied 只证明"值到了工厂"，
                 // commit 证明"这一路真的起播了、且带的是它的 header"。真机 T6 两行都要看。
@@ -462,6 +464,7 @@ class PlayerManager @Inject constructor(
         } else {
             // 非 iptv 台必须显式写 null 而不是"不写"：上一个 iptv 台留下的 UA/Referer
             // 会串到本台（与 WebDAV 单例凭证跨源串写同一类）。
+            streamHeaderStore.isIptv = false
             streamHeaderStore.current = StreamHeaderPolicy.resolve(
                 isIptv = false,
                 headers = streamHeaderStore.current,
@@ -533,6 +536,7 @@ class PlayerManager @Inject constructor(
         // 先让"正在等 header 索引"的那一路失效，否则停止之后它会自己 commit 开播
         commitGate.invalidate()
         // 清空当前路的 header：残留会把上一个台的 UA/Referer 带给下一个台
+        streamHeaderStore.isIptv = false
         streamHeaderStore.current = null
         controller?.stop()
     }
@@ -578,6 +582,8 @@ class PlayerManager @Inject constructor(
             }
             // 无正在播放时保持既有 no-op（不擅自起播首台）
             val current = _currentStation.value ?: return@launch
+            // iptv 台在播但基准为空（进程重建、直接恢复播放页）：不要回落到电台列表把用户切走
+            if (iptvRepository.isIptvId(current.id) && registered.isNullOrEmpty()) return@launch
             // 连按保护：播报挂起期间 _currentStation 尚未更新，第二次按键基于“待落地目标”继续前推，避免回到同一台
             val baseId = pendingSkipTargetId ?: current.id
             val target = nextStation(stations, baseId, forward) ?: return@launch
@@ -647,6 +653,7 @@ class PlayerManager @Inject constructor(
         // 戏曲不走 playQueueSource，这里必须自己清：否则上一个 iptv 台的
         // UA/Referer 会被带给云盘音频（与 WebDAV 单例凭证跳源串写同一类）
         commitGate.invalidate()      // 顺带让仍在等 header 索引的那一路失效
+        streamHeaderStore.isIptv = false
         streamHeaderStore.current = null
         _isOperaMode.value = true
         _error.value = null

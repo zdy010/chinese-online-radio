@@ -20,4 +20,13 @@ import javax.inject.Singleton
 @Singleton
 class StreamHeaderStore @Inject constructor() {
     @Volatile var current: StreamHeaders? = null
+
+    /**
+     * 当前这一路是否 iptv。
+     *
+     * **不能**用 `current == null` 反推：实测 17,319/18,584 条 iptv 流没有自定义头，
+     * 它们的 current 就是 null。工厂靠这个标志决定要不要带 WebDAV 的 Authorization
+     * （见 [RequestHeaders]），反推会让凭据跟着裸 IP 流发出去。
+     */
+    @Volatile var isIptv: Boolean = false
 }
