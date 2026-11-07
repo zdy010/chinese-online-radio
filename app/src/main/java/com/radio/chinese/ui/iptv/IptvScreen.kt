@@ -212,7 +212,7 @@ fun IptvScreen(
         val iptvNow = current?.takeIf { it.id.startsWith(IptvStationRepository.PREFIX) }
         if (iptvNow != null) {
             RadioMiniPlayerBar(
-                title = iptvNow.name,
+                title = com.radio.chinese.domain.model.StationDisplayName.of(iptvNow),
                 subtitle = playbackError ?: if (playing) "正在播放" else "已暂停",
                 coverUrl = iptvNow.logoUrl,
                 isPlaying = playing,

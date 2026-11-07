@@ -41,6 +41,9 @@ import com.radio.chinese.ui.common.ErrorState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NestedWindowInsets
+import com.radio.chinese.domain.model.IptvBrief
+import com.radio.chinese.domain.model.StationDisplayName
+import com.radio.chinese.ui.common.MarqueeText
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.playabilityNameColor
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
@@ -387,7 +390,8 @@ fun StationListItem(
                     // 用同一段富文本的两种样式，而不是 Row 里摆两个 Text：
                     // 两个 Text 会抢宽度，名字一长就把后面的波浪标记与「单」字挤出去；
                     // 单段富文本是整行一起省略，控件永远留在原位。
-                    val sub = stationSubtitleOf(station)
+                    // iptv 的简介单独一行（下面走马灯），不挤在台名后面
+                    val sub = if (station.id.startsWith("iptv:")) "" else stationSubtitleOf(station)
                     val nameStyle = MaterialTheme.typography.titleSmall
                     // 台名按可用性着色：未知分数返回 null，保持默认色。
                     // 必须在 buildAnnotatedString 外取：那个 lambda 不是 @Composable
@@ -396,7 +400,7 @@ fun StationListItem(
                         text = buildAnnotatedString {
                             withStyle(
                                 nameStyle.copy(color = stationNameColor ?: Color.Unspecified).toSpanStyle()
-                            ) { append(station.name) }
+                            ) { append(StationDisplayName.of(station)) }
                             if (sub.isNotBlank()) {
                                 append("  ")
                                 withStyle(
@@ -420,6 +424,19 @@ fun StationListItem(
                     if (hasEpg) {
                         Spacer(modifier = Modifier.width(Dimens.GapSmall))
                         StatusChip(text = "单")
+                    }
+                }
+                // iptv 简介单独一行：走马灯，太长也不折行顶高列表
+                if (station.id.startsWith("iptv:")) {
+                    val brief = IptvBrief.of(station)
+                    if (brief.isNotBlank()) {
+                        MarqueeText(
+                            text = brief,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier.padding(top = Dimens.GapTiny),
+                        )
                     }
                 }
                 // 正在播出的节目名：太长时单行走马灯滚动，不折行顶高列表行；

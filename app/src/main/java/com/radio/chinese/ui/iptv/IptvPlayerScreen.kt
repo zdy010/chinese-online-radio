@@ -47,6 +47,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.radio.chinese.domain.model.IptvBrief
+import com.radio.chinese.domain.model.StationDisplayName
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.VideoStageFrame
@@ -103,7 +105,7 @@ fun IptvPlayerScreen(
                     modifier = if (isCarSurface()) Modifier.heightIn(min = Dimens.TouchMin) else Modifier,
                     title = {
                         Text(
-                            text = station?.name ?: "iptv",
+                            text = station?.let { StationDisplayName.of(it) } ?: "iptv",
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -171,6 +173,7 @@ fun IptvPlayerScreen(
                     number = if (index >= 0) index + 1 else 0,
                     total = base.size,
                     quality = currentSource?.quality.orEmpty(),
+                    brief = station?.let { IptvBrief.of(it) }.orEmpty(),
                     message = error ?: status,
                     isError = error != null,
                 )
@@ -255,6 +258,7 @@ private fun IptvInfoRow(
     number: Int,
     total: Int,
     quality: String,
+    brief: String,
     message: String?,
     isError: Boolean,
 ) {
@@ -264,6 +268,16 @@ private fun IptvInfoRow(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        // 简介：播放页可以多行，不滚动（V14）
+        if (brief.isNotBlank()) {
+            Text(
+                text = brief,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (quality.isNotBlank()) {
             Text(
                 text = "清晰度 $quality",
