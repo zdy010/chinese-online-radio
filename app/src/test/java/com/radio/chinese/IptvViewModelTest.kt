@@ -48,6 +48,19 @@ class IptvViewModelTest {
     ) = IptvViewLogic.build(all, query, adultEnabled, allLanguages, favIds, recentIds)
 
     @Test
+    fun `省份分组只统计有值的频道，其他固定排最后`() {
+        val data = listOf(
+            RadioStation(id = "iptv:a", name = "A", category = "general", region = "安徽"),
+            RadioStation(id = "iptv:b", name = "B", category = "general", region = "安徽"),
+            RadioStation(id = "iptv:c", name = "C", category = "general", region = "江苏"),
+            RadioStation(id = "iptv:d", name = "D", category = "general", region = "其他"),
+            RadioStation(id = "iptv:e", name = "E", category = "general", region = ""),
+        )
+        val regions = IptvViewLogic.build(data, "", false, false, emptyList(), emptyList()).regions
+        assertEquals(listOf("安徽" to 2, "江苏" to 1, "其他" to 1), regions)
+    }
+
+    @Test
     fun `成人开关打开时，非中英的成人台也可见`() {
         // 实测两条成人台 language=country:grn,spa，若语言过滤也作用于成人，开关等于假的
         val data = listOf(

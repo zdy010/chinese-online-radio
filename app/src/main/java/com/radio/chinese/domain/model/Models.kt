@@ -44,6 +44,8 @@ data class RadioStation(
     val tags: List<String> = emptyList(),
     /** 中文国家/地区名。此前被塞在 [frequency] 里当副标题用，现还原为独立字段 */
     val country: String = "",
+    /** 省份/区域。仅 iptv 中国频道有值（如「安徽」），其余为空；用于按省筛选 */
+    val region: String = "",
     /** 中文语言名，同上 */
     val language: String = "",
     /**

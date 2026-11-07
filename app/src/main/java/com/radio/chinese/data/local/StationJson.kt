@@ -52,6 +52,7 @@ object StationJson {
                 tags = o["tags"]?.asArray()?.mapNotNull { (it as? JsonPrimitive)?.content }
                     ?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList(),
                 country = o.string("country"),
+                region = o.string("region"),
                 language = o.string("language"),
                 altNames = o["altNames"]?.asArray()?.mapNotNull { (it as? JsonPrimitive)?.content }
                     ?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList(),

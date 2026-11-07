@@ -374,11 +374,14 @@ fun StationListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Station Logo：缺 logo 时不再是一片空白，而是有底色的收音机图标
+            // 占位缩字跟随显示名：中文台名会让封面取前两字（「少儿频道」→「少儿」），
+            // 用原名「Jiangxi Children's Channel」则会得到 JCC，和旁边的中文台名对不上
+            val displayName = StationDisplayName.of(station)
             StationCover(
                 url = station.logoUrl,
                 size = Dimens.CoverSmall,
-                label = station.name,
-                contentDescription = station.name
+                label = displayName,
+                contentDescription = displayName
             )
 
             Spacer(modifier = Modifier.width(Dimens.GapMedium))

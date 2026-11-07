@@ -116,4 +116,27 @@ class IptvAssetsGateTest {
         val bare = list.filter { it.country.isNotBlank() && it.country.matches(Regex("[A-Z]{2}")) }
         assertTrue("有 ${bare.size} 条国家显示成裸码，例：${bare.take(3).map { it.id }}", bare.isEmpty())
     }
+
+    /**
+     * 中国频道必须都能归到一个已知省份（或「全国」「其他」兜底）。
+     *
+     * 同步工具的 RegionOf 是关键词表 + 拼音匹配，表漏一条就会静默落进「其他」；
+     * 这条断言把「每个中国频道都有归属」钉住，表改坏了会立刻红。
+     */
+    @Test
+    fun `中国频道的省份必须落在已知集合内`() {
+        val allowed = setOf(
+            "全国", "其他",
+            "北京", "天津", "上海", "重庆",
+            "河北", "山西", "辽宁", "吉林", "黑龙江", "江苏", "浙江", "安徽", "福建", "江西",
+            "山东", "河南", "湖北", "湖南", "广东", "海南", "四川", "贵州", "云南", "陕西",
+            "甘肃", "青海", "台湾", "内蒙古", "广西", "西藏", "宁夏", "新疆", "香港", "澳门",
+        )
+        val cn = list.filter { it.country == "中国" }
+        val bad = cn.filter { it.region.isBlank() || it.region !in allowed }
+        assertTrue(
+            "有 ${bad.size} 条中国频道省份为空或越界，例：${bad.take(3).map { "${it.id}=${it.region}" }}",
+            bad.isEmpty(),
+        )
+    }
 }

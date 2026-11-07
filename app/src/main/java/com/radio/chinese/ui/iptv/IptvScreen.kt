@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.Card
@@ -166,6 +167,7 @@ fun IptvScreen(
                 total = ui.visible.size,
                 categoryCount = ui.categories.size,
                 countryCount = ui.countries.size,
+                regionCount = ui.regions.size,
                 recentCount = ui.recents.size,
                 favoriteCount = ui.favorites.size,
                 onOpen = { mode = it },
@@ -183,6 +185,13 @@ fun IptvScreen(
                 entries = ui.countries,
                 icon = Icons.Default.Public,
                 onOpen = { mode = "cty:$it" },
+                modifier = Modifier.weight(1f),
+            )
+
+            mode == "regions" -> LabelGrid(
+                entries = ui.regions,
+                icon = Icons.Default.Place,
+                onOpen = { mode = "rgn:$it" },
                 modifier = Modifier.weight(1f),
             )
 
@@ -230,6 +239,11 @@ fun IptvScreen(
 private fun modeTitle(mode: String, ui: IptvUiState): String = when {
     mode == "categories" -> "全部分类 · ${ui.categories.size} 类"
     mode == "countries" -> "全部国家/地区 · ${ui.countries.size} 个"
+    mode == "regions" -> "省份/区域 · ${ui.regions.size} 个"
+    mode.startsWith("rgn:") -> {
+        val name = mode.removePrefix("rgn:")
+        "$name · ${ui.visible.count { it.region == name }} 个频道"
+    }
     mode == "recent" -> "最近播放 · ${ui.recents.size} 个频道"
     mode == "favorite" -> "我的收藏 · ${ui.favorites.size} 个频道"
     mode.startsWith("cat:") -> {
@@ -247,6 +261,7 @@ private fun modeTitle(mode: String, ui: IptvUiState): String = when {
 private fun parentOf(mode: String): String = when {
     mode.startsWith("cat:") -> "categories"
     mode.startsWith("cty:") -> "countries"
+    mode.startsWith("rgn:") -> "regions"
     else -> ""
 }
 
@@ -259,6 +274,7 @@ private fun listFor(ui: IptvUiState, mode: String): List<RadioStation> = when {
         ui.visible.filter { st -> st.tags.any { IptvCategory.labelOf(it) == label } }
     }
     mode.startsWith("cty:") -> ui.visible.filter { it.country == mode.removePrefix("cty:") }
+    mode.startsWith("rgn:") -> ui.visible.filter { it.region == mode.removePrefix("rgn:") }
     else -> emptyList()
 }
 
@@ -286,6 +302,7 @@ private fun EntryGrid(
     total: Int,
     categoryCount: Int,
     countryCount: Int,
+    regionCount: Int,
     recentCount: Int,
     favoriteCount: Int,
     onOpen: (String) -> Unit,
@@ -306,6 +323,11 @@ private fun EntryGrid(
         item {
             EntryCard(Icons.Default.Public, "国家/地区", "$countryCount 个国家/地区") {
                 onOpen("countries")
+            }
+        }
+        item {
+            EntryCard(Icons.Default.Place, "省份/区域", "$regionCount 个省/区域") {
+                onOpen("regions")
             }
         }
         item {

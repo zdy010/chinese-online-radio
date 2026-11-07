@@ -109,6 +109,57 @@ foreach ($c in $cty) {
     $ctyLangs[[string]$c.code] = @($c.languages | ForEach-Object { [string]$_ } |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 }
+"=== 5b 中文频道归省：省名 + 主要地级市 + 台名特有关键词 ==="
+# 顺序 = 匹配优先级：[ordered] 保证「全国」先判（CCTV/CGTN 不该落进北京），
+# 长词优先（黑龙江/内蒙古/新疆生产建设兵团），避免「海南」把「海南州」抢走这类误判。
+$provinceTable = [ordered]@{
+    '全国'   = @('cctv', 'cgtn', '中国教育电视台', '中央电视', 'china travel', 'china weather', '中国气象')
+    '北京'   = @('北京', 'brtv', 'beijing')
+    '天津'   = @('天津', 'tianjin')
+    '上海'   = @('上海', '东方卫视', 'dragon tv', 'shanghai', 'ics', 'smg', '风尚购物', 'fengshang')
+    '重庆'   = @('重庆', 'chongqing')
+    '河北'   = @('河北', '石家庄', '唐山', '秦皇岛', '邯郸', '邢台', '保定', '张家口', '承德', '沧州', '廊坊', '衡水', 'hebei', 'shijiazhuang', 'tangshan', 'qinhuangdao', 'handan', 'xingtai', 'baoding', 'zhangjiakou', 'chengde', 'cangzhou', 'langfang', 'hengshui')
+    '山西'   = @('山西', '太原', '大同', '阳泉', '长治', '晋城', '朔州', '晋中', '运城', '忻州', '临汾', '吕梁', 'shanxi', 'taiyuan', 'datong', 'yangquan', 'changzhi', 'jincheng', 'shuozhou', 'jinzhong', 'yuncheng', 'xinzhou', 'linfen', 'lvliang')
+    '内蒙古' = @('内蒙古', '呼和浩特', '包头', '乌海', '赤峰', '通辽', '鄂尔多斯', '呼伦贝尔', '巴彦淖尔', '乌兰察布', 'neimenggu', 'inner mongolia', 'hohhot', 'baotou', 'wuhai', 'chifeng', 'tongliao', 'ordos', 'hulunbuir', 'bayannur', 'ulanqab')
+    '辽宁'   = @('辽宁', '沈阳', '大连', '鞍山', '抚顺', '本溪', '丹东', '锦州', '营口', '阜新', '辽阳', '盘锦', '铁岭', '朝阳', '葫芦岛', 'liaoning', 'shenyang', 'dalian', 'anshan', 'fushun', 'benxi', 'dandong', 'jinzhou', 'yingkou', 'fuxin', 'liaoyang', 'panjin', 'tieling', 'chaoyang', 'huludao')
+    '吉林'   = @('吉林', '长春', '四平', '辽源', '通化', '白山', '松原', '白城', '延边', 'jilin', 'changchun', 'siping', 'liaoyuan', 'tonghua', 'baishan', 'songyuan', 'baicheng', 'yanbian')
+    '黑龙江' = @('黑龙江', '哈尔滨', '齐齐哈尔', '鸡西', '鹤岗', '双鸭山', '大庆', '伊春', '佳木斯', '七台河', '牡丹江', '黑河', '绥化', 'heilongjiang', 'harbin', 'qiqihar', 'jixi', 'hegang', 'shuangyashan', 'daqing', 'yichun', 'jiamusi', 'qitaihe', 'mudanjiang', 'heihe', 'suihua')
+    '江苏'   = @('江苏', '南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁', 'jiangsu', 'nanjing', 'wuxi', 'xuzhou', 'changzhou', 'suzhou', 'nantong', 'lianyungang', 'huaian', 'yancheng', 'yangzhou', 'zhenjiang', 'taizhou', 'suqian')
+    '浙江'   = @('浙江', '杭州', '宁波', '温州', '嘉兴', '湖州', '绍兴', '金华', '衢州', '舟山', '台州', '丽水', 'zhejiang', 'hangzhou', 'ningbo', 'wenzhou', 'jiaxing', 'huzhou', 'shaoxing', 'jinhua', 'quzhou', 'zhoushan', 'taizhou', 'lishui')
+    '安徽'   = @('安徽', '合肥', '芜湖', '蚌埠', '淮南', '马鞍山', '淮北', '铜陵', '安庆', '黄山', '滁州', '阜阳', '宿州', '六安', '亳州', '池州', '宣城', 'anhui', 'hefei', 'wuhu', 'bengbu', 'huainan', 'maanshan', 'huaibei', 'tongling', 'anqing', 'huangshan', 'chuzhou', 'fuyang', 'suzhou', 'luan', 'bozhou', 'chizhou', 'xuancheng')
+    '福建'   = @('福建', '福州', '厦门', '莆田', '三明', '泉州', '漳州', '南平', '龙岩', '宁德', '海峡卫视', '东南卫视', 'fujian', 'fuzhou', 'xiamen', 'putian', 'sanming', 'quanzhou', 'zhangzhou', 'nanping', 'longyan', 'ningde')
+    '江西'   = @('江西', '南昌', '景德镇', '萍乡', '九江', '新余', '鹰潭', '赣州', '吉安', '宜春', '抚州', '上饶', 'jiangxi', 'nanchang', 'jingdezhen', 'pingxiang', 'jiujiang', 'xinyu', 'yingtan', 'ganzhou', 'jian', 'yichun', 'fuzhou', 'shangrao')
+    '山东'   = @('山东', '济南', '青岛', '淄博', '枣庄', '东营', '烟台', '潍坊', '济宁', '泰安', '威海', '日照', '临沂', '德州', '聊城', '滨州', '菏泽', 'shandong', 'jinan', 'qingdao', 'zibo', 'zaozhuang', 'dongying', 'yantai', 'weifang', 'jining', 'taian', 'weihai', 'rizhao', 'linyi', 'dezhou', 'liaocheng', 'binzhou', 'heze')
+    '河南'   = @('河南', '郑州', '开封', '洛阳', '平顶山', '安阳', '鹤壁', '新乡', '焦作', '濮阳', '许昌', '漯河', '三门峡', '南阳', '商丘', '信阳', '周口', '驻马店', '济源', 'henan', 'zhengzhou', 'kaifeng', 'luoyang', 'pingdingshan', 'anyang', 'hebi', 'xinxiang', 'jiaozuo', 'puyang', 'xuchang', 'luohe', 'sanmenxia', 'nanyang', 'shangqiu', 'xinyang', 'zhoukou', 'zhumadian', 'jiyuan')
+    '湖北'   = @('湖北', '武汉', '黄石', '十堰', '宜昌', '襄阳', '襄樊', '鄂州', '荆门', '孝感', '荆州', '黄冈', '咸宁', '随州', '恩施', 'hubei', 'wuhan', 'huangshi', 'shiyan', 'yichang', 'xiangyang', 'ezhou', 'jingmen', 'xiaogan', 'jingzhou', 'huanggang', 'xianning', 'suizhou', 'enshi')
+    '湖南'   = @('湖南', '长沙', '株洲', '湘潭', '衡阳', '邵阳', '岳阳', '常德', '张家界', '益阳', '郴州', '永州', '怀化', '娄底', '湘西', 'hunan', 'changsha', 'zhuzhou', 'xiangtan', 'hengyang', 'shaoyang', 'yueyang', 'changde', 'zhangjiajie', 'yiyang', 'chenzhou', 'yongzhou', 'huaihua', 'loudi', 'xiangxi')
+    '广东'   = @('广东', '广州', '韶关', '深圳', '珠海', '汕头', '佛山', '江门', '湛江', '茂名', '肇庆', '惠州', '梅州', '汕尾', '河源', '阳江', '清远', '东莞', '中山', '潮州', '揭阳', '云浮', '南方卫视', '珠江', '大湾区', 'guangdong', 'guangzhou', 'shaoguan', 'shenzhen', 'zhuhai', 'shantou', 'foshan', 'jiangmen', 'zhanjiang', 'maoming', 'zhaoqing', 'huizhou', 'meizhou', 'shanwei', 'heyuan', 'yangjiang', 'qingyuan', 'dongguan', 'zhongshan', 'chaozhou', 'jieyang', 'yunfu')
+    '广西'   = @('广西', '南宁', '柳州', '桂林', '梧州', '北海', '防城港', '钦州', '贵港', '玉林', '百色', '贺州', '河池', '来宾', '崇左', 'guangxi', 'nanning', 'liuzhou', 'guilin', 'wuzhou', 'beihai', 'fangchenggang', 'qinzhou', 'guigang', 'yulin', 'baise', 'hezhou', 'hechi', 'laibin', 'chongzuo')
+    '海南'   = @('海南', '海口', '三亚', '三沙', '儋州', 'hainan', 'haikou', 'sanya', 'sansha', 'danzhou')
+    '四川'   = @('四川', '成都', '自贡', '攀枝花', '泸州', '德阳', '绵阳', '广元', '遂宁', '内江', '乐山', '南充', '眉山', '宜宾', '广安', '达州', '雅安', '巴中', '资阳', 'sichuan', 'chengdu', 'zigong', 'panzhihua', 'luzhou', 'deyang', 'mianyang', 'guangyuan', 'suining', 'neijiang', 'leshan', 'nanchong', 'meishan', 'yibin', 'guangan', 'dazhou', 'yaan', 'bazhong', 'ziyang')
+    '贵州'   = @('贵州', '贵阳', '六盘水', '遵义', '安顺', '毕节', '铜仁', '黔东南', '黔南', '黔西南', 'guizhou', 'guiyang', 'liupanshui', 'zunyi', 'anshun', 'bijie', 'tongren', 'qiandongnan', 'qiannan', 'qianxinan')
+    '云南'   = @('云南', '昆明', '曲靖', '玉溪', '保山', '昭通', '丽江', '普洱', '临沧', '楚雄', '红河', '文山', '西双版纳', '大理', '德宏', '怒江', '迪庆', 'yunnan', 'kunming', 'qujing', 'yuxi', 'baoshan', 'zhaotong', 'lijiang', 'puer', 'lincang', 'chuxiong', 'honghe', 'wenshan', 'xishuangbanna', 'dali', 'dehong', 'nujiang', 'diqing')
+    '西藏'   = @('西藏', '拉萨', '日喀则', '昌都', '林芝', '山南', '那曲', '阿里', 'xizang', 'tibet', 'lhasa', 'shigatse', 'chamdo', 'nyingchi', 'shannan', 'nagqu', 'ali')
+    '陕西'   = @('陕西', '西安', '铜川', '宝鸡', '咸阳', '渭南', '延安', '汉中', '榆林', '安康', '商洛', 'shaanxi', 'xian', 'tongchuan', 'baoji', 'xianyang', 'weinan', 'yanan', 'hanzhong', 'yulin', 'ankang', 'shangluo')
+    '甘肃'   = @('甘肃', '兰州', '嘉峪关', '金昌', '白银', '天水', '武威', '张掖', '平凉', '酒泉', '庆阳', '定西', '陇南', '临夏', '甘南', 'gansu', 'lanzhou', 'jiayuguan', 'jinchang', 'baiyin', 'tianshui', 'wuwei', 'zhangye', 'pingliang', 'jiuquan', 'qingyang', 'dingxi', 'longnan', 'linxia', 'gannan', 'dunhuang', 'hezheng')
+    '青海'   = @('青海', '西宁', '海东', '海北', '黄南', '海南州', '果洛', '玉树', '海西', 'qinghai', 'xining', 'haidong', 'haibei', 'huangnan', 'hainan zhou', 'golog', 'yushu', 'haixi')
+    '宁夏'   = @('宁夏', '银川', '石嘴山', '吴忠', '固原', '中卫', 'ningxia', 'yinchuan', 'shizuishan', 'wuzhong', 'guyuan', 'zhongwei')
+    '新疆'   = @('新疆', '乌鲁木齐', '克拉玛依', '吐鲁番', '哈密', '昌吉', '博尔塔拉', '巴音郭楞', '阿克苏', '克孜勒苏', '喀什', '和田', '伊犁', '塔城', '阿勒泰', '兵团', '石河子', 'xinjiang', 'urumqi', 'karamay', 'turpan', 'hami', 'changji', 'bortala', 'bayinguoleng', 'aksu', 'kizilsu', 'kashgar', 'hotan', 'ili', 'tacheng', 'altay', 'bingtuan', 'shihezi')
+    '台湾'   = @('台湾', '台北', '新北', '桃园', '台中', '台南', '高雄', '基隆', '新竹', '嘉义', 'taiwan', 'taipei', 'new taipei', 'taoyuan', 'taichung', 'tainan', 'kaohsiung', 'keelung', 'hsinchu', 'chiayi')
+    '香港'   = @('香港', 'hong kong', 'tvb', 'viutv', 'rthk')
+    '澳门'   = @('澳门', 'macau', 'macao', 'tdm')
+}
+
+function RegionOf($nameZh, $nameEn) {
+    $text = ("$nameZh $nameEn").ToLower()
+    foreach ($prov in $provinceTable.Keys) {
+        foreach ($kw in $provinceTable[$prov]) {
+            if ($text.Contains($kw.ToLower())) { return $prov }
+        }
+    }
+    return '其他'
+}
+
 function LangOf($id, $countryCode) {
     # 语言播放列表命中 = 明确语言；否则按国家官方语言推测，加 country: 前缀让 App 知道这是推测。
     # 前缀不是装饰：美国/印度这类多官方语言国家，只有推测集"全部是中英"才该保留，
@@ -172,12 +223,16 @@ foreach ($k in $byChannel.Keys) {
     if ($srcs.Count -eq 0) { continue }
     $desc = if ([string]::IsNullOrWhiteSpace([string]$c.network)) { [string]$c.name } else { [string]$c.network }
     if (-not [string]::IsNullOrWhiteSpace([string]$c.replaced_by)) { $desc += "（上游标记已被 $($c.replaced_by) 替换）" }
+    # 省份：只对中国频道算，其余留空（不参与省份分组）
+    $zhName = @($c.alt_names | ForEach-Object { [string]$_ } |
+        Where-Object { $_ -match '[\u4e00-\u9fff]' } | Select-Object -First 1)
+    $region = if ([string]$c.country -eq 'CN') { RegionOf ([string]$zhName) ([string]$c.name) } else { '' }
     [void]$rec.Add([ordered]@{
         id = "iptv:$k"; name = ChannelName $c ([System.Uri]$srcs[0].url).Host
         altNames = @(@($c.alt_names | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
         category = "general"; streamUrl = $srcs[0].url; sources = $srcs
         website = [string]$c.website; description = $desc
-        country = CNName ([string]$c.country); language = (LangOf $k ([string]$c.country))
+        country = CNName ([string]$c.country); language = (LangOf $k ([string]$c.country)); region = $region
         nsfw = ($c.is_nsfw -eq $true); logoUrl = ""
         tags = @(@($c.categories | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     })

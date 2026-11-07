@@ -22,6 +22,8 @@ data class IptvLists(
     val recents: List<RadioStation>,
     val categories: List<Pair<String, Int>>,
     val countries: List<Pair<String, Int>>,
+    /** 省份/区域 → 频道数。仅中国频道有值，「其他」固定排最后 */
+    val regions: List<Pair<String, Int>> = emptyList(),
 )
 
 object IptvViewLogic {
@@ -78,6 +80,15 @@ object IptvViewLogic {
                 .eachCount()
                 .entries
                 .sortedByDescending { it.value }
+                .map { it.key to it.value },
+            regions = allowed
+                .map { it.region }
+                .filter { it.isNotBlank() }
+                .groupingBy { it }
+                .eachCount()
+                .entries
+                // 「其他」放最后：它是兜底桶，不该压在一堆具体省份前面
+                .sortedWith(compareBy({ it.key == "其他" }, { -it.value }))
                 .map { it.key to it.value },
         )
     }
