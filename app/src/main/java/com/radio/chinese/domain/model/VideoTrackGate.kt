@@ -32,6 +32,16 @@ object VideoTrackGate {
      * 只比布尔会让重进播放页变成 no-op，用户看到「退出重进才好」的黑屏。
      * 所以换了播放器实例也必须重落。
      */
+    /**
+     * iptv 播放页的闸门意图：页面开着就恒要画面。
+     *
+     * **不能拿 hasVideoTrack 当意图**：playStation 每次把 hasVideo 置 false，等新流的
+     * onTracksChanged 再置 true。若绑它，每次切台都会先收闸再开闸，两次重写
+     * trackSelectionParameters 打断音频 —— 等于把 2.2.4 修掉的问题搬回切台瞬间。
+     * 页面关着时由 MainScreen 按路由收闸。
+     */
+    fun pictureWantedForIptvPlayer(pageOpen: Boolean): Boolean = pageOpen
+
     fun shouldReapplyGate(
         previousMounted: Boolean,
         nextMounted: Boolean,

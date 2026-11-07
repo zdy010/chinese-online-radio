@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.IptvBrief
 import com.radio.chinese.domain.model.StationDisplayName
+import com.radio.chinese.domain.model.VideoTrackGate
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.VideoStageFrame
@@ -80,12 +81,18 @@ fun IptvPlayerScreen(
 
     val fullScreen = rememberVideoFullScreen(canRotate = isCarSurface().not())
 
-    // 闸门跟页面意图，不跟 View 生命周期（spec §7.3）。漏这句解码器不会开视频轨，
-    // 症状是"iptv 永远只有声音没画面"，且编译与单测都抓不到。
-    // 只声明「要画面」。离开本页**不收闸**：重写轨道参数会打断后台音频
-    // （实测 AudioSink UnexpectedDiscontinuityException → 所有节目源均无法播放），
-    // 也会让画面拖着 1 秒才消失。收闸交给 MainScreen 在真正离开 iptv tab 时做。
-    LaunchedEffect(hasVideo) { playerManager.setVideoPictureWanted(hasVideo) }
+    // 闸门跟「页面意图」：本页开着就一直要画面，**不跟 hasVideoTrack**。
+    // playStation 每次都把 hasVideo 置 false（要等新流的 onTracksChanged），绑它的话
+    // 每次切台都会先收闸再开闸，两次重写 trackSelectionParameters 打断音频 ——
+    // 等于把 2.2.4 回退掉的问题从「返回列表」搬到了「切台瞬间」（QA 审查 P0）。
+    // 漏这句解码器不会开视频轨，症状是「iptv 永远只有声音没画面」。
+    // 离开本页不收闸：重写参数会打断后台音频、让画面拖着渐隐才消失；
+    // 收闸交给 MainScreen 在真正离开 iptv 路由时做。
+    LaunchedEffect(Unit) {
+        playerManager.setVideoPictureWanted(
+            VideoTrackGate.pictureWantedForIptvPlayer(pageOpen = true)
+        )
+    }
 
     // 上下台与方控滚轮读**同一个**基准集合（V11）：这个集合由 iptv 页注册，
     // 电台页不注册时为空，播放页不会自己另算一份电台列表。

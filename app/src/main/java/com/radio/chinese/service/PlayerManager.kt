@@ -376,12 +376,15 @@ class PlayerManager @Inject constructor(
     }
 
     private fun applyVideoTrackGate() {
+        val p = videoPlayerMount.player
+        if (p == null) {
+            android.util.Log.w("VideoGate", "播放器尚未建起，闸门待下次挂载再落")
+            return
+        }
+        // 同步记账：原先 lastGatedPlayer 在协程末尾才赋值，同值连调时第二次会把
+        // 「异步还没更新」误判成换了播放器（replaced=true），重复排队重写轨道参数。
+        lastGatedPlayer = p
         scope.launch {
-            val p = videoPlayerMount.player
-            if (p == null) {
-                android.util.Log.w("VideoGate", "播放器尚未建起，闸门待下次挂载再落")
-                return@launch
-            }
             val decode = VideoTrackGate.shouldDecodeVideo(_videoPictureWanted.value)
             // 验收 V3/V10 的断点：页面不要画面后必须重新看到 decode=false（视频轨收闸，不再多解码）
             android.util.Log.d("VideoGate", "pictureWanted=${_videoPictureWanted.value} decode=$decode")
@@ -392,10 +395,9 @@ class PlayerManager @Inject constructor(
             } catch (e: IllegalStateException) {
                 // ExoPlayer 校验 application thread；此处 scope 是 Main，正常不会走到
                 android.util.Log.e("VideoGate", "视频轨闸门写入失败", e)
-                return@launch
+                // 写失败就撤销记账，允许下一次重落，避免新播放器被当成「没换过」
+                lastGatedPlayer = null
             }
-            // 只在真的写成功时记账，否则新实例到了会被当成“没换过”而漏重落
-            lastGatedPlayer = p
         }
     }
 

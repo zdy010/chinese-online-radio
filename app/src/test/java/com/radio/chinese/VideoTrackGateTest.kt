@@ -55,6 +55,26 @@ class VideoTrackGateTest {
      * 分支换位置、AndroidView 重建。若闸门跟着 View 生命周期走，一进全屏就收闸再开闸，
      * 解码器被拆建，用户看到闪黑。跟着页面意图走就完全不受布局影响。
      */
+    /**
+     * 切台时 PlayerManager.playStation 会把 hasVideoTrack 置 false，等新流 onTracksChanged。
+     * 闸门意图不能跟着它翻：绑 hasVideo 会让每次切台都收闸再开闸，两次重写
+     * trackSelectionParameters 打断音频（2.2.4 修掉的问题被搬回切台瞬间）。
+     */
+    @Test
+    fun `iptv 播放页开着就恒要画面，不随视频轨检测翻动`() {
+        val wanted = VideoTrackGate.pictureWantedForIptvPlayer(pageOpen = true)
+        assertTrue(wanted)
+        assertTrue(VideoTrackGate.shouldDecodeVideo(wanted))
+        assertFalse(VideoTrackGate.pictureWantedForIptvPlayer(pageOpen = false))
+    }
+
+    /** 同步记账的前提：同值且播放器没换，绝不能再排一次轨道参数重写 */
+    @Test
+    fun `同值且播放器未换时不重复落地闸门`() {
+        assertFalse(VideoTrackGate.shouldReapplyGate(true, true, false))
+        assertFalse(VideoTrackGate.shouldReapplyGate(false, false, false))
+    }
+
     @Test
     fun `闸门输入是页面意图而非视图挂载`() {
         assertFalse(VideoTrackGate.shouldDecodeVideo(pictureWanted = false))

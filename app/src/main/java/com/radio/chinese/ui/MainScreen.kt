@@ -192,12 +192,14 @@ fun MainScreen(
     // 不在 IptvScreen 的 onDispose 里清：从浏览页跳到 iptv 播放页时浏览页也会 dispose，
     // 那会把基准清掉，滚轮又切回电台（T12）。这里以路由为准，只有一个清理点。
     LaunchedEffect(currentRoute) {
-        // 只在切回其它一级 tab 时清：播放页（含 Task 8 过渡用的通用 Player 页）虽然
-        // 也"离开了 iptv tab"，但仍在播 iptv 台，那里清掉基准会让滚轮切回电台（T12）。
-        if (currentRoute in listOf(Screen.Radio.route, Screen.Audio.route, Screen.Settings.route)) {
-            playerManager.clearSkipBase()
-            // 真正离开 iptv tab 才收视频轨闸门。播放页 ↔ iptv 列表之间不收：
-            // 那一段重写轨道参数会打断后台音频，也会让画面拖着渐隐才消失。
+        // 只按路由收闸。clearSkipBase 已移到「点底部导航」的显式动作里：
+        // navigate 带 popUpTo(Radio)，过渡期间 currentRoute 会短暂回到 Radio，
+        // 若在这里清，会把 IptvScreen 刚注册的基准清成 0/0（播放页「第 0 / 0 频道」）。
+        // 只要不在 iptv 这两个路由里就收闸：节目单 / 标签 / 管理 / 诊断页同样没有
+        // PlayerView，不收会白白解码视频（QA 审查 P1）。
+        // 播放页 ↔ iptv 列表之间不收：那一段重写轨道参数会打断后台音频，
+        // 也会让画面拖着渐隐才消失。
+        if (currentRoute != Screen.Iptv.route && currentRoute != Screen.IptvPlayer.route) {
             playerManager.setVideoPictureWanted(false)
         }
     }
@@ -225,6 +227,12 @@ fun MainScreen(
                             selected = selected,
                             onClick = {
                                 if (currentRoute != item.screen.route) {
+                                    // 切到非 iptv 一级 tab 才清切台基准。必须是这里的显式动作：
+                                    // popUpTo(Radio) 会让 currentRoute 短暂回到 Radio，
+                                    // 放在 LaunchedEffect(currentRoute) 里会误清（QA 审查 P1）。
+                                    if (item.screen.route != Screen.Iptv.route) {
+                                        playerManager.clearSkipBase()
+                                    }
                                     navController.navigate(item.screen.route) {
                                         popUpTo(Screen.Radio.route) { saveState = true }
                                         launchSingleTop = true

@@ -120,12 +120,17 @@ fun IptvScreen(
     // 「第 0 / 0 频道」、上下台按钮失效 —— 从播放页返回再点迷你条回去时尤其明显，
     // 看起来像播放状态被重置。清理集中在 MainScreen 按路由做（切到别的 tab 才清）。
     LaunchedEffect(ui.visible, mode, ui.query) {
+        // 冷启 / 切回 tab 的首帧 visible 可能是空表：别把已有基准覆盖成空，
+        // 否则播放页显示「第 0 / 0 频道」、上下台与方控滚轮全 no-op（QA 审查 P1）。
+        if (ui.isLoading || ui.visible.isEmpty()) return@LaunchedEffect
         val base = when {
             ui.query.isNotBlank() || mode.isNotEmpty() -> ui.visible
             // 与「中国」页同一份顺序，否则播放页频道号和列表对不上、上下台会跳到意外位置
             else -> IptvChinaOrder.sorted(ui.visible.filter { it.country == "中国" })
         }
         playerManager.setSkipBase(base)
+        // 诊断：0/0 频道这类问题要靠这行确认「到底注册了没有、注册了多少条」
+        android.util.Log.d("SkipBase", "registered size=${base.size} mode=$mode query=${ui.query}")
     }
 
     Column(modifier = Modifier.fillMaxSize()) {

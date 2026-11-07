@@ -73,7 +73,9 @@ fun VideoStageFrame(
                     .matchParentSize()
                     .pointerInput(Unit) { detectTapGestures { controlsVisible = !controlsVisible } }
             )
-            if (controlsVisible) {
+            // 全屏态恒留退出入口：点画面收起控件后 orientation 被 configChanges 吃掉、
+            // 不会重建 composition，否则「退出全屏」会一直消失只剩系统返回键。
+            if (controlsVisible || fullScreen.isFullScreen) {
                 if (showRotate) {
                     IconButton(
                         onClick = {
