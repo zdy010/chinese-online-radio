@@ -1,9 +1,12 @@
 package com.radio.chinese.ui.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -80,11 +83,14 @@ fun VideoStageFrame(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .offset(x = -Dimens.TouchMin)   // 与全屏按钮并排，不重叠
-                            .size(Dimens.TouchMin),
+                            .size(Dimens.TouchMin)
+                            // 半透明黑底 + 白图标：画面可能很亮，深色图标会看不见（用户实测"没有全屏"）
+                            .background(Color.Black.copy(alpha = 0.45f), CircleShape),
                     ) {
                         Icon(
                             imageVector = Icons.Default.ScreenRotation,
                             contentDescription = "切换横竖屏",
+                            tint = Color.White,
                         )
                     }
                 }
@@ -95,12 +101,14 @@ fun VideoStageFrame(
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .size(Dimens.TouchMin),
+                        .size(Dimens.TouchMin)
+                        .background(Color.Black.copy(alpha = 0.45f), CircleShape),
                 ) {
                     Icon(
                         imageVector = if (fullScreen.isFullScreen) Icons.Default.FullscreenExit
                                       else Icons.Default.Fullscreen,
                         contentDescription = if (fullScreen.isFullScreen) "退出全屏" else "全屏",
+                        tint = Color.White,
                     )
                 }
             }
