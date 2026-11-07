@@ -46,6 +46,7 @@ import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.domain.model.IptvBrief
 import com.radio.chinese.domain.model.StationDisplayName
 import com.radio.chinese.ui.common.LocalEpgInline
+import com.radio.chinese.ui.common.focusRing
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.playabilityNameColor
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
@@ -365,7 +366,8 @@ fun StationListItem(
             else it.clickable(onClick = onClick)
         }
     Card(
-        modifier = itemModifier,
+        // 电视/车机上方向键移焦点时必须有可见反馈：手机档点按后的短暂高亮也无害
+        modifier = itemModifier.focusRing(MaterialTheme.shapes.medium),
         shape = MaterialTheme.shapes.medium
     ) {
         Column {

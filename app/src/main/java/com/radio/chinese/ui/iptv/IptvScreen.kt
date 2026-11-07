@@ -59,6 +59,7 @@ import com.radio.chinese.ui.common.NowPlayingState
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.SurfaceTab
+import com.radio.chinese.ui.common.focusRing
 import com.radio.chinese.ui.common.SurfaceTabBar
 import com.radio.chinese.ui.common.rememberNowPlaying
 import com.radio.chinese.ui.home.StationListItem
@@ -527,7 +528,8 @@ private fun EntryCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = Dimens.TouchMin)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .focusRing(MaterialTheme.shapes.large),
         shape = MaterialTheme.shapes.large,
     ) {
         Row(

@@ -2,6 +2,7 @@ package com.radio.chinese
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +25,7 @@ import com.radio.chinese.ui.common.LocalPlayability
 import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.ChineseRadioTheme
 import com.radio.chinese.ui.theme.FontScaleOption
+import com.radio.chinese.ui.theme.isTv
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -49,6 +51,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // 电视恒横屏。放在这里而不是主题里：部分盒子的 HDMI 传感器会把方向来回报成
+        // portrait，跟 Theme 的 windowOrientation 打架；显式请求一次最稳。
+        if (isTv()) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
         requestNotificationPermission()
 
