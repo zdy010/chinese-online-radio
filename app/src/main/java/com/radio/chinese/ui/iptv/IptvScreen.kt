@@ -67,10 +67,13 @@ import com.radio.chinese.ui.theme.canHostRail
 import com.radio.chinese.ui.theme.isCarSurface
 import kotlinx.coroutines.launch
 
+/** 页签顺序：国家(0) / 省份(1) / 中国(2) / 分类(3) / 收藏(4) / 最近(5)，默认停在中国 */
+private const val DEFAULT_TAB_PAGE = 2
+
 /**
  * iptv 一级 tab：与电台同构的「搜索栏 + 页签 + 左右滑动」，**不平铺 12k 条**。
  *
- * 默认第 0 页「中国」直接列国内频道；向左滑依次是地区 / 分类 / 收藏 / 最近。
+ * 页签顺序 国家 / 省份 / 中国 / 分类 / 收藏 / 最近，默认停在第 2 页「中国」直接列国内频道。
  * 分类与省份是两级入口，点进去才按标签 / 中文省名列频道；没有分类标签的记录
  * 只能靠搜索、国家、最近或收藏到达，这是数据形状决定的，不硬造一个巨大的「其他」格子。
  * 有查询时页签让位给搜索结果，二级列表用 [BrowseTopBar] 带返回。
@@ -101,7 +104,11 @@ fun IptvScreen(
     // "cat:<label>" / "cty:<name>" = 具体频道列表。用 String 是为了 rememberSaveable 直接可存。
     var mode by rememberSaveable { mutableStateOf("") }
     // 记住进二级目录前停在哪一页，返回时 Pager 恢复到那一页而不是弹回「中国」
-    var lastTabPage by rememberSaveable { mutableIntStateOf(0) }
+    // key 带版本：页签顺序变过，旧版保存的 index 0 是「中国」，新版 0 已变成「国家」，
+    // 直接恢复会把用户丢到错误的一页。换 key 后升级一律回到默认「中国」。
+    var lastTabPage by rememberSaveable(key = "iptv_tab_v2") {
+        mutableIntStateOf(DEFAULT_TAB_PAGE)
+    }
 
     // 系统返回键先退"搜索态"、再退"二级列表"，不要一步退出 iptv tab。
     // 不拦这一步时，在分类/国家列表按返回会直接回到电台页，看起来像"点进去就回不来了"。
@@ -339,11 +346,12 @@ private fun IptvTabsHost(
     onPageChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // 顺序按用户浏览习惯：国内台 → 国内省份 → 全球国家 → 分类 → 收藏 → 最近
+    // 用户指定顺序：国家 → 省份 → 中国 → 分类 → 收藏 → 最近。
+    // 默认停在中国（index 2），让国家/省份在左、分类/收藏/最近在右，两边一滑就到。
     val tabs = listOf(
-        SurfaceTab("中国", Icons.Default.Flag),
-        SurfaceTab("省份", Icons.Default.Place),
         SurfaceTab("国家", Icons.Default.Public),
+        SurfaceTab("省份", Icons.Default.Place),
+        SurfaceTab("中国", Icons.Default.Flag),
         SurfaceTab("分类", Icons.Default.Category),
         SurfaceTab("收藏", Icons.Default.Favorite),
         SurfaceTab("最近", Icons.Default.History),
@@ -403,20 +411,20 @@ private fun IptvPager(
     onOpenMode: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // CCTV 打头的国内列表；省份、国家、分类各自占一页，左滑顺序 = 用户找台的路径
+    // CCTV 打头的国内列表。页签 0/1/3 是目录网格，2/4/5 是频道列表
     val china = IptvChinaOrder.sorted(ui.visible.filter { it.country == "中国" })
     HorizontalPager(state = pagerState, modifier = modifier) { page ->
         when (page) {
-            0, 4, 5 -> {
+            2, 4, 5 -> {
                 val list = when (page) {
-                    0 -> china
+                    2 -> china
                     4 -> ui.favorites
                     else -> ui.recents
                 }
                 if (list.isEmpty()) {
                     EmptyState(
                         icon = Icons.Default.Tv,
-                        title = if (page == 0) "没有中国频道" else "这里还是空的",
+                        title = if (page == 2) "没有中国频道" else "这里还是空的",
                         hint = if (page == 4) "在频道列表点收藏即可加入" else "播放过的频道会出现在这里",
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -431,16 +439,16 @@ private fun IptvPager(
                     )
                 }
             }
+            0 -> LabelGrid(
+                entries = ui.countries,
+                icon = Icons.Default.Public,
+                onOpen = { onOpenMode("cty:$it") },
+                modifier = Modifier.fillMaxSize(),
+            )
             1 -> LabelGrid(
                 entries = ui.regions,
                 icon = Icons.Default.Place,
                 onOpen = { onOpenMode("rgn:$it") },
-                modifier = Modifier.fillMaxSize(),
-            )
-            2 -> LabelGrid(
-                entries = ui.countries,
-                icon = Icons.Default.Public,
-                onOpen = { onOpenMode("cty:$it") },
                 modifier = Modifier.fillMaxSize(),
             )
             3 -> LabelGrid(
