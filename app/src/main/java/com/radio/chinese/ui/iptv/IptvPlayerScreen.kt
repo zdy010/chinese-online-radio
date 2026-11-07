@@ -35,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -83,10 +82,10 @@ fun IptvPlayerScreen(
 
     // 闸门跟页面意图，不跟 View 生命周期（spec §7.3）。漏这句解码器不会开视频轨，
     // 症状是"iptv 永远只有声音没画面"，且编译与单测都抓不到。
+    // 只声明「要画面」。离开本页**不收闸**：重写轨道参数会打断后台音频
+    // （实测 AudioSink UnexpectedDiscontinuityException → 所有节目源均无法播放），
+    // 也会让画面拖着 1 秒才消失。收闸交给 MainScreen 在真正离开 iptv tab 时做。
     LaunchedEffect(hasVideo) { playerManager.setVideoPictureWanted(hasVideo) }
-    DisposableEffect(Unit) {
-        onDispose { playerManager.setVideoPictureWanted(false) }
-    }
 
     // 上下台与方控滚轮读**同一个**基准集合（V11）：这个集合由 iptv 页注册，
     // 电台页不注册时为空，播放页不会自己另算一份电台列表。

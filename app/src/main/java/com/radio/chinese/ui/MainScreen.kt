@@ -1,5 +1,7 @@
 package com.radio.chinese.ui
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -51,7 +53,14 @@ fun RadioNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Radio.route
+        startDestination = Screen.Radio.route,
+        // 默认转场是 700ms 淡入淡出：从视频播放页返回时旧画面会完整停留近 1 秒才消失，
+        // 用户看到的就是「画面赖着不走」。视频 App 不需要这个动画，全部关掉瞬时换页。
+        // 必须设在 NavHost 这一级：composable 级设置实测盖不住默认时长。
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
     ) {
         composable(Screen.Radio.route) {
             RadioScreen(
@@ -63,7 +72,15 @@ fun RadioNavGraph(
             )
         }
 
-        composable(Screen.Iptv.route) {
+        composable(
+            route = Screen.Iptv.route,
+            // 与 IptvPlayer 成对关闭：AnimatedContent 时长取两端最大值，
+            // 只关播放页的 popExit 会让列表页默认 popEnter 把旧画面完整撑住 300ms 才突然消失。
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) {
             IptvScreen(
                 playerManager = playerManager,
                 // 专用播放页是无参数路由：状态一律读 PlayerManager（与 OperaPlayer 同构）。
@@ -74,7 +91,15 @@ fun RadioNavGraph(
             )
         }
 
-        composable(Screen.IptvPlayer.route) {
+        composable(
+            route = Screen.IptvPlayer.route,
+            // 播放页不要转场渐隐：按返回时旧画面会淡出近 1 秒，用户感觉「画面赖着不走」。
+            // 这里直接换页，画面随 PlayerView 移除立即消失。
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) {
             IptvPlayerScreen(
                 playerManager = playerManager,
                 onNavigateBack = { navController.popBackStack() },
@@ -171,6 +196,9 @@ fun MainScreen(
         // 也"离开了 iptv tab"，但仍在播 iptv 台，那里清掉基准会让滚轮切回电台（T12）。
         if (currentRoute in listOf(Screen.Radio.route, Screen.Audio.route, Screen.Settings.route)) {
             playerManager.clearSkipBase()
+            // 真正离开 iptv tab 才收视频轨闸门。播放页 ↔ iptv 列表之间不收：
+            // 那一段重写轨道参数会打断后台音频，也会让画面拖着渐隐才消失。
+            playerManager.setVideoPictureWanted(false)
         }
     }
 

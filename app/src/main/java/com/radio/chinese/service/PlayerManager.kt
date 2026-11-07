@@ -354,40 +354,24 @@ class PlayerManager @Inject constructor(
         }
     }
 
-    /** 收闸的延迟任务：短时间内又要画面就取消，别把解码器拆了又建 */
-    private var gateOffJob: Job? = null
-    // 1.5s：要盖住「按返回 → 导航动画 → 迷你条出现 → 用户点它」这一整段，
-    // 600ms 实测不够（导航动画就吃掉大半），仍会看到一次 decode=false。
-    private val gateOffDelayMs = 1500L
-
     /**
-     * 播放页声明「我要看画面 / 我不要了」。
+     * 播放页声明「我要看画面 / 我不要了」。幂等：重复值不产生副作用。
      *
-     * **收闸延迟 1.5 秒落地**：iptv 播放页 ↔ 列表迷你条是高频切换，立刻禁用视频轨
-     * 会让回来时再启用一次，两次重写 `trackSelectionParameters` 会让解码器重新选轨、
-     * 重新缓冲（实测现象就是「切一下像重新播放了」）。快速切回时延迟任务被取消，
-     * 轨道参数一次都不动。真正离开 iptv tab 或长时间不回来时仍会收闸，后台不持续解码。
+     * **不要用延迟任务落地收闸**：实测在后台 1.5 秒后重写 `trackSelectionParameters`
+     * 会让 `DefaultAudioSink` 抛 `UnexpectedDiscontinuityException`（音频时间戳跳跃），
+     * 进而打断后台播放、走到「所有节目源均无法播放」。
+     *
+     * iptv 播放页 ↔ 列表（迷你条）之间由调用方保证**根本不调这个方法**（见 MainScreen）：
+     * 这一段的轨道参数一次都不动，音频不打断、画面随 PlayerView 移除立即消失。
+     * 真正的收闸点是切到其它一级 tab / 换成电台台 —— 那时本来就要换媒体。
      *
      * 失败只记日志不写 `_error`：`_error` 是播放页唯一的红色情绪通道。
      */
     fun setVideoPictureWanted(wanted: Boolean) {
-        if (!wanted) {
-            gateOffJob?.cancel()
-            gateOffJob = scope.launch {
-                delay(gateOffDelayMs)
-                if (_videoPictureWanted.value) {
-                    _videoPictureWanted.value = false
-                    applyVideoTrackGate()
-                }
-            }
-            return
-        }
-        gateOffJob?.cancel()
-        gateOffJob = null
         val previous = _videoPictureWanted.value
         val replaced = videoPlayerMount.player !== lastGatedPlayer
-        if (!VideoTrackGate.shouldReapplyGate(previous, true, replaced)) return
-        _videoPictureWanted.value = true
+        if (!VideoTrackGate.shouldReapplyGate(previous, wanted, replaced)) return
+        _videoPictureWanted.value = wanted
         applyVideoTrackGate()
     }
 
