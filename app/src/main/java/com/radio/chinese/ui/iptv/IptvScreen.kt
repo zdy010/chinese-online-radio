@@ -39,6 +39,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -59,7 +60,10 @@ import com.radio.chinese.ui.common.NowPlayingState
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.SurfaceTab
+import com.radio.chinese.ui.common.TvNineKeySearchDialog
+import com.radio.chinese.ui.common.TvSearchEntry
 import com.radio.chinese.ui.common.focusRing
+import com.radio.chinese.ui.theme.isTvSurface
 import com.radio.chinese.ui.common.SurfaceTabBar
 import com.radio.chinese.ui.common.rememberNowPlaying
 import com.radio.chinese.ui.home.StationListItem
@@ -110,6 +114,7 @@ fun IptvScreen(
     var lastTabPage by rememberSaveable(key = "iptv_tab_v2") {
         mutableIntStateOf(DEFAULT_TAB_PAGE)
     }
+    var showTvSearch by remember { mutableStateOf(false) }
 
     // 系统返回键先退"搜索态"、再退"二级列表"，不要一步退出 iptv tab。
     // 不拦这一步时，在分类/国家列表按返回会直接回到电台页，看起来像"点进去就回不来了"。
@@ -135,14 +140,30 @@ fun IptvScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SearchBarRow(
-            value = queryText,
-            onValueChange = { q ->
-                viewModel.updateQuery(q)
-                if (q.isNotEmpty()) mode = ""
-            },
-            placeholder = "搜索频道名称、别名或国家",
-        )
+        // 电视没有键盘，换成九键拼音首字母入口
+        if (isTvSurface()) {
+            TvSearchEntry(onOpen = { showTvSearch = true })
+        } else {
+            SearchBarRow(
+                value = queryText,
+                onValueChange = { q ->
+                    viewModel.updateQuery(q)
+                    if (q.isNotEmpty()) mode = ""
+                },
+                placeholder = "搜索频道名称、别名或国家",
+            )
+        }
+
+        if (showTvSearch) {
+            TvNineKeySearchDialog(
+                stations = ui.visible,
+                onDismiss = { showTvSearch = false },
+                onSelect = { station ->
+                    showTvSearch = false
+                    onRowClick(station)
+                },
+            )
+        }
 
         if (ui.isLoading) {
             LoadingState("正在读取内置频道清单…", modifier = Modifier.weight(1f))
