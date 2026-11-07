@@ -91,9 +91,14 @@ fun IptvScreen(
     BackHandler(enabled = ui.query.isNotEmpty()) { viewModel.updateQuery("") }
     BackHandler(enabled = ui.query.isBlank() && mode.isNotEmpty()) { mode = parentOf(mode) }
 
-    // 切台基准（V11）：注册当前可见集合。清理集中在 MainScreen 按路由做 ——
-    // 从浏览页跳播放页时浏览页也会 dispose，在 onDispose 里 clear 会把刚注册的基准清掉。
-    LaunchedEffect(ui.visible) { playerManager.setSkipBase(ui.visible) }
+    // 切台基准（V11）：只在"有具体列表"时注册（搜索/分类/国家/收藏/最近）。
+    // 首屏四入口也把整表注册进去的话，电台正在播时进 iptv tab 按一下媒体键，
+    // nextStation 会因"当前台不在表里"取首项 —— 用户被切到一个随机 iptv 频道。
+    // 清理集中在 MainScreen 按路由做（浏览页跳播放页时也会 dispose）。
+    LaunchedEffect(ui.visible, mode, ui.query) {
+        val hasList = ui.query.isNotBlank() || mode.isNotEmpty()
+        playerManager.setSkipBase(if (hasList) ui.visible else null)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBarRow(

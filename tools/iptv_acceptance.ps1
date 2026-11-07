@@ -68,7 +68,7 @@ function Dump-Ui($tag) {
         $b = [regex]::Matches($n.bounds, '\d+')
         if ($b.Count -lt 4) { continue }
         $out += [pscustomobject]@{
-            Text = $n.text; Descr = $n."content-desc"
+            Text = $n.text; Descr = $n."content-desc"; Class = $n.class
             X1 = [int]$b[0].Value; Y1 = [int]$b[1].Value
             X2 = [int]$b[2].Value; Y2 = [int]$b[3].Value
             CX = [int](([int]$b[0].Value + [int]$b[2].Value) / 2)
@@ -95,6 +95,24 @@ function Wait-Ready($pattern, $sec = 60) {
 function Tap-Node($pattern) {
     $hit = Find-Node $pattern (Dump-Ui "tap")
     if (-not $hit) { throw "node not found: $pattern" }
+    adb shell input tap $hit.CX $hit.CY | Out-Null
+    return $hit
+}
+
+# 搜索结果里的台行：必须排除搜索框自身 —— 它的文本就是查询词，
+# 直接 Find-Node <台名> 会先命中搜索框（本轮 T6/T7/T9/T10/V13 的假失败全部来自这里）。
+function Find-StationRow($name, $nodes) {
+    $edit = @($nodes | Where-Object { $_.Class -eq 'android.widget.EditText' }) | Select-Object -First 1
+    $minY = if ($edit) { $edit.Y2 + 2 } else { 0 }
+    return @($nodes | Where-Object {
+            ($_.Text -like "*$name*" -or $_.Descr -like "*$name*") -and $_.Y1 -ge $minY
+        }) | Select-Object -First 1
+}
+
+function Tap-StationRow($name) {
+    $nodes = Dump-Ui "row"
+    $hit = Find-StationRow $name $nodes
+    if (-not $hit) { throw "station row not found: $name" }
     adb shell input tap $hit.CX $hit.CY | Out-Null
     return $hit
 }
@@ -194,6 +212,14 @@ $adultSample = @($allStations | Where-Object {
 "baseline: records=$($allStations.Count) visible=$($visibleStations.Count) adult=$(@($adultSample).Count) news=$($tagCounts['news'])"
 
 $results = @()
+
+# 单条判据抛异常不能把整轮验收打断：之前 Search-Query 一次 throw 就让 T6–T14 全部没有结果，
+# 汇总里只看到半张表，比 FAIL 更误导。trap 记录一条 FAIL 后继续跑下一项。
+trap {
+    Assert "执行异常" $false "$($_.Exception.Message)（line $($_.InvocationInfo.ScriptLineNumber)）"
+    continue
+}
+
 function Assert($name, $ok, $detail, [switch]$Inconclusive) {
     # 第三态必须是独立的 Result 值：$ok=true 冒充不可判，汇总里会显示 PASS
     $r = if ($Inconclusive) { "INCONCLUSIVE" } elseif ($ok) { "PASS" } else { "FAIL" }
@@ -220,9 +246,14 @@ function Open-Iptv {
 function Search-Query($q) {
     $n = Dump-Ui "searchbox"
     $clear = Find-Node "清除搜索内容" $n
-    if ($clear) { adb shell input tap $clear.CX $clear.CY | Out-Null; Start-Sleep -Milliseconds 300 }
+    if ($clear) {
+        adb shell input tap $clear.CX $clear.CY | Out-Null
+        Start-Sleep -Milliseconds 500
+        # 必须重新 dump：placeholder 在框里有字时不渲染，拿清空前的快照找它必然找不到
+        $n = Dump-Ui "searchbox2"
+    }
     $box = Find-Node "搜索频道名称" $n
-    if (-not $box) { throw "找不到 iptv 搜索框" }
+    if (-not $box) { throw "找不到 iptv 搜索框（当前页面可能不在 iptv 入口）" }
     adb shell input tap $box.CX $box.CY | Out-Null
     $safe = ($q -replace ' ', '%s') -replace '[^A-Za-z0-9%.\-]', ''
     if ([string]::IsNullOrWhiteSpace($safe)) { return $null }
@@ -352,7 +383,7 @@ if ($OnlyT -in 0, 6) {
         adb logcat -c
         $q = $uaSample[0].name
         $null = Search-Query $q
-        Tap-Node $q | Out-Null
+        Tap-StationRow $q | Out-Null
         Start-Sleep -Seconds 10   # 带 UA 的流也常需要轮转，4 秒时 commit 可能还没到
         $logs = "$((adb logcat -d -s IptvHeaders:D) -join ' ')"
         $applied = $logs -match 'applied ua=true'
@@ -373,7 +404,7 @@ if ($OnlyT -in 0, 7) {
     $null = Open-Iptv
     if ($uaSample.Count -gt 0) {
         $null = Search-Query $uaSample[0].name
-        Tap-Node $uaSample[0].name | Out-Null
+        Tap-StationRow $uaSample[0].name | Out-Null
         Start-Sleep -Seconds 8
     }
     $nodes = Dump-Ui "t7-before"
@@ -426,7 +457,7 @@ if ($OnlyT -in 0, 9) {
             Assert "T9 NSFW 默认关" $false "成人台名不可自动输入：$adultName" -Inconclusive
         } else {
             $n = Search-Query $safeAdult
-            $offHit = if ($n) { Find-Node $adultName $n } else { $null }
+            $offHit = if ($n) { Find-StationRow $adultName $n } else { $null }
             Assert "T9 默认关：搜成人台无结果" ($null -eq $offHit) "query=$safeAdult name=$adultName"
             # 开关在设置页：Launch-Home 之后必须先点底部「设置」
             Launch-Home
@@ -435,7 +466,7 @@ if ($OnlyT -in 0, 9) {
             Start-Sleep -Milliseconds 600
             $null = Open-Iptv
             $n2 = Search-Query $safeAdult
-            $onHit = if ($n2) { Find-Node $adultName $n2 } else { $null }
+            $onHit = if ($n2) { Find-StationRow $adultName $n2 } else { $null }
             Assert "T9 打开后有结果" ($null -ne $onHit) "query=$safeAdult name=$adultName"
             Launch-Home
             Tap-Node "设置" | Out-Null
@@ -452,7 +483,7 @@ if ($OnlyT -in 0, 15) {
         $null = Open-Iptv
         $q = $jpnSample[0].name
         $n = Search-Query $q
-        $offHit = if ($n) { Find-Node $q $n } else { $null }
+        $offHit = if ($n) { Find-StationRow $q $n } else { $null }
         Assert "V13 默认隐藏非中英频道" ($null -eq $offHit) "query=$q name=$($jpnSample[0].name)"
         Launch-Home
         Tap-Node "设置" | Out-Null
@@ -460,7 +491,7 @@ if ($OnlyT -in 0, 15) {
         Start-Sleep -Milliseconds 600
         $null = Open-Iptv
         $n2 = Search-Query $q
-        $onHit = if ($n2) { Find-Node $q $n2 } else { $null }
+        $onHit = if ($n2) { Find-StationRow $q $n2 } else { $null }
         Assert "V13 打开后可见非中英频道" ($null -ne $onHit) "query=$q name=$($jpnSample[0].name)"
         Launch-Home
         Tap-Node "设置" | Out-Null
@@ -481,8 +512,23 @@ if ($OnlyT -in 0, 10) {
         $s = Get-ScreenSize
         $inside = @($nodes | Where-Object { $_.X2 -le $s.W + 2 -and $_.Y2 -le $s.H + 2 }).Count
         Assert "T10 车机档 iptv 列表节点在屏内" ($inside -eq @($nodes).Count) "屏内=$inside / 总节点=$(@($nodes).Count) size=$($s.W)x$($s.H)"
-        # 控件单行：播控按钮的 Y 必须落在同一行。播放页需先起播，这里只记几何基线供人工复核
-        Assert "T10 播放页控件单行" $false "需进播放页后比对 4 个按钮的 Y1；本脚本只记 dump 供复核" -Inconclusive
+        # 播控单行：进播放页后比对 4 个按钮的 Y1，不靠人眼
+        $null = Open-Iptv
+        if ($uaSample.Count -gt 0) {
+            $null = Search-Query $uaSample[0].name
+            Tap-StationRow $uaSample[0].name | Out-Null
+            Start-Sleep -Seconds 8
+        }
+        $pn = Dump-Ui "t10-player"
+        $ys = @()
+        foreach ($b in @("上一个频道", "下一个频道", "节目源")) {
+            $h = Find-Node $b $pn
+            if ($h) { $ys += $h.Y1 }
+        }
+        $pp = @($pn | Where-Object { $_.Descr -match '^(暂停|继续)播放$' }) | Select-Object -First 1
+        if ($pp) { $ys += $pp.Y1 }
+        $singleRow = ($ys.Count -eq 4 -and @($ys | Select-Object -Unique).Count -le 1)
+        Assert "T10 车机档播控单行" $singleRow "命中=$($ys.Count)/4 Y=$($ys -join ',')"
     } finally {
         # 必须放 finally：中途抛错把设备留在车机档，后续所有判据都会红
         adb shell wm size reset | Out-Null
@@ -508,7 +554,7 @@ if ($OnlyT -in 0, 12) {
     if ($uaSample.Count -gt 0) {
         $null = Open-Iptv
         $null = Search-Query $uaSample[0].name
-        Tap-Node $uaSample[0].name | Out-Null   # 点一次即进播放页
+        Tap-StationRow $uaSample[0].name | Out-Null   # 点一次即进播放页
         Start-Sleep -Seconds 8
         adb logcat -c
         adb shell input keyevent 87 | Out-Null  # KEYCODE_MEDIA_NEXT
@@ -525,8 +571,31 @@ if ($OnlyT -in 0, 12) {
 
 # ---------------- T13 通知栏恢复 ----------------
 if ($OnlyT -in 0, 13) {
-    Assert "T13 通知栏/媒体键恢复到同一个 iptv 台" $false `
-        "手工：播 iptv 台 → Home → 点通知栏回 App，核对播放页标题仍是该台；本脚本不代点通知栏" -Inconclusive
+    if ($uaSample.Count -gt 0) {
+        $null = Open-Iptv
+        $null = Search-Query $uaSample[0].name
+        Tap-StationRow $uaSample[0].name | Out-Null
+        Start-Sleep -Seconds 8
+        $title = $uaSample[0].name
+        adb shell input keyevent 3 | Out-Null            # Home，让 App 进后台
+        Start-Sleep -Seconds 2
+        adb shell cmd statusbar expand-notifications | Out-Null
+        Start-Sleep -Seconds 2
+        $n = Dump-Ui "t13-notif"
+        $hit = Find-Node $title $n
+        if (-not $hit) {
+            Assert "T13 通知栏恢复到同一个 iptv 台" $false "通知栏里没找到「$title」（可能通知被折叠或未出媒体样式）" -Inconclusive
+        } else {
+            adb shell input tap $hit.CX $hit.CY | Out-Null
+            Start-Sleep -Seconds 3
+            $n2 = Dump-Ui "t13-back"
+            $back = $null -ne (Find-Node $title $n2)
+            Assert "T13 通知栏恢复到同一个 iptv 台" $back "点通知后标题「$title」可见=$back"
+        }
+        adb shell cmd statusbar collapse | Out-Null
+    } else {
+        Assert "T13 通知栏恢复" $false "没有可自动输入的起播样本" -Inconclusive
+    }
 }
 
 # ---------------- T14 R8 复跑 ----------------

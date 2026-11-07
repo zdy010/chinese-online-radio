@@ -48,6 +48,22 @@ class IptvViewModelTest {
     ) = IptvViewLogic.build(all, query, adultEnabled, allLanguages, favIds, recentIds)
 
     @Test
+    fun `成人开关打开时，非中英的成人台也可见`() {
+        // 实测两条成人台 language=country:grn,spa，若语言过滤也作用于成人，开关等于假的
+        val data = listOf(
+            RadioStation(
+                id = "iptv:adult.ar", name = "Adult", category = "general",
+                language = "country:grn,spa", nsfw = true,
+            ),
+            RadioStation(id = "iptv:jpn.jp", name = "JP", category = "general", language = "country:jpn"),
+        )
+        val off = IptvViewLogic.build(data, "", false, false, emptyList(), emptyList()).visible
+        assertTrue("成人开关关时成人台必须隐藏", off.isEmpty())
+        val on = IptvViewLogic.build(data, "", true, false, emptyList(), emptyList()).visible
+        assertEquals(listOf("iptv:adult.ar"), on.map { it.id })
+    }
+
+    @Test
     fun `默认只留中文与英语频道，开关打开后全显示`() {
         val data = listOf(
             RadioStation(id = "iptv:cn.cn", name = "CN", category = "general", language = "country:zho"),

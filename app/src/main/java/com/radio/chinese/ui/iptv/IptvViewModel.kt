@@ -7,11 +7,12 @@ import com.radio.chinese.data.repository.FavoriteRepository
 import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.domain.model.RadioStation
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,16 +57,18 @@ class IptvViewModel @Inject constructor(
     private val _allLanguages = MutableStateFlow(false)
     // 与 _all 分开：清单解析失败时也是空表，那时该显示空态而不是无限 Loading（spec §9）
     private val _loaded = MutableStateFlow(false)
+    /** 收藏集合单一来源：连点两次时用 Flow 的最新值判断，不每次现查（会读到旧值、把收藏反成取消） */
+    private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
 
     val uiState: StateFlow<IptvUiState> = combine(
         combine(_all, _query, _adultEnabled, _allLanguages, _loaded) { all, q, adult, langs, loaded ->
             Inputs(all, q, adult, langs, loaded)
         },
-        favoriteRepository.getFavoriteIds(),
+        _favoriteIds,
         preferences.radioRecentStationIds,
     ) { input, favIds, recentIds ->
         val lists = IptvViewLogic.build(
-            input.all, input.query, input.adult, input.allLanguages, favIds, recentIds,
+            input.all, input.query, input.adult, input.allLanguages, favIds.toList(), recentIds,
         )
         IptvUiState(
             visible = lists.visible,
@@ -78,7 +81,8 @@ class IptvViewModel @Inject constructor(
             isLoading = !input.loaded,
             loadFailed = input.loaded && input.all.isEmpty(),
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), IptvUiState())
+    // 全表过滤（12k × 7 字段）不能压在主线程：每次按键都在 Main 上重算会掉帧
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), IptvUiState())
 
     init {
         viewModelScope.launch {
@@ -91,6 +95,9 @@ class IptvViewModel @Inject constructor(
         viewModelScope.launch {
             preferences.iptvAllLanguages.collect { _allLanguages.value = it }
         }
+        viewModelScope.launch {
+            favoriteRepository.getFavoriteIds().collect { _favoriteIds.value = it.toSet() }
+        }
     }
 
     fun updateQuery(q: String) { _query.value = q }
@@ -100,8 +107,7 @@ class IptvViewModel @Inject constructor(
 
     fun toggleFavorite(stationId: String) {
         viewModelScope.launch {
-            val isFav = favoriteRepository.getFavoriteIds().first().contains(stationId)
-            favoriteRepository.toggleFavorite(stationId, isFav)
+            favoriteRepository.toggleFavorite(stationId, stationId in _favoriteIds.value)
         }
     }
 
