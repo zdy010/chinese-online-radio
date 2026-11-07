@@ -108,13 +108,17 @@ fun IptvScreen(
     BackHandler(enabled = ui.query.isNotEmpty()) { viewModel.updateQuery("") }
     BackHandler(enabled = ui.query.isBlank() && mode.isNotEmpty()) { mode = parentOf(mode) }
 
-    // 切台基准（V11）：只在"有具体列表"时注册（搜索/分类/国家/收藏/最近）。
-    // 首屏四入口也把整表注册进去的话，电台正在播时进 iptv tab 按一下媒体键，
-    // nextStation 会因"当前台不在表里"取首项 —— 用户被切到一个随机 iptv 频道。
-    // 清理集中在 MainScreen 按路由做（浏览页跳播放页时也会 dispose）。
+    // 切台基准（V11）：始终注册一份列表，**不能清空**。
+    // 首屏已改成页签式，默认「中国」页本身就是频道列表；清空会让播放页显示
+    // 「第 0 / 0 频道」、上下台按钮失效 —— 从播放页返回再点迷你条回去时尤其明显，
+    // 看起来像播放状态被重置。清理集中在 MainScreen 按路由做（切到别的 tab 才清）。
     LaunchedEffect(ui.visible, mode, ui.query) {
-        val hasList = ui.query.isNotBlank() || mode.isNotEmpty()
-        playerManager.setSkipBase(if (hasList) ui.visible else null)
+        val base = when {
+            ui.query.isNotBlank() || mode.isNotEmpty() -> ui.visible
+            // 与「中国」页同一份顺序，否则播放页频道号和列表对不上、上下台会跳到意外位置
+            else -> IptvChinaOrder.sorted(ui.visible.filter { it.country == "中国" })
+        }
+        playerManager.setSkipBase(base)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
