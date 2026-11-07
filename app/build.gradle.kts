@@ -19,12 +19,12 @@ val gitCommitCount: Int by lazy {
     } catch (_: Exception) { 1 }
 }
 
-// 2.1 大版本线的起点提交数：修订号 = 当前提交数 − 该基线，使 2.1.x 的修订号从 0 重新起算。
-// 定在 205（宣布 2.1.0 时的 HEAD 提交数）；此后每提交一次，修订号自动 +1。
-// 2.1.0 内容：架构治理（分层依赖零违例、RadioPreferences 按域拆分、
-// PlayerManager 抽出 OperaPositionTracker、浏览链路去重）+ 电视伴音独立分组 + TTS 引擎探测硬化。
-val version2Base = 205
-val version2Line = "2.1"
+// 2.2 大版本线的起点提交数：修订号 = 当前提交数 − 该基线，使 2.2.x 的修订号从 0 重新起算。
+// 定在 296（宣布 2.2 时的 HEAD 提交数）；此后每提交一次，修订号自动 +1。
+// 2.2 内容：iptv 首页改为与电台一致的「搜索栏 + 页签 + 左右滑动」，默认「中国」页，
+// 依次为地区 / 分类 / 收藏 / 最近；另有频道简介、中文台名、省份、可用性评分、EPG 行内展开。
+val version2Base = 296
+val version2Line = "2.2"
 
 // Load keystore properties for release signing
 val keystoreProperties = Properties()

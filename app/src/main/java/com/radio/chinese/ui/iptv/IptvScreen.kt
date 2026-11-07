@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
@@ -33,7 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.domain.model.IptvCategory
+import com.radio.chinese.domain.model.IptvChinaOrder
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
@@ -51,17 +58,22 @@ import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NowPlayingState
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.SearchBarRow
+import com.radio.chinese.ui.common.SurfaceTab
+import com.radio.chinese.ui.common.SurfaceTabBar
 import com.radio.chinese.ui.common.rememberNowPlaying
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.canHostRail
 import com.radio.chinese.ui.theme.isCarSurface
+import kotlinx.coroutines.launch
 
 /**
- * iptv 一级 tab（spec V5）：搜索优先 + 四入口，**不平铺 12k 条**。
+ * iptv 一级 tab：与电台同构的「搜索栏 + 页签 + 左右滑动」，**不平铺 12k 条**。
  *
- * 规则一句话：空查询看入口，有查询看结果。分类与国家是两级入口，
- * 进去才按标签/中文国名列频道；3,557 条没有 tags 的记录只能靠搜索/国家/最近/收藏到达，
- * 这是数据形状决定的，不为了补洞硬造一个巨大的「其他」格子。
+ * 默认第 0 页「中国」直接列国内频道；向左滑依次是地区 / 分类 / 收藏 / 最近。
+ * 分类与省份是两级入口，点进去才按标签 / 中文省名列频道；没有分类标签的记录
+ * 只能靠搜索、国家、最近或收藏到达，这是数据形状决定的，不硬造一个巨大的「其他」格子。
+ * 有查询时页签让位给搜索结果，二级列表用 [BrowseTopBar] 带返回。
  */
 @Composable
 fun IptvScreen(
@@ -88,6 +100,8 @@ fun IptvScreen(
     // "" = 首屏四入口；categories/countries/recent/favorite = 二级入口页；
     // "cat:<label>" / "cty:<name>" = 具体频道列表。用 String 是为了 rememberSaveable 直接可存。
     var mode by rememberSaveable { mutableStateOf("") }
+    // 记住进二级目录前停在哪一页，返回时 Pager 恢复到那一页而不是弹回「中国」
+    var lastTabPage by rememberSaveable { mutableIntStateOf(0) }
 
     // 系统返回键先退"搜索态"、再退"二级列表"，不要一步退出 iptv tab。
     // 不拦这一步时，在分类/国家列表按返回会直接回到电台页，看起来像"点进去就回不来了"。
@@ -163,14 +177,16 @@ fun IptvScreen(
                 }
             }
 
-            mode.isEmpty() -> EntryGrid(
-                total = ui.visible.size,
-                categoryCount = ui.categories.size,
-                countryCount = ui.countries.size,
-                regionCount = ui.regions.size,
-                recentCount = ui.recents.size,
-                favoriteCount = ui.favorites.size,
-                onOpen = { mode = it },
+            // 与电台一致的排版：搜索栏 + 页签 + 左右滑动。默认停在第 0 页「中国」。
+            mode.isEmpty() -> IptvTabsHost(
+                ui = ui,
+                nowPlaying = nowPlaying,
+                favoriteIds = favoriteIds,
+                onRowClick = onRowClick,
+                onFavoriteClick = viewModel::toggleFavorite,
+                onOpenMode = { mode = it },
+                initialPage = lastTabPage,
+                onPageChanged = { lastTabPage = it },
                 modifier = Modifier.weight(1f),
             )
 
@@ -258,10 +274,14 @@ private fun modeTitle(mode: String, ui: IptvUiState): String = when {
     else -> "频道列表"
 }
 
+/**
+ * 二级频道列表返回时直接回页签首页（Pager 会记住来时的那一页）。
+ *
+ * 不再回 "categories"/"regions" 这类独立目录页：新排版下目录已经是页签里的一页，
+ * 再退回一份没有页签栏的旧目录，用户会看到「返回后顶部页签不见了」。
+ */
 private fun parentOf(mode: String): String = when {
-    mode.startsWith("cat:") -> "categories"
-    mode.startsWith("cty:") -> "countries"
-    mode.startsWith("rgn:") -> "regions"
+    mode.startsWith("cat:") || mode.startsWith("cty:") || mode.startsWith("rgn:") -> ""
     else -> ""
 }
 
@@ -297,44 +317,134 @@ private fun BrowseTopBar(title: String, onBack: () -> Unit) {
     }
 }
 
+/**
+ * 与电台首页同构的页签容器：手机档顶部 TabRow / 车机档左侧 rail + HorizontalPager。
+ *
+ * 默认停在第 0 页「中国」——进 iptv 先看国内频道，不用在 12k 条里找；
+ * 向左滑依次是地区 / 分类 / 收藏 / 最近，点顶栏页签等价。
+ */
 @Composable
-private fun EntryGrid(
-    total: Int,
-    categoryCount: Int,
-    countryCount: Int,
-    regionCount: Int,
-    recentCount: Int,
-    favoriteCount: Int,
-    onOpen: (String) -> Unit,
+private fun IptvTabsHost(
+    ui: IptvUiState,
+    nowPlaying: NowPlayingState,
+    favoriteIds: Set<String>,
+    onRowClick: (RadioStation) -> Unit,
+    onFavoriteClick: (String) -> Unit,
+    onOpenMode: (String) -> Unit,
+    initialPage: Int,
+    onPageChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyVerticalGrid(
-        columns = if (isCarSurface()) GridCells.Adaptive(300.dp) else GridCells.Fixed(2),
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(Dimens.ScreenPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.GapMedium),
-    ) {
-        item {
-            EntryCard(Icons.Default.Category, "分类浏览", "$categoryCount 类 · 共 $total 个频道") {
-                onOpen("categories")
+    // 顺序按用户浏览习惯：国内台 → 国内省份 → 全球国家 → 分类 → 收藏 → 最近
+    val tabs = listOf(
+        SurfaceTab("中国", Icons.Default.Flag),
+        SurfaceTab("省份", Icons.Default.Place),
+        SurfaceTab("国家", Icons.Default.Public),
+        SurfaceTab("分类", Icons.Default.Category),
+        SurfaceTab("收藏", Icons.Default.Favorite),
+        SurfaceTab("最近", Icons.Default.History),
+    )
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { tabs.size })
+    // 进二级目录前记录当前页；返回时 Pager 重新创建会用它当 initialPage
+    LaunchedEffect(pagerState.currentPage) { onPageChanged(pagerState.currentPage) }
+    val scope = rememberCoroutineScope()
+    val onSelect: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
+    val railNav = canHostRail(tabs.size)
+
+    val pager: @Composable (Modifier) -> Unit = { m ->
+        IptvPager(
+            pagerState = pagerState,
+            ui = ui,
+            nowPlaying = nowPlaying,
+            favoriteIds = favoriteIds,
+            onRowClick = onRowClick,
+            onFavoriteClick = onFavoriteClick,
+            onOpenMode = onOpenMode,
+            modifier = m,
+        )
+    }
+
+    if (railNav) {
+        Row(modifier = modifier) {
+            SurfaceTabBar(
+                tabs = tabs,
+                currentPage = pagerState.currentPage,
+                onSelect = onSelect,
+                modifier = Modifier.width(Dimens.RailWidth),
+                useRail = true,
+            )
+            pager(Modifier.weight(1f))
+        }
+    } else {
+        Column(modifier = modifier) {
+            SurfaceTabBar(
+                tabs = tabs,
+                currentPage = pagerState.currentPage,
+                onSelect = onSelect,
+                useRail = false,
+            )
+            pager(Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun IptvPager(
+    pagerState: PagerState,
+    ui: IptvUiState,
+    nowPlaying: NowPlayingState,
+    favoriteIds: Set<String>,
+    onRowClick: (RadioStation) -> Unit,
+    onFavoriteClick: (String) -> Unit,
+    onOpenMode: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // CCTV 打头的国内列表；省份、国家、分类各自占一页，左滑顺序 = 用户找台的路径
+    val china = IptvChinaOrder.sorted(ui.visible.filter { it.country == "中国" })
+    HorizontalPager(state = pagerState, modifier = modifier) { page ->
+        when (page) {
+            0, 4, 5 -> {
+                val list = when (page) {
+                    0 -> china
+                    4 -> ui.favorites
+                    else -> ui.recents
+                }
+                if (list.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.Default.Tv,
+                        title = if (page == 0) "没有中国频道" else "这里还是空的",
+                        hint = if (page == 4) "在频道列表点收藏即可加入" else "播放过的频道会出现在这里",
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    StationGrid(
+                        stations = list,
+                        nowPlaying = nowPlaying,
+                        favoriteIds = favoriteIds,
+                        onRowClick = onRowClick,
+                        onFavoriteClick = onFavoriteClick,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
-        }
-        item {
-            EntryCard(Icons.Default.Public, "国家/地区", "$countryCount 个国家/地区") {
-                onOpen("countries")
-            }
-        }
-        item {
-            EntryCard(Icons.Default.Place, "省份/区域", "$regionCount 个省/区域") {
-                onOpen("regions")
-            }
-        }
-        item {
-            EntryCard(Icons.Default.History, "最近播放", "$recentCount 个频道") { onOpen("recent") }
-        }
-        item {
-            EntryCard(Icons.Default.Favorite, "我的收藏", "$favoriteCount 个频道") { onOpen("favorite") }
+            1 -> LabelGrid(
+                entries = ui.regions,
+                icon = Icons.Default.Place,
+                onOpen = { onOpenMode("rgn:$it") },
+                modifier = Modifier.fillMaxSize(),
+            )
+            2 -> LabelGrid(
+                entries = ui.countries,
+                icon = Icons.Default.Public,
+                onOpen = { onOpenMode("cty:$it") },
+                modifier = Modifier.fillMaxSize(),
+            )
+            3 -> LabelGrid(
+                entries = ui.categories,
+                icon = Icons.Default.Category,
+                onOpen = { onOpenMode("cat:$it") },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
