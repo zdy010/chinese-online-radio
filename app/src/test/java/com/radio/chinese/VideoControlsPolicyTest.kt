@@ -28,6 +28,17 @@ class VideoControlsPolicyTest {
     }
 
     @Test
+    fun `iptv 页强制显示全屏入口，即便还没出画面`() {
+        assertTrue(
+            VideoControlsPolicy.showsFullScreenButton(
+                hasVideoTrack = false,
+                isFullScreen = false,
+                alwaysShow = true,
+            )
+        )
+    }
+
+    @Test
     fun `已在全屏时恒给退出入口`() {
         assertTrue(VideoControlsPolicy.showsFullScreenButton(hasVideoTrack = false, isFullScreen = true))
     }

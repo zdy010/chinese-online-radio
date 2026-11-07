@@ -38,11 +38,17 @@ fun VideoStageFrame(
     playerManager: PlayerManager,
     fullScreen: VideoFullScreenState,
     modifier: Modifier = Modifier,
+    /**
+     * iptv 页传 true：流还没出画面（视频轨未上报）时也要能看到全屏入口。
+     * 否则用户看到的就是"这个播放页没有全屏"，而不是"这个流还没起来"。
+     */
+    alwaysShowFullScreen: Boolean = false,
 ) {
     val hasVideo by playerManager.hasVideoTrack.collectAsState()
     val interactive = VideoControlsPolicy.showsFullScreenButton(
         hasVideoTrack = hasVideo,
         isFullScreen = fullScreen.isFullScreen,
+        alwaysShow = alwaysShowFullScreen,
     )
     val showRotate = VideoControlsPolicy.showsRotateButton(
         // 用进入全屏那一刻的判定，不用当前形态：大屏手机一进全屏就横屏、

@@ -145,6 +145,8 @@ fun IptvPlayerScreen(
                     playerManager = playerManager,
                     fullScreen = fullScreen,
                     modifier = Modifier.fillMaxSize(),
+                    // iptv 页恒给全屏入口：流没起来时用户也要能找到它
+                    alwaysShowFullScreen = true,
                 )
                 // 还没出画面时给个明确反馈：否则整块纯黑只有底部一行字，像卡死
                 if (!hasVideo && status != null) {

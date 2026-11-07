@@ -36,8 +36,11 @@ object VideoControlsPolicy {
      * `isFullScreen` 优先：已在全屏就必须给退出入口 —— 大屏手机点全屏后强制横屏，
      * 形态判定会当场翻转，若条件里有任何形态判断，按钮会在用户眼前消失。
      */
-    fun showsFullScreenButton(hasVideoTrack: Boolean, isFullScreen: Boolean): Boolean =
-        isFullScreen || hasVideoTrack
+    fun showsFullScreenButton(
+        hasVideoTrack: Boolean,
+        isFullScreen: Boolean,
+        alwaysShow: Boolean = false,
+    ): Boolean = alwaysShow || isFullScreen || hasVideoTrack
 
     /**
      * 页面细节区块（台名/频率/简介/标签/EPG/节目源/播控）要不要渲染。
