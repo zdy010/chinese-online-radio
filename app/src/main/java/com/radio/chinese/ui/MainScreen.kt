@@ -66,8 +66,11 @@ fun RadioNavGraph(
         composable(Screen.Iptv.route) {
             IptvScreen(
                 playerManager = playerManager,
-                // 专用播放页是无参数路由：状态一律读 PlayerManager（与 OperaPlayer 同构）
-                onNavigateToPlayer = { _ -> navController.navigate(Screen.IptvPlayer.route) },
+                // 专用播放页是无参数路由：状态一律读 PlayerManager（与 OperaPlayer 同构）。
+                // launchSingleTop：连点两个台时不叠两层播放页，返回一次就回列表。
+                onNavigateToPlayer = { _ ->
+                    navController.navigate(Screen.IptvPlayer.route) { launchSingleTop = true }
+                },
             )
         }
 

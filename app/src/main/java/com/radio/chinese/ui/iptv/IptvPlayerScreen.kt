@@ -1,12 +1,15 @@
 package com.radio.chinese.ui.iptv
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,13 +17,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,7 +44,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.ui.common.VideoStageFrame
@@ -58,6 +66,7 @@ import com.radio.chinese.ui.theme.isCarSurface
 fun IptvPlayerScreen(
     playerManager: PlayerManager,
     onNavigateBack: () -> Unit,
+    viewModel: IptvPlayerViewModel = hiltViewModel(),
 ) {
     val station by playerManager.currentStation.collectAsState()
     val isPlaying by playerManager.isPlaying.collectAsState()
@@ -66,6 +75,7 @@ fun IptvPlayerScreen(
     val sourceScores by playerManager.sourceScores.collectAsState()
     val status by playerManager.status.collectAsState()
     val error by playerManager.error.collectAsState()
+    val favoriteIds by viewModel.favoriteIds.collectAsState()
 
     val fullScreen = rememberVideoFullScreen(canRotate = isCarSurface().not())
 
@@ -103,16 +113,55 @@ fun IptvPlayerScreen(
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                         }
                     },
+                    actions = {
+                        val id = station?.id
+                        val fav = id != null && id in favoriteIds
+                        IconButton(
+                            onClick = { id?.let(viewModel::toggleFavorite) },
+                            enabled = id != null,
+                        ) {
+                            Icon(
+                                imageVector = if (fav) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = if (fav) "取消收藏" else "收藏",
+                                tint = if (fav) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
                 )
             }
         },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            VideoStageFrame(
-                playerManager = playerManager,
-                fullScreen = fullScreen,
-                modifier = Modifier.fillMaxWidth().weight(1f),
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    // 黑底：PlayerView 是 RESIZE_MODE_FIT，16:9 内容在竖屏里上下留边；
+                    // 留边露出 Scaffold 的浅色 surface 会像"画面悬浮在页面中间"，黑底才是播放器观感。
+                    .background(Color.Black),
+            ) {
+                VideoStageFrame(
+                    playerManager = playerManager,
+                    fullScreen = fullScreen,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                // 还没出画面时给个明确反馈：否则整块纯黑只有底部一行字，像卡死
+                if (!hasVideo && status != null) {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(Dimens.GapMedium))
+                        Text(
+                            text = status.orEmpty(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                        )
+                    }
+                }
+            }
 
             // 全屏时画面独占：退出入口在 VideoStageFrame 的控制层上
             if (!fullScreen.isFullScreen) {

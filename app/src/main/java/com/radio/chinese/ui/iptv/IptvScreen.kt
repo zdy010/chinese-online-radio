@@ -1,5 +1,6 @@
 package com.radio.chinese.ui.iptv
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,15 +41,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.domain.model.IptvCategory
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
 import com.radio.chinese.ui.common.LoadingState
 import com.radio.chinese.ui.common.NowPlayingState
+import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.rememberNowPlaying
-import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.home.StationListItem
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
@@ -67,11 +69,27 @@ fun IptvScreen(
     viewModel: IptvViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.uiState.collectAsState()
-    val onRowClick = rememberStationRowOnClick(playerManager, onNavigateToPlayer)
+    // 迷你条要的是"这台还在不在播"，与列表的 isPlaying 标记分开取，避免搜索过滤掉当前台时看不到
+    val current by playerManager.currentStation.collectAsState()
+    val playing by playerManager.isPlaying.collectAsState()
+    val playbackError by playerManager.error.collectAsState()
+    // iptv 是视频：点台就该立刻看到画面，不能沿用电台"先留在列表、再点才进播放页"的语义。
+    // 当前台正在播时只导航，不重复起播（重复 playStation 会重置轮转，打断正在播的流）。
+    val onRowClick: (RadioStation) -> Unit = { station ->
+        if (playerManager.currentStation.value?.id != station.id) {
+            playerManager.playStation(station)
+        }
+        onNavigateToPlayer(station.id)
+    }
     val nowPlaying = rememberNowPlaying(playerManager)
     // "" = 首屏四入口；categories/countries/recent/favorite = 二级入口页；
     // "cat:<label>" / "cty:<name>" = 具体频道列表。用 String 是为了 rememberSaveable 直接可存。
     var mode by rememberSaveable { mutableStateOf("") }
+
+    // 系统返回键先退"搜索态"、再退"二级列表"，不要一步退出 iptv tab。
+    // 不拦这一步时，在分类/国家列表按返回会直接回到电台页，看起来像"点进去就回不来了"。
+    BackHandler(enabled = ui.query.isNotEmpty()) { viewModel.updateQuery("") }
+    BackHandler(enabled = ui.query.isBlank() && mode.isNotEmpty()) { mode = parentOf(mode) }
 
     // 切台基准（V11）：注册当前可见集合。清理集中在 MainScreen 按路由做 ——
     // 从浏览页跳播放页时浏览页也会 dispose，在 onDispose 里 clear 会把刚注册的基准清掉。
@@ -103,7 +121,7 @@ fun IptvScreen(
 
         val searching = ui.query.isNotBlank()
         if (!searching && mode.isNotEmpty()) {
-            BrowseTopBar(title = modeTitle(mode), onBack = { mode = parentOf(mode) })
+            BrowseTopBar(title = modeTitle(mode, ui), onBack = { mode = parentOf(mode) })
             if (mode == "categories") {
                 Text(
                     text = "按上游标签聚合；没有分类标签的频道请用搜索或国家入口查找",
@@ -181,16 +199,41 @@ fun IptvScreen(
                 }
             }
         }
+
+        // 迷你条：从播放页返回后还能看到"正在播什么"，点它回专用播放页。
+        // 只有 iptv 台才显示：电台台有自己的迷你条，不该在 iptv 页出现。
+        val iptvNow = current?.takeIf { it.id.startsWith(IptvStationRepository.PREFIX) }
+        if (iptvNow != null) {
+            RadioMiniPlayerBar(
+                title = iptvNow.name,
+                subtitle = playbackError ?: if (playing) "正在播放" else "已暂停",
+                coverUrl = iptvNow.logoUrl,
+                isPlaying = playing,
+                onPlayPause = { playerManager.togglePlayPause() },
+                onClick = { onNavigateToPlayer(iptvNow.id) },
+            )
+        }
     }
 }
 
-private fun modeTitle(mode: String): String = when {
-    mode == "categories" -> "全部分类"
-    mode == "countries" -> "全部国家/地区"
-    mode == "recent" -> "最近播放"
-    mode == "favorite" -> "我的收藏"
-    mode.startsWith("cat:") -> mode.removePrefix("cat:")
-    mode.startsWith("cty:") -> mode.removePrefix("cty:")
+/**
+ * 二级列表标题。带上条目数：既让用户知道这一页有多大，也让验收能直接读到
+ * "点进新闻后有 1003 个频道"，不必靠数列表项。
+ */
+private fun modeTitle(mode: String, ui: IptvUiState): String = when {
+    mode == "categories" -> "全部分类 · ${ui.categories.size} 类"
+    mode == "countries" -> "全部国家/地区 · ${ui.countries.size} 个"
+    mode == "recent" -> "最近播放 · ${ui.recents.size} 个频道"
+    mode == "favorite" -> "我的收藏 · ${ui.favorites.size} 个频道"
+    mode.startsWith("cat:") -> {
+        val label = mode.removePrefix("cat:")
+        val n = ui.visible.count { st -> st.tags.any { IptvCategory.labelOf(it) == label } }
+        "$label · $n 个频道"
+    }
+    mode.startsWith("cty:") -> {
+        val name = mode.removePrefix("cty:")
+        "$name · ${ui.visible.count { it.country == name }} 个频道"
+    }
     else -> "频道列表"
 }
 
