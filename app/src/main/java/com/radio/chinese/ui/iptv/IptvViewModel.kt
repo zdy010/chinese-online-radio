@@ -55,6 +55,12 @@ class IptvViewModel @Inject constructor(
 
     private val _all = MutableStateFlow<List<RadioStation>>(emptyList())
     private val _query = MutableStateFlow("")
+
+    /**
+     * 搜索框必须绑这份**同步**值：uiState 在 Default 线程重算，
+     * 绑 uiState.query 会在每次按键后把输入回滚成上一帧的旧值（实测 "CCTV" 只剩 "V"）。
+     */
+    val query: StateFlow<String> = _query
     private val _adultEnabled = MutableStateFlow(false)
     private val _allLanguages = MutableStateFlow(false)
     // 与 _all 分开：清单解析失败时也是空表，那时该显示空态而不是无限 Loading（spec §9）

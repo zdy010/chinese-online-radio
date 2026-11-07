@@ -69,6 +69,8 @@ fun IptvScreen(
     viewModel: IptvViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.uiState.collectAsState()
+    // 输入框绑同步 query，不绑 uiState（后者在 Default 线程重算，会回滚输入）
+    val queryText by viewModel.query.collectAsState()
     // 迷你条要的是"这台还在不在播"，与列表的 isPlaying 标记分开取，避免搜索过滤掉当前台时看不到
     val current by playerManager.currentStation.collectAsState()
     val playing by playerManager.isPlaying.collectAsState()
@@ -102,7 +104,7 @@ fun IptvScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBarRow(
-            value = ui.query,
+            value = queryText,
             onValueChange = { q ->
                 viewModel.updateQuery(q)
                 if (q.isNotEmpty()) mode = ""
