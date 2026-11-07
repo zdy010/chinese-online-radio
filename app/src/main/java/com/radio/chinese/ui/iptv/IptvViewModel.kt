@@ -32,6 +32,7 @@ private data class Inputs(
     val all: List<RadioStation>,
     val query: String,
     val adult: Boolean,
+    val allLanguages: Boolean,
     val loaded: Boolean,
 )
 
@@ -52,17 +53,20 @@ class IptvViewModel @Inject constructor(
     private val _all = MutableStateFlow<List<RadioStation>>(emptyList())
     private val _query = MutableStateFlow("")
     private val _adultEnabled = MutableStateFlow(false)
+    private val _allLanguages = MutableStateFlow(false)
     // 与 _all 分开：清单解析失败时也是空表，那时该显示空态而不是无限 Loading（spec §9）
     private val _loaded = MutableStateFlow(false)
 
     val uiState: StateFlow<IptvUiState> = combine(
-        combine(_all, _query, _adultEnabled, _loaded) { all, q, adult, loaded ->
-            Inputs(all, q, adult, loaded)
+        combine(_all, _query, _adultEnabled, _allLanguages, _loaded) { all, q, adult, langs, loaded ->
+            Inputs(all, q, adult, langs, loaded)
         },
         favoriteRepository.getFavoriteIds(),
         preferences.radioRecentStationIds,
     ) { input, favIds, recentIds ->
-        val lists = IptvViewLogic.build(input.all, input.query, input.adult, favIds, recentIds)
+        val lists = IptvViewLogic.build(
+            input.all, input.query, input.adult, input.allLanguages, favIds, recentIds,
+        )
         IptvUiState(
             visible = lists.visible,
             favorites = lists.favorites,
@@ -84,6 +88,9 @@ class IptvViewModel @Inject constructor(
         viewModelScope.launch {
             preferences.iptvAdultEnabled.collect { _adultEnabled.value = it }
         }
+        viewModelScope.launch {
+            preferences.iptvAllLanguages.collect { _allLanguages.value = it }
+        }
     }
 
     fun updateQuery(q: String) { _query.value = q }
@@ -100,5 +107,9 @@ class IptvViewModel @Inject constructor(
 
     fun setAdultEnabled(enabled: Boolean) {
         viewModelScope.launch { preferences.setIptvAdultEnabled(enabled) }
+    }
+
+    fun setAllLanguages(enabled: Boolean) {
+        viewModelScope.launch { preferences.setIptvAllLanguages(enabled) }
     }
 }

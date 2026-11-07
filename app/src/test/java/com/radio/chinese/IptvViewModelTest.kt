@@ -41,10 +41,28 @@ class IptvViewModelTest {
 
     private fun build(
         adultEnabled: Boolean = false,
+        allLanguages: Boolean = false,
         query: String = "",
         favIds: List<String> = emptyList(),
         recentIds: List<String> = emptyList(),
-    ) = IptvViewLogic.build(all, query, adultEnabled, favIds, recentIds)
+    ) = IptvViewLogic.build(all, query, adultEnabled, allLanguages, favIds, recentIds)
+
+    @Test
+    fun `默认只留中文与英语频道，开关打开后全显示`() {
+        val data = listOf(
+            RadioStation(id = "iptv:cn.cn", name = "CN", category = "general", language = "country:zho"),
+            RadioStation(id = "iptv:eng.us", name = "EN", category = "general", language = "eng"),
+            RadioStation(id = "iptv:jpn.jp", name = "JP", category = "general", language = "country:jpn"),
+            RadioStation(id = "iptv:us.us", name = "US", category = "general", language = "country:eng,spa"),
+            RadioStation(id = "iptv:direct:x", name = "D", category = "general", language = ""),
+        )
+        val off = IptvViewLogic.build(data, "", false, false, emptyList(), emptyList())
+            .visible.map { it.id }
+        assertEquals(setOf("iptv:cn.cn", "iptv:eng.us", "iptv:direct:x"), off.toSet())
+        val on = IptvViewLogic.build(data, "", false, true, emptyList(), emptyList())
+            .visible.map { it.id }
+        assertEquals(5, on.size)
+    }
 
     @Test
     fun `默认隐藏成人，标记与 xxx 分类都算`() {

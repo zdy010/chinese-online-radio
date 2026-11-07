@@ -59,6 +59,7 @@ data class SettingsUiState(
     val uiMode: Int = 0,
     val bootAutoStart: Boolean = false,
     val iptvAdultEnabled: Boolean = false,
+    val iptvAllLanguages: Boolean = false,
     val voiceAnnounceEnabled: Boolean = true,
     val localFirstEnabled: Boolean = true
 )
@@ -137,6 +138,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(iptvAdultEnabled = enabled)
             }
         }
+        viewModelScope.launch {
+            preferences.iptvAllLanguages.collect { enabled ->
+                _uiState.value = _uiState.value.copy(iptvAllLanguages = enabled)
+            }
+        }
         observeListenEnhance()
     }
 
@@ -167,6 +173,12 @@ class SettingsViewModel @Inject constructor(
     fun setIptvAdultEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferences.setIptvAdultEnabled(enabled)
+        }
+    }
+
+    fun setIptvAllLanguages(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.setIptvAllLanguages(enabled)
         }
     }
 
@@ -386,6 +398,24 @@ fun SettingsScreen(
                     .clickable {
                         viewModel.setBootAutoStart(!uiState.bootAutoStart)
                     }
+            )
+
+            HorizontalDivider()
+
+            // iptv 语言：默认只显示中文与英语，其他语言要在这里显式打开
+            ListItem(
+                headlineContent = { Text("显示其他语言频道（iptv）") },
+                supportingContent = { Text("默认关闭，只显示中文与英语频道。开启后显示西班牙语、阿拉伯语、俄语等频道") },
+                leadingContent = { Icon(Icons.Default.Language, contentDescription = null) },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.iptvAllLanguages,
+                        onCheckedChange = { viewModel.setIptvAllLanguages(it) }
+                    )
+                },
+                modifier = Modifier
+                    .carTouchTarget()
+                    .clickable { viewModel.setIptvAllLanguages(!uiState.iptvAllLanguages) }
             )
 
             HorizontalDivider()

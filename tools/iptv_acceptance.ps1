@@ -1,6 +1,6 @@
 # iptv Tab 真机验收 T1–T14（spec §10.2）
 # 用法：pwsh -NoProfile -File tools/iptv_acceptance.ps1                      全量
-#      pwsh -NoProfile -File tools/iptv_acceptance.ps1 -OnlyT 3              单跑 T3
+#      pwsh -NoProfile -File tools/iptv_acceptance.ps1 -OnlyT 3              单跑 T3（15 = V13 语言过滤）
 #      pwsh -NoProfile -File tools/iptv_acceptance.ps1 -Pkg com.radio.chinese  R8 包复跑
 # 纪律：结论一律以**本次**设备输出为准；拿不到信号就 INCONCLUSIVE，绝不写 PASS。
 #       dump 前先 rm 旧文件、Assert 有第三态、几何切换放 try/finally，均照抄
@@ -111,6 +111,19 @@ function Tap-After-Scroll($pattern) {
     throw "not found after 20 swipes: $pattern"
 }
 
+# 只找不点：国家列表按频道数排序，「中国」154 条排在中后段，首屏 dump 抓不到
+function Find-After-Scroll($pattern, $max = 10) {
+    $s = Get-ScreenSize
+    $x = [int]($s.W * 0.5); $from = [int]($s.H * 0.72); $to = [int]($s.H * 0.32)
+    for ($i = 0; $i -lt $max; $i++) {
+        $hit = Find-Node $pattern (Dump-Ui "find")
+        if ($hit) { return $hit }
+        adb shell input swipe $x $from $x $to 350 | Out-Null
+        Start-Sleep -Milliseconds 400
+    }
+    return $null
+}
+
 # ---- 环境前置 ----
 $devs = @(adb devices | Select-String "\tdevice$")
 if ($devs.Count -eq 0) {
@@ -131,10 +144,30 @@ adb shell pm grant $pkg android.permission.POST_NOTIFICATIONS 2>$null | Out-Null
 
 # ---- 清单基线：脚本内读 json，不靠截图、不靠人报数 ----
 $allStations = @((Get-Content $assets -Raw -Encoding UTF8 | ConvertFrom-Json).stations)
+
+# 语言准入必须与 IptvLanguage 逐条对齐，否则 T3 的计数会与界面差一截
+function Test-PreferredLanguage($language) {
+    $raw = "$language".Trim()
+    if (-not $raw) { return $true }
+    $pref = @('zho', 'chi', 'cmn', 'yue', 'zh', 'en', 'eng')
+    if ($raw.StartsWith('country:')) {
+        $codes = @($raw.Substring(8) -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ })
+        if ($codes.Count -eq 0) { return $true }
+        return (@($codes | Where-Object { $pref -notcontains $_ }).Count -eq 0)
+    }
+    $codes = @($raw -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ })
+    if ($codes.Count -eq 0) { return $true }
+    return (@($codes | Where-Object { $pref -contains $_ }).Count -gt 0)
+}
+
 # 成人判据与生产一致：nsfw 标记 或 tags 含 xxx（默认开关关）
+# 语言判据与生产一致：默认只留中文与英语（V13）
 $visibleStations = @($allStations | Where-Object {
-    $_.nsfw -ne $true -and @($_.tags) -notcontains 'xxx'
+    $_.nsfw -ne $true -and @($_.tags) -notcontains 'xxx' -and (Test-PreferredLanguage $_.language)
 })
+$jpnSample = @($allStations | Where-Object {
+    $_.language -eq 'country:jpn' -and $_.name -match '^[A-Za-z0-9 .\-]+$'
+} | Select-Object -First 1)
 $tagCounts = @{}
 foreach ($s in $visibleStations) {
     foreach ($t in @($s.tags)) { if ($t) { $tagCounts[$t] = 1 + $tagCounts[$t] } }
@@ -201,8 +234,11 @@ function Search-Query($q) {
 function Card-Count($nodes, $label) {
     $l = Find-Node $label $nodes
     if (-not $l) { return $null }
-    $c = @($nodes | Where-Object { $_.Text -match '^\d+ 个频道$' } |
-        Sort-Object { [math]::Abs($_.Y1 - $l.Y1) } | Select-Object -First 1)
+    # 标签与计数必须在同一列：只按 Y 距离排，两列同高时会随机取到隔壁列的计数
+    $colTol = [math]::Max(120, [int]((Get-ScreenSize).W / 4))
+    $c = @($nodes | Where-Object {
+            $_.Text -match '^\d+ 个频道$' -and [math]::Abs($_.X1 - $l.X1) -le $colTol
+        } | Sort-Object { [math]::Abs($_.Y1 - $l.Y1) } | Select-Object -First 1)
     if ($c.Count -eq 0) { return $null }
     return [int]([regex]::Match($c[0].Text, '\d+').Value)
 }
@@ -237,10 +273,14 @@ if ($OnlyT -in 0, 1) {
 if ($OnlyT -in 0, 2) {
     $null = Open-Iptv
     $nodes = Dump-Ui "t2"
-    $cards = @($nodes | Where-Object { $_.Text -like "*个频道*" })
-    Assert "T2 首屏是搜索框+四入口，不平铺万条" (
-        $cards.Count -ge 4 -and @($nodes).Count -le 30
-    ) "入口卡=$($cards.Count) 可见节点=$(@($nodes).Count)（spec 判据 ≤30）"
+    # 判据盯"四入口齐全 + 没有任何列表行"，不再拿总节点数当阈值：
+    # LazyGrid 只渲染可见项，12k 平铺与 12 条平铺的节点数一样，节点数证明不了"不平铺"。
+    $entryNames = @("分类浏览", "国家/地区", "最近播放", "我的收藏")
+    $entryHits = @($entryNames | ForEach-Object { Find-Node $_ $nodes } | Where-Object { $_ }).Count
+    $rowFavs = @($nodes | Where-Object { $_.Descr -eq '收藏' }).Count
+    Assert "T2 首屏是四入口而非频道列表" (
+        $entryHits -eq 4 -and $rowFavs -eq 0
+    ) "入口=$entryHits/4 列表行收藏按钮=$rowFavs 可见节点=$(@($nodes).Count)"
     Assert "T2 顶部有搜索框" ($null -ne (Find-Node "搜索频道名称" $nodes)) "placeholder=搜索频道名称、别名或国家"
 }
 
@@ -260,6 +300,14 @@ if ($OnlyT -in 0, 3) {
             Assert "T3 分类 $label 计数与 json 一致" ($ui -eq $expected) "ui=$ui json=$expected"
         }
     }
+    # 点进「新闻」：标题应带实测条数（不是只显示分类名）
+    Tap-Node "新闻" | Out-Null
+    Start-Sleep -Milliseconds 800
+    $detail = Dump-Ui "t3-news"
+    $expect = $tagCounts['news']
+    $title = @($detail | Where-Object { $_.Text -like '新闻 · *' } | Select-Object -First 1)
+    Assert "T3 新闻列表标题含实测条数" ($title.Count -gt 0 -and $title[0].Text -eq "新闻 · $expect 个频道") `
+        "title=$(if ($title.Count -gt 0) { $title[0].Text } else { 'none' }) expect=新闻 · $expect 个频道"
 }
 
 # ---------------- T4 国家中文名 ----------------
@@ -268,9 +316,11 @@ if ($OnlyT -in 0, 4) {
     Tap-Node "国家/地区" | Out-Null
     Start-Sleep -Milliseconds 800
     $nodes = Dump-Ui "t4-countries"
-    $cn = @($nodes | Where-Object { $_.Text -eq "中国" }).Count -gt 0
+    # 先看首屏有没有未翻译的裸代码（滚动前）
     $raw = @($nodes | Where-Object { $_.Text -eq "CN" }).Count -eq 0
-    Assert "T4 国家入口显示「中国」不是「CN」" ($cn -and $raw) "中国节点=$cn 独立CN节点不存在=$raw"
+    # 「中国」154 条，按频道数排序在中后段，要滚才看得到
+    $cnNode = Find-After-Scroll "中国"
+    Assert "T4 国家入口显示「中国」不是「CN」" ($null -ne $cnNode -and $raw) "中国节点=$(($null -ne $cnNode)) 独立CN节点不存在=$raw"
 }
 
 # ---------------- T5 搜索（别名 / direct） ----------------
@@ -303,7 +353,7 @@ if ($OnlyT -in 0, 6) {
         $q = $uaSample[0].name
         $null = Search-Query $q
         Tap-Node $q | Out-Null
-        Start-Sleep -Seconds 4
+        Start-Sleep -Seconds 10   # 带 UA 的流也常需要轮转，4 秒时 commit 可能还没到
         $logs = "$((adb logcat -d -s IptvHeaders:D) -join ' ')"
         $applied = $logs -match 'applied ua=true'
         $commit = $logs -match 'commit id=iptv:.*ua=true'
@@ -319,14 +369,12 @@ if ($OnlyT -in 0, 6) {
 
 # ---------------- T7 全屏 ----------------
 if ($OnlyT -in 0, 7) {
-    # 自己起播：rememberStationRowOnClick 的语义是"第一次起播留在列表，第二次点当前台才进页"
+    # 自己起播：iptv 行点击的语义是"点一次就起播并立刻进专用播放页"
     $null = Open-Iptv
     if ($uaSample.Count -gt 0) {
         $null = Search-Query $uaSample[0].name
         Tap-Node $uaSample[0].name | Out-Null
-        Start-Sleep -Seconds 3
-        Tap-Node $uaSample[0].name | Out-Null
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 8
     }
     $nodes = Dump-Ui "t7-before"
     $full = Find-Node "全屏" $nodes
@@ -398,6 +446,30 @@ if ($OnlyT -in 0, 9) {
     }
 }
 
+# ---------------- V13 语言过滤（默认只留中文/英语） ----------------
+if ($OnlyT -in 0, 15) {
+    if ($jpnSample.Count -gt 0) {
+        $null = Open-Iptv
+        $q = $jpnSample[0].name
+        $n = Search-Query $q
+        $offHit = if ($n) { Find-Node $q $n } else { $null }
+        Assert "V13 默认隐藏非中英频道" ($null -eq $offHit) "query=$q name=$($jpnSample[0].name)"
+        Launch-Home
+        Tap-Node "设置" | Out-Null
+        Tap-After-Scroll "显示其他语言频道（iptv）" | Out-Null
+        Start-Sleep -Milliseconds 600
+        $null = Open-Iptv
+        $n2 = Search-Query $q
+        $onHit = if ($n2) { Find-Node $q $n2 } else { $null }
+        Assert "V13 打开后可见非中英频道" ($null -ne $onHit) "query=$q name=$($jpnSample[0].name)"
+        Launch-Home
+        Tap-Node "设置" | Out-Null
+        Tap-After-Scroll "显示其他语言频道（iptv）" | Out-Null   # 关回，别把设备留在打开态
+    } else {
+        Assert "V13 语言过滤" $false "清单里没有日语样本，无法验收" -Inconclusive
+    }
+}
+
 # ---------------- T10 车机几何 ----------------
 if ($OnlyT -in 0, 10) {
     try {
@@ -436,10 +508,8 @@ if ($OnlyT -in 0, 12) {
     if ($uaSample.Count -gt 0) {
         $null = Open-Iptv
         $null = Search-Query $uaSample[0].name
-        Tap-Node $uaSample[0].name | Out-Null
-        Start-Sleep -Seconds 3
-        Tap-Node $uaSample[0].name | Out-Null   # 进播放页
-        Start-Sleep -Seconds 2
+        Tap-Node $uaSample[0].name | Out-Null   # 点一次即进播放页
+        Start-Sleep -Seconds 8
         adb logcat -c
         adb shell input keyevent 87 | Out-Null  # KEYCODE_MEDIA_NEXT
         Start-Sleep -Seconds 5

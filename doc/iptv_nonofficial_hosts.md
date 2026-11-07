@@ -245,6 +245,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AajKiKhabar.in | （无 website） | indianews-yupp.vgcdn.net |
 | AajKiKhabar.in | （无 website） | mumt04.tangotv.in |
 | AajKiKhabar.in | （无 website） | stream.ottlive.co.in |
+| AajKiKhabar.in | （无 website） | vglivessai.akamaized.net |
 | AajNews.pk | www.aaj.tv | 115.42.65.142 |
 | AajTak.in | www.aajtak.in | 103.213.31.109 |
 | AajTak.in | www.aajtak.in | aajtaklive-amd.akamaized.net |
@@ -259,6 +260,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AaryaaTV.in | （无 website） | stream.ottlive.co.in |
 | AaseervathamTV.in | （无 website） | mumt04.tangotv.in |
 | Aastha.in | www.aasthatv.tv | 103.175.73.12 |
+| Aastha.in | www.aasthatv.tv | 163.61.226.31 |
 | Aastha.in | www.aasthatv.tv | aasthaott.akamaized.net |
 | Aastha.in | www.aasthatv.tv | cdn.pishow.tv |
 | Aastha.in | www.aasthatv.tv | fta.ektv.in |
@@ -271,6 +273,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AasthaGujarati.in | www.aasthatv.tv | aasthaott.akamaized.net |
 | AasthaGujarati.in | www.aasthatv.tv | fta.ektv.in |
 | AasthaGujarati.in | www.aasthatv.tv | mumt04.tangotv.in |
+| AasthaInternational.in | www.aasthatv.tv | aasthaott.akamaized.net |
 | AasthaKannada.in | www.aasthatv.tv | aasthaott.akamaized.net |
 | AasthaKannada.in | www.aasthatv.tv | cdn.pishow.tv |
 | AasthaPrime1.in | www.aasthatv.tv | aasthaott.akamaized.net |
@@ -343,14 +346,19 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ABNUrdu.us | www.abnsat.com | mediaserver.abnvideos.com |
 | ABPAnanda.in | bengali.abplive.com | d2l4ar6y3mrs4k.cloudfront.net |
 | ABPAnanda.in | bengali.abplive.com | fta.ektv.in |
+| ABPAnanda.in | bengali.abplive.com | mumt05.tangotv.in |
 | ABPAsmita.in | gujarati.abplive.com | d2l4ar6y3mrs4k.cloudfront.net |
 | ABPAsmita.in | gujarati.abplive.com | fta.ektv.in |
+| ABPAsmita.in | gujarati.abplive.com | mumt07.tangotv.in |
 | ABPGanga.in | www.abpganga.com | d2l4ar6y3mrs4k.cloudfront.net |
 | ABPGanga.in | www.abpganga.com | fta.ektv.in |
+| ABPGanga.in | www.abpganga.com | mumt05.tangotv.in |
 | ABPMajha.in | marathi.abplive.com | cdn.pishow.tv |
 | ABPMajha.in | marathi.abplive.com | fta.ektv.in |
 | ABPMajha.in | marathi.abplive.com | mumbai-edge.smartplaytv.in |
+| ABPMajha.in | marathi.abplive.com | mumt05.tangotv.in |
 | ABPMajha.in | marathi.abplive.com | yupprestreamliveus.akamaized.net |
+| ABPNews.in | www.abplive.com | 163.61.226.31 |
 | ABPNews.in | www.abplive.com | cdn.pishow.tv |
 | ABPNews.in | www.abplive.com | d1rc86nwwc9fag.cloudfront.net |
 | ABPNews.in | www.abplive.com | d2l4ar6y3mrs4k.cloudfront.net |
@@ -358,6 +366,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ABPNews.in | www.abplive.com | mumbai-edge.smartplaytv.in |
 | ABPNews.in | www.abplive.com | mumt04.tangotv.in |
 | ABPSanjha.in | punjabi.abplive.com | fta.ektv.in |
+| ABPSanjha.in | punjabi.abplive.com | mumt04.tangotv.in |
 | AbsoluteRealitybyWETV.us | （无 website） | amc-absolutereality-1-us.plex.wurl.tv |
 | ABTelevision.pe | （无 website） | live-evg8.tv360.bitel.com.pe |
 | AbyaYalaTV.bo | abyayala.tv.bo | 15.204.246.24 |
@@ -794,19 +803,21 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AnandTV.in | （无 website） | live.legitpro.co.in |
 | AnandWariTV.in | （无 website） | mumt03.tangotv.in |
 | Anaylos7.us | pluto.tv | jmp2.uk |
+| ANBNews.in | anbnews.in | d1msejlow1t3l4.cloudfront.net |
 | ANBNews.in | anbnews.in | fta.ektv.in |
 | ANBNews.in | anbnews.in | mumt05.tangotv.in |
 | ANBNews.in | anbnews.in | server.livelegitpro.in |
+| ANBNews.in | anbnews.in | stream.ottlive.co.in |
 | ANCTelevision.co | anctelevision.com | live.amelbatv.co |
 | AndesTelevision.pe | radiosicuani.com | live-evg7.tv360.bitel.com.pe |
 | AndesTelevision.pe | radiosicuani.com | stmv2.srvif.com |
 | AndinaRTV.pe | andinartv.com | live-evg8.tv360.bitel.com.pe |
 | AndorraTV.ad | www.andorradifusio.ad | livesg1.rtva.hiway.media |
 | AndoTV.cn | www.qhtb.cn | play.kankanlive.com |
+| Andpictures.in | andtv.zee5.com | 103.135.253.32 |
 | Andromeda.us | pluto.tv | jmp2.uk |
 | AndTV.in | andtv.zee5.com | 3f56f997.wurl.com |
 | AndTV.in | andtv.zee5.com | amg01117-amg01117c1-amgplt0029.playout.now3.amagi.tv |
-| AndTV.in | andtv.zee5.com | drk6xq0vhn.gpcdn.net |
 | AndyHaryana.in | www.andyharyana.com | mumt03.tangotv.in |
 | AneflixLive.us | vaughn.live | stream-cdn-iad.vaughnsoft.net |
 | AnewZTV.az | anewz.tv | 53be5ef2d13aa.streamlock.net |
@@ -850,7 +861,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AnmolTV.in | www.zee5.com | drk6xq0vhn.gpcdn.net |
 | AnmolTV.in | www.zee5.com | fta.ektv.in |
 | AnNinhTV.vn | www.antv.gov.vn | freem3u.xyz |
-| AnNinhTV.vn | www.antv.gov.vn | live.tvon.vn |
 | AnNinhTV.vn | www.antv.gov.vn | liveh12.vtvprime.vn |
 | AnshunComprehensiveNewsChannel.cn | www.gzastv.com | hplayer1.juyun.tv |
 | ANT1.gr | www.antenna.gr | mcdn.antennaplus.gr |
@@ -859,21 +869,23 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AntaresTelevision.pe | antarestvradio.com | 5c3fb01839654.streamlock.net |
 | Antena1.pe | canala1.com | bantel-cdn1.iptvperu.tv |
 | Antena1.pe | canala1.com | live-evg8.tv360.bitel.com.pe |
-| Antena1.ro | a1.ro | live4dai.antenaplay.ro |
 | Antena1.ro | a1.ro | live77cdn2.antenaplay.ro |
 | Antena21.do | www.antena7.com.do | alba-do-antena7-c21.stream.mediatiquestream.com |
 | Antena21.do | www.antena7.com.do | hls.tvabierta.net |
 | Antena3.es | www.antena3.com | cdn.stmify.com |
 | Antena3CNN.ro | www.antena3.ro | live3vox.antenaplay.ro |
+| Antena3CNN.ro | www.antena3.ro | live77cdn2.antenaplay.ro |
 | Antena3Constanta.ro | antena3constanta.ro | streaming.eforie.city |
 | Antena3Internacional.es | www.antena3internacional.com | 38.252.238.18 |
 | Antena3Suceava.ro | antena3suceava.ro | livestream.a3sv.ro |
 | Antena7.do | www.antena7.com.do | alba-do-antena7-antena7.stream.mediatiquestream.com |
 | Antena7.do | www.antena7.com.do | hls.tvabierta.net |
 | AntenaHD.pl | （无 website） | 92.114.85.87 |
-| AntenaInternational.ro | antenainternational.ro | live4dai.antenaplay.ro |
+| AntenaInternational.ro | antenainternational.ro | live77cdn2.antenaplay.ro |
+| AntenaPlayEvents.ro | （无 website） | live77cdn2.antenaplay.ro |
 | AntenaSeisTV.cr | www.antenaseis.com | video1.azulstream.com |
 | AntenaSport.ro | as.ro | stream1.antenaplay.ro |
+| AntenaStars.ro | antenastars.ro | live77cdn2.antenaplay.ro |
 | AntenaSUR.pe | （无 website） | cloudpro.servidoresdestream.com |
 | AntenaSUR.pe | （无 website） | live-evg8.tv360.bitel.com.pe |
 | AntenaTV.mx | www.antenatele.com.mx | 5ca9af4645e15.streamlock.net |
@@ -951,6 +963,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | AreYouTheOne.se | pluto.tv | jmp2.uk |
 | ArgentinisimaSatelital.ar | argentinisimatv.com.ar | stream1.sersat.com |
 | ArgesTV.ro | argestv.ro | btutzctahuf0wjoq.cdn.streamingserver.io |
+| ArgusNews.in | argusnews.in | d1msejlow1t3l4.cloudfront.net |
 | ArgusNews.in | argusnews.in | mumt05.tangotv.in |
 | ArgusNews.in | argusnews.in | stream.ottlive.co.in |
 | AricaTV.cl | arica.tv | 5eff35271151c.streamlock.net |
@@ -1252,21 +1265,28 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | B1.ro | b1.ro | hls02ns.antenaplay.ro |
 | B15Fresnillo.mx | b15.com.mx | s5.mexside.net |
 | B15Zacatecas.mx | b15.com.mx | s5.mexside.net |
+| B4UBhojpuri.in | b4umovies.in | 163.61.226.31 |
 | B4UBhojpuri.in | b4umovies.in | cc-t2mudtkmuz4wb.akamaized.net |
 | B4UBhojpuri.in | b4umovies.in | cdnb4u.wiseplayout.com |
 | B4UBhojpuri.in | b4umovies.in | fta.ektv.in |
 | B4UBhojpuri.in | b4umovies.in | mumt05.tangotv.in |
 | B4UBhojpuri.in | b4umovies.in | streams.tangotv.in |
+| B4UKadak.in | b4umovies.in | 163.61.226.31 |
+| B4UKadak.in | b4umovies.in | amg00877-b4unew-amg00877c4-xiaomi-in-5473.playouts.now.amagi.tv |
 | B4UKadak.in | b4umovies.in | cdn.pishow.tv |
 | B4UKadak.in | b4umovies.in | fta.ektv.in |
 | B4UKadak.in | b4umovies.in | mumt06.tangotv.in |
 | B4UKadak.in | b4umovies.in | streams.tangotv.in |
 | B4UKadak.in | b4umovies.in | tvsen3.aynaott.com |
+| B4UMovies.in | b4umovies.in | 103.135.253.32 |
+| B4UMovies.in | b4umovies.in | 163.61.226.31 |
 | B4UMovies.in | b4umovies.in | 66.102.126.10 |
+| B4UMovies.in | b4umovies.in | amg00877-b4unew-amg00877c2-xiaomi-in-5489.playouts.now.amagi.tv |
 | B4UMovies.in | b4umovies.in | cdn.pishow.tv |
 | B4UMovies.in | b4umovies.in | fta.ektv.in |
 | B4UMovies.in | b4umovies.in | mumt06.tangotv.in |
 | B4UMovies.in | b4umovies.in | streams.tangotv.in |
+| B4UMusic.in | b4umusic.in | 163.61.226.31 |
 | B4UMusic.in | b4umusic.in | 66.102.126.10 |
 | B4UMusic.in | b4umusic.in | amg00877-b4unew-amg00877c3-xiaomi-in-5474.playouts.now.amagi.tv |
 | B4UMusic.in | b4umusic.in | amg01408-amg01408c5-amgplt0747.playout.now3.amagi.tv |
@@ -1421,13 +1441,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | BBCNewsPashto.uk | www.bbc.com | vs-hls-pushb-ww-live.akamaized.net |
 | BBCNL.nl | www.bbcbenelux.com | lb.iptvnetwork.net |
 | BBCOne.uk | www.bbc.co.uk | 193.239.186.231 |
-| BBCOne.uk | www.bbc.co.uk | 193.46.58.239 |
-| BBCOne.uk | www.bbc.co.uk | cdn.stmify.com |
 | BBCOne.uk | www.bbc.co.uk | vs-cmaf-push-uk-live.akamaized.net |
 | BBCOne.uk | www.bbc.co.uk | vs-cmaf-pushb-uk-live.akamaized.net |
 | BBCOne.uk | www.bbc.co.uk | vs-hls-push-uk-live.akamaized.net |
 | BBCOne.uk | www.bbc.co.uk | vs-hls-pushb-uk-live.akamaized.net |
-| BBCParliament.uk | www.bbc.co.uk | cdn.stmify.com |
 | BBCParliament.uk | www.bbc.co.uk | vs-cmaf-pushb-uk-live.akamaized.net |
 | BBCPersian.uk | www.bbc.com | vs-cmaf-pushb-ww-live.akamaized.net |
 | BBCPersian.uk | www.bbc.com | vs-cmaf-pushb-ww.live.cf.md.bbci.co.uk |
@@ -1457,16 +1474,11 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | BBCRedButton7.uk | www.bbc.co.uk | ve-cmaf-push-uk-live.akamaized.net |
 | BBCRedButton8.uk | www.bbc.co.uk | ve-cmaf-push-uk-live.akamaized.net |
 | BBCRedButton9.uk | www.bbc.co.uk | ve-cmaf-push-uk-live.akamaized.net |
-| BBCScotland.uk | www.bbc.co.uk | cdn.stmify.com |
 | BBCScotland.uk | www.bbc.co.uk | vs-cmaf-pushb-uk-live.akamaized.net |
 | BBCScotland.uk | www.bbc.co.uk | vs-hls-pushb-uk-live.akamaized.net |
-| BBCThree.uk | www.bbc.co.uk | cdn.stmify.com |
 | BBCThree.uk | www.bbc.co.uk | vs-cmaf-pushb-uk-live.akamaized.net |
 | BBCThree.uk | www.bbc.co.uk | vs-hls-pushb-uk-live.akamaized.net |
-| BBCThreeCBBC.uk | www.bbc.co.uk | 193.46.58.239 |
 | BBCTravel.us | pluto.tv | jmp2.uk |
-| BBCTwo.uk | www.bbc.co.uk | 193.46.58.239 |
-| BBCTwo.uk | www.bbc.co.uk | cdn.stmify.com |
 | BBCTwo.uk | www.bbc.co.uk | vs-cmaf-push-uk-live.akamaized.net |
 | BBCTwo.uk | www.bbc.co.uk | vs-cmaf-pushb-uk-live.akamaized.net |
 | BBCTwo.uk | www.bbc.co.uk | vs-hls-push-uk-live.akamaized.net |
@@ -1532,6 +1544,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | BenguturkTV.tr | www.benguturk.com | 185.234.111.229 |
 | BenguturkTV.tr | www.benguturk.com | tv.ensonhaber.com |
 | BenieTV.ci | www.benie.tv | tv.voozmedia.fun |
+| BeninTVJunior.bj | srtb.bj | srtblive.streamakaci.tv |
 | BeninWebTV.bj | beninwebtv.com | stream.beninwebtv.bj |
 | BerenteTV.hu | berente.hu | stream.streaming4u.hu |
 | BergamoTV.it | bergamotv.it | db142859fd5541b09de25d6507f1f2d3.msvdn.net |
@@ -1596,6 +1609,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Bharat24.in | www.bharat24live.com | fta.ektv.in |
 | Bharat24.in | www.bharat24live.com | mumt06.tangotv.in |
 | Bharat24.in | www.bharat24live.com | streams.tangotv.in |
+| Bharat24.in | www.bharat24live.com | vglivessai.akamaized.net |
 | BharatAtoZ.in | （无 website） | live.ekamraott.com |
 | BharatExpress.in | bharatexpress.com | cdn.pishow.tv |
 | BharatExpress.in | bharatexpress.com | fta.ektv.in |
@@ -1620,6 +1634,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | BibelTV.de | www.bibeltv.de | bibint01.iptv-playoutcenter.de |
 | BibelTVImpuls.de | （无 website） | bibeltv02.iptv-playoutcenter.de |
 | BibelTVMusik.de | （无 website） | bibeltv03.iptv-playoutcenter.de |
+| BicolorPlusPremium.pe | （无 website） | live-evg10.tv360.bitel.com.pe |
 | BigAsia.ru | bigasia.ru | live-bigasia.cdnvideo.ru |
 | BigBrother.us | pluto.tv | jmp2.uk |
 | BIGBROTHERCLASSIC.de | pluto.tv | jmp2.uk |
@@ -1829,7 +1844,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | BTB2.pl | （无 website） | emisja.btb.j00r.us |
 | BTB3.pl | （无 website） | emisja3.btb.j00r.us |
 | BTLTV.ke | （无 website） | goliveafrica.media |
-| BTLTV.nl | btl-tv.com | livecdn.live247stream.com |
+| BTLTV.nl | btl-tv.com | cdn.liveplustv.com |
 | BTMTV.ug | （无 website） | btmug.zerocdn.org |
 | BTTV.in | www.businesstoday.in | feeds.intoday.in |
 | bTV.bg | www.btv.bg | 213.91.179.28 |
@@ -1869,7 +1884,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | BVG.in | （无 website） | mumt05.tangotv.in |
 | BVN.nl | www.bvn.tv | c9851ec-rbm-hilv-fsly.cdn.redbee.live |
 | BVN.nl | www.bvn.tv | lb.iptvnetwork.net |
-| BVN.nl | www.bvn.tv | tv.ft.md.npox.nl |
 | BX1.be | （无 website） | 59959724487e3.streamlock.net |
 | BX1.be | （无 website） | dlgt0tdl2hpq3.cloudfront.net |
 | BXArts.us | www.bronxnet.org | reflect-stream-bronxnet.cablecast.tv |
@@ -1905,6 +1919,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | CaliforniaMusicChannel.us | cmctv.com | cmc-kowdtv.amagi.tv |
 | CaliforniaMusicChannel.us | cmctv.com | cmc-ono.amagi.tv |
 | CalvaryTV.in | （无 website） | cdn.pishow.tv |
+| CalvaryTV.in | （无 website） | d1msejlow1t3l4.cloudfront.net |
 | CAM10TV.cm | cam10tv.com | stream.it-innov.com |
 | CaMauTV.vn | （无 website） | tv.ctvcamau.vn |
 | CameradeiDeputati.it | www.camera.it | video-ar.radioradicale.it |
@@ -2351,10 +2366,12 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | CartoonitoAsia.sg | （无 website） | 202.150.165.66 |
 | CartoonitoAsia.sg | （无 website） | cdn4.skygo.mn |
 | CartoonitoCEE.uk | www.boomerangtv.co.uk | 193.33.39.108 |
+| CartoonitoCEE.uk | www.boomerangtv.co.uk | 213.91.179.28 |
 | CartoonitoCEE.uk | www.boomerangtv.co.uk | 88.212.7.14 |
 | CartoonitoCEE.uk | www.boomerangtv.co.uk | 92.114.85.87 |
 | CartoonitoLatinAmerica.us | cartoonitola.com | 45.173.12.70 |
 | CartoonNetwork.in | www.cartoonnetworkindia.com | drk6xq0vhn.gpcdn.net |
+| CartoonNetwork.it | www.cartoonnetwork.it | 185.227.34.104 |
 | CartoonNetwork.pk | www.cartoonnetwork.com.pk | vodzong.mjunoon.tv |
 | CartoonNetwork.tr | www.cartoonnetwork.com.tr | 176.65.153.40 |
 | CartoonNetwork.us | www.cartoonnetwork.com | 212.5.144.156 |
@@ -2363,9 +2380,11 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | CartoonNetworkAsia.sg | www.cartoonnetworkasia.com | 202.150.165.66 |
 | CartoonNetworkAsia.sg | www.cartoonnetworkasia.com | cdn4.skygo.mn |
 | CartoonNetworkCEE.uk | （无 website） | 193.33.39.108 |
+| CartoonNetworkCEE.uk | （无 website） | 213.91.179.28 |
 | CartoonNetworkCEE.uk | （无 website） | 45.132.87.69 |
 | CartoonNetworkCEE.uk | （无 website） | 88.212.7.14 |
 | CartoonNetworkCEE.uk | （无 website） | 92.114.85.87 |
+| CartoonNetworkHDPlus.in | www.cartoonnetworkindia.com | 103.135.253.32 |
 | CartoonNetworkHDPlus.in | www.cartoonnetworkindia.com | drk6xq0vhn.gpcdn.net |
 | CartoonNetworkLatinAmerica.us | www.cartoonnetworkla.com | 15.204.246.24 |
 | CartoonNetworkLatinAmerica.us | www.cartoonnetworkla.com | 158.172.217.18 |
@@ -2640,6 +2659,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ChannelsTV.ng | www.channelstv.com | cs2.push2stream.com |
 | ChannelU.sg | tv.mewatch.sg | cdn.qd.je |
 | ChannelWIN.in | www.channelwin.tv | cdn.pishow.tv |
+| ChannelWIN.in | www.channelwin.tv | cdn.smartstream.video |
 | ChannelWIN.in | www.channelwin.tv | fta.ektv.in |
 | ChannelWIN.in | www.channelwin.tv | mumt05.tangotv.in |
 | ChaosCity.us | pluto.tv | jmp2.uk |
@@ -2650,6 +2670,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ChardiklaGurbaaniTV.in | timetv.news | chardikalatimestv.gigabitcdn.net |
 | ChardiklaTimeTV.in | timetv.news | cdn.pishow.tv |
 | ChardiklaTimeTV.in | timetv.news | chardikalagurbanitv.gigabitcdn.net |
+| ChardiklaTimeTV.in | timetv.news | d1msejlow1t3l4.cloudfront.net |
 | ChardiklaTimeTV.in | timetv.news | fta.ektv.in |
 | ChardiklaTimeTV.in | timetv.news | mumt07.tangotv.in |
 | ChardiklaTimeTV.in | timetv.news | streams.tangotv.in |
@@ -2956,17 +2977,26 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ColomeTV.do | colometv.com | ss2.tvrdomi.com |
 | Colors.in | www.colorstv.com | 103.135.253.32 |
 | Colors.in | www.colorstv.com | 103.151.60.162 |
+| Colors.in | www.colorstv.com | livetv.shamon-cable.net |
 | Colors.in | www.colorstv.com | raw.githubusercontent.com |
+| ColorsBangla.in | www.colorstv.com | 103.135.253.32 |
 | ColorsBangla.in | www.colorstv.com | 103.151.60.162 |
 | ColorsBangla.in | www.colorstv.com | 103.165.93.31 |
+| ColorsBangla.in | www.colorstv.com | livetv.shamon-cable.net |
+| ColorsBanglaCinema.in | www.colorstv.com | 103.135.253.32 |
 | ColorsBanglaCinema.in | www.colorstv.com | 103.151.60.162 |
+| ColorsBanglaCinema.in | www.colorstv.com | livetv.shamon-cable.net |
+| ColorsCineplex.in | www.colorstv.com | 103.135.253.32 |
 | ColorsCineplex.in | www.colorstv.com | 103.151.60.162 |
 | ColorsCineplex.in | www.colorstv.com | raw.githubusercontent.com |
+| ColorsCineplexBollywood.in | www.colorstv.com | 163.61.226.31 |
+| ColorsCineplexSuperhits.in | www.colorstv.com | 163.61.226.31 |
 | ColorsGujarati.in | www.colorstv.com | raw.githubusercontent.com |
 | ColorsInfinity.in | www.colorstv.com | 103.151.60.162 |
 | ColorsKannada.in | www.colorstv.com | da86m1sqpm3o0.cloudfront.net |
 | ColorsMarathi.in | www.colorstv.com | da86m1sqpm3o0.cloudfront.net |
 | ColorsMENA.in | www.colorstv.com | da86m1sqpm3o0.cloudfront.net |
+| ColorsRishtey.in | www.colorstv.com | 163.61.226.31 |
 | ColorsRishteyAmericas.in | www.colorstv.com | manatv.akamaized.net |
 | ColorsSuper.in | www.colorstv.com | d1rc86nwwc9fag.cloudfront.net |
 | ColorsTamil.in | www.colorstv.com | da86m1sqpm3o0.cloudfront.net |
@@ -2981,7 +3011,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ComediaalobestiadePlutoTV.de | pluto.tv | jmp2.uk |
 | ComedyCentral.de | www.comedycentral.de | ma.anixa.tv |
 | ComedyCentral.it | www.comedycentral.it | team-tv.co |
-| ComedyCentral.ro | www.comedycentral.com.ro | saruman1.tharen1.cfd |
 | ComedyCentral.se | pluto.tv | jmp2.uk |
 | ComedyCentral.us | pluto.tv | jmp2.uk |
 | ComedyCentralAnimation.us | pluto.tv | jmp2.uk |
@@ -3196,6 +3225,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DacTV.pe | （无 website） | live-evg8.tv360.bitel.com.pe |
 | DacwaTV.ke | www.dacwa.tv | ap02.iqplay.tv |
 | Dagestan.ru | www.rgvktv.ru | dagestan.mediacdn.ru |
+| DailyPostTV.in | （无 website） | stream.ottlive.co.in |
 | DailyPostTV.in | （无 website） | streams.tangotv.in |
 | DailyPostTV.in | （无 website） | vglivessai.akamaized.net |
 | DakLakTV.vn | www.drt.org.vn | cdn.drt.vn |
@@ -3214,11 +3244,13 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DanceTVMinimalTech.ee | www.dancetv.net | mbit1.worldcast.tv |
 | DanceTVTechnoWarehouse.ee | www.dancetv.net | m2b2.worldcast.tv |
 | Dangal2.in | dangaltv.enterr10tv.com | 107.167.16.138 |
+| Dangal2.in | dangaltv.enterr10tv.com | 163.61.226.31 |
 | Dangal2.in | dangaltv.enterr10tv.com | fta.ektv.in |
 | Dangal2.in | dangaltv.enterr10tv.com | live-dangal2.akamaized.net |
 | Dangal2.in | dangaltv.enterr10tv.com | mumt03.tangotv.in |
 | Dangal2.in | dangaltv.enterr10tv.com | streams.tangotv.in |
 | Dangal2.in | dangaltv.enterr10tv.com | tvsen3.aynaott.com |
+| DangalTV.in | dangaltv.enterr10tv.com | 163.61.226.31 |
 | DangalTV.in | dangaltv.enterr10tv.com | cdn.pishow.tv |
 | DangalTV.in | dangaltv.enterr10tv.com | fta.ektv.in |
 | DangalTV.in | dangaltv.enterr10tv.com | live-dangal.akamaized.net |
@@ -3325,12 +3357,14 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DDMizoram.in | （无 website） | fta.ektv.in |
 | DDNagaland.in | （无 website） | d2lk5u59tns74c.cloudfront.net |
 | DDNagaland.in | （无 website） | fta.ektv.in |
+| DDNational.in | prasarbharati.gov.in | 163.61.226.31 |
 | DDNational.in | prasarbharati.gov.in | cdn.pishow.tv |
 | DDNational.in | prasarbharati.gov.in | d3qs3d2rkhfqrt.cloudfront.net |
 | DDNational.in | prasarbharati.gov.in | fta.ektv.in |
 | DDNational.in | prasarbharati.gov.in | mumbai-edge.smartplaytv.in |
 | DDNational.in | prasarbharati.gov.in | mumt01.tangotv.in |
 | DDNational.in | prasarbharati.gov.in | streams.tangotv.in |
+| DDNews.in | ddnews.gov.in | 163.61.226.31 |
 | DDNews.in | ddnews.gov.in | d3qs3d2rkhfqrt.cloudfront.net |
 | DDNews.in | ddnews.gov.in | fta.ektv.in |
 | DDNews.in | ddnews.gov.in | mumbai-edge.smartplaytv.in |
@@ -3338,6 +3372,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DDOdia.in | prasarbharati.gov.in | d3qs3d2rkhfqrt.cloudfront.net |
 | DDOdia.in | prasarbharati.gov.in | fta.ektv.in |
 | DDOdia.in | prasarbharati.gov.in | mumbai-edge.smartplaytv.in |
+| DDPunjabi.in | prasarbharati.gov.in | 163.61.226.31 |
 | DDPunjabi.in | prasarbharati.gov.in | d3qs3d2rkhfqrt.cloudfront.net |
 | DDPunjabi.in | prasarbharati.gov.in | fta.ektv.in |
 | DDRajasthan.in | prasarbharati.gov.in | cdn.pishow.tv |
@@ -3371,6 +3406,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DDYadagiri.in | prasarbharati.gov.in | fta.ektv.in |
 | DeadlyWomen.us | pluto.tv | d1mgh147xpmgs8.cloudfront.net |
 | DeadlyWomen.us | pluto.tv | jmp2.uk |
+| DeAKids.it | www.deakids.it | 185.227.34.104 |
 | DealorNoDeal.us | pluto.tv | aegis-cloudfront-1.tubi.video |
 | DealorNoDeal.us | pluto.tv | amg00627-amg00627c21-samsung-gb-3869.playouts.now.amagi.tv |
 | DealorNoDeal.us | pluto.tv | amg00627-amg00627c21-samsung-nz-3876.playouts.now.amagi.tv |
@@ -3468,6 +3504,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DiezTVUbeda.es | www.dieztv.es | streaming.cloud.innovasur.es |
 | DiffrentStrokesArnold.us | pluto.tv | jmp2.uk |
 | Digi24.ro | www.digi24.ro | edge-ar.rcs-rds.ro |
+| Digi4K.ro | www.digi4k.ro | vip-acasatv.online |
 | DigitalCongoTV.cd | digitalcongo.org | 51.254.199.122 |
 | DigitalVision63.do | （无 website） | ss2.tvrdomi.com |
 | DijlahTV.iq | www.dijlah.tv | ghaasiflu.online |
@@ -3489,8 +3526,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DiscoverPakistan.pk | www.discoverpakistan.tv | 103.86.135.164 |
 | DiscoverPakistan.pk | www.discoverpakistan.tv | livecdn.live247stream.com |
 | DiscoveryAsiaTaiwan.tw | www.discoverychannel.com.tw | 125.227.210.55 |
+| DiscoveryChannel.bg | （无 website） | 213.91.179.28 |
 | DiscoveryChannel.cz | （无 website） | 88.212.15.50 |
 | DiscoveryChannel.hu | www.discoverychannel.hu | 88.212.7.14 |
+| DiscoveryChannel.in | www.discoverychannel.co.in | 103.135.253.32 |
 | DiscoveryChannel.in | www.discoverychannel.co.in | drk6xq0vhn.gpcdn.net |
 | DiscoveryChannel.it | discoverychannel.it | streaming.aurora.enhanced.live |
 | DiscoveryChannel.nl | www.discoveryplus.nl | lb.iptvnetwork.net |
@@ -3603,6 +3642,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DNJTV.pr | dnj.tv | cloud2.streaminglivehd.com |
 | DNN.in | newsdnntv.com | fta.ektv.in |
 | DNN.in | newsdnntv.com | samitaorigin.tangotv.in |
+| DNN.in | newsdnntv.com | stream.ottlive.co.in |
 | DobleCTelevision.pe | doblectelevision.com | live20.bozztv.com |
 | Docevision.cl | （无 website） | live20.bozztv.com |
 | DocMartin.se | pluto.tv | jmp2.uk |
@@ -3665,6 +3705,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DontTellTheBride.uk | www.littledotstudios.com | lds-donttellbride-rakuten.amagi.tv |
 | DontTellTheBride.uk | www.littledotstudios.com | lds-donttellbride-samsunguk.amagi.tv |
 | DopaChannel.th | www.comdopa.com | dopachannel.truegse.com |
+| Doraemon.us | （无 website） | live20.bozztv.com |
 | Dorama.ru | dorama-tv.com | fs.uplink.kz |
 | Dorama.ru | dorama-tv.com | stream.mcquack.net |
 | Dorama.ru | dorama-tv.com | stream8.cinerama.uz |
@@ -3689,6 +3730,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DreamWorksChannelAsia.us | dreamworks-asia.com | cdn12.178.indevs.in |
 | DreamWorksChannelAsia.us | dreamworks-asia.com | nmk.ioapk.com |
 | DreamWorksChannelLatinAmerica.us | dreamworkstv.com | 138.121.15.230 |
+| DreamWorksChannelLatinAmerica.us | dreamworkstv.com | barinaslive1.boldmss.com |
 | DreamWorksChannelLatinAmerica.us | dreamworkstv.com | cdn-5.nxplay.com.br |
 | DreamWorksChannelLatinAmerica.us | dreamworkstv.com | live.nxplay.com.br |
 | DreikoTV.pa | dreikotv.online | cloudvideo.servers10.com |
@@ -3750,6 +3792,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | DurangaldekoTelebista.es | dotb.eus | nlb2-live.emitstream.com |
 | DuranTV.ec | durantv.com.ec | cloudvideo.servers10.com |
 | DurontoTV.bd | www.duronto.tv | box.bbaria.net |
+| DurontoTV.bd | www.duronto.tv | livetv.shamon-cable.net |
 | DurontoTV.bd | www.duronto.tv | tvsen6.aynaott.com |
 | DushanbeHD.tj | （无 website） | 185.121.1.163 |
 | DushanbeHD.tj | （无 website） | live.teleradiocom.tj |
@@ -3941,6 +3984,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Enterr10Bangla.in | （无 website） | amg01448-samsungin-enterr10bangla-samsungin-ad-gg.amagi.tv |
 | Enterr10Bangla.in | （无 website） | fta.ektv.in |
 | Enterr10Bangla.in | （无 website） | live-bangla.akamaized.net |
+| Enterr10Bangla.in | （无 website） | livetv.shamon-cable.net |
 | Enterr10Bangla.in | （无 website） | mumt07.tangotv.in |
 | EntertainmentTonight.us | www.etonline.com | enterbcef94b.airspace-cdn.cbsivideo.com |
 | EntertainmentTonight.us | www.etonline.com | jmp2.uk |
@@ -3952,6 +3996,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | EPATV.cl | （无 website） | live-evg10.tv360.bitel.com.pe |
 | EPATV.cl | （无 website） | v4.tustreaming.cl |
 | EpicBharat.in | www.epicon.in | cc-p1izg43bk7sj5.akamaized.net |
+| EpicBharat.in | www.epicon.in | dt4psgz92awc5.cloudfront.net |
 | EpicBharat.in | www.epicon.in | epiconvh.akamaized.net |
 | EpicBharat.in | www.epicon.in | fta.ektv.in |
 | EpicBharat.in | www.epicon.in | mumt06.tangotv.in |
@@ -3968,6 +4013,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | EpicMusic.in | www.showboxchannel.com | streams.tangotv.in |
 | EpicParivar.in | www.isharachannel.com | 103.151.60.162 |
 | EpicTV.in | www.epicon.in | cc-czbq30x55knit.akamaized.net |
+| EpicTV.in | www.epicon.in | d1fodel5fjpe8b.cloudfront.net |
 | EpilogesTV.gr | epiloges.tv | gra1.crystalweb.net |
 | EpirusTV1.gr | www.epirustv1.eu | rtmp.win |
 | EPlanetTV.ir | （无 website） | eplhls.wns.live |
@@ -4157,12 +4203,15 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | EuropaPlusTV.ru | europaplustv.com | stream.mcquack.net |
 | Europe1TV.fr | www.europe1.fr | raw.githubusercontent.com |
 | Eurosport.in | eurosport.co.in | drk6xq0vhn.gpcdn.net |
+| Eurosport.in | eurosport.co.in | livetv.shamon-cable.net |
+| Eurosport1.fr | www.eurosport.fr | 185.228.163.146 |
 | Eurosport1.fr | www.eurosport.fr | 45.134.141.161 |
 | Eurosport1.fr | www.eurosport.fr | 88.212.7.14 |
 | Eurosport1.fr | www.eurosport.fr | 90.183.52.46 |
 | Eurosport1.fr | www.eurosport.fr | andro.mangeinde4.lat |
 | Eurosport1.fr | www.eurosport.fr | s7.iptv-24.net |
 | Eurosport1Polska.pl | （无 website） | 57.128.210.196 |
+| Eurosport2.fr | www.eurosport.fr | 185.228.163.146 |
 | Eurosport2.fr | www.eurosport.fr | 45.134.141.161 |
 | Eurosport2.fr | www.eurosport.fr | 88.212.7.14 |
 | Eurosport2.fr | www.eurosport.fr | andro.mangeinde4.lat |
@@ -4283,6 +4332,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | FashionFinds.us | plus.qvc.com | qvc-amd-live.akamaized.net |
 | FashionLifeStyle.ru | （无 website） | 31.148.48.15 |
 | FashionLifeStyle.ru | （无 website） | stream.mcquack.net |
+| FashionTV.in | www.fashiontvindia.in | 163.61.226.31 |
 | FashionTV.in | www.fashiontvindia.in | fta.ektv.in |
 | FashionTV.ru | www.fashiontv.com | fashionlive.mediacdn.ru |
 | FashionTV.ua | www.fashiontv.ua | stream.mcquack.net |
@@ -4487,7 +4537,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | FoxDeportes.us | www.foxdeportes.com | 23.237.104.106 |
 | FoxDeportes.us | www.foxdeportes.com | live-manifest.production-public.tubi.io |
 | FoxLife.ru | www.foxlifetv.ru | stream.mcquack.net |
-| FoxNewsChannel.us | www.foxnews.com | 138.121.15.230 |
+| FoxNewsChannel.us | www.foxnews.com | p14.usnlive.com |
 | FoxNewsChannel.us | www.foxnews.com | tvsen6.aynaott.com |
 | FoxSoul.us | foxsoul.tv | aegis-cloudfront-1.tubi.video |
 | FoxSoul.us | foxsoul.tv | foxsoul-vizio.amagi.tv |
@@ -4623,6 +4673,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | GarudaTV.id | www.garuda.tv | hgmtv.com |
 | GaundaPunjabTV.ca | gaundapunjablive.com | cdn6.live247stream.com |
 | GaviotaTV.ec | gaviotatv.com | gaviotatv.streamseguro.com |
+| GaziTV.bd | gazitv.com | 103.135.253.32 |
 | GaziTV.bd | gazitv.com | app.ncare.live |
 | GaziTV.bd | gazitv.com | tvn1.chowdhury-shaheb.com |
 | GBNews.uk | www.gbnews.uk | a-cdn.klowdtv.com |
@@ -4774,20 +4825,24 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | GoldenPremier.mx | televisa-networks.com | 200.57.28.141 |
 | GoldenPremier2.mx | televisa-networks.com | 200.229.147.210 |
 | GoldenPremier2.mx | televisa-networks.com | 200.57.28.141 |
+| Goldmines.in | goldmines.co.in | 163.61.226.31 |
 | Goldmines.in | goldmines.co.in | cdn.pishow.tv |
 | Goldmines.in | goldmines.co.in | fta.ektv.in |
 | Goldmines.in | goldmines.co.in | mumt04.tangotv.in |
 | Goldmines.in | goldmines.co.in | streams.tangotv.in |
 | Goldmines.in | goldmines.co.in | tvsen3.aynaott.com |
+| Goldmines.in | goldmines.co.in | tvsen6.aynaott.com |
 | Goldmines2.in | goldmines.co.in | fta.ektv.in |
 | Goldmines2.in | goldmines.co.in | mumt03.tangotv.in |
 | GoldminesAction.in | （无 website） | fta.ektv.in |
 | GoldminesAction.in | （无 website） | mumt03.tangotv.in |
+| GoldminesBollywood.in | goldmines.co.in | 163.61.226.31 |
 | GoldminesBollywood.in | goldmines.co.in | fta.ektv.in |
 | GoldminesBollywood.in | goldmines.co.in | mumt03.tangotv.in |
 | GoldminesBollywood.in | goldmines.co.in | streams.tangotv.in |
 | GoldminesBollywood.in | goldmines.co.in | tvsen6.aynaott.com |
 | GoldminesMovies.in | goldmines.co.in | 103.175.73.12 |
+| GoldminesMovies.in | goldmines.co.in | 163.61.226.31 |
 | GoldminesMovies.in | goldmines.co.in | cdn.pishow.tv |
 | GoldminesMovies.in | goldmines.co.in | fta.ektv.in |
 | GoldminesMovies.in | goldmines.co.in | mumt04.tangotv.in |
@@ -4798,6 +4853,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | GoldTV.it | www.goldtv.it | streaming.softwarecreation.it |
 | GoldTVSat.it | www.grupposciscione.it | streaming.softwarecreation.it |
 | GolfChannel.cz | www.golfchannel.cz | dash4.antik.sk |
+| GolfChannel.us | www.golfchannel.com | tvsen6.aynaott.com |
 | GolfChannelLatinAmerica.us | www.golfchannel-la.com | 143.14.178.35 |
 | GolfChannelLatinAmerica.us | www.golfchannel-la.com | 15.204.246.24 |
 | GolfChannelLatinAmerica.us | www.golfchannel-la.com | 38.252.238.18 |
@@ -4813,6 +4869,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | GoodLife45.us | www.tv45.org | 2-fss-2.streamhoster.com |
 | GoodnessTV.in | www.goodnesstv.in | fta.ektv.in |
 | GoodnessTV.in | www.goodnesstv.in | mumt07.tangotv.in |
+| GoodNewsToday.in | www.gnttv.com | 163.61.226.31 |
 | GoodNewsToday.in | www.gnttv.com | aajtaklive.vgcdn.net |
 | GoodNewsToday.in | www.gnttv.com | cc-89m9zu7a2upfe.akamaized.net |
 | GoodNewsToday.in | www.gnttv.com | fta.ektv.in |
@@ -4869,6 +4926,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | GTCNews.in | （无 website） | gtc.ottlive.co.in |
 | GTCNews.in | （无 website） | mumt03.tangotv.in |
 | GTCNews.in | （无 website） | vglivessai.akamaized.net |
+| GTCPunjabi.in | （无 website） | 163.61.226.31 |
 | GTCPunjabi.in | （无 website） | cdn.ottlive.co.in |
 | GTCPunjabi.in | （无 website） | fta.ektv.in |
 | GTCPunjabi.in | （无 website） | gtc-yupp.vgcdn.net |
@@ -4963,7 +5021,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Handystar.de | www.handystar.de | sparhandytv.cdn.ses-ps.com |
 | HangulatTV.hu | onlinestream.live | iptv01.eurocable.co.hu |
 | HanoiTV1.vn | hanoitv.vn | liveh34.vtvprime.vn |
-| HappyChannel.ro | tvhappy.ro | live4dai.antenaplay.ro |
+| HappyChannel.ro | tvhappy.ro | live77cdn2.antenaplay.ro |
 | HappyDays.se | pluto.tv | jmp2.uk |
 | HappyDays.us | pluto.tv | jmp2.uk |
 | HappyKids.us | happykids.tv | dil9xdvretp0f.cloudfront.net |
@@ -5016,8 +5074,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | HBOMundiLatinAmerica.us | www.hbolatam.com | bantel-cdn1.iptvperu.tv |
 | HBOPlusLatinAmerica.us | www.hbolatam.com | 15.204.246.24 |
 | HBOPlusLatinAmerica.us | www.hbolatam.com | 45.134.141.161 |
+| HBOPopLatinAmerica.us | www.hbolatam.com | 15.204.246.24 |
 | HBOSignatureAsia.sg | www.hboasia.com | 202.150.165.66 |
 | HBOSignatureLatinAmerica.us | www.hbomax.tv | bantel-cdn1.iptvperu.tv |
+| HBOXtremeLatinAmerica.us | www.hbolatam.com | 15.204.246.24 |
 | HBOXtremeLatinAmerica.us | www.hbolatam.com | bantel-cdn1.iptvperu.tv |
 | HBTV.us | www.huntingtonbeachca.gov | reflect-huntingtonbeach.cablecast.tv |
 | HCH.hn | hch.tv | 45.228.234.9 |
@@ -5048,8 +5108,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | HellenicParliamentTV.gr | www.hellenicparliament.gr | ert-ucdn.broadpeak-aas.com |
 | HellenicParliamentTV.gr | www.hellenicparliament.gr | streamer-cache.grnet.gr |
 | HellenicTV.uk | www.hellenictv.net | l5.cloudskep.com |
-| HelloTaste.ro | hellotaste.ro | dai.google.com |
-| HelloTaste.ro | hellotaste.ro | live77cdn2.antenaplay.ro |
 | HellsKitchen.us | pluto.tv | amg00654-itv-amg00654c1-samsung-au-1072.playouts.now.amagi.tv |
 | HellsKitchen.us | pluto.tv | amg00654-itvstudios-hellskitchen-samsungse-9n806.amagi.tv |
 | HellsKitchen.us | pluto.tv | amg00654-itvstudios-hellskitchen-samsunguk-c8rgt.amagi.tv |
@@ -5085,10 +5143,12 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | HilandoFinoTV.do | www.hilandofinotv.com | hilandofinotv.essastream.com |
 | HillsboroughTV.us | www.hillsboroughcounty.org | cdn3.wowza.com |
 | HimlenTV7.fi | （无 website） | vod.tv7.fi |
+| HindiHits.in | （无 website） | 146.59.253.52 |
 | HindiHits.in | （无 website） | samitaorigin.tangotv.in |
 | HindiKhabar.in | hindikhabar.com | cdn.pishow.tv |
 | HindiKhabar.in | hindikhabar.com | d1msejlow1t3l4.cloudfront.net |
 | HindiKhabar.in | hindikhabar.com | fta.ektv.in |
+| HindiKhabar.in | hindikhabar.com | livingindiaottlive.akamaized.net |
 | HindiKhabar.in | hindikhabar.com | mumt04.tangotv.in |
 | HindiKhabar.in | hindikhabar.com | stream.ottlive.co.in |
 | HindiKhabar.in | hindikhabar.com | tvsen7.aynaott.com |
@@ -5293,6 +5353,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | HunanWomensChannel.cn | （无 website） | 35848.hlsplay.aodianyun.com |
 | HunatTV.tr | hunattv.com | 59cba4d34b678.streamlock.net |
 | HunatTV.tr | hunattv.com | live.artidijitalmedya.com |
+| HungamaTV.in | hungamatv.ga | 103.135.253.32 |
 | Hungry.us | www.hungry.live | dos35knl8v49a.cloudfront.net |
 | HungYenTV.vn | www.hungyentv.vn | ott3.nethubtv.vn |
 | HuzurTV.ru | huzurtv.ru | hls-mycdn08724960135.cdnvideo.ru |
@@ -5310,6 +5371,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | i24NEWSHebrew.il | www.i24news.tv | i24newshebrew-cdn.encoders.immergo.tv |
 | IAmChannel.id | iamchannel.org | 61146e7ab7a66.streamlock.net |
 | IasiTVLife.ro | iasitvlife.ro | tv.streambox.ro |
+| IBC24.in | www.ibc24.in | d3qs3d2rkhfqrt.cloudfront.net |
 | IBC24.in | www.ibc24.in | fta.ektv.in |
 | IBC24.in | www.ibc24.in | mumt03.tangotv.in |
 | IBC24.in | www.ibc24.in | mumt05.tangotv.in |
@@ -5469,6 +5531,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | InsideCrime.us | pluto.tv | jmp2.uk |
 | INSP.us | www.insp.com | a-cdn.klowdtv.com |
 | InstantSaga.us | （无 website） | jmp2.uk |
+| Insulanonstop.ro | （无 website） | live77cdn2.antenaplay.ro |
 | Insync.in | www.insyncmusic.net | d1msejlow1t3l4.cloudfront.net |
 | Insync.in | www.insyncmusic.net | fta.ektv.in |
 | Insync.in | www.insyncmusic.net | mumt04.tangotv.in |
@@ -5605,6 +5668,9 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | JaiMaharashtra.in | www.jaimaharashtranews.com | d1msejlow1t3l4.cloudfront.net |
 | JakTV.id | jak-tv.com | op-group1-swiftservesd-1.dens.tv |
 | JaliscoTV.mx | jaliscotv.com | video0.rogohosting.com |
+| JalshaMovies.in | www.jalshamovies.com | 103.135.253.32 |
+| JalshaMovies.in | www.jalshamovies.com | box.bbaria.net |
+| JalshaMovies.in | www.jalshamovies.com | livetv.shamon-cable.net |
 | JalwaTV.pk | jalwa.tv | 119.156.228.231 |
 | JalwaTV.pk | jalwa.tv | vodzong.mjunoon.tv |
 | JamaicaOnlineTV.jm | jamaicaonlinetv.com | tvsw7-hls.secdn.net |
@@ -5800,6 +5866,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | KalemehTV.uk | kalemeh.tv | klmhls.wns.live |
 | KalikaTV.in | （无 website） | server.applelive.in |
 | KalingaTV.in | kalingatv.com | cdn.pishow.tv |
+| KalingaTV.in | kalingatv.com | d1msejlow1t3l4.cloudfront.net |
 | KalingaTV.in | kalingatv.com | fta.ektv.in |
 | KalingaTV.in | kalingatv.com | mumbai-edge.smartplaytv.in |
 | KalingaTV.in | kalingatv.com | mumt01.tangotv.in |
@@ -5808,6 +5875,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | KalsanTV.uk | kalsantv.com | ap02.iqplay.tv |
 | Kan11.il | www.kan.org.il | kancdn.medonecdn.net |
 | KanaalZ.be | www.kanaalz.be | d1hz1p2gea2zy4.cloudfront.net |
+| KanakNews.in | kanaknews.com | d1msejlow1t3l4.cloudfront.net |
 | KanakNews.in | kanaknews.com | fta.ektv.in |
 | KanakNews.in | kanaknews.com | mumbai-edge.smartplaytv.in |
 | Kanal10Asia.se | www.kanal10asia.com | cdn-kanal10.crossnet.net |
@@ -5900,6 +5968,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | KCM.sg | kcglobalmedia.com | amg02159-amg02159c7-samsung-in-4001.playouts.now.amagi.tv |
 | KContentbyCJENM.us | pluto.tv | d2q0mzb9bm4w5z.cloudfront.net |
 | KCTV.kr | www.kctv.co.kr | 119.77.96.184 |
+| KechnecTV.sk | （无 website） | 88.212.7.14 |
 | KecskemetiTV.hu | kecskemetitv.hu | eurobioinvest.hu |
 | KecskemetiTV.hu | kecskemetitv.hu | rtmp1.40e.hu |
 | KempenTV.nl | www.kempentv.nl | ms2.mx-cd.net |
@@ -5921,6 +5990,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | KeyPeele.se | pluto.tv | jmp2.uk |
 | KFONTV.us | watchkfon.fontana.org | reflect-watchkfon-fontana.cablecast.tv |
 | Khabar.kz | khabar.kz | fs.uplink.kz |
+| KhabarFast.in | www.khabarfast.com | d2gvyg6lvauoko.cloudfront.net |
 | KhabarFast.in | www.khabarfast.com | fta.ektv.in |
 | KhabarFast.in | www.khabarfast.com | mumt04.tangotv.in |
 | KhabarFast.in | www.khabarfast.com | samitaorigin.tangotv.in |
@@ -6590,15 +6660,18 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ManoramaNews.in | www.manoramanews.com | segment.yuppcdn.net |
 | ManoramaNews.in | www.manoramanews.com | streams.tangotv.in |
 | ManoramaNews.in | www.manoramanews.com | yuppmedtaorire.akamaized.net |
+| ManoranjanGrand.in | www.manoranjantv.com | 163.61.226.31 |
 | ManoranjanGrand.in | www.manoranjantv.com | cdn.pishow.tv |
 | ManoranjanGrand.in | www.manoranjantv.com | fta.ektv.in |
 | ManoranjanGrand.in | www.manoranjantv.com | mumt06.tangotv.in |
 | ManoranjanGrand.in | www.manoranjantv.com | streams.tangotv.in |
+| ManoranjanMovies.in | www.manoranjantv.com | 163.61.226.31 |
 | ManoranjanMovies.in | www.manoranjantv.com | fta.ektv.in |
 | ManoranjanMovies.in | www.manoranjantv.com | mumt04.tangotv.in |
 | ManoranjanPrime.in | （无 website） | cdn.pishow.tv |
 | ManoranjanPrime.in | （无 website） | fta.ektv.in |
 | ManoranjanPrime.in | （无 website） | mumt06.tangotv.in |
+| ManoranjanTV.in | www.manoranjantv.com | 163.61.226.31 |
 | ManoranjanTV.in | www.manoranjantv.com | cdn.pishow.tv |
 | ManoranjanTV.in | www.manoranjantv.com | fta.ektv.in |
 | ManoranjanTV.in | www.manoranjantv.com | mumt04.tangotv.in |
@@ -6624,6 +6697,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | MarjaeyatTVPersian.iq | marjaeyat.tv | livefa.marjaeyattv.com |
 | MarkaTV.do | www.vivalivetv.com | 5790d294af2dc.streamlock.net |
 | MarlaVision.do | www.vivalivetv.com | soportedvb.click |
+| MarqueeSportsNetwork.us | www.marqueesportsnetwork.com | tvsen6.aynaott.com |
 | MarriedwithChildren.us | pluto.tv | jmp2.uk |
 | MarsellaTV.co | www.marsellaestereo.com | stmv2.voxtvhd.com.br |
 | MartinCountyTV.us | martin.granicus.com | cdn3.wowza.com |
@@ -6740,7 +6814,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | MCITelevision.co | canalmci.com.co | video.ejeserver.com |
 | McLeodsDaughters.us | pluto.tv | amg00627-amg00627c5-samsung-nz-2807.playouts.now.amagi.tv |
 | McLeodsTochter.de | pluto.tv | jmp2.uk |
-| MCMPop.fr | www.mcm.fr | 188.115.15.121 |
+| MCMPop.fr | www.mcm.fr | 176.65.153.78 |
 | MCMTop.fr | www.mcm.fr | 185.228.163.146 |
 | MCMTop.ru | universaltv.ru | 46.32.176.50 |
 | MCN6ArtsChannel.us | mcn6.org | d18fcxaqfnwjhj.cloudfront.net |
@@ -6837,6 +6911,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | MetroTV.hn | www.lametrohn.com | s.emisoras.tv |
 | MetroTV.id | www.metrotvnews.com | edge.medcom.id |
 | MetroTV.in | www.metrotvtelugu.com | mercury.streambridge.link |
+| MeTVToons.us | metvtoons.com | sr-live-weigel1.akamaized.net |
 | meWATCHLIVE1.sg | www.mewatch.sg | tglmp04.akamaized.net |
 | MexiquenseTV.mx | radioytvmexiquense.mx | 5e50264bd6766.streamlock.net |
 | MezokovesdiTelevizio.hu | www.kovesdimedia.com | cloudfront44.lexanetwork.com |
@@ -7054,6 +7129,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Motorvision.de | motorvision.tv | cdn-apse1-prod.tsv2.amagi.tv |
 | Motorvision.de | motorvision.tv | jmp2.uk |
 | Motorvision.de | motorvision.tv | mvg-mv-xumo.otteravision.com |
+| Motorvision.de | motorvision.tv | mvg-mv.otteravision.com |
 | Motorvision.de | motorvision.tv | op-group1-swiftservehd-1.dens.tv |
 | Motorvision.de | motorvision.tv | stream.ads.ottera.tv |
 | MovieBangla.bd | moviebangla.tv | alvetv.com |
@@ -7066,7 +7142,9 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Movies.us | www.moviestvnetwork.com | bozztv.com |
 | MoviesAction.sa | （无 website） | shd-amg-fast.edgenextcdn.net |
 | MovieSmartTurk.tr | www.dsmart.com.tr | playhdnewjj.xyz |
+| MoviesNow.in | （无 website） | 103.135.253.32 |
 | MoviesNow.in | （无 website） | 103.151.60.162 |
+| MoviesNowPlus.in | （无 website） | 103.135.253.32 |
 | MovieSphere.us | lionsgatechannels.com | aegis-cloudfront-1.tubi.video |
 | MovieSphere.us | lionsgatechannels.com | amg00353-amg00353c32-samsung-nz-3588.playouts.now.amagi.tv |
 | MovieSphere.us | lionsgatechannels.com | amg00353-lionsgatefilmsi-moviesphereaus-samsungau-7qzhf.amagi.tv |
@@ -7084,7 +7162,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | MovistarPlus.pe | www.movistarplus.pe | 190.108.91.206 |
 | MovistarPlus.pe | www.movistarplus.pe | 45.4.1.201 |
 | MoyaPlaneta.ru | www.moya-planeta.ru | 31.148.48.15 |
-| MoyaPlaneta.ru | www.moya-planeta.ru | 91.226.120.120 |
 | MoyaPlaneta.ru | www.moya-planeta.ru | fs.uplink.kz |
 | MoyaPlaneta.ru | www.moya-planeta.ru | stream.mcquack.net |
 | Moyastikhiya.ru | xn----ptbankthz9fg.xn--p1ai | stream.mcquack.net |
@@ -7251,6 +7328,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | MuzangalaTV.ao | muzangala.tv | 5cf4a2c2512a2.streamlock.net |
 | Muzhskoekino.ru | www.nastroykino.ru | fs.uplink.kz |
 | Muzhskoekino.ru | www.nastroykino.ru | stream.mcquack.net |
+| Muzhskoy.ru | www.mans-tv.ru | fonbet.mediacdn.ru |
 | MuzsikaTV.hu | rtl.hu | 88.212.7.14 |
 | MuzSoyuz.ru | muz.tv-soyuz.ru | hls-tvsoyuz.cdnvideo.ru |
 | MuzTV.ru | muz-tv.ru | 185.71.81.6 |
@@ -7328,11 +7406,13 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NamayeshTV.ir | （无 website） | ncdn.telewebion.ir |
 | NambikkaiTV.in | nambikkaitv.com | cdn.pishow.tv |
 | NambikkaiTV.in | nambikkaitv.com | d1msejlow1t3l4.cloudfront.net |
+| NammaBangalore.in | （无 website） | stream.ottlive.co.in |
 | NanaksarLive.in | （无 website） | mumt01.tangotv.in |
 | NanaksarLive.in | （无 website） | samitaorigin.tangotv.in |
 | NanchangNewsGeneralistChannel.cn | （无 website） | play-live-hls.jxtvcn.com.cn |
 | NandejaraNeeTV.py | nandejaranee.org | copacogen.desdeparaguay.net |
 | NandePortetepeTV.py | （无 website） | video.hostingcaaguazu.com |
+| NandighoshaTV.in | nandighoshatv.com | d1msejlow1t3l4.cloudfront.net |
 | NandighoshaTV.in | nandighoshatv.com | mumt05.tangotv.in |
 | Nanduti.py | nanduti.com.py | 190.128.214.97 |
 | Nanduti.py | nanduti.com.py | nanduti.b-cdn.net |
@@ -7346,6 +7426,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Naruto.us | pluto.tv | jmp2.uk |
 | Narutoenespanol.us | pluto.tv | jmp2.uk |
 | NarutoShippuden.us | （无 website） | jmp2.uk |
+| NashaTema.ru | nashatema.tv | fonbet.mediacdn.ru |
 | NashBridges.us | lionsgatechannels.com | aegis-cloudfront-1.tubi.video |
 | NashBridges.us | lionsgatechannels.com | amg00353-amg00353c35-xumo-us-3804.playouts.now.amagi.tv |
 | NashBridges.us | lionsgatechannels.com | jmp2.uk |
@@ -7366,6 +7447,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NationalGeographic.fi | www.natgeotv.com | live-fi.tvkaista.net |
 | NationalGeographic.hr | www.natgeotv.com | 176.61.157.250 |
 | NationalGeographic.hu | www.natgeotv.com | 88.212.7.14 |
+| NationalGeographic.in | natgeotv.com | 103.135.253.32 |
 | NationalGeographic.mx | www.nationalgeographicla.com | 138.121.15.230 |
 | NationalGeographic.nl | www.nationalgeographic.nl | 46.32.176.50 |
 | NationalGeographic.nl | www.nationalgeographic.nl | lb.iptvnetwork.net |
@@ -7506,12 +7588,16 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NDTVMadhyaPradeshChhattisgarh.in | mpcg.ndtv.in | cdn.pishow.tv |
 | NDTVMadhyaPradeshChhattisgarh.in | mpcg.ndtv.in | mumt06.tangotv.in |
 | NDTVMadhyaPradeshChhattisgarh.in | mpcg.ndtv.in | ndtvregional.akamaized.net |
+| NDTVMadhyaPradeshChhattisgarh.in | mpcg.ndtv.in | vg-ndtvlive.akamaized.net |
+| NDTVMarathi.in | marathi.ndtv.com | janya-ndtv.akamaized.net |
+| NDTVMarathi.in | marathi.ndtv.com | vg-ndtvwatcho.akamaized.net |
 | NDTVMarathi.in | marathi.ndtv.com | web-ndtv-marathi.akamaized.net |
 | NDTVProfit.in | profit.ndtv.com | cdn.pishow.tv |
 | NDTVProfit.in | profit.ndtv.com | ndtvprofit.akamaized.net |
 | NDTVRajasthan.in | rajasthan.ndtv.in | cdn.pishow.tv |
 | NDTVRajasthan.in | rajasthan.ndtv.in | mumt03.tangotv.in |
 | NDTVRajasthan.in | rajasthan.ndtv.in | ndtvregional.akamaized.net |
+| NDTVRajasthan.in | rajasthan.ndtv.in | vg-ndtvlive.akamaized.net |
 | NDTVRajasthan.in | rajasthan.ndtv.in | vglivessai.akamaized.net |
 | NdurumeniTV.ke | （无 website） | goliveafrica.media |
 | NegociosTV.es | www.negocios.com | streaming013.gestec-video.com |
@@ -7603,6 +7689,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | News24.in | news24online.com | cdn.pishow.tv |
 | News24.in | news24online.com | fta.ektv.in |
 | News24.in | news24online.com | mumt01.tangotv.in |
+| News24.in | news24online.com | stream.ottlive.co.in |
 | News24.in | news24online.com | streams.tangotv.in |
 | News24.in | news24online.com | tvsen5.aynaott.com |
 | News24.in | news24online.com | tvsen5.aynascope.net |
@@ -7631,6 +7718,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NewsIndia24x7.in | newsindianetwork.com | cdn.pishow.tv |
 | NewsIndia24x7.in | newsindianetwork.com | fta.ektv.in |
 | NewsIndia24x7.in | newsindianetwork.com | samitaorigin.tangotv.in |
+| NewsIndia24x7.in | newsindianetwork.com | stream.ottlive.co.in |
 | NewsJ.in | www.newsj.tv | cdn.pishow.tv |
 | NewsLeader.in | newsleaderlive.com | stream.ottlive.co.in |
 | NewsLive.in | www.newslivetv.com | cdn.pishow.tv |
@@ -7639,8 +7727,11 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NewsLiveBangla.in | （无 website） | cdn.pishow.tv |
 | NewsLiveBangla.in | （无 website） | mumt01.tangotv.in |
 | NewsLiveBangla.in | （无 website） | mumt06.tangotv.in |
+| NewsLiveBangla.in | （无 website） | stream.ottlive.co.in |
 | NewsMalayalam24x7.in | newsmalayalam.com | cdn.pishow.tv |
+| NewsMalayalam24x7.in | newsmalayalam.com | vglivessai.akamaized.net |
 | NewsMarathi24x7.in | newsmarathitv.in | live1.ottlive.co.in |
+| NewsMarathi24x7.in | newsmarathitv.in | stream.ottlive.co.in |
 | Newsmax2.us | www.newsmaxtv.com | 2-fss-2.streamhoster.com |
 | Newsmax2.us | www.newsmaxtv.com | a-cdn.klowdtv.com |
 | Newsmax2.us | www.newsmaxtv.com | amg00217-newsmax-newsmax-rokuus-dur76.amagi.tv |
@@ -7672,6 +7763,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NewsoftheWorld.us | newsoftheworld.us | nowhls.wns.live |
 | NewsOne.pk | www.newsone.tv | 103.250.28.74 |
 | NewsOne.pk | www.newsone.tv | vodzong.mjunoon.tv |
+| NewsOnly.in | （无 website） | newsonly.kableone.com |
 | NewsStateMPCHG.in | www.newsnationtv.com | fta.ektv.in |
 | NewsStateMPCHG.in | www.newsnationtv.com | jmp2.uk |
 | NewsStateMPCHG.in | www.newsnationtv.com | mumt01.tangotv.in |
@@ -7680,7 +7772,9 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NewsStateUPUK.in | www.newsnationtv.com | fta.ektv.in |
 | NewsStateUPUK.in | www.newsnationtv.com | jmp2.uk |
 | NewsTamil24x7.in | newstamil.tv | cdn.pishow.tv |
+| NewsTamil24x7.in | newstamil.tv | stream.ottlive.co.in |
 | NewsTamil24x7.in | newstamil.tv | streams.tangotv.in |
+| NewsTamil24x7.in | newstamil.tv | vglivessai.akamaized.net |
 | NewsWorld.hk | www.lightninginternational.net | amg01076-lightning-amg01076c5-rakuten-us-1788.playouts.now.amagi.tv |
 | NewsX.in | www.newsx.com | cdn.pishow.tv |
 | NewsX.in | www.newsx.com | fta.ektv.in |
@@ -7703,6 +7797,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NFLChannel.us | pluto.tv | jmp2.uk |
 | NFLChannel.us | pluto.tv | pb-we3ltka9xobj6.akamaized.net |
 | NFLNetwork.us | www.nfl.com | 198.58.104.90 |
+| NFLNetwork.us | www.nfl.com | tvsen6.aynaott.com |
 | NGFederal.ar | ngfederal.ar | 617c5175c970b.streamlock.net |
 | NGFederal.ar | ngfederal.ar | www.coninfo.net |
 | NgheAnTV.vn | truyenhinhnghean.vn | 67tz1gnwrvxic.cmccdn.net |
@@ -7737,29 +7832,21 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Nickelodeon.cz | www.nickelodeon.cz | 88.212.15.50 |
 | Nickelodeon.de | www.nick.de | ma.anixa.tv |
 | Nickelodeon.de | www.nick.de | unilivemtveu-lh.akamaihd.net |
-| Nickelodeon.fr | www.nickelodeon.fr | 151.80.18.177 |
-| Nickelodeon.hr | www.nick.tv | 176.61.157.250 |
 | Nickelodeon.hu | www.nickelodeon.hu | 193.33.39.108 |
 | Nickelodeon.hu | www.nickelodeon.hu | 88.212.7.14 |
+| Nickelodeon.in | www.nickindia.com | 103.135.253.32 |
 | Nickelodeon.in | www.nickindia.com | 103.185.24.134 |
 | Nickelodeon.in | www.nickindia.com | 202.70.146.135 |
 | Nickelodeon.in | www.nickindia.com | dksmedia.tv |
-| Nickelodeon.it | www.nicktv.it | hostemea1236.s.gy |
+| Nickelodeon.it | www.nicktv.it | 185.227.34.104 |
 | Nickelodeon.nl | www.nickelodeon.nl | 185.77.12.179 |
-| Nickelodeon.pl | www.nick.com.pl | 92.114.85.87 |
 | Nickelodeon.ro | www.nickelodeon.ro | 178.76.68.60 |
-| Nickelodeon.ro | www.nickelodeon.ro | onyx1.mofta1.cfd |
 | Nickelodeon.ru | nickelodeon.ru | stream.mcquack.net |
-| Nickelodeon.uk | www.nick.co.uk | tvsen7.aynascope.net |
-| Nickelodeon.us | www.nick.com | 198.58.104.90 |
 | NickelodeonCIS.kz | （无 website） | stream8.cinerama.uz |
 | NickelodeonClasico.us | pluto.tv | jmp2.uk |
 | NickelodeonClassico.us | pluto.tv | jmp2.uk |
 | NickelodeonClassics.de | pluto.tv | jmp2.uk |
 | Nickelodeonenespanol.us | pluto.tv | jmp2.uk |
-| NickelodeonGlobal.uk | www.nick.com | 103.151.60.162 |
-| NickelodeonJunior.fr | www.nickelodeonjunior.fr | 151.80.18.177 |
-| NickelodeonLatinAmerica.us | nickelodeon.la | 15.204.246.24 |
 | NickelodeonLatinAmerica.us | nickelodeon.la | 181.78.79.131 |
 | NickelodeonLatinAmerica.us | nickelodeon.la | 190.234.82.52 |
 | NickelodeonLatinAmerica.us | nickelodeon.la | 190.93.224.42 |
@@ -7770,6 +7857,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NickJr.cz | www.nickelodeon.cz | 88.212.15.50 |
 | NickJr.hr | www.nick.tv | 176.61.157.250 |
 | NickJr.hu | www.nickelodeon.hu | 88.212.7.14 |
+| NickJr.in | nickjrindia.com | 103.135.253.32 |
 | NickJr.in | nickjrindia.com | 103.151.60.162 |
 | NickJr.in | nickjrindia.com | 103.185.24.134 |
 | NickJr.in | nickjrindia.com | 202.70.146.135 |
@@ -7936,6 +8024,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | NRBTV.us | nrbtv.org | stream-us-east-1.getpublica.com |
 | NRBTV.us | nrbtv.org | uni6rtmp.tulix.tv |
 | NRJHits.fr | www.nrj-play.fr | test.946985.filegear-sg.me |
+| NRK1.no | www.nrk.no | 185.19.191.171 |
 | NRK1.no | www.nrk.no | nrk-live-no.akamaized.net |
 | NRK2.no | www.nrk.no | nrk-live-no.akamaized.net |
 | NRK3.no | www.nrk.no | nrk-live-no.akamaized.net |
@@ -8173,6 +8262,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | OneTV.lb | www.mtv.com.lb | hms.pfs.gdn |
 | OneTVESchoolCambodia.kh | （无 website） | 49.156.33.114 |
 | ONFM.pt | www.onfm.pt | 5ce9406b73c33.streamlock.net |
+| OnkarNews.in | （无 website） | stream.ottlive.co.in |
 | ONKids.vn | vtvcab.vn | freem3u.xyz |
 | ONLife.vn | vtvcab.vn | freem3u.xyz |
 | OnlineTVNusantara.id | indeksnews.com | 5bf7b725107e5.streamlock.net |
@@ -8399,6 +8489,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | PeaceofMindTV.in | www.pmtv.in | mumbai-edge.smartplaytv.in |
 | PeaceofMindTV.in | www.pmtv.in | mumt03.tangotv.in |
 | PeaceofMindTV.in | www.pmtv.in | yuppnimrestreammum.akamaized.net |
+| PeaceTVBangla.ae | peacetv.tv | 103.135.253.32 |
 | PeaceTVBangla.ae | peacetv.tv | dzkyvlfyge.erbvr.com |
 | PeaceTVChinese.ae | peacetv.tv | dzkyvlfyge.erbvr.com |
 | PeaceTVEnglish.ae | peacetv.tv | dzkyvlfyge.erbvr.com |
@@ -8506,6 +8597,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Pitaara.in | （无 website） | pitaara-lg.vgcdn.net |
 | Pitaara.in | （无 website） | streams.tangotv.in |
 | Pitaara.in | （无 website） | vg-pitaaratvlive.akamaized.net |
+| PitaaraComedy.in | （无 website） | janya-pitaaralive.akamaized.net |
+| PitaaraComedy.in | （无 website） | pitaara-lg.vgcdn.net |
+| PitaaraComedy.in | （无 website） | vg-pitaaratvyupp.akamaized.net |
+| PitaaraComedy.in | （无 website） | vglivessai.akamaized.net |
 | PiuraTV.pe | （无 website） | live-evg7.tv360.bitel.com.pe |
 | PixelTV.ua | pixelua.tv | cdn15.live-tv.cloud |
 | PixelTV.ua | pixelua.tv | stream.mcquack.net |
@@ -8853,6 +8948,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | PodRadiopaPlutoTV.se | pluto.tv | jmp2.uk |
 | Poehali.ru | www.poehali.tv | 31.148.48.15 |
 | Poehali.ru | www.poehali.tv | 88.212.15.50 |
+| Pogo.in | （无 website） | 103.135.253.32 |
 | Pogo.in | （无 website） | 103.151.60.162 |
 | PokerGo.us | pluto.tv | jmp2.uk |
 | PolarTV.cl | www.radiopolar.com | polartv.webredirect.org |
@@ -8868,7 +8964,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | PolimerTV.in | www.polimertv.com | raw.githubusercontent.com |
 | Polonia1.pl | polonia1.tv | 92.114.85.87 |
 | Polsat.pl | www.polsat.pl | cdn-s-playnow-live.pluscdn.pl |
-| Polsat.pl | www.polsat.pl | srv7.flussonic111.com |
 | Polsat2.pl | www.polsat2.pl | 57.128.210.196 |
 | PolsatFilm.pl | www.polsatfilm.pl | 92.63.196.180 |
 | PolsatGames.pl | （无 website） | 92.63.196.180 |
@@ -8941,15 +9036,18 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | PowervisionTV.in | www.powervisiontv.com | mumbai-edge.smartplaytv.in |
 | PowervisionTV.in | www.powervisiontv.com | mumt07.tangotv.in |
 | Pradesh24Gujarati.in | （无 website） | stream2.livebox.co.in |
+| PragNews.in | pragnews.com | d1msejlow1t3l4.cloudfront.net |
 | PragNews.in | pragnews.com | fta.ektv.in |
 | PragNews.in | pragnews.com | streams.tangotv.in |
 | PraiseTV.pk | praisetvpakistan.tv | livecdn.live247stream.com |
 | PraiseTV.pk | praisetvpakistan.tv | pixelsmedia.live |
 | PrameyaNews7.in | www.prameyanews7.com | mumt03.tangotv.in |
+| PrameyaNews7.in | www.prameyanews7.com | vglivessai.akamaized.net |
 | PrarthanaBhawanTV.in | www.prarthanabhawantv.com | fta.ektv.in |
 | PrarthanaBhawanTV.in | www.prarthanabhawantv.com | mumt03.tangotv.in |
 | PrarthanaLife.in | www.tarangplus.in | cdn.pishow.tv |
 | PrathamKhabar24x7.in | prathamkhabartv.com | livelegitpro.in |
+| PrathamKhabar24x7.in | prathamkhabartv.com | stream.ottlive.co.in |
 | PrathamNews.in | （无 website） | mumt03.tangotv.in |
 | PratidinTime.in | www.pratidintime.com | cdn.pishow.tv |
 | PratidinTime.in | www.pratidintime.com | d1msejlow1t3l4.cloudfront.net |
@@ -8998,6 +9096,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | PrimeAsiaTV.ca | primeasiatv.com | primeasia.selfip.net |
 | PrimeCanadaTV.ca | www.primecanada.tv | cdn27.live247stream.com |
 | PrimeNews.in | （无 website） | cdn.pishow.tv |
+| PrimeNews.in | （无 website） | d1msejlow1t3l4.cloudfront.net |
 | PrimeNews.in | （无 website） | mumt07.tangotv.in |
 | PrimeNews.in | （无 website） | stream.ottlive.co.in |
 | PrimerTV.br | primertv.com.br | 200.194.238.229 |
@@ -9175,6 +9274,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | QosqoTimes.pe | qosqotimes.pe | stmv2.srvif.com |
 | Qostanai.kz | kostanaytv.kz | stream.kaztrk.kz |
 | QPVN.vn | www.qpvn.vn | liveh12.vtvprime.vn |
+| QTV.in | www.theq.tv | 163.61.226.31 |
 | QTV.in | www.theq.tv | fta.ektv.in |
 | QTV.in | www.theq.tv | mumt05.tangotv.in |
 | QTV.in | www.theq.tv | samitaorigin.tangotv.in |
@@ -9417,6 +9517,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | RajDigitalPlus.in | www.rajtvnet.in | livestream.rajtv.tv |
 | RajeenTV.ps | www.rajeen.tv | mn-nl.mncdn.com |
 | RajMusixKannada.in | www.rajkanada.in | mumt01.tangotv.in |
+| RajMusixKannada.in | www.rajkanada.in | samitaorigin.tangotv.in |
 | RajMusixMalayalam.in | www.rajtvnet.in | cdn.pishow.tv |
 | RajMusixMalayalam.in | www.rajtvnet.in | mumt04.tangotv.in |
 | RajMusixTamil.in | www.rajtvnet.in | livestream.rajtv.tv |
@@ -9687,6 +9788,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | RepublicBangla.in | www.republicworld.com | cdn.pishow.tv |
 | RepublicBangla.in | www.republicworld.com | fta.ektv.in |
 | RepublicBangla.in | www.republicworld.com | streams.tangotv.in |
+| RepublicBharat.in | bharat.republicworld.com | 163.61.226.31 |
 | RepublicBharat.in | bharat.republicworld.com | cdn.pishow.tv |
 | RepublicBharat.in | bharat.republicworld.com | fta.ektv.in |
 | RepublicBharat.in | bharat.republicworld.com | mumt06.tangotv.in |
@@ -9832,6 +9934,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | RongeenTV.in | rongeentv.com | mumbai-edge.smartplaytv.in |
 | RongeenTV.in | rongeentv.com | mumt05.tangotv.in |
 | RongeenTV.in | rongeentv.com | server.thelegitpro.in |
+| RongeenTV.in | rongeentv.com | stream.ottlive.co.in |
 | RossiniTV.it | www.rossinitv.it | 5cbd3bc28341f.streamlock.net |
 | Rossiya1Vainah.ru | gtrkvainah.tv | live.chechensoft.ru |
 | RotanaCinemaEgypt.eg | www.cinema.rotana.net | rotana.hibridcdn.net |
@@ -9854,9 +9957,11 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | RPlus.in | rplus.in | fta.ektv.in |
 | RPlus.in | rplus.in | mumt05.tangotv.in |
 | RPlus.in | rplus.in | thelegitpro.in |
+| RPlus.in | rplus.in | vglivessai.akamaized.net |
 | RPlusGold.in | rplus.in | cdn.pishow.tv |
 | RPlusGold.in | rplus.in | fta.ektv.in |
 | RPlusGold.in | rplus.in | mumt03.tangotv.in |
+| RPlusGold.in | rplus.in | stream.ottlive.co.in |
 | RPlusGold.in | rplus.in | vglivessai.akamaized.net |
 | RPLWoerden.nl | rplwoerden.nl | d1893oi5c6e5u0.cloudfront.net |
 | RPPTV.pe | rpp.pe | 190.93.224.42 |
@@ -10039,6 +10144,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | RumbaMixTV.pe | www.radiorumbamixtv.com | live-evg5.tv360.bitel.com.pe |
 | RumbaTV.co | www.canalrumbatv.com | 138.94.3.106 |
 | RumbaTV.co | www.canalrumbatv.com | 186.148.196.100 |
+| RumbaTV.co | www.canalrumbatv.com | 190.124.20.69 |
 | RumbaTV.co | www.canalrumbatv.com | 190.61.47.54 |
 | RumbaTV.co | www.canalrumbatv.com | 38.134.250.110 |
 | RumboMineroTV.pe | www.rumbominero.com | 45.70.201.81 |
@@ -10157,6 +10263,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SadhnaPlusNews.in | www.sadhna.com | 6n3yow8pl9ok-hls-live.5centscdn.com |
 | SadhnaPlusNews.in | www.sadhna.com | mumt03.tangotv.in |
 | SadhnaTV.in | www.sadhna.com | mumt05.tangotv.in |
+| SadvidyaTV.in | www.sadvidyatv.in | server.thelegitpro.in |
 | SafariTV.in | www.safaritvchannel.com | fta.ektv.in |
 | SafariTV.in | www.safaritvchannel.com | j78dp346yq5r-hls-live.5centscdn.com |
 | SafariTV.in | www.safaritvchannel.com | mumt04.tangotv.in |
@@ -10171,6 +10278,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SaiTV.in | （无 website） | mumt03.tangotv.in |
 | SakshiTV.in | www.sakshi.com | cdn.pishow.tv |
 | SakshiTV.in | www.sakshi.com | mumt07.tangotv.in |
+| SakshiTV.in | www.sakshi.com | stream.ottlive.co.in |
 | SakshiTV.in | www.sakshi.com | yuppmedtaorire.akamaized.net |
 | SakshiTV.in | www.sakshi.com | yuppnimresmum.akamaized.net |
 | SalaamTV.in | zeenews.india.com | d2o3r1shda7xvv.cloudfront.net |
@@ -10361,6 +10469,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SemillitasTV.us | semillitas.com | 38.252.238.18 |
 | SemillitasTV.us | semillitas.com | 45.5.117.99 |
 | SemnanTV.ir | semnan.irib.ir | ncdn.telewebion.ir |
+| SenadoTV.py | www.senado.gov.py | vid.hls.protv.ro |
 | SenalColombia.co | www.senalcolombia.tv | 138.121.15.230 |
 | SenalColombia.co | www.senalcolombia.tv | 190.61.47.54 |
 | SenalColombia.co | www.senalcolombia.tv | 200.122.223.13 |
@@ -10477,6 +10586,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ShemarooTV.in | www.shemarooent.com | mumt06.tangotv.in |
 | ShemarooTV.in | www.shemarooent.com | streams.tangotv.in |
 | ShemarooTV.in | www.shemarooent.com | tvsen3.aynaott.com |
+| ShemarooTV.in | www.shemarooent.com | tvsen6.aynaott.com |
 | ShemarooUmang.in | （无 website） | airtelapp.shemaroo.com |
 | ShemarooUmang.in | （无 website） | fta.ektv.in |
 | ShemarooUmang.in | （无 website） | mumt04.tangotv.in |
@@ -10493,6 +10603,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ShenzhenSatelliteTV.cn | sztv.cutv.com | 39.135.138.59 |
 | ShenzhenSatelliteTV.cn | sztv.cutv.com | livepull-tcms.sztv.com.cn |
 | ShikshaTV.in | shikshatv.live | 103.89.46.106 |
+| Shinchan.us | （无 website） | live20.bozztv.com |
 | ShineStarTV.pk | shinestar.tv | f-tx-edge-87.christianworldmedia.com |
 | ShinsegaeTVShopping.kr | www.shinsegaetvshopping.com | liveout.catenoid.net |
 | Shokiruyushchee.ru | www.tricolor.tv | stream.mcquack.net |
@@ -10598,6 +10709,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SkySports1.mx | www.sky.com.mx | 45.228.234.9 |
 | SkySportSelect.nz | www.sky.co.nz | 37.49.224.5 |
 | SkySportsF1.uk | www.skysports.com | cdn.stmify.com |
+| SkySportsNews.uk | www.skysports.com | cdn.stmify.com |
 | SkySportsNFL.uk | www.skysports.com | cdn.stmify.com |
 | SL1.ir | （无 website） | slonehls.wns.live |
 | SL2.ir | （无 website） | sltwohls.wns.live |
@@ -10679,8 +10791,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SonnenklarTV.de | www.sonnenklar.tv | euvia.cdn.ses-ps.com |
 | SonoOndaTV.ec | sonoonda.com | live.obslivestream.com |
 | SonusFM.de | www.sonus.fm | 60015180a7f57.streamlock.net |
+| SonyAath.in | www.aath.in | 103.135.253.32 |
 | SonyAath.in | www.aath.in | 103.151.60.162 |
 | SonyAath.in | www.aath.in | 103.165.93.31 |
+| SonyAath.in | www.aath.in | livetv.shamon-cable.net |
 | SonyBBCEarth.in | www.bbcasia.com | 103.185.24.134 |
 | SonyCanalNovelas.us | （无 website） | a89829b8dca2471ab52ea9a57bc28a35.mediatailor.us-east-1.amazonaws.com |
 | SonyChannel.ar | la.sonychannel.com | 138.121.15.230 |
@@ -10692,6 +10806,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SonyEntertainmentTelevision.in | www.setindia.com | 103.151.60.162 |
 | SonyEntertainmentTelevision.in | www.setindia.com | 38.96.178.205 |
 | SonyKALHindi.us | www.sonykal.com | wurlsonypicturestv.global.transmit.live |
+| SonyMax.in | www.sonymax.tv | 103.135.253.32 |
 | SonyMax.in | www.sonymax.tv | 103.151.60.162 |
 | SonyMovies.br | （无 website） | 168.197.104.22 |
 | SonyMovies.br | （无 website） | 170.83.16.50 |
@@ -10709,17 +10824,15 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SonyOneHitsAction.fr | （无 website） | d1tvu4639eiqii.cloudfront.net |
 | SonyOneHitsComedie.fr | （无 website） | 7aa9671895264ec9a384dfed1b992171.mediatailor.us-west-2.amazonaws.com |
 | SonyOneHitsComedie.fr | （无 website） | d3nvxupr08boay.cloudfront.net |
+| SonyPal.in | www.sonypal.in | 163.61.226.31 |
 | SonyPal.in | www.sonypal.in | 59.103.38.46 |
 | SonyPix.in | www.sonypix.com | 103.151.60.162 |
 | SonySAB.in | www.sabtv.com | 103.151.60.162 |
 | SonySAB.in | www.sabtv.com | drk6xq0vhn.gpcdn.net |
-| SonySportsTen1.in | www.sonysportsnetwork.com | 103.151.60.162 |
-| SonySportsTen1.in | www.sonysportsnetwork.com | 103.185.24.134 |
-| SonySportsTen2.in | www.sonysportsnetwork.com | 103.151.60.162 |
 | SonySportsTen3Hindi.in | www.sonysportsnetwork.com | 103.151.60.162 |
-| SonySportsTen4.in | www.sonysportsnetwork.com | 103.151.60.162 |
-| SonySportsTen5.in | www.sonysportsnetwork.com | 103.151.60.162 |
+| SonyWah.in | www.sonywah.tv | 163.61.226.31 |
 | SonyWah.in | www.sonywah.tv | sl.vodep39240327.workers.dev |
+| SonyYay.in | www.sonyyay.com | livetv.shamon-cable.net |
 | SoonaTV.co | www.conectandosoluciones.com | vs20.live.opencaster.com |
 | SooriyanTV.ca | www.sooriyantv.ca | live20.bozztv.com |
 | SophiaTV.de | （无 website） | bild-und-ton.stream |
@@ -10802,10 +10915,12 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Sport.sk | www.rtvs.sk | 88.212.15.50 |
 | Sport.uz | www.mtrk.uz | stream8.cinerama.uz |
 | Sport1.cz | www.sport1tv.cz | 88.212.15.50 |
+| Sport1.cz | www.sport1tv.cz | 88.212.7.14 |
 | Sport1.hu | www.sport1tv.hu | 88.212.7.14 |
 | Sport1.ua | www.poverkhnost.tv | stream.mcquack.net |
 | Sport1Baltic.ua | www.poverkhnost.tv | stream.mcquack.net |
 | Sport2.cz | www.sport1tv.cz | 88.212.15.50 |
+| Sport2.cz | www.sport1tv.cz | 88.212.7.14 |
 | Sport2.hu | www.sport1tv.hu | 88.212.7.14 |
 | Sport2.ua | www.poverkhnost.tv | stream.mcquack.net |
 | Sport3.ua | www.poverkhnost.tv | stream.mcquack.net |
@@ -10849,11 +10964,13 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SRF.de | www.srf-online.de | 58de7a369a9c4.streamlock.net |
 | SRFernsehen.de | www.sr.de | srfs.akamaized.net |
 | SriwijayaTV.id | www.sriwijayatv.com | sriwijayatv.siar.us |
+| SRKTV.in | srk.tv | srknowapp.ncare.live |
 | SSport2.tr | www.ssport.tv | bcovlive-a.akamaihd.net |
 | Stadium.us | watchstadium.com | aegis-cloudfront-1.tubi.video |
 | Stadium.us | watchstadium.com | wurl120sports.global.transmit.live |
 | Star101FM.gu | star101.gu | live2.tensila.com |
 | StarAsia.pk | starasianews.tv | 103.250.28.74 |
+| StarBharat.in | www.hotstar.com | 103.135.253.32 |
 | StarBharat.uk | （无 website） | raw.githubusercontent.com |
 | StarChannel.bg | starchannel-bg.com | 213.91.179.28 |
 | StarChannel.cl | www.star-latam.com | 138.121.15.230 |
@@ -10873,12 +10990,17 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | StarCrime.pt | www.startv.pt | znty.dyndns.org |
 | StarCrime.si | www.starchannel-si.com | 92.36.202.5 |
 | StarFamily.ru | （无 website） | dash2.antik.sk |
+| StarGold.in | hotstar.com | 103.135.253.32 |
 | StarGold.in | hotstar.com | 103.151.60.162 |
 | StarGold.in | hotstar.com | 103.185.24.134 |
+| StarGold.in | hotstar.com | livetv.shamon-cable.net |
 | StarGold2.in | hotstar.com | 103.151.60.162 |
+| StarGoldSelect.in | hotstar.com | livetv.shamon-cable.net |
+| StarJalsha.in | www.hotstar.com | 103.135.253.32 |
 | StarJalsha.in | www.hotstar.com | 103.151.60.162 |
 | StarJalsha.in | www.hotstar.com | cdn98.com |
 | StarJalsha.in | www.hotstar.com | da86m1sqpm3o0.cloudfront.net |
+| StarJalsha.in | www.hotstar.com | livetv.shamon-cable.net |
 | StarKentrikisElladas.gr | tvstar.gr | telmaco-cdn.akamaized.net |
 | StarKiran.in | www.hotstar.com | 103.151.60.162 |
 | StarLife.bg | www.starchannel-bg.com | 213.91.179.28 |
@@ -10886,23 +11008,24 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | StarLife.si | www.starchannel-si.com | 92.36.202.5 |
 | StarMaa.in | www.hotstar.com | da86m1sqpm3o0.cloudfront.net |
 | StarMaaMovies.in | www.hotstar.com | da86m1sqpm3o0.cloudfront.net |
+| StarMovies.in | www.starmovies.in | 103.135.253.32 |
+| StarMovies.in | www.starmovies.in | livetv.shamon-cable.net |
 | StarMovies.pt | www.startv.pt | znty.dyndns.org |
 | StarMovies.si | www.starchannel-si.com | 92.36.202.5 |
+| StarMoviesSelect.in | www.starmovies.in | livetv.shamon-cable.net |
 | Starnet.in | （无 website） | 5a1178b42cc03.streamlock.net |
+| StarNews.bd | starnews.com.bd | 103.135.253.32 |
+| StarPlus.in | www.hotstar.com | 103.135.253.32 |
 | StarPlus.in | www.hotstar.com | 103.185.24.134 |
 | StarPlus.in | www.hotstar.com | 41.205.93.154 |
 | StarPlus.in | www.hotstar.com | 66.102.126.10 |
+| StarPlus.in | www.hotstar.com | livetv.shamon-cable.net |
 | StarPlus.uk | （无 website） | 103.151.60.162 |
 | StarPlus.uk | （无 website） | d1rc86nwwc9fag.cloudfront.net |
 | StarPlusTelevizija.mk | starplustv.com | live.muzickatv.mk |
 | StarPravah.in | www.hotstar.com | da86m1sqpm3o0.cloudfront.net |
 | StarSports2.in | www.startv.com | 103.151.60.162 |
-| StarSports2.in | www.startv.com | tvsen5.aynascope.net |
-| StarSports2Hindi.in | jiohotstar.com | tvsen5.aynaott.com |
 | StarSports2Telugu.in | （无 website） | real-vk.proxy.nellaiiptv.com |
-| StarSports3.in | www.startv.com | 103.151.60.162 |
-| StarSportsSelect1.in | www.startv.com | 103.151.60.162 |
-| StarSportsSelect2.in | www.startv.com | 103.151.60.162 |
 | StarSportsSelect2.in | www.startv.com | tvsen7.aynascope.net |
 | StarsTV.pl | starstv.eu | 92.114.85.87 |
 | STARTAir.ru | starttv.ru | 176.118.197.101 |
@@ -10922,6 +11045,8 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | StarTV.mn | www.startv.mn | cdn4.skygo.mn |
 | StarTV.tr | www.startv.com.tr | dogus.daioncdn.net |
 | STARTWorld.ru | starttv.ru | fs.uplink.kz |
+| StarUtsav.in | hotstar.com | 163.61.226.31 |
+| StarUtsavMovies.in | hotstar.com | 163.61.226.31 |
 | StarVijay.in | www.hotstar.com | da86m1sqpm3o0.cloudfront.net |
 | Starz.us | www.starz.com | 23.237.104.106 |
 | StarzCinema.us | www.starz.com | 23.237.104.106 |
@@ -11092,6 +11217,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | SuperSix.it | www.supersixtv.net | 5db313b643fd8.streamlock.net |
 | SuperSpongeBob.us | pluto.tv | jmp2.uk |
 | SuperTennis.it | www.supertennis.tv | live-embed.supertennix.hiway.media |
+| SuperToons.bg | supertoons.bg | d3bxvshzgfq6in.cloudfront.net |
 | SuperTV.ba | www.supertelevizija.com | mirtv.club |
 | SuperTV.it | www.bresciasat.it | 59d7d6f47d7fc.streamlock.net |
 | SuperTV.it | www.bresciasat.it | wms.shared.streamshow.it |
@@ -11116,6 +11242,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Survivor.us | pluto.tv | amg00627-amg00627c16-samsung-nz-2811.playouts.now.amagi.tv |
 | Survivor.us | pluto.tv | amg00627-banijaygroup-surviour-uk-samsunguk-uyz22.amagi.tv |
 | Survivor.us | pluto.tv | jmp2.uk |
+| SuryaSamachar.in | （无 website） | d1msejlow1t3l4.cloudfront.net |
 | SuspilneKrym.ua | crimea.suspilne.media | stream.mcquack.net |
 | SuspilneKultura.ua | suspilne.media | stream.mcquack.net |
 | SuspilneKyiv.ua | central.suspilne.media | live-nstu.cdn-03.cosmonova.net.ua |
@@ -11195,6 +11322,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TaazaTV.in | taazatv.com | fta.ektv.in |
 | TaazaTV.in | taazatv.com | live.we2live.in |
 | TaazaTV.in | taazatv.com | tvsen3.aynaott.com |
+| TaazaTV.in | taazatv.com | tvsen7.aynaott.com |
 | TabarestanTV.ir | mazandaran.irib.ir | ncdn.telewebion.ir |
 | TabbarHits.in | （无 website） | fta.ektv.in |
 | TabbarHits.in | （无 website） | livingindiaottlive.akamaized.net |
@@ -11230,6 +11358,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TanasuhTV.ly | tanasuh.tv | kilolink.pulsarstarsolutions.com |
 | TanzaniaSafariChannel.tz | tanzaniasafarichannel.go.tz | stream-134630.castr.net |
 | Tapesh2.us | www.tapesh.com | maxtvhls.wns.live |
+| TAPSports.ph | tapdmv.com | amg19223-amg19223c2-amgplt0351.playout.now3.amagi.tv |
 | TAPTVChannel23.us | www.cityoflompoc.com | livestream.telvue.com |
 | TAPTVChannel24.us | www.cityoflompoc.com | livestream.telvue.com |
 | TAPTVChannel25.us | www.cityoflompoc.com | livestream.telvue.com |
@@ -11271,6 +11400,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TBS.us | www.tbs.com | turnerlive.warnermediacdn.com |
 | TCM.us | www.tcm.com | turnerlive.warnermediacdn.com |
 | TCM10HD.br | （无 website） | live.tcm10.com.br |
+| TCMLatinAmerica.us | www.tcmla.com | 181.78.14.26 |
 | TCMLatinAmerica.us | www.tcmla.com | 45.171.64.30 |
 | TCMLatinAmerica.us | www.tcmla.com | streaming.onnethn.com |
 | TCSPlus.sv | www.tcsgo.com | telecorporacion.cdn.vustreams.com |
@@ -11356,7 +11486,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Telecafe.ru | www.telecafe.ru | stream.mcquack.net |
 | Telecafe.ru | www.telecafe.ru | stream8.cinerama.uz |
 | Telecanal.cl | www.telecanal.cl | 45.232.210.1 |
-| Telecanal.cl | www.telecanal.cl | tr.live.clarovtrcdn.vtrplay.com |
 | Telecanal12.do | telecanal12.net | edge.essastream.com |
 | Telecanal28.do | （无 website） | edge.essastream.com |
 | Telecaribe.co | telecaribe.co | 138.121.15.230 |
@@ -11615,7 +11744,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TempoTV.tr | www.tempo-tv.com | live.artidijitalmedya.com |
 | TenarensesTV.do | www.tenarenses.com | edge.essastream.com |
 | TENCanal10.hn | www.tencanal10.tv | raw.githubusercontent.com |
-| TenCricket.in | www.sonypicturessportsnetwork.com | 103.151.60.162 |
 | TendenciasPrime.cl | www.tendenciastv.cl | v4.tustreaming.cl |
 | TenGerTV.mn | （无 website） | cdn4.skygo.mn |
 | TennisChannel.us | www.tennischannel.app | 138.59.177.78 |
@@ -11709,6 +11837,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TheDesignNetwork.us | pluto.tv | d4483wsd7yl91.cloudfront.net |
 | TheDoctors.us | （无 website） | lukentvlive.vgcdn.net |
 | theDoveTV.us | thedove.us | thedovetv.bozztv.com |
+| TheExplorers.ru | skymediatv.ru | sofast-yupptv.vgcdn.net |
 | TheFirstTV.us | www.thefirsttv.com | a-cdn.klowdtv.com |
 | TheFirstTV.us | www.thefirsttv.com | jmp2.uk |
 | TheFirstTV.us | www.thefirsttv.com | pb-7dne0wn288z2f.akamaized.net |
@@ -11907,6 +12036,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TNN16.th | www.tnnthailand.com | live-us1.thaimomo.com |
 | TNORadio.ve | tnoradio.com | stmv1.srvstm.com |
 | TNPNews.in | tnpnews.in | server.thelegitpro.in |
+| TNPNews.in | tnpnews.in | stream.ottlive.co.in |
 | TNT.ru | tnt-online.ru | 176.118.197.101 |
 | TNT.ru | tnt-online.ru | 31.148.48.15 |
 | TNT.ru | tnt-online.ru | 31.148.5.241 |
@@ -12000,6 +12130,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TopicalMoonRD.do | www.vivalivetv.com | sistemastr.tropicalmoonmedia.com |
 | TopLatinoTV.pe | toplatino.net | 38.87.224.20 |
 | TopNewsMarathi.in | （无 website） | live1.ottlive.co.in |
+| TopNewsMarathi.in | （无 website） | stream.ottlive.co.in |
 | TopStoriesbyNewsy.us | （无 website） | content.uplynk.com |
 | TopTV.pe | www.toptvaguaytia.com | tvdatta.com |
 | TopTV.rs | www.top-tv.rs | 82.165.71.58 |
@@ -12211,7 +12342,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TV10.rw | www.radiotv10.rw | 5c46fa289c89f.streamlock.net |
 | TV100.gr | fm100.gr | gwebstream.net |
 | TV100.in | www.tv100.info | fta.ektv.in |
-| TV1000.bg | tv1000.bg | 85.14.32.26 |
 | TV1000.bg | tv1000.bg | stream.mcquack.net |
 | TV1000RussianKinoGlobal.ru | （无 website） | 213.91.179.28 |
 | TV10SanJuan.do | tv10sanjuan.com.do | 59d39900ebfb8.streamlock.net |
@@ -12233,6 +12363,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TV25.mn | www.tv25.mn | cdn4.skygo.mn |
 | TV264.tr | tv264.com.tr | b01c02nl.mediatriple.net |
 | TV27News.in | （无 website） | mumt04.tangotv.in |
+| TV27News.in | （无 website） | stream.ottlive.co.in |
 | TV2Bornholm.dk | www.tv2bornholm.dk | livecdn.euw1-0005.jwplive.com |
 | TV2Comedy.hu | tv2play.hu | 88.212.7.14 |
 | TV2Kids.hu | tv2play.hu | 88.212.7.14 |
@@ -12267,6 +12398,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TV41.tr | tv41.com.tr | live.artidijitalmedya.com |
 | TV41.tr | tv41.com.tr | stream.taksimbilisim.com |
 | TV45.in | （无 website） | server.livelegitpro.in |
+| TV45.in | （无 website） | stream.ottlive.co.in |
 | TV45.ni | tv45nicaragua.com | hdbox.chunklistv.com |
 | TV5.mn | tv5.mn | cdn4.skygo.mn |
 | TV52.tr | www.tv52.com.tr | edge1.socialsmart.tv |
@@ -12289,6 +12421,8 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TV5MondeEurope.fr | europe.tv5monde.com | 45.14.84.37 |
 | TV5MondeEurope.fr | europe.tv5monde.com | 5.180.164.197 |
 | TV5MondeEurope.fr | europe.tv5monde.com | ert-ucdn.broadpeak-aas.com |
+| TV5MondeInfo.fr | maghreb-orient.tv5monde.com | 91.235.255.32 |
+| TV5MondeInfo.fr | maghreb-orient.tv5monde.com | tvf-tvfm.otteravision.com |
 | TV5MondeLatinAmerica.fr | latina.tv5monde.com | 45.162.231.38 |
 | TV5MondeLatinAmerica.fr | latina.tv5monde.com | 45.235.0.78 |
 | TV5MondePacific.fr | apac.tv5monde.com | 103.190.232.129 |
@@ -12308,6 +12442,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TV7Benevento.it | （无 website） | streaming.senecadot.com |
 | TV7Bharat.in | tv7bharat.tv | stream.ottlive.co.in |
 | TV7Colmar.fr | www.tv7.fr | tv7.live-kd.com |
+| TV7National.in | （无 website） | stream.ottlive.co.in |
 | TV7Triveneta.it | （无 website） | www.gruppotv7.com |
 | TV8.it | tv8.it | 102.129.186.182 |
 | TV8.lt | tv8.tv3.lt | stream.mcquack.net |
@@ -12325,6 +12460,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TV9Bangla.in | www.tv9bangla.com | fta.ektv.in |
 | TV9Bangla.in | www.tv9bangla.com | mumbai-edge.smartplaytv.in |
 | TV9Bangla.in | www.tv9bangla.com | streams.tangotv.in |
+| TV9Bharatvarsh.in | www.tv9hindi.com | 163.61.226.31 |
 | TV9Bharatvarsh.in | www.tv9hindi.com | dyjmyiv3bp2ez.cloudfront.net |
 | TV9Bharatvarsh.in | www.tv9hindi.com | fta.ektv.in |
 | TV9Bharatvarsh.in | www.tv9hindi.com | streams.tangotv.in |
@@ -12503,6 +12639,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TVEBahia.br | www.tve.ba.gov.br | selpro1348.procergs.com.br |
 | TVEBahia.br | www.tve.ba.gov.br | streaming.procergs.com.br |
 | TVEInternacionalAmerica.es | www.rtve.es | 116.121.59.72 |
+| TVEInternacionalAmerica.es | www.rtve.es | barinaslive1.boldmss.com |
 | TVEInternacionalAsiaOceania.es | www.rtve.es | 103.172.29.30 |
 | TVEInternacionalEurope.es | www.rtve.es | 91.228.35.249 |
 | TVEllef.nl | （无 website） | 61ae39677a1ab.streamlock.net |
@@ -12691,13 +12828,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TVOSanVicente.cl | www.tvosanvicente.cl | 5ff3d9babae13.streamlock.net |
 | TVOstfold.no | www.tvoplay.no | streamnorge.com |
 | TvoyeTVYumor.ru | vk.com | tvoetv.space |
-| TVP1.pl | tvp1.tvp.pl | 57.128.210.196 |
 | TVP1.pl | tvp1.tvp.pl | 92.114.85.87 |
-| TVP1.pl | tvp1.tvp.pl | srv7.flussonic111.com |
-| TVP2.pl | tvp2.tvp.pl | 57.128.210.196 |
-| TVP2.pl | tvp2.tvp.pl | srv7.flussonic111.com |
-| TVP3Warszawa.pl | warszawa.tvp.pl | 92.114.85.87 |
-| TVPABC.pl | abc.tvp.pl | 92.114.85.87 |
 | TVPaiEterno.br | www.paieterno.com.br | 168.197.104.22 |
 | TVPaiEterno.br | www.paieterno.com.br | 186.219.52.187 |
 | TVPaiEterno.br | www.paieterno.com.br | 45.162.64.114 |
@@ -12721,13 +12852,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TVPeruNoticias.pe | www.tvperu.gob.pe | 190.93.224.42 |
 | TVPeruNoticias.pe | www.tvperu.gob.pe | bantel-cdn1.iptvperu.tv |
 | TVPetropolis.br | （无 website） | video02.logicahost.com.br |
-| TVPHD.pl | hd.tvp.pl | 57.128.210.196 |
-| TVPHistoria.pl | historia.tvp.pl | 92.114.85.87 |
 | TVPiKanal.rs | www.rtvpicanal.com | stream.pikanal.rs |
 | TVPInfo.pl | www.tvp.info | dash4.antik.sk |
 | TVPirot.rs | （无 website） | 5bc45691ca49f.streamlock.net |
 | TVPirveli.ge | www.tvpirveli.ge | nue01-edge01.itdc.ge |
-| TVPKultura.pl | tvpkultura.tvp.pl | 92.114.85.87 |
 | TVPlata.do | www.tvplata.net | ss2.tvrdomi.com |
 | TVPLosMochis.mx | tvpacifico.mx | 5ca3e84a76d30.streamlock.net |
 | TVPlus.cl | www.tvmas.tv | 190.234.82.52 |
@@ -12743,14 +12871,11 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | TVPrato.it | www.tvprato.it | live.mariatvcdn.com |
 | TVProfissao.br | （无 website） | stmv.webtvninjas.com.br |
 | TVPRozrywka.pl | tvprozrywka.tvp.pl | 185.227.34.179 |
-| TVPSeriale.pl | seriale.tvp.pl | 92.114.85.87 |
-| TVPSport.pl | sport.tvp.pl | 57.128.210.196 |
 | TVPublicaFueguina.ar | tvpublicafueguina.com.ar | nd106.republicaservers.com |
 | TVPublicaMarcosPaz.ar | www.mediospublicos.marcospaz.net | ca.centaurychile.com |
 | TVPuls.pl | tvpuls.pl | edge01.cdn.emitel.pl |
 | TVPuls.pl | tvpuls.pl | edge06.cdn.emitel.pl |
 | TVPunjab.ca | tvpunjab.com | 932y483pdjv8-hls-live.5centscdn.com |
-| TVPWilno.pl | wilno.tvp.pl | 78.62.9.23 |
 | TVPWorld.pl | tvpworld.com | dash2.antik.sk |
 | TVQuiModena.it | （无 website） | 59d7d6f47d7fc.streamlock.net |
 | TVQuisqueya.us | www.tvquisqueya.com | cloud5.livescast.com |
@@ -12997,13 +13122,13 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | UniNettunoUniversityTV.it | www.uninettuno.tv | stream6-rai-it.akamaized.net |
 | UnionTV.py | uniontv.com.py | tigocloud.desdeparaguay.net |
 | UniquelyThai.vn | （无 website） | livefta.malimarcdn.com |
+| UniqueTV.in | coboltv.com | 163.61.226.31 |
 | UniqueTV.in | coboltv.com | fta.ektv.in |
 | UniqueTV.in | coboltv.com | mumt05.tangotv.in |
 | UniRadioTV.py | www.uniradiopy.com | video.hostingcaaguazu.com |
 | UniregionTV.cl | uniregion.cl | 5ff3d9babae13.streamlock.net |
 | UnisulTV.br | unisultv.blogspot.com | sitetv.brasilstream.com.br |
 | Unite8Sports2.in | unite8sports.in | 103.151.60.162 |
-| Unite8Sports2.in | unite8sports.in | 59.103.38.46 |
 | Unitel.bo | unitel.bo | 190.181.61.93 |
 | Unitel.pe | unitelperu.pe | play.agenciastreaming.com |
 | Uniteve.ar | uniteve.com.ar | vivo.solumedia.com |
@@ -13230,6 +13355,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ViasatHistory.ua | viasat.com.ua | 777905.live.tvstitch.com |
 | ViasatKino.ua | viasat.com.ua | 176.61.157.250 |
 | ViasatKino.ua | viasat.com.ua | 777905.live.tvstitch.com |
+| ViasatKino.ua | viasat.com.ua | 85.14.32.26 |
 | ViasatKino.ua | viasat.com.ua | dtv.vol.net.ua |
 | ViasatKino.ua | viasat.com.ua | flash1.bogulus1.cfd |
 | ViasatKinoAction.ua | viasat.com.ua | 777905.live.tvstitch.com |
@@ -13375,6 +13501,7 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Volgograd24.ru | volgograd24.tv | vgtrkregion-reg.cdnvideo.ru |
 | VolgyhidTV.hu | mediakft.hu | 5cd03f21c7193.streamlock.net |
 | VolksmusikTV.de | www.volksmusik.tv | vmtv.iptv-playoutcenter.de |
+| Volleyball.ru | volley.ru | fonbet.mediacdn.ru |
 | Volver.ar | www.volver.com.ar | 138.121.113.175 |
 | VoprosyiOtvety.ru | tv-stream.ru | stream.mcquack.net |
 | VosgesTV.fr | www.viavosges.tv | vosgestv.live-kd.com |
@@ -13460,7 +13587,9 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | WanLuoTV.ug | www.newvision.co.ug | stream.hydeinnovations.com |
 | WantedDeadorAlive.us | lionsgatechannels.com | aegis-cloudfront-1.tubi.video |
 | WAPATV41.pr | www.televicentropr.com | wapa.hostless.app |
+| WAPATV42.pr | （无 website） | wapa.hostless.app |
 | WapTV.ng | waptvchannel.com | newproxy3.vidivu.tv |
+| WarnerChannel.us | www.warnerchannel.com | 15.204.246.24 |
 | WarnerChannel.us | www.warnerchannel.com | 38.134.250.110 |
 | WarnerChannel.us | www.warnerchannel.com | 45.184.109.10 |
 | WarnerTV.cz | （无 website） | 88.212.15.50 |
@@ -13632,7 +13761,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | WWONTVChannel48.us | www.wonnewyork.net | tv2.fastcast4u.com |
 | WXTV.tw | （无 website） | mobile.ccdntech.com |
 | WXWZLD231.pr | mastvpr.com | 5bf8041cb3fed.streamlock.net |
-| Wydarzenia24.pl | www.wydarzenia24.pl | 92.114.85.87 |
 | X1027FM.aw | xfmaruba.com | live2.tensila.com |
 | X1027FM.aw | xfmaruba.com | stream.castr.com |
 | XamaTV.ar | www.xama.tv | srs.unsj.edu.ar |
@@ -13722,6 +13850,8 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | YES.mv | psmnews.mv | lana.psm.mv |
 | YesMoviesAction.il | www.yes.co.il | stream.mcquack.net |
 | YesNetwork.us | www.yesnetwork.com | 23.237.104.106 |
+| YichangSanxiaGeneralChannel.cn | （无 website） | liveplay.ycrmt.cn |
+| YichangSanxiaTravelLifeChannel.cn | （无 website） | liveplay.ycrmt.cn |
 | YleTeemaFem.fi | svenska.yle.fi | live-fi.tvkaista.net |
 | YleTeemaFem.fi | svenska.yle.fi | yletv.akamaized.net |
 | YleTeemaFem.fi | svenska.yle.fi | yletvworld.akamaized.net |
@@ -13798,8 +13928,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | Zee24Taas.in | zeenews.india.com | streams.tangotv.in |
 | ZeeAction.in | www.zee5.com | fta.ektv.in |
 | ZeeBangla.in | zeebangla.zee5.com | 103.151.60.162 |
+| ZeeBangla.in | zeebangla.zee5.com | livetv.shamon-cable.net |
 | ZeeBangla.in | zeebangla.zee5.com | raw.githubusercontent.com |
 | ZeeBangla.in | zeebangla.zee5.com | tvsen6.aynaott.com |
+| ZeeBanglaSonar.in | www.zee5.com | 103.135.253.32 |
 | ZeeBanglaSonar.in | www.zee5.com | 103.185.24.134 |
 | ZeeBanglaSonar.in | www.zee5.com | d1g8wgjurz8via.cloudfront.net |
 | ZeeBharat.in | www.zee5.com | fta.ektv.in |
@@ -13808,9 +13940,12 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ZeeBiharJharkhand.in | zeenews.india.com | raw.githubusercontent.com |
 | ZeeBiharJharkhand.in | zeenews.india.com | vg-zeefta.akamaized.net |
 | ZeeBusiness.in | www.zeebiz.com | dwby15d04agvq.cloudfront.net |
+| ZeeBusiness.in | www.zeebiz.com | vg-zeefta.akamaized.net |
 | ZeeCineClassic.in | （无 website） | amg00862-amg00862c8-amgplt0173.playout.now3.amagi.tv |
+| ZeeCinema.in | zeecinema.zee5.com | 103.135.253.32 |
 | ZeeCinema.in | zeecinema.zee5.com | 103.151.60.162 |
 | ZeeCinema.in | zeecinema.zee5.com | d1g8wgjurz8via.cloudfront.net |
+| ZeeCinema.in | zeecinema.zee5.com | livetv.shamon-cable.net |
 | ZeeCinema.in | zeecinema.zee5.com | raw.githubusercontent.com |
 | ZeeComedyNation.in | （无 website） | amg00862-amg00862c5-amgplt0173.playout.now3.amagi.tv |
 | ZeeDelhiNCRHaryana.in | www.zee5.com | vg-zeefta.akamaized.net |
@@ -13839,8 +13974,10 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ZeeTamil.in | zeetamil.zee5.com | da86m1sqpm3o0.cloudfront.net |
 | ZeeTamil.in | zeetamil.zee5.com | ev-eu-hw-fast-mpd.starzplayarabia.com |
 | ZeeTamilNews.in | zeenews.india.com | raw.githubusercontent.com |
+| ZeeTelugu.in | zeetelugu.zee5.com | listas-m3u8.github.io |
 | ZeeTelugu.in | zeetelugu.zee5.com | raw.githubusercontent.com |
 | ZeeTeluguNews.in | zeenews.india.com | d116gfrn8orazi.cloudfront.net |
+| ZeeTV.in | www.zeetv.com | 103.135.253.32 |
 | ZeeTV.in | www.zeetv.com | 103.151.60.162 |
 | ZeeTV.in | www.zeetv.com | 41.205.93.154 |
 | ZeeTVAsiaPacific.sg | www.zeetelevisionasia.com | raw.githubusercontent.com |
@@ -13898,7 +14035,6 @@ spec V1 决定全收（用户签字），本文件是审计线索，不是功能
 | ZooMoo.sg | www.zoomoo.tv | cdn-apse1-prod.tsv2.amagi.tv |
 | ZooMoo.sg | www.zoomoo.tv | d1bpufuvfayfg8.cloudfront.net |
 | ZooMoo.sg | www.zoomoo.tv | zoomoo-samsungau.amagi.tv |
-| ZoomTV.pl | zoomtv.pl | 92.114.85.87 |
 | Zoopark.ru | telekanalzoopark.ru | fs.uplink.kz |
 | Zoopark.ru | telekanalzoopark.ru | stream8.cinerama.uz |
 | ZooTV.ru | www.telezoo.tv | 31.148.48.15 |

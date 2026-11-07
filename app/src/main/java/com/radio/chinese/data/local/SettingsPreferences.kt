@@ -26,6 +26,7 @@ internal class SettingsPreferences(private val store: DataStore<Preferences>) {
         val KEY_UI_MODE = intPreferencesKey("ui_mode")
         val KEY_BOOT_AUTOSTART = booleanPreferencesKey("boot_auto_start")
         val KEY_IPTV_ADULT = booleanPreferencesKey("iptv_adult_enabled")
+        val KEY_IPTV_ALL_LANGUAGES = booleanPreferencesKey("iptv_all_languages")
     }
 
     val theme: Flow<AppTheme> = store.data
@@ -43,9 +44,13 @@ internal class SettingsPreferences(private val store: DataStore<Preferences>) {
     /** 默认 false：开关没被显式打开过就绝不把成人频道放进列表与搜索 */
     val iptvAdultEnabled: Flow<Boolean> = store.data.map { it[KEY_IPTV_ADULT] ?: false }
 
+    /** 默认 false：只显示中文与英语频道，其他语言要显式打开 */
+    val iptvAllLanguages: Flow<Boolean> = store.data.map { it[KEY_IPTV_ALL_LANGUAGES] ?: false }
+
     suspend fun setThemeKey(key: String) { store.edit { it[KEY_THEME_KEY] = key } }
     suspend fun setFontScaleKey(key: String) { store.edit { it[KEY_FONT_SCALE] = key } }
     suspend fun setUiMode(mode: Int) { store.edit { it[KEY_UI_MODE] = mode } }
     suspend fun setBootAutoStart(enabled: Boolean) { store.edit { it[KEY_BOOT_AUTOSTART] = enabled } }
     suspend fun setIptvAdultEnabled(enabled: Boolean) { store.edit { it[KEY_IPTV_ADULT] = enabled } }
+    suspend fun setIptvAllLanguages(enabled: Boolean) { store.edit { it[KEY_IPTV_ALL_LANGUAGES] = enabled } }
 }

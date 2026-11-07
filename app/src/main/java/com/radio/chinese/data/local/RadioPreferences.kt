@@ -47,12 +47,15 @@ class RadioPreferences @Inject constructor(
     val bootAutoStart: Flow<Boolean> = settings.bootAutoStart
     /** iptv 成人频道开关。默认关：项目现行策略是成人内容不入默认列表 */
     val iptvAdultEnabled: Flow<Boolean> = settings.iptvAdultEnabled
+    /** 其他语言频道开关。默认关：只显示中文与英语频道 */
+    val iptvAllLanguages: Flow<Boolean> = settings.iptvAllLanguages
 
     suspend fun setThemeKey(key: String) = settings.setThemeKey(key)
     suspend fun setFontScaleKey(key: String) = settings.setFontScaleKey(key)
     suspend fun setUiMode(mode: Int) = settings.setUiMode(mode)
     suspend fun setBootAutoStart(enabled: Boolean) = settings.setBootAutoStart(enabled)
     suspend fun setIptvAdultEnabled(enabled: Boolean) = settings.setIptvAdultEnabled(enabled)
+    suspend fun setIptvAllLanguages(enabled: Boolean) = settings.setIptvAllLanguages(enabled)
 
     // ========== Playback 域 ==========
     val lastPlayedStationId: Flow<String?> = playback.lastPlayedStationId

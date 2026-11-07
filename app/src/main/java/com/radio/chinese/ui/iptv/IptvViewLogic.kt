@@ -3,6 +3,7 @@ package com.radio.chinese.ui.iptv
 import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.domain.model.IptvAdult
 import com.radio.chinese.domain.model.IptvCategory
+import com.radio.chinese.domain.model.IptvLanguage
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.domain.model.StationFilter
 
@@ -28,6 +29,7 @@ object IptvViewLogic {
         all: List<RadioStation>,
         query: String,
         adultEnabled: Boolean,
+        allLanguagesEnabled: Boolean,
         favoriteIds: List<String>,
         recentIds: List<String>,
     ): IptvLists {
@@ -37,7 +39,10 @@ object IptvViewLogic {
         val mine = all.filter { it.id.startsWith(IptvStationRepository.PREFIX) }
         // 默认隐藏成人：列表、搜索、分类计数、收藏、最近全用同一份 allowed，
         // 免得留一条"列表里没有、收藏页却能看到"的旁路（V2）。
-        val allowed = if (adultEnabled) mine else mine.filterNot { IptvAdult.isAdult(it) }
+        val adultOk = if (adultEnabled) mine else mine.filterNot { IptvAdult.isAdult(it) }
+        // 默认只留中文/英语频道（V13）。分类计数、收藏、最近都基于 allowed，不留旁路
+        val allowed = if (allLanguagesEnabled) adultOk
+        else adultOk.filter { IptvLanguage.isPreferred(it.language) }
         val byId = allowed.associateBy { it.id }
         val favSet = favoriteIds.toSet()
 

@@ -42,6 +42,23 @@ $stF  = Fetch "https://iptv-org.github.io/api/streams.json"    "streams.json"
 $ctyF = Fetch "https://iptv-org.github.io/api/countries.json"  "countries.json"
 $catF = Fetch "https://iptv-org.github.io/api/categories.json" "categories.json"
 
+# 语言播放列表是可选增强：主数据已够生成清单，语言列表只用来把"明确是中文/英语"的频道标出来。
+# 拉不到就退回国家官方语言，不因为一个附加文件把整次同步卡死（但必须 warn，不能静默）。
+function FetchText($url, $name) {
+    $f = Join-Path $work $name
+    Remove-Item $f -Force -ErrorAction SilentlyContinue
+    curl.exe -sS --fail --max-time 180 -x $Proxy -o $f $url
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $f)) { return $null }
+    return $f
+}
+$zhoIds = @{}; $engIds = @{}
+$zhoF = FetchText "https://iptv-org.github.io/iptv/languages/zho.m3u" "lang-zho.m3u"
+$engF = FetchText "https://iptv-org.github.io/iptv/languages/eng.m3u" "lang-eng.m3u"
+if ($zhoF) { foreach ($m in [regex]::Matches((Get-Content $zhoF -Raw -Encoding UTF8), 'tvg-id="([^"@]+)')) { $zhoIds[$m.Groups[1].Value] = $true } }
+if ($engF) { foreach ($m in [regex]::Matches((Get-Content $engF -Raw -Encoding UTF8), 'tvg-id="([^"@]+)')) { $engIds[$m.Groups[1].Value] = $true } }
+if (-not $zhoF -or -not $engF) { Write-Warning "语言播放列表拉取失败，只能按国家官方语言判断语言（精度下降，但仍可用）" }
+"语言列表：zho=$($zhoIds.Count) eng=$($engIds.Count)"
+
 $ch  = Get-Content $chF  -Raw -Encoding UTF8 | ConvertFrom-Json
 $st  = Get-Content $stF  -Raw -Encoding UTF8 | ConvertFrom-Json
 $cty = Get-Content $ctyF -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -82,6 +99,24 @@ function CNName($code) {
     if ([string]::IsNullOrWhiteSpace($code)) { return "" }
     if ($iso.ContainsKey($code))  { return $iso[$code] }
     if ($ctyName.ContainsKey($code)) { return $ctyName[$code] }   # 表没覆盖 → 回落英文名，不留空
+    return ""
+}
+
+# 语言：优先用语言播放列表的明确标注，没有标注的用频道所属国家的官方语言。
+# 不猜"名字里有没有中文"：alt_names 里的中文是译名，不代表播出语言。
+$ctyLangs = @{}
+foreach ($c in $cty) {
+    $ctyLangs[[string]$c.code] = @($c.languages | ForEach-Object { [string]$_ } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+function LangOf($id, $countryCode) {
+    # 语言播放列表命中 = 明确语言；否则按国家官方语言推测，加 country: 前缀让 App 知道这是推测。
+    # 前缀不是装饰：美国/印度这类多官方语言国家，只有推测集"全部是中英"才该保留，
+    # 否则 eng,spa / eng,hin,tam 会把整批西语、印地语频道当成英语台放进来。
+    if ($zhoIds.ContainsKey($id)) { return "zho" }
+    if ($engIds.ContainsKey($id)) { return "eng" }
+    $ls = $ctyLangs[$countryCode]
+    if ($ls -and $ls.Count -gt 0) { return "country:" + ($ls -join ",") }
     return ""
 }
 
@@ -142,7 +177,7 @@ foreach ($k in $byChannel.Keys) {
         altNames = @(@($c.alt_names | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
         category = "general"; streamUrl = $srcs[0].url; sources = $srcs
         website = [string]$c.website; description = $desc
-        country = CNName ([string]$c.country); language = ""
+        country = CNName ([string]$c.country); language = (LangOf $k ([string]$c.country))
         nsfw = ($c.is_nsfw -eq $true); logoUrl = ""
         tags = @(@($c.categories | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     })
