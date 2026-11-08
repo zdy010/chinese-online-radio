@@ -58,10 +58,10 @@ fun TvSearchEntry(
     ) {
         Row(
             modifier = Modifier
+                .focusRing(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
                 .heightIn(min = Dimens.TouchMin)
                 .clickable(onClick = onOpen)
-                .focusRing(MaterialTheme.shapes.medium)
                 .padding(horizontal = Dimens.GapMedium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -135,10 +135,10 @@ fun TvNineKeySearchDialog(
                         items(results, key = { it.id }) { station ->
                             Row(
                                 modifier = Modifier
+                                    .focusRing(MaterialTheme.shapes.small)
                                     .fillMaxWidth()
                                     .heightIn(min = Dimens.TouchSecondary)
                                     .clickable { onSelect(station) }
-                                    .focusRing(MaterialTheme.shapes.small)
                                     .padding(horizontal = Dimens.GapSmall),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -225,9 +225,9 @@ private fun KeyButton(
 ) {
     Surface(
         modifier = modifier
+            .focusRing(MaterialTheme.shapes.small)
             .heightIn(min = Dimens.TouchSecondary)
-            .clickable(onClick = onClick)
-            .focusRing(MaterialTheme.shapes.small),
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
