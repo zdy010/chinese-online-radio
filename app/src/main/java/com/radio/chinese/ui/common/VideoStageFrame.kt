@@ -46,6 +46,8 @@ fun VideoStageFrame(
      * 否则用户看到的就是"这个播放页没有全屏"，而不是"这个流还没起来"。
      */
     alwaysShowFullScreen: Boolean = false,
+    /** 电视默认全屏：不渲染全屏/旋转按钮，也不放「点画面收起控件」的手势层 */
+    showControls: Boolean = true,
 ) {
     val hasVideo by playerManager.hasVideoTrack.collectAsState()
     val interactive = VideoControlsPolicy.showsFullScreenButton(
@@ -66,7 +68,7 @@ fun VideoStageFrame(
         // matchParentSize 与 align 是 BoxScope 成员（不用 import）；offset 是 Modifier 扩展，已在顶部 import
         VideoStage(playerManager = playerManager, modifier = Modifier.matchParentSize())
 
-        if (interactive) {
+        if (showControls && interactive) {
             // 透明手势层：点画面切换控制层。放在画面之上、按钮之下。
             Box(
                 Modifier

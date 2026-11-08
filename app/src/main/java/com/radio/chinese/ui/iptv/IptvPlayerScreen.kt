@@ -1,6 +1,7 @@
 package com.radio.chinese.ui.iptv
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,10 +42,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.style.TextOverflow
+import com.radio.chinese.domain.model.RadioStation
+import com.radio.chinese.ui.common.VideoFullScreenState
+import com.radio.chinese.ui.theme.isTvSurface
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.domain.model.IptvBrief
 import com.radio.chinese.domain.model.StationDisplayName
@@ -79,7 +87,14 @@ fun IptvPlayerScreen(
     val error by playerManager.error.collectAsState()
     val favoriteIds by viewModel.favoriteIds.collectAsState()
 
-    val fullScreen = rememberVideoFullScreen(canRotate = isCarSurface().not())
+    // 电视进播放页就是全屏，不给「要不要全屏」这一步，也不给全屏/旋转按钮。
+    // 锁定后返回键直接退回列表（不会被「先退全屏」吞掉），媒体键仍由会话处理。
+    val tv = isTvSurface()
+    val fullScreen = rememberVideoFullScreen(
+        canRotate = isCarSurface().not(),
+        initiallyFullScreen = tv,
+        lockFullScreen = tv,
+    )
 
     // 闸门跟「页面意图」：本页开着就一直要画面，**不跟 hasVideoTrack**。
     // playStation 每次都把 hasVideo 置 false（要等新流的 onTracksChanged），绑它的话
@@ -140,6 +155,22 @@ fun IptvPlayerScreen(
             }
         },
     ) { padding ->
+        if (tv) {
+            // 电视：画面铺满全屏，节目信息浮在画面下沿，没有顶栏/播控/全屏按钮
+            TvFullScreenStage(
+                playerManager = playerManager,
+                fullScreen = fullScreen,
+                hasVideo = hasVideo,
+                status = status,
+                error = error,
+                number = if (index >= 0) index + 1 else 0,
+                total = base.size,
+                quality = currentSource?.quality.orEmpty(),
+                brief = station?.let { IptvBrief.of(it) }.orEmpty(),
+                base = base,
+                modifier = Modifier.fillMaxSize().padding(padding),
+            )
+        } else {
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             Box(
                 modifier = Modifier
@@ -256,6 +287,7 @@ fun IptvPlayerScreen(
                 }
             }
         }
+        }
     }
 }
 
@@ -267,19 +299,32 @@ private fun IptvInfoRow(
     brief: String,
     message: String?,
     isError: Boolean,
+    modifier: Modifier = Modifier,
+    /** 叠在画面上时：半透明黑底 + 白字，保证任何画面内容下都可读 */
+    onPicture: Boolean = false,
 ) {
-    Column(modifier = Modifier.padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall)) {
-        Text(
-            text = "第 $number / $total 频道",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+    val labelColor = if (onPicture) Color.White.copy(alpha = 0.78f)
+    else MaterialTheme.colorScheme.onSurfaceVariant
+    val bodyColor = if (onPicture) Color.White else MaterialTheme.colorScheme.onSurface
+    Column(
+        modifier = modifier
+            .then(if (onPicture) Modifier.background(Color.Black.copy(alpha = 0.62f)) else Modifier)
+            .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall)
+    ) {
+        // 切台基准偶发尚未注册时 total=0，显示「第 0 / 0 频道」只会误导，先不显示这一行
+        if (total > 0) {
+            Text(
+                text = "第 $number / $total 频道",
+                style = MaterialTheme.typography.labelLarge,
+                color = labelColor,
+            )
+        }
         // 简介：播放页可以多行，不滚动（V14）
         if (brief.isNotBlank()) {
             Text(
                 text = brief,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = bodyColor,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -288,18 +333,98 @@ private fun IptvInfoRow(
             Text(
                 text = "清晰度 $quality",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = labelColor,
             )
         }
         if (!message.isNullOrBlank()) {
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isError) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (isError) MaterialTheme.colorScheme.error else labelColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+/**
+ * 电视全屏画面：视频铺满整屏，节目信息浮在下沿，没有任何按钮。
+ *
+ * 遥控器：左右切台、OK/确定 暂停继续。媒体键（上一台/下一台/播放暂停）
+ * 仍由 MainActivity + MediaSession 处理，这里不重复接管，避免一次按键切两台。
+ */
+@Composable
+private fun TvFullScreenStage(
+    playerManager: PlayerManager,
+    fullScreen: VideoFullScreenState,
+    hasVideo: Boolean,
+    status: String?,
+    error: String?,
+    number: Int,
+    total: Int,
+    quality: String,
+    brief: String,
+    base: List<RadioStation>,
+    modifier: Modifier = Modifier,
+) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focusRequester.requestFocus() } }
+
+    Box(
+        modifier = modifier
+            .background(Color.Black)
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                val native = event.nativeKeyEvent
+                if (native.action != AndroidKeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
+                when (native.keyCode) {
+                    AndroidKeyEvent.KEYCODE_DPAD_LEFT -> {
+                        playerManager.playPrevious(base)
+                        true
+                    }
+                    AndroidKeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        playerManager.playNext(base)
+                        true
+                    }
+                    AndroidKeyEvent.KEYCODE_DPAD_CENTER, AndroidKeyEvent.KEYCODE_ENTER -> {
+                        playerManager.togglePlayPause()
+                        true
+                    }
+                    else -> false
+                }
+            }
+    ) {
+        VideoStageFrame(
+            playerManager = playerManager,
+            fullScreen = fullScreen,
+            modifier = Modifier.fillMaxSize(),
+            showControls = false,
+        )
+        if (!hasVideo && status != null) {
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(Dimens.GapMedium))
+                Text(
+                    text = status.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                )
+            }
+        }
+        IptvInfoRow(
+            number = number,
+            total = total,
+            quality = quality,
+            brief = brief,
+            message = error ?: status,
+            isError = error != null,
+            onPicture = true,
+            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
+        )
     }
 }
