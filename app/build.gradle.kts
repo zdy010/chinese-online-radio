@@ -104,7 +104,9 @@ android {
 
     defaultConfig {
         applicationId = "com.radio.chinese"
-        minSdk = 26
+        // legacy TV 分支：Android 5.1 (API 22) 盒子专用验证线。
+        // 主线保持 26；这里只用于验证「能不能装、能不能播」，暂不做完整兼容清理。
+        minSdk = 22
         targetSdk = 35
         versionCode = gitCommitCount
         // 2.1 大版本：主版本 2，次版本 1，修订号从 0 重新起算（修订号 = 提交数 − 基线，仍自动递增）
@@ -121,7 +123,8 @@ android {
             val version = variant.versionName
             // 带真凭证的自测包在文件名里强制留痕，让人不可能“诋不清这个包能不能发”
             val eggTag = if (buildType == "release" && eggEnabled) "-EGG" else ""
-            output.outputFileName = "chinese-online-radio-${version}-${buildType}$eggTag.apk"
+            // 本分支产物带 API22 标记，避免和主线包混装
+            output.outputFileName = "chinese-online-radio-${version}-${buildType}-API22$eggTag.apk"
         }
     }
 
@@ -163,6 +166,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // EPG 的 LocalDate/DateTimeFormatter 是 API 26 才有的 java.time，
+        // 不 desugar 在 5.1 上会 NoClassDefFoundError
+        isCoreLibraryDesugaringEnabled = true
     }
 
     buildFeatures {
@@ -200,6 +206,9 @@ android {
 }
 
 dependencies {
+    // legacy TV 分支：把 java.time 等 API 26+ 的库降到 API 22 可运行
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
     // Compose BOM
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
