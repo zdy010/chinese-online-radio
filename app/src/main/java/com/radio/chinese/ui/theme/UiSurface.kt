@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * 界面形态。全树唯一判定源：页面只允许用 [isCarSurface] 分支，
@@ -22,21 +23,30 @@ val LocalUiSurface = compositionLocalOf { UiSurface.Phone }
  * 报 160dpi 时横屏是 1280x720dp（判成车机），报 240dpi 时只有 853x480dp
  * （sw=480，会被判成手机，用户永远等不到车机布局）。
  */
-fun resolveUiSurface(mode: Int, smallestWidthDp: Int, landscape: Boolean): UiSurface = when (mode) {
+fun resolveUiSurface(
+    mode: Int,
+    smallestWidthDp: Int,
+    landscape: Boolean,
+    isTv: Boolean = false,
+): UiSurface = when (mode) {
     1 -> UiSurface.Phone
     2 -> UiSurface.Car
-    else -> if (smallestWidthDp >= 600 && landscape) UiSurface.Car else UiSurface.Phone
+    // 电视是固定横屏大屏，但 1080p@320dpi 的 sw 只有 540dp，够不到 600 阈值：
+    // 按手机档渲染会把列表压成单列、右侧空一大片。TV 只要横屏就走大屏档。
+    else -> if ((isTv || smallestWidthDp >= 600) && landscape) UiSurface.Car else UiSurface.Phone
 }
 
 /** 随旋转 / 分屏 / 手动改模式重组，不需要重启进程。 */
 @Composable
 fun rememberUiSurface(mode: Int): UiSurface {
     val cfg = LocalConfiguration.current
-    return remember(cfg.smallestScreenWidthDp, cfg.orientation, mode) {
+    val tv = LocalContext.current.isTv()
+    return remember(cfg.smallestScreenWidthDp, cfg.orientation, mode, tv) {
         resolveUiSurface(
             mode,
             cfg.smallestScreenWidthDp,
-            cfg.orientation == Configuration.ORIENTATION_LANDSCAPE
+            cfg.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            tv,
         )
     }
 }
