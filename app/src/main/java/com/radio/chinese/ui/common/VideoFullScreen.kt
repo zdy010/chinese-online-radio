@@ -43,13 +43,19 @@ class VideoFullScreenState(
 )
 
 @Composable
-fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
+fun rememberVideoFullScreen(
+    canRotate: Boolean,
+    /** 电视上进播放页就是全屏，不提供「选择进不进全屏」这一步 */
+    initiallyFullScreen: Boolean = false,
+    /** 锁定后返回键不用于「退出全屏」，而是正常返回列表；toggle/rotate 也失效 */
+    lockFullScreen: Boolean = false,
+): VideoFullScreenState {
     val context = LocalContext.current
     // 用 LocalConfiguration 而不是 context.resources：后者不是快照态，转屏后不会重组，
     // 旋转按钮就会拿着一份过期的"当前是横屏"结论。
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    var fullScreen by rememberSaveable { mutableStateOf(false) }
+    var fullScreen by rememberSaveable { mutableStateOf(initiallyFullScreen) }
     var rotateOverride by rememberSaveable { mutableStateOf<VideoOrientation?>(null) }
 
     // 冻结“进入全屏那一刻能不能转”：两个真实场景需要它——
@@ -102,33 +108,39 @@ fun rememberVideoFullScreen(canRotate: Boolean): VideoFullScreenState {
         }
     }
 
-    BackHandler(enabled = fullScreen) {
+    // 电视上全屏是常态：返回键必须退回列表，不能被「先退全屏」吞掉
+    BackHandler(enabled = fullScreen && !lockFullScreen) {
         rotateOverride = null
         fullScreen = false
     }
 
-    return remember(fullScreen, isLandscape, enteredCanRotate) {
+    return remember(fullScreen, isLandscape, enteredCanRotate, lockFullScreen) {
         VideoFullScreenState(
             isFullScreen = fullScreen,
             isLandscape = isLandscape,
             canRotateAtEntry = enteredCanRotate,
             toggle = {
-                if (fullScreen) {
-                    rotateOverride = null
-                } else {
-                    // 进入：把当前的可转判定冻结下来，重建/翻转都不再改它
-                    enteredCanRotate = canRotateNow
+                if (!lockFullScreen) {
+                    if (fullScreen) {
+                        rotateOverride = null
+                    } else {
+                        // 进入：把当前的可转判定冻结下来，重建/翻转都不再改它
+                        enteredCanRotate = canRotateNow
+                    }
+                    fullScreen = !fullScreen
                 }
-                fullScreen = !fullScreen
             },
             // 以“上一次请求”为事实源，不拿观测到的 isLandscape：设备不理会请求时（折叠屏、
             // 分屏、部分车机 ROM，以及本项目的模拟器），观测值永远不变，按钮会“按了没反应”；
             // 转屏动画期内连点也会两下只切一下。那些都是 spec §3.1 自己立的反模式。
+            // 电视没有旋转概念，锁定态下不让任何残留调用改方向。
             rotate = {
-                val current = rotateOverride ?: VideoOrientation.Landscape
-                rotateOverride = VideoControlsPolicy.nextOrientation(
-                    currentLandscape = current == VideoOrientation.Landscape
-                )
+                if (!lockFullScreen) {
+                    val current = rotateOverride ?: VideoOrientation.Landscape
+                    rotateOverride = VideoControlsPolicy.nextOrientation(
+                        currentLandscape = current == VideoOrientation.Landscape
+                    )
+                }
             },
         )
     }
