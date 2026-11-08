@@ -76,6 +76,18 @@ object KeyCapture {
 
     fun offer(code: Int) {
         if (!_listening.value) return
+        // 方向键 / OK / 返回 / Home 是遥控器操作界面的唯一出路。
+        // 一旦被绑成「切台」之类的动作，用户就再也移不动焦点、退不出页面，
+        // 只能清应用数据才能恢复 —— 录制阶段直接拒收。
+        val reserved = code == android.view.KeyEvent.KEYCODE_DPAD_UP ||
+            code == android.view.KeyEvent.KEYCODE_DPAD_DOWN ||
+            code == android.view.KeyEvent.KEYCODE_DPAD_LEFT ||
+            code == android.view.KeyEvent.KEYCODE_DPAD_RIGHT ||
+            code == android.view.KeyEvent.KEYCODE_DPAD_CENTER ||
+            code == android.view.KeyEvent.KEYCODE_ENTER ||
+            code == android.view.KeyEvent.KEYCODE_BACK ||
+            code == android.view.KeyEvent.KEYCODE_HOME
+        if (reserved) return
         _candidates.update { list ->
             if (list.any { it.code == code }) list
             else (list + KeyBinding.KeyCode(code)).takeLast(MAX_CANDIDATES)

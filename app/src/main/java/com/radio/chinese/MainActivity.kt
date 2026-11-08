@@ -57,7 +57,8 @@ class MainActivity : ComponentActivity() {
         // 电视恒横屏。放在这里而不是主题里：部分盒子的 HDMI 传感器会把方向来回报成
         // portrait，跟 Theme 的 windowOrientation 打架；显式请求一次最稳。
         // 手动「电视」档也算：这台机器可能既没有 TELEVISION 位也没有 leanback。
-        val uiModeAtStart = runBlocking { preferences.uiMode.first() }
+        // DataStore 首次读取若抛 IOException，不能让整个 App 崩在 onCreate 里
+        val uiModeAtStart = runCatching { runBlocking { preferences.uiMode.first() } }.getOrDefault(0)
         if (TvSurface.resolveTvMode(uiModeAtStart, isTv())) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }

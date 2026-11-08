@@ -311,8 +311,9 @@ private fun IptvInfoRow(
             .then(if (onPicture) Modifier.background(Color.Black.copy(alpha = 0.62f)) else Modifier)
             .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall)
     ) {
-        // 切台基准偶发尚未注册时 total=0，显示「第 0 / 0 频道」只会误导，先不显示这一行
-        if (total > 0) {
+        // total=0：基准还没注册；number=0：当前台不在当前页列表里（例如从九键候选选中了
+        // 一个境外台，而基准只有中国台）。两种情况显示「第 0 / …」都是误导，直接不显示。
+        if (total > 0 && number > 0) {
             Text(
                 text = "第 $number / $total 频道",
                 style = MaterialTheme.typography.labelLarge,
@@ -379,6 +380,8 @@ private fun TvFullScreenStage(
             .onPreviewKeyEvent { event ->
                 val native = event.nativeKeyEvent
                 if (native.action != AndroidKeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
+                // 长按左右键会连发 repeat：每次切一台，按住一秒能跳过十几台
+                if (native.repeatCount != 0) return@onPreviewKeyEvent false
                 when (native.keyCode) {
                     AndroidKeyEvent.KEYCODE_DPAD_LEFT -> {
                         playerManager.playPrevious(base)

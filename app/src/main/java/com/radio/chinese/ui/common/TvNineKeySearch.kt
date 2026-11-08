@@ -118,6 +118,8 @@ fun TvNineKeySearchDialog(
                 .onPreviewKeyEvent { event ->
                     val native = event.nativeKeyEvent
                     if (native.action != AndroidKeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
+                    // 长按数字键会连发 repeat，一口气灌进一长串数字
+                    if (native.repeatCount != 0) return@onPreviewKeyEvent false
                     val code = native.keyCode
                     val digit = when (code) {
                         in AndroidKeyEvent.KEYCODE_0..AndroidKeyEvent.KEYCODE_9 ->
