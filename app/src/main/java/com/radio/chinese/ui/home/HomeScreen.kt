@@ -437,15 +437,20 @@ fun StationListItem(
                         StatusChip(text = "单")
                     }
                 }
-                // iptv 简介单独一行：走马灯，太长也不折行顶高列表
+                // iptv 简介单独一行。不用 MarqueeText：它的 SubcomposeLayout 在
+                // LazyGrid 里每次重组都要重新 subcompose 测量，电视上按方向键移动焦点时
+                // 会造成测量震荡（列表列宽在相邻帧里跳变、持续滚动停不下来）。
+                // 简介是「国家 · 分类 · 语言」这种短文本，单行省略就够，本来就滚不起来。
                 if (station.id.startsWith("iptv:")) {
                     val brief = IptvBrief.of(station)
                     if (brief.isNotBlank()) {
-                        MarqueeText(
+                        Text(
                             text = brief,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = Dimens.GapTiny),
                         )
                     }
