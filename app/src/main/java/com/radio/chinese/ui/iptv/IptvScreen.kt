@@ -383,16 +383,27 @@ private fun IptvTabsHost(
         SurfaceTab("收藏", Icons.Default.Favorite),
         SurfaceTab("最近", Icons.Default.History),
     )
+    val tv = isTvSurface()
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { tabs.size })
-    // 进二级目录前记录当前页；返回时 Pager 重新创建会用它当 initialPage
-    LaunchedEffect(pagerState.currentPage) { onPageChanged(pagerState.currentPage) }
+    // 电视不用 HorizontalPager：列表项获得焦点时的 bringIntoView 会把 Pager 推到
+    // 非整页横向偏移并停住（左列空白、右列被裁），每次按方向键又推一次，
+    // 表现为「节目列表刷新停不下来」。电视改成页签点击直接换页，没有横向滚动容器。
+    var tvPage by rememberSaveable(key = "iptv_tv_page_v1") { mutableIntStateOf(initialPage) }
+    val currentPage = if (tv) tvPage else pagerState.currentPage
+    // 进二级目录前记录当前页；返回时用它当 initialPage
+    LaunchedEffect(currentPage) { onPageChanged(currentPage) }
     val scope = rememberCoroutineScope()
-    val onSelect: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
+    val onSelect: (Int) -> Unit = if (tv) {
+        { tvPage = it }
+    } else {
+        { scope.launch { pagerState.animateScrollToPage(it) } }
+    }
     val railNav = canHostRail(tabs.size)
 
     val pager: @Composable (Modifier) -> Unit = { m ->
         IptvPager(
             pagerState = pagerState,
+            staticPage = if (tv) tvPage else null,
             ui = ui,
             nowPlaying = nowPlaying,
             favoriteIds = favoriteIds,
@@ -407,7 +418,7 @@ private fun IptvTabsHost(
         Row(modifier = modifier) {
             SurfaceTabBar(
                 tabs = tabs,
-                currentPage = pagerState.currentPage,
+                currentPage = currentPage,
                 onSelect = onSelect,
                 modifier = Modifier.width(Dimens.RailWidth),
                 useRail = true,
@@ -418,7 +429,7 @@ private fun IptvTabsHost(
         Column(modifier = modifier) {
             SurfaceTabBar(
                 tabs = tabs,
-                currentPage = pagerState.currentPage,
+                currentPage = currentPage,
                 onSelect = onSelect,
                 useRail = false,
             )
@@ -430,6 +441,8 @@ private fun IptvTabsHost(
 @Composable
 private fun IptvPager(
     pagerState: PagerState,
+    /** 非空 = 电视：直接渲染这一页，不创建 HorizontalPager */
+    staticPage: Int?,
     ui: IptvUiState,
     nowPlaying: NowPlayingState,
     favoriteIds: Set<String>,
@@ -440,51 +453,90 @@ private fun IptvPager(
 ) {
     // CCTV 打头的国内列表。页签 0/1/3 是目录网格，2/4/5 是频道列表
     val china = IptvChinaOrder.sorted(ui.visible.filter { it.country == "中国" })
-    HorizontalPager(state = pagerState, modifier = modifier) { page ->
-        when (page) {
-            2, 4, 5 -> {
-                val list = when (page) {
-                    2 -> china
-                    4 -> ui.favorites
-                    else -> ui.recents
-                }
-                if (list.isEmpty()) {
-                    EmptyState(
-                        icon = Icons.Default.Tv,
-                        title = if (page == 2) "没有中国频道" else "这里还是空的",
-                        hint = if (page == 4) "在频道列表点收藏即可加入" else "播放过的频道会出现在这里",
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    StationGrid(
-                        stations = list,
-                        nowPlaying = nowPlaying,
-                        favoriteIds = favoriteIds,
-                        onRowClick = onRowClick,
-                        onFavoriteClick = onFavoriteClick,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
-            0 -> LabelGrid(
-                entries = ui.countries,
-                icon = Icons.Default.Public,
-                onOpen = { onOpenMode("cty:$it") },
-                modifier = Modifier.fillMaxSize(),
-            )
-            1 -> LabelGrid(
-                entries = ui.regions,
-                icon = Icons.Default.Place,
-                onOpen = { onOpenMode("rgn:$it") },
-                modifier = Modifier.fillMaxSize(),
-            )
-            3 -> LabelGrid(
-                entries = ui.categories,
-                icon = Icons.Default.Category,
-                onOpen = { onOpenMode("cat:$it") },
+    if (staticPage != null) {
+        IptvPage(
+            page = staticPage,
+            china = china,
+            ui = ui,
+            nowPlaying = nowPlaying,
+            favoriteIds = favoriteIds,
+            onRowClick = onRowClick,
+            onFavoriteClick = onFavoriteClick,
+            onOpenMode = onOpenMode,
+            modifier = modifier,
+        )
+    } else {
+        HorizontalPager(state = pagerState, modifier = modifier) { page ->
+            IptvPage(
+                page = page,
+                china = china,
+                ui = ui,
+                nowPlaying = nowPlaying,
+                favoriteIds = favoriteIds,
+                onRowClick = onRowClick,
+                onFavoriteClick = onFavoriteClick,
+                onOpenMode = onOpenMode,
                 modifier = Modifier.fillMaxSize(),
             )
         }
+    }
+}
+
+@Composable
+private fun IptvPage(
+    page: Int,
+    china: List<RadioStation>,
+    ui: IptvUiState,
+    nowPlaying: NowPlayingState,
+    favoriteIds: Set<String>,
+    onRowClick: (RadioStation) -> Unit,
+    onFavoriteClick: (String) -> Unit,
+    onOpenMode: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (page) {
+        2, 4, 5 -> {
+            val list = when (page) {
+                2 -> china
+                4 -> ui.favorites
+                else -> ui.recents
+            }
+            if (list.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Default.Tv,
+                    title = if (page == 2) "没有中国频道" else "这里还是空的",
+                    hint = if (page == 4) "在频道列表点收藏即可加入" else "播放过的频道会出现在这里",
+                    modifier = modifier,
+                )
+            } else {
+                StationGrid(
+                    stations = list,
+                    nowPlaying = nowPlaying,
+                    favoriteIds = favoriteIds,
+                    onRowClick = onRowClick,
+                    onFavoriteClick = onFavoriteClick,
+                    modifier = modifier,
+                )
+            }
+        }
+        0 -> LabelGrid(
+            entries = ui.countries,
+            icon = Icons.Default.Public,
+            onOpen = { onOpenMode("cty:$it") },
+            modifier = modifier,
+        )
+        1 -> LabelGrid(
+            entries = ui.regions,
+            icon = Icons.Default.Place,
+            onOpen = { onOpenMode("rgn:$it") },
+            modifier = modifier,
+        )
+        3 -> LabelGrid(
+            entries = ui.categories,
+            icon = Icons.Default.Category,
+            onOpen = { onOpenMode("cat:$it") },
+            modifier = modifier,
+        )
     }
 }
 
