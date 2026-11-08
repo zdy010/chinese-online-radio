@@ -3,6 +3,7 @@ package com.radio.chinese
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
 import android.os.Build
 import dagger.hilt.android.HiltAndroidApp
 
@@ -15,7 +16,12 @@ class RadioApp : Application() {
     }
 
     private fun createNotificationChannel() {
-        val manager = getSystemService(NotificationManager::class.java)
+        // NotificationChannel 是 API 26 才有；getSystemService(Class) 是 API 23 才有。
+        // legacy TV 分支（minSdk 22）上两者都不能碰，否则 Application.onCreate 直接
+        // NoSuchMethodError 崩溃（Android 5.1 TV AVD 实测）。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        @Suppress("DEPRECATION")
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
 
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
