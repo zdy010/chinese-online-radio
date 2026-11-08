@@ -92,8 +92,8 @@ fun rememberVideoFullScreen(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
         } else {
-            // 退出全屏：不受 canRotate 约束，永远复位；电视上复位成「仍横屏」（见 resetOrientation）
-            resetOrientation(activity)
+            // 退出全屏：不受 canRotate 约束，永远复位；电视档复位成「仍横屏」（见 resetOrientation）
+            resetOrientation(activity, keepLandscape = lockFullScreen)
             controller.show(WindowInsetsCompat.Type.systemBars())
         }
     }
@@ -102,7 +102,10 @@ fun rememberVideoFullScreen(
     DisposableEffect(Unit) {
         onDispose {
             val activity = context as? android.app.Activity ?: return@onDispose
-            resetOrientation(activity)
+            // keepLandscape 用档位判定：手动选「电视」但系统判不出 TV 的盒子，
+            // 若只看 activity.isTv()，离开播放页会把 MainActivity 的横屏锁解掉，
+            // 而且 onCreate 不会再跑 —— 用户必须重启 App 才能恢复横屏。
+            resetOrientation(activity, keepLandscape = lockFullScreen)
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
                 .show(WindowInsetsCompat.Type.systemBars())
         }
@@ -152,8 +155,8 @@ fun rememberVideoFullScreen(
  * 电视恒横屏：复位成 `UNSPECIFIED` 会把 `MainActivity.onCreate` 的锁定解掉，
  * 部分盒子按 HDMI 传感器上报的方向把整个界面翻成竖屏。
  */
-private fun resetOrientation(activity: android.app.Activity) {
-    activity.requestedOrientation = if (activity.isTv()) {
+private fun resetOrientation(activity: android.app.Activity, keepLandscape: Boolean) {
+    activity.requestedOrientation = if (keepLandscape || activity.isTv()) {
         ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     } else {
         ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
