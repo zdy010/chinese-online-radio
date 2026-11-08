@@ -599,10 +599,10 @@ private fun EntryCard(
 ) {
     Card(
         modifier = Modifier
+            .focusRing(MaterialTheme.shapes.large)
             .fillMaxWidth()
             .heightIn(min = Dimens.TouchMin)
-            .clickable(onClick = onClick)
-            .focusRing(MaterialTheme.shapes.large),
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
     ) {
         Row(

@@ -367,7 +367,11 @@ fun StationListItem(
         }
     Card(
         // 电视/车机上方向键移焦点时必须有可见反馈：手机档点按后的短暂高亮也无害
-        modifier = itemModifier.focusRing(MaterialTheme.shapes.medium),
+        // focusRing 必须在链首：onFocusChanged 观察不到上游 clickable 的焦点节点，
+        // 放在 itemModifier 之后会永远收不到焦点变化（实测描边整个消失）
+        modifier = Modifier
+            .focusRing(MaterialTheme.shapes.medium)
+            .then(itemModifier),
         shape = MaterialTheme.shapes.medium
     ) {
         Column {
