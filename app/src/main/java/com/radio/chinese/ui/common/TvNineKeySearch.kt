@@ -52,7 +52,7 @@ fun TvSearchEntry(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
+            .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapTiny),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
@@ -60,7 +60,9 @@ fun TvSearchEntry(
             modifier = Modifier
                 .focusRing(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
-                .heightIn(min = Dimens.TouchMin)
+                // 与音频库的 AppSearchField 同一下限（车机档 64dp）。
+                // 用 TouchMin(88dp) 会把列表整体顶下去，和另外两屏顶部对不齐。
+                .heightIn(min = Dimens.TouchSecondary)
                 .clickable(onClick = onOpen)
                 .padding(horizontal = Dimens.GapMedium),
             verticalAlignment = Alignment.CenterVertically,

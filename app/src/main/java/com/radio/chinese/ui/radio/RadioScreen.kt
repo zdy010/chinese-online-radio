@@ -87,7 +87,8 @@ fun RadioScreen(
             TvSearchEntry(onOpen = { showTvSearch = true }) {
                 IconButton(
                     onClick = onNavigateToEpg,
-                    modifier = Modifier.size(Dimens.TouchMin)
+                    // 与搜索入口同高：88dp 会把整行重新撑回去
+                    modifier = Modifier.size(Dimens.TouchSecondary)
                 ) {
                     Icon(Icons.Default.CalendarMonth, contentDescription = "节目单")
                 }
