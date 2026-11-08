@@ -55,5 +55,10 @@ class UiSurfaceTest {
             UiSurface.Car,
             resolveUiSurface(mode = 2, smallestWidthDp = 400, landscape = false, isTv = false),
         )
+        // 强制电视档：即便 sw 很小、系统也判不出 TV，仍走大屏布局
+        assertEquals(
+            UiSurface.Car,
+            resolveUiSurface(mode = 3, smallestWidthDp = 400, landscape = false, isTv = false),
+        )
     }
 }

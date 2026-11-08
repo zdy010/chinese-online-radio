@@ -25,7 +25,10 @@ import com.radio.chinese.ui.common.LocalPlayability
 import com.radio.chinese.ui.theme.AppTheme
 import com.radio.chinese.ui.theme.ChineseRadioTheme
 import com.radio.chinese.ui.theme.FontScaleOption
+import com.radio.chinese.ui.theme.TvSurface
 import com.radio.chinese.ui.theme.isTv
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -53,7 +56,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // 电视恒横屏。放在这里而不是主题里：部分盒子的 HDMI 传感器会把方向来回报成
         // portrait，跟 Theme 的 windowOrientation 打架；显式请求一次最稳。
-        if (isTv()) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        // 手动「电视」档也算：这台机器可能既没有 TELEVISION 位也没有 leanback。
+        val uiModeAtStart = runBlocking { preferences.uiMode.first() }
+        if (TvSurface.resolveTvMode(uiModeAtStart, isTv())) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
 
         requestNotificationPermission()
 

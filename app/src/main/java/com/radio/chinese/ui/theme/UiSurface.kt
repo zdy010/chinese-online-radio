@@ -18,7 +18,7 @@ val LocalUiSurface = compositionLocalOf { UiSurface.Phone }
 /**
  * 纯函数判定，便于单点核对。
  *
- * mode：0=自动 / 1=强制手机 / 2=强制车机。
+ * mode：0=自动 / 1=强制手机 / 2=强制车机 / 3=强制电视。
  * 必须有手动档：加装车机上报的 density 极随意，同样 1280x720 的面板，
  * 报 160dpi 时横屏是 1280x720dp（判成车机），报 240dpi 时只有 853x480dp
  * （sw=480，会被判成手机，用户永远等不到车机布局）。
@@ -31,6 +31,10 @@ fun resolveUiSurface(
 ): UiSurface = when (mode) {
     1 -> UiSurface.Phone
     2 -> UiSurface.Car
+    // 强制电视也用大屏布局。TV 专属行为（九键搜索、默认全屏、遥控器焦点）
+    // 不在这里，由 Theme 下发的 LocalTvMode 单独控制，避免把 UiSurface 扩成三态
+    // 后所有 isCarSurface() 分支都要重判。
+    3 -> UiSurface.Car
     // 电视是固定横屏大屏，但 1080p@320dpi 的 sw 只有 540dp，够不到 600 阈值：
     // 按手机档渲染会把列表压成单列、右侧空一大片。TV 只要横屏就走大屏档。
     else -> if ((isTv || smallestWidthDp >= 600) && landscape) UiSurface.Car else UiSurface.Phone
