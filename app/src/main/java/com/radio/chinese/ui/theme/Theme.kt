@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -66,10 +67,13 @@ val LocalIsDarkTheme = compositionLocalOf { false }
 fun ChineseRadioTheme(
     theme: AppTheme = AppTheme.SYSTEM,
     fontScale: Float = 1f,
-    uiMode: Int = 0,    // 0 = 自动, 1 = 手机, 2 = 车机
+    uiMode: Int = 0,    // 0 = 自动, 1 = 手机, 2 = 车机, 3 = 电视
     content: @Composable () -> Unit
 ) {
     val surface = rememberUiSurface(uiMode)
+    // 手动档优先：选手机/车机就关掉 TV 行为，选电视就强制开启。
+    // 只有「自动」才信系统特征 —— 国产盒子常常两条判据都不上报。
+    val tvMode = TvSurface.resolveTvMode(uiMode, LocalContext.current.isTv())
     // 车机档取字号“下限”而不是叠乘：标准档在车机上按「大」渲染，
     // 用户仍可选超大(1.3)，不会出现 1.3×1.15 那种失控放大。
     val effectiveScale = if (surface == UiSurface.Car) maxOf(fontScale, 1.15f) else fontScale
@@ -97,6 +101,7 @@ fun ChineseRadioTheme(
 
     CompositionLocalProvider(
         LocalUiSurface provides surface,
+        LocalTvMode provides tvMode,
         LocalIsDarkTheme provides dark,
     ) {
         MaterialTheme(

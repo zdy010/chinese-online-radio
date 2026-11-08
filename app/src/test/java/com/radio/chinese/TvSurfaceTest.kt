@@ -33,4 +33,18 @@ class TvSurfaceTest {
         // 车机：无触屏但没有 leanback
         assertFalse(TvSurface.isTv(uiModeType = 3, hasTouchscreen = false, hasLeanback = false))
     }
+
+    @Test
+    fun `自动档取系统判定，手动电视档强制开启`() {
+        assertTrue(TvSurface.resolveTvMode(uiMode = 0, systemIsTv = true))
+        assertFalse(TvSurface.resolveTvMode(uiMode = 0, systemIsTv = false))
+        assertTrue(TvSurface.resolveTvMode(uiMode = 3, systemIsTv = false))
+    }
+
+    @Test
+    fun `手动手机或车机档能关掉系统误判的电视行为`() {
+        // 系统上报 TV 但用户选了手机/车机：手动档必须赢，否则九键搜索赖着不走
+        assertFalse(TvSurface.resolveTvMode(uiMode = 1, systemIsTv = true))
+        assertFalse(TvSurface.resolveTvMode(uiMode = 2, systemIsTv = true))
+    }
 }

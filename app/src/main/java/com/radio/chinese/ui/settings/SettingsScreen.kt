@@ -353,7 +353,8 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
-            // 界面形态：加装车机上报的 density 不可控，自动判定必须能被推翻
+            // 界面形态：加装车机上报的 density 不可控、国产电视不上报 leanback，
+            // 自动判定必须能被推翻；「电视」档同时启用九键搜索与播放页默认全屏
             ListItem(
                 headlineContent = { Text("界面模式") },
                 supportingContent = {
@@ -361,7 +362,8 @@ fun SettingsScreen(
                         listOf(
                             0 to "自动",
                             1 to "手机",
-                            2 to "车机"
+                            2 to "车机",
+                            3 to "电视"
                         ).forEach { (mode, label) ->
                             FilterChip(
                                 selected = uiState.uiMode == mode,
