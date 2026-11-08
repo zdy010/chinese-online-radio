@@ -1,5 +1,6 @@
 package com.radio.chinese.ui.common
 
+import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -109,7 +111,27 @@ fun TvNineKeySearchDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.86f)
-                .heightIn(min = 360.dp, max = 620.dp),
+                .heightIn(min = 360.dp, max = 620.dp)
+                // 遥控器数字键直接输入：以前只能靠方向键把焦点挪到屏幕上的数字按钮
+                // 再按 OK，九键输入法等于没用。这里在对话框根接收按键，
+                // 无论焦点在数字键、候选行还是根上，数字键都能进输入框。
+                .onPreviewKeyEvent { event ->
+                    val native = event.nativeKeyEvent
+                    if (native.action != AndroidKeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
+                    val code = native.keyCode
+                    val digit = when (code) {
+                        in AndroidKeyEvent.KEYCODE_0..AndroidKeyEvent.KEYCODE_9 ->
+                            (code - AndroidKeyEvent.KEYCODE_0).toString()
+                        in AndroidKeyEvent.KEYCODE_NUMPAD_0..AndroidKeyEvent.KEYCODE_NUMPAD_9 ->
+                            (code - AndroidKeyEvent.KEYCODE_NUMPAD_0).toString()
+                        else -> null
+                    }
+                    when {
+                        digit != null -> { digits += digit; true }
+                        code == AndroidKeyEvent.KEYCODE_DEL -> { digits = digits.dropLast(1); true }
+                        else -> false
+                    }
+                },
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surface,
         ) {
