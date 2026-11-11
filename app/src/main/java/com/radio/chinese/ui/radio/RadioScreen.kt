@@ -36,6 +36,7 @@ import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.canHostRail
 import com.radio.chinese.ui.theme.isCarSurface
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -63,6 +64,12 @@ fun RadioScreen(
     // 默认停在「全部」而不是「地区」：地区目录是「台太多」时的另一条入口，
     // 不该把熟悉的电台列表挤掉。在「全部」向右滑就能滑到「地区」，跟点顶栏那一页等价。
     val pagerState = rememberPagerState(initialPage = 1, pageCount = { tabs.size })
+    // 电视不用 HorizontalPager：和 iptv 那次同一个坑 —— 列表项获得焦点时
+    // bringIntoView 会把 Pager 推到非整页横向偏移，播放中的列表于是一直闪烁/位移。
+    // 电视改成页签点击直接换页，用独立页状态，不创建任何横向滚动容器。
+    val tv = isTvSurface()
+    var tvPage by rememberSaveable { mutableIntStateOf(1) }
+    val currentPage = if (tv) tvPage else pagerState.currentPage
     val scope = rememberCoroutineScope()
     var searchQuery by remember { mutableStateOf("") }
     val homeViewModel: HomeViewModel = hiltViewModel()
@@ -124,7 +131,13 @@ fun RadioScreen(
             )
         }
 
-        val onSelectTab: (Int) -> Unit = { scope.launch { pagerState.animateScrollToPage(it) } }
+        // 页签点击与页面内的「去分类/去收藏/返回全部」都走同一套跳页逻辑
+        val onJumpToPage: (Int) -> Unit = if (tv) {
+            { tvPage = it }
+        } else {
+            { scope.launch { pagerState.animateScrollToPage(it) } }
+        }
+        val onSelectTab: (Int) -> Unit = onJumpToPage
         // 页签数要算进去：5 个条目在矮车机屏上 rail 装不下，得退回顶部横条
         val railNav = canHostRail(tabs.size)
 
@@ -133,53 +146,57 @@ fun RadioScreen(
             Row(modifier = Modifier.weight(1f)) {
                 SurfaceTabBar(
                     tabs = tabs,
-                    currentPage = pagerState.currentPage,
+                    currentPage = currentPage,
                     onSelect = onSelectTab,
                     modifier = Modifier.width(Dimens.RailWidth),
                     useRail = railNav,
                 )
                 RadioPagerHost(
                     pagerState = pagerState,
+                    staticPage = if (tv) tvPage else null,
                     homeViewModel = homeViewModel,
                     searchQuery = searchQuery,
                     onNavigateToPlayer = onNavigateToPlayer,
                     onNavigateToSettings = onNavigateToSettings,
                     onNavigateToTag = onNavigateToTag,
-                    scope = scope,
+                    onJumpToPage = onJumpToPage,
                     modifier = Modifier.weight(1f)
                 )
             }
         } else {
             SurfaceTabBar(
                 tabs = tabs,
-                currentPage = pagerState.currentPage,
+                currentPage = currentPage,
                 onSelect = onSelectTab,
                 useRail = railNav,
             )
             RadioPagerHost(
                 pagerState = pagerState,
+                staticPage = if (tv) tvPage else null,
                 homeViewModel = homeViewModel,
                 searchQuery = searchQuery,
                 onNavigateToPlayer = onNavigateToPlayer,
                 onNavigateToSettings = onNavigateToSettings,
                 onNavigateToTag = onNavigateToTag,
-                scope = scope,
+                onJumpToPage = onJumpToPage,
                 modifier = Modifier.weight(1f)
             )
         }
     }
 }
 
-/** 五个页签的宿主。手机档与车机档共用，避开把 when 复制两遍。 */
+/** 五个页签的宿主。手机/车机走 Pager，电视走静态页。 */
 @Composable
 private fun RadioPagerHost(
     pagerState: PagerState,
+    /** 非空 = 电视：直接渲染这一页，不创建 HorizontalPager */
+    staticPage: Int?,
     homeViewModel: HomeViewModel,
     searchQuery: String,
     onNavigateToPlayer: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToTag: (String?) -> Unit,
-    scope: CoroutineScope,
+    onJumpToPage: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // 五个页签共用一份 EPG 状态：列表行自己读 Local，不再靠每个页面记得传参
@@ -191,7 +208,46 @@ private fun RadioPagerHost(
         onToggle = homeViewModel::toggleEpgExpand,
     )
     CompositionLocalProvider(LocalEpgInline provides epgState) {
-    HorizontalPager(state = pagerState, modifier = modifier) { page ->
+        if (staticPage != null) {
+            RadioPage(
+                page = staticPage,
+                homeViewModel = homeViewModel,
+                searchQuery = searchQuery,
+                onNavigateToPlayer = onNavigateToPlayer,
+                onNavigateToSettings = onNavigateToSettings,
+                onNavigateToTag = onNavigateToTag,
+                onJumpToPage = onJumpToPage,
+                modifier = modifier,
+            )
+        } else {
+            HorizontalPager(state = pagerState, modifier = modifier) { page ->
+                RadioPage(
+                    page = page,
+                    homeViewModel = homeViewModel,
+                    searchQuery = searchQuery,
+                    onNavigateToPlayer = onNavigateToPlayer,
+                    onNavigateToSettings = onNavigateToSettings,
+                    onNavigateToTag = onNavigateToTag,
+                    onJumpToPage = onJumpToPage,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RadioPage(
+    page: Int,
+    homeViewModel: HomeViewModel,
+    searchQuery: String,
+    onNavigateToPlayer: (String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToTag: (String?) -> Unit,
+    onJumpToPage: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
         when (page) {
             // 页签顺序：0 地区 / 1 全部 / 2 分类 / 3 收藏 / 4 最近。
             // 下面几个跳页回调里的数字必须跟着这份顺序走，加页签时一起改。
@@ -202,16 +258,15 @@ private fun RadioPagerHost(
                 searchQuery = searchQuery
             )
             1 -> HomeScreen(showTopBar = false, viewModel = homeViewModel, onNavigateToPlayer = onNavigateToPlayer,
-                onNavigateToCategory = { scope.launch { pagerState.animateScrollToPage(2) } },
-                onNavigateToFavorites = { scope.launch { pagerState.animateScrollToPage(3) } },
+                onNavigateToCategory = { onJumpToPage(2) },
+                onNavigateToFavorites = { onJumpToPage(3) },
                 onNavigateToSettings = onNavigateToSettings)
             2 -> CategoryScreen(showTopBar = false, viewModel = homeViewModel, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
                 onNavigateToTag = onNavigateToTag,
-                onNavigateBack = { scope.launch { pagerState.animateScrollToPage(1) } })
+                onNavigateBack = { onJumpToPage(1) })
             3 -> FavoritesScreen(showTopBar = false, searchQuery = searchQuery, onNavigateToPlayer = onNavigateToPlayer,
-                onNavigateBack = { scope.launch { pagerState.animateScrollToPage(1) } })
+                onNavigateBack = { onJumpToPage(1) })
             4 -> RadioRecentTab(onNavigateToPlayer = onNavigateToPlayer, searchQuery = searchQuery)
-        }
         }
     }
 }
