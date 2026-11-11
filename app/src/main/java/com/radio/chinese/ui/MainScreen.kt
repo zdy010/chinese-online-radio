@@ -3,6 +3,7 @@ package com.radio.chinese.ui
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -17,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -38,6 +40,8 @@ import com.radio.chinese.ui.radio.RadioScreen
 import com.radio.chinese.ui.settings.SettingsScreen
 import com.radio.chinese.ui.tag.TagScreen
 import com.radio.chinese.ui.manage.ManageScreen
+import com.radio.chinese.ui.theme.Dimens
+import com.radio.chinese.ui.theme.isTvSurface
 
 data class BottomNavItem(
     val screen: Screen,
@@ -217,29 +221,43 @@ fun MainScreen(
         Screen.Radio.route, Screen.Iptv.route, Screen.Audio.route, Screen.Settings.route,
     )
 
+    val onNavSelect: (BottomNavItem) -> Unit = { item ->
+        if (currentRoute != item.screen.route) {
+            // 切到非 iptv 一级 tab 才清切台基准。必须是这里的显式动作：
+            // popUpTo(Radio) 会让 currentRoute 短暂回到 Radio，
+            // 放在 LaunchedEffect(currentRoute) 里会误清（QA 审查 P1）。
+            if (item.screen.route != Screen.Iptv.route) {
+                playerManager.clearSkipBase()
+            }
+            navController.navigate(item.screen.route) {
+                popUpTo(Screen.Radio.route) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    val tv = isTvSurface()
     Scaffold(
+        // 电视把一级导航放顶部：遥控器焦点常驻上半屏，底部整条让给迷你播放条。
+        // 用 TabRow 替掉 NavigationBar，条目更矮，内容区反而变高。
+        topBar = {
+            if (tv && showBottomBar) {
+                TvPrimaryNav(
+                    items = bottomNavItems,
+                    currentRoute = currentRoute,
+                    onSelect = onNavSelect,
+                )
+            }
+        },
         bottomBar = {
-            if (showBottomBar) {
+            if (!tv && showBottomBar) {
                 NavigationBar {
                     bottomNavItems.forEach { item ->
                         val selected = currentRoute == item.screen.route
                         NavigationBarItem(
                             selected = selected,
-                            onClick = {
-                                if (currentRoute != item.screen.route) {
-                                    // 切到非 iptv 一级 tab 才清切台基准。必须是这里的显式动作：
-                                    // popUpTo(Radio) 会让 currentRoute 短暂回到 Radio，
-                                    // 放在 LaunchedEffect(currentRoute) 里会误清（QA 审查 P1）。
-                                    if (item.screen.route != Screen.Iptv.route) {
-                                        playerManager.clearSkipBase()
-                                    }
-                                    navController.navigate(item.screen.route) {
-                                        popUpTo(Screen.Radio.route) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
+                            onClick = { onNavSelect(item) },
                             icon = { Icon(if (selected) item.selectedIcon else item.unselectedIcon, contentDescription = item.label) },
                             label = { Text(item.label) }
                         )
@@ -253,6 +271,48 @@ fun MainScreen(
                 navController = navController,
                 playerManager = playerManager,
             )
+        }
+    }
+}
+
+/**
+ * 电视专用的一级导航：横排 4 项，替代手机档的底部 NavigationBar。
+ *
+ * 为什么搬上来：遥控器操作时焦点基本都在上半屏，底部切一级入口要跨过整个内容区；
+ * 底部那条也让不出来给迷你播放条。TabRow 比 NavigationBar 矮，内容区反而多出空间。
+ */
+@Composable
+private fun TvPrimaryNav(
+    items: List<BottomNavItem>,
+    currentRoute: String?,
+    onSelect: (BottomNavItem) -> Unit,
+) {
+    val selectedIndex = items.indexOfFirst { it.screen.route == currentRoute }.coerceAtLeast(0)
+    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
+        TabRow(selectedTabIndex = selectedIndex) {
+            items.forEach { item ->
+                val selected = item.screen.route == currentRoute
+                Tab(
+                    selected = selected,
+                    onClick = { onSelect(item) },
+                    // 电视上命中区不能小：方向键移焦点的目标就是这个 Tab
+                    modifier = Modifier.heightIn(min = Dimens.TouchSecondary),
+                    text = {
+                        Text(
+                            item.label,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = null,
+                        )
+                    },
+                )
+            }
         }
     }
 }
