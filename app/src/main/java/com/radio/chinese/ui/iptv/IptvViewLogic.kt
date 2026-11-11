@@ -47,8 +47,9 @@ object IptvViewLogic {
         // 免得留一条"列表里没有、收藏页却能看到"的旁路（V2）。
         val adultOk = if (adultEnabled) mine else mine.filterNot { IptvAdult.isAdult(it) }
         // 默认只留中文/英语频道（V13）。分类计数、收藏、最近都基于 allowed，不留旁路。
-        // 成人频道不受语言过滤：实测两条成人台恰好是西语（country:grn,spa），
-        // 这里若也按语言剔，打开成人开关后仍然一条都看不到，开关等于假的。
+        // 成人频道不受语言过滤：上游成人台常带非中英 language，若也按语言剔，
+        // 打开成人开关后仍一条都看不到，开关等于假的。当前清单已无成人条目
+        // （上游两条误标已修正），这条留作将来真出现成人台时的兜底。
         var allowed = if (allLanguagesEnabled) adultOk
         else adultOk.filter { IptvAdult.isAdult(it) || IptvLanguage.isPreferred(it.language) }
         // 连续失败达到阈值就隐藏（0 = 不隐藏）。与成人/语言同一份 allowed，
