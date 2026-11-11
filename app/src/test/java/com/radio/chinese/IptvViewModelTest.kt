@@ -62,7 +62,7 @@ class IptvViewModelTest {
 
     @Test
     fun `成人开关打开时，非中英的成人台也可见`() {
-        // 实测两条成人台 language=country:grn,spa，若语言过滤也作用于成人，开关等于假的
+        // 上游成人台常带非中英 language（country:xxx 格式），若语言过滤也作用于成人，开关等于假的
         val data = listOf(
             RadioStation(
                 id = "iptv:adult.ar", name = "Adult", category = "general",

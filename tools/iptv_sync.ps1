@@ -21,6 +21,11 @@ $ErrorActionPreference = "Stop"
 $assets = "app/src/main/assets/iptv_channels.json"
 $audit  = "doc/iptv_nonofficial_hosts.md"
 $work   = ".superpowers/tmp/iptv"
+
+# 上游 iptv-org 把这两条普通频道误标成 is_nsfw=true（用户实机核实为误标）：
+# Retroclub 是音乐台，Tele Posadas 是阿根廷地方综合台，分类/标签都不是成人。
+# 不在这里兜住，每次重跑同步都会把误标写回来，成人开关又凭空多出 2 条。
+$NSFW_FALSE_POSITIVES = @('Retroclub.ar', 'TelePosadas.ar')
 New-Item -ItemType Directory -Force -Path (Split-Path $assets) | Out-Null
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 
@@ -233,7 +238,7 @@ foreach ($k in $byChannel.Keys) {
         category = "general"; streamUrl = $srcs[0].url; sources = $srcs
         website = [string]$c.website; description = $desc
         country = CNName ([string]$c.country); language = (LangOf $k ([string]$c.country)); region = $region
-        nsfw = ($c.is_nsfw -eq $true); logoUrl = ""
+        nsfw = (($c.is_nsfw -eq $true) -and ($k -notin $NSFW_FALSE_POSITIVES)); logoUrl = ""
         tags = @(@($c.categories | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     })
 }

@@ -2,6 +2,7 @@ package com.radio.chinese
 
 import com.radio.chinese.data.local.StationJson
 import com.radio.chinese.domain.model.IptvAdult
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -90,7 +91,7 @@ class IptvAssetsGateTest {
      * header 必须真的入库：不入库的话那批流会大面积 403，而没有任何测试会红。
      *
      * 阈值取实测基线（2026-11-06：带 header 的流远多于 50）而不是 `> 0`：
-     * `> 0` 只能防“整字段不写”，防不了“只丢一半”。丢一半同样会有一大批台点不响。
+     * `> 0` 只能防"整字段不写"，防不了"只丢一半"。丢一半同样会有一大批台点不响。
      */
     @Test
     fun `带 header 的流不少于基线`() {
@@ -99,15 +100,20 @@ class IptvAssetsGateTest {
     }
 
     /**
-     * 成人条目必须存在（否则 V2 的隐藏开关是个空功能）。
+     * 上游误标核对：Retroclub / Tele Posadas 曾被 iptv-org 标成 is_nsfw=true，
+     * 用户实机核实是普通频道（音乐台 / 阿根廷地方综合台），已在清单和
+     * tools/iptv_sync.ps1 的白名单里修正。这里钉住"重跑同步不能再写回来"。
      *
-     * 实测上游 374 个 is_nsfw 频道里**只有 3 条流**，所以这里只能钉“至少 1 条”；
-     * 它实质是“那几条还在不在”的哨兵，不能当成“隐藏了几百个频道”的证据。
+     * 修正后当前清单 0 条成人台，所以原先「成人条目 >= 1」的断言撤销。
+     * IptvAdult / IptvViewLogic 的过滤机制仍保留：上游将来真出现成人台，默认照样隐藏。
+     * 判定规则本身由 IptvModelFieldsTest 用内联 JSON 覆盖，不依赖清单里有没有样本。
      */
     @Test
-    fun `成人条目存在且能被 IptvAdult 认出`() {
-        val adults = list.count { IptvAdult.isAdult(it) }
-        assertTrue("成人条目为 0，隐藏开关将无意义", adults >= 1)
+    fun `上游误标的两条普通频道不得再被标成成人`() {
+        val ids = setOf("iptv:Retroclub.ar", "iptv:TelePosadas.ar")
+        val hit = list.filter { it.id in ids }
+        assertEquals(2, hit.size)
+        assertTrue(hit.none { IptvAdult.isAdult(it) })
     }
 
     /** 国家名必须是中文或英文原名，不能是裸码 —— 裸码说明 ISO2_CN 与 countries.json 都没命中。 */
