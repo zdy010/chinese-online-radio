@@ -2,8 +2,11 @@ package com.radio.chinese.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -46,7 +49,7 @@ import com.radio.chinese.ui.common.NestedWindowInsets
 import com.radio.chinese.domain.model.IptvBrief
 import com.radio.chinese.domain.model.StationDisplayName
 import com.radio.chinese.ui.common.LocalEpgInline
-import com.radio.chinese.ui.common.focusRing
+import com.radio.chinese.ui.common.focusRingVisual
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.playabilityNameColor
 import com.radio.chinese.ui.common.RadioMiniPlayerBar
@@ -357,20 +360,32 @@ fun StationListItem(
     val epgPrograms = epg.expanded[station.id]
     val epgMinute = epg.minute
     val onEpgToggle: (() -> Unit)? = if (hasEpg) { { epg.onToggle(station.id) } } else null
+    // 焦点状态用 InteractionSource 观察，而不是 onFocusChanged：
+    // LazyVerticalGrid 里焦点在行间移动时，失焦的那一行不一定收到 isFocused=false，
+    // 旧描边会一直留在原处（电视上表现为「按键后列表一直闪/两个框」）。
+    // 让 clickable 和焦点观察共用同一个 interactionSource，状态才可靠。
+    val interactionSource = remember { MutableInteractionSource() }
+    val focused by interactionSource.collectIsFocusedAsState()
     // 不传 onLongClick 时保持原来的 clickable：只在需要长按弹菜单的页面才升级，
     // 避免给分类页等复用方添上不需要的长按响应
     val itemModifier = modifier
         .fillMaxWidth()
         .let {
-            if (onLongClick != null) it.combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            else it.clickable(onClick = onClick)
+            if (onLongClick != null) it.combinedClickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ) else it.clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = onClick,
+            )
         }
     Card(
         // 电视/车机上方向键移焦点时必须有可见反馈：手机档点按后的短暂高亮也无害
-        // focusRing 必须在链首：onFocusChanged 观察不到上游 clickable 的焦点节点，
-        // 放在 itemModifier 之后会永远收不到焦点变化（实测描边整个消失）
         modifier = Modifier
-            .focusRing(MaterialTheme.shapes.medium)
+            .focusRingVisual(focused)
             .then(itemModifier),
         shape = MaterialTheme.shapes.medium
     ) {
