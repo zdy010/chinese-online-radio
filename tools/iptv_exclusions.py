@@ -57,8 +57,10 @@ BACKUP_DIR = ROOT / ".superpowers/tmp/iptv/probe"
 SCHEMA_VERSION = 1  # 结构未变，只是新增 reason 枚举值与 streamExclusions 字段
 REASON_ALL_GONE = "all-sources-gone"
 REASON_BOTH_UNREACHABLE = "unreachable-both-network-modes"
-ALLOWED_REASONS = {REASON_ALL_GONE, REASON_BOTH_UNREACHABLE}
+REASON_BOTH_GONE = "both-network-modes-gone"
+ALLOWED_REASONS = {REASON_ALL_GONE, REASON_BOTH_UNREACHABLE, REASON_BOTH_GONE}
 SYNTHETIC_WHY = "both-network-modes-unreachable"
+SYNTHETIC_GONE_WHY = "both-network-modes-gone"
 
 MIN_STATIONS = 10_000  # 与 IptvAssetsGateTest、iptv_sync.ps1 的下限保持一致
 MIN_ALIASES = 100      # 与 IptvAssetsGateTest「带别名的条目 > 100」一致
@@ -283,6 +285,99 @@ def build_stream_exclusions(streams: dict, dead: dict,
     return sorted(by_url.values(), key=lambda e: e["url"])
 
 
+# ---------------------------------------------------------------- C 类：两轮严格模式都确证失效
+
+
+def _resolve_probe_path(raw: str) -> Path:
+    p = Path(raw)
+    return p if p.is_absolute() else ROOT / p
+
+
+def load_intersect(path: Path, fingerprint: str):
+    """读交集结果与它引用的两轮严格探测结论，并做完整性校验。"""
+    if not path.exists():
+        raise SystemExit(f"交集结果不存在：{path}")
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    if doc.get("assetsSha256") != fingerprint:
+        raise SystemExit("交集结果的 assets 指纹与当前清单不一致，拒绝混用两版结论")
+    cov = doc.get("coverage", {})
+    if cov.get("bothTested", 0) < doc.get("streamTotal", 1):
+        raise SystemExit("两轮没有把清单全部测完，交集是残缺的，拒绝据此剔除")
+    dpath = _resolve_probe_path(doc["direct"]["path"])
+    ppath = _resolve_probe_path(doc["proxy"]["path"])
+    if not dpath.exists() or not ppath.exists():
+        raise SystemExit(f"交集引用的探测结果缺失：{dpath} / {ppath}")
+    return doc, json.loads(dpath.read_text(encoding="utf-8")), json.loads(ppath.read_text(encoding="utf-8"))
+
+
+def _gone_rows(streams: dict, keys: list, dstate: dict, pstate: dict) -> list:
+    rows = []
+    for key in keys:
+        de = dstate["entries"].get(key)
+        pe = pstate["entries"].get(key)
+        if not de or not pe or de.get("verdict") != ip.GONE or pe.get("verdict") != ip.GONE:
+            raise SystemExit(f"{key} 并非两轮严格模式都 GONE，拒绝写入排除名单")
+        rows.append({
+            "url": streams[key]["url"],
+            "verdict": ip.GONE,  # 处置结论；两轮原始判定在 probes
+            "why": SYNTHETIC_GONE_WHY,
+            "httpStatus": _http_status(pe) or _http_status(de),
+            "probes": [_probe_row("proxy-on", de), _probe_row("proxy-off", pe)],
+            "excludedAt": _now(),
+        })
+    return rows
+
+
+def build_intersect_entries(stations: list, station_keys: dict, streams: dict,
+                            isect: dict, dstate: dict, pstate: dict):
+    """C 类：整台剔除 + 只剔坏源分层 + 供 build_pruned 使用的合成结论。"""
+    gone_keys = set(isect["streamClasses"]["both-gone"])
+    station_ids = set(isect["stationClasses"]["both-gone"])
+    out = []
+    for st in stations:
+        sid = st["id"]
+        if sid not in station_ids:
+            continue
+        keys = station_keys.get(sid, [])
+        if not keys or not all(k in gone_keys for k in keys):
+            raise SystemExit(f"{sid} 被标为整台失效，但不是所有源都 both-gone")
+        rows = _gone_rows(streams, keys, dstate, pstate)
+        out.append({
+            "id": sid,
+            "name": st.get("name", ""),
+            "country": st.get("country", ""),
+            "language": st.get("language", ""),
+            "reason": REASON_BOTH_GONE,
+            "reasonDetail": (
+                f"全部 {len(rows)} 个源在无代理直连与有代理两轮**严格模式**"
+                "（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）"
+                "均确证 GONE；两种网络环境、两套判定都失效，故剔除。"
+            ),
+            "urls": [r["url"] for r in rows],
+            "streams": rows,
+            "excludedAt": _now(),
+        })
+    stream_entries = {}
+    for key in gone_keys:
+        owners = sorted({s["id"] for s in streams[key]["stations"]
+                         if s["id"] not in station_ids})
+        if not owners:
+            continue
+        url = streams[key]["url"]
+        rows = _gone_rows(streams, [key], dstate, pstate)
+        stream_entries[url] = {
+            "url": url, "stationIds": owners,
+            "reason": REASON_BOTH_GONE,
+            "reasonDetail": (
+                "该源在无代理直连与有代理两轮严格模式下均确证 GONE；"
+                "所属频道仍有其它可用源，因此只剔此源、保留频道。"
+            ),
+            "probes": rows[0]["probes"],
+            "excludedAt": _now(),
+        }
+    return out, list(stream_entries.values()), gone_keys
+
+
 # ---------------------------------------------------------------- 文档合并与校验
 
 
@@ -310,7 +405,8 @@ def merge_stream_entries(existing: dict, fresh: list) -> tuple[list, int]:
 def make_document(entries: list, state: dict, fingerprint: str,
                   stream_entries: list | None = None,
                   recheck_state: dict | None = None,
-                  recheck_path: Path | None = None) -> dict:
+                  recheck_path: Path | None = None,
+                  intersect_path: Path | None = None) -> dict:
     stream_entries = stream_entries or []
     source = {
         "probeResult": str(DEFAULT_STATE.relative_to(ROOT)).replace("\\", "/"),
@@ -329,6 +425,12 @@ def make_document(entries: list, state: dict, fingerprint: str,
         source["recheckResult"] = rel.replace("\\", "/")
         source["recheckedAt"] = recheck_state.get("updatedAt", "")
         source["recheckModes"] = recheck_state.get("modes", [])
+    if intersect_path is not None:
+        try:
+            rel = str(intersect_path.resolve().relative_to(ROOT))
+        except (ValueError, OSError):
+            rel = str(intersect_path)
+        source["intersectResult"] = rel.replace("\\", "/")
     return {
         "schemaVersion": SCHEMA_VERSION,
         "note": (
@@ -340,8 +442,10 @@ def make_document(entries: list, state: dict, fingerprint: str,
         "criterion": (
             "A all-sources-gone：所有源全部 HTTP 404/410；"
             "B unreachable-both-network-modes：代理开启为 UNKNOWN，关闭代理直连复测"
-            "（同一套判定参数）仍拿不到数据。任一环境收到数据即保留。"
-            "403/429/5xx/错误页/超时单一环境结果一律不进本名单。"
+            "（同一套判定参数）仍拿不到数据；"
+            "C both-network-modes-gone：无代理直连与有代理两轮严格模式"
+            "（验分片/魔数、参数完全一致）都确证 GONE。"
+            "任一环境收到数据即保留；403/429/5xx/超时单一环境结果一律不进本名单。"
         ),
         "source": source,
         "count": len(entries),
@@ -366,7 +470,7 @@ def verify_exclusions(doc: dict, stations: list) -> list:
                 problems.append(f"{eid} 缺字段 {field}")
         if e.get("reason") not in ALLOWED_REASONS:
             problems.append(f"{eid} 的 reason 不在准入集合：{e.get('reason')}")
-        if e.get("reason") == REASON_BOTH_UNREACHABLE:
+        if e.get("reason") in (REASON_BOTH_UNREACHABLE, REASON_BOTH_GONE):
             for s in e.get("streams", []):
                 nets = {p.get("network") for p in s.get("probes", [])}
                 if nets != {"proxy-on", "proxy-off"}:
@@ -461,8 +565,27 @@ def _load_recheck(path: Path, fingerprint: str) -> dict:
 
 
 def _plan(args, stations, streams, keys, state, fingerprint):
-    """返回 (fresh台级条目, fresh流级条目, 用于 build_pruned 的 entries, 复测结果)。"""
+    """返回 (fresh台级条目, fresh流级条目, 用于 build_pruned 的 entries, 复测结果, 现有名单)。"""
     existing = load_exclusions(args.exclusions)
+    if args.recheck and args.intersect:
+        raise SystemExit("--recheck 与 --intersect 只能选一个，避免两种口径混算")
+
+    if args.intersect:
+        isect, dstate, pstate = load_intersect(args.intersect, fingerprint)
+        fresh, stream_fresh, gone_keys = build_intersect_entries(
+            stations, keys, streams, isect, dstate, pstate)
+        effective = dict(state["entries"])
+        for k in gone_keys:
+            effective[k] = {
+                "verdict": ip.GONE, "why": SYNTHETIC_GONE_WHY,
+                "detail": "strict-direct=gone; strict-proxy=gone",
+                "mode": "strict-intersect", "elapsed": 0,
+            }
+        print(f"两轮严格模式都 GONE 的流 {len(gone_keys)} 条 → "
+              f"整台剔除 {len(fresh)} 台、逐源剔除 {len(stream_fresh)} 条",
+              file=sys.stderr)
+        return fresh, stream_fresh, effective, None, existing
+
     if not args.recheck:
         fresh = build_entries(stations, keys, streams, state["entries"], state)
         return fresh, [], state["entries"], None, existing
@@ -493,7 +616,7 @@ def cmd_build(args) -> int:
     merged, added = merge_entries(existing, fresh)
     merged_streams, stream_added = merge_stream_entries(existing, stream_fresh)
     doc = make_document(merged, state, fingerprint, merged_streams,
-                        recheck_state, args.recheck)
+                        recheck_state, args.recheck, args.intersect)
     problems = verify_exclusions(doc, stations)
     structural = [p for p in problems if "清单里仍有" not in p]
     if structural:
@@ -514,7 +637,7 @@ def cmd_apply(args) -> int:
     merged, added = merge_entries(existing, fresh)
     merged_streams, stream_added = merge_stream_entries(existing, stream_fresh)
     doc = make_document(merged, state, fingerprint, merged_streams,
-                        recheck_state, args.recheck)
+                        recheck_state, args.recheck, args.intersect)
     # 只删不改顺序：宽松口径的 LIVE 可能是 403 错误页，不配被提到主源
     pruned, stats = ip.build_pruned(stations, keys, effective, promote_live=False)
     problems = validate_pruned(pruned, stations, doc)
@@ -599,6 +722,8 @@ def main(argv=None) -> int:
         p.add_argument("--recheck", type=Path, default=None,
                        help="直连复测结果文件；与代理开的结果交叉比对，"
                             "只有两种环境都拿不到数据才追加剔除")
+        p.add_argument("--intersect", type=Path, default=None,
+                       help="两轮严格探测的交集结果；据此剔除两轮都确证 GONE 的台与源")
         if name == "apply":
             p.add_argument("--dry-run", action="store_true",
                            help="只跑全部校验，不写名单、不备份、不替换 assets")
