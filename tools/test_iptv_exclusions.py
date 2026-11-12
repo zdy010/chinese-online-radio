@@ -385,5 +385,110 @@ class TestRecheckCli(unittest.TestCase):
                 self.assertEqual(aligned["entries"][keys["iptv:C"][0]]["verdict"], ip.LIVE)
 
 
+def strict_entry(verdict):
+    return {"verdict": verdict,
+            "why": "http-404" if verdict == ip.GONE else "media-playlist",
+            "detail": "", "mode": "strict", "elapsed": 0.2}
+
+
+def intersect_fixture(fp):
+    stations = [
+        station("iptv:A", ["https://h/a.m3u8"]),
+        station("iptv:B", ["https://h/b1.m3u8", "https://h/b2.m3u8"]),
+        station("iptv:C", ["https://h/c.m3u8"]),
+    ]
+    streams, keys = ip.collect_streams(stations)
+    gone = {keys["iptv:A"][0], keys["iptv:B"][0]}
+    mk = lambda: {"modes": ["strict"], "assetsSha256": fp,
+                  "entries": {k: strict_entry(ip.GONE if k in gone else ip.LIVE)
+                              for k in streams}}
+    isect = {
+        "assetsSha256": fp, "streamTotal": len(streams),
+        "coverage": {"bothTested": len(streams)},
+        "streamClasses": {"both-gone": sorted(gone)},
+        "stationClasses": {"both-gone": ["iptv:A"]},
+        "direct": {"path": "d.json"}, "proxy": {"path": "p.json"},
+    }
+    return stations, streams, keys, isect, mk(), mk()
+
+
+class TestIntersectExclusions(unittest.TestCase):
+    def setUp(self):
+        self.stations, self.streams, self.keys, self.isect, self.d, self.p = \
+            intersect_fixture("f" * 64)
+
+    def _build(self):
+        return ex.build_intersect_entries(
+            self.stations, self.keys, self.streams, self.isect, self.d, self.p)
+
+    def test_station_and_stream_are_separated(self):
+        entries, se, gone = self._build()
+        self.assertEqual([e["id"] for e in entries], ["iptv:A"])
+        self.assertEqual(entries[0]["reason"], ex.REASON_BOTH_GONE)
+        self.assertEqual(len(gone), 2)
+        self.assertEqual([s["url"] for s in se], ["https://h/b1.m3u8"])
+        self.assertEqual(se[0]["stationIds"], ["iptv:B"])
+        self.assertEqual({p["network"] for p in entries[0]["streams"][0]["probes"]},
+                         {"proxy-on", "proxy-off"})
+
+    def test_rejects_stream_not_gone_in_both_rounds(self):
+        self.d["entries"][self.keys["iptv:A"][0]] = strict_entry(ip.UNKNOWN)
+        with self.assertRaises(SystemExit):
+            self._build()
+
+    def test_verify_accepts_c_class_after_removal(self):
+        entries, se, _ = self._build()
+        doc = {"entries": entries, "streamExclusions": se}
+        kept = [
+            dict(self.stations[1], sources=[self.stations[1]["sources"][1]],
+                 streamUrl="https://h/b2.m3u8"),
+            self.stations[2],
+        ]
+        self.assertEqual(ex.verify_exclusions(doc, kept), [])
+
+
+class TestIntersectCli(unittest.TestCase):
+    def test_apply_intersect_end_to_end(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            stations, streams, keys, isect, dstate, pstate = intersect_fixture("f" * 64)
+            assets, state_p = root / "a.json", root / "s.json"
+            excl = root / "e.json"
+            dp, pp, ip_ = root / "d.json", root / "p.json", root / "i.json"
+            assets.write_text(json.dumps({"stations": stations}, ensure_ascii=False),
+                              encoding="utf-8")
+            fp = ip.sha256_file(assets)
+            ip.save_state(state_p, {
+                "schemaVersion": 1, "assetsSha256": fp, "updatedAt": CHECKED_AT,
+                "modes": ["fast"],
+                "entries": {k: {"verdict": ip.LIVE, "why": "fast-any-data",
+                                "detail": "status=200", "mode": "fast", "elapsed": 0.1}
+                            for k in streams},
+            })
+            isect["assetsSha256"] = fp
+            isect["direct"]["path"] = str(dp)
+            isect["proxy"]["path"] = str(pp)
+            dp.write_text(json.dumps(dstate), encoding="utf-8")
+            pp.write_text(json.dumps(pstate), encoding="utf-8")
+            ip_.write_text(json.dumps(isect), encoding="utf-8")
+            argv = ["apply", "--intersect", str(ip_), "--assets", str(assets),
+                    "--state", str(state_p), "--exclusions", str(excl)]
+            with patch.object(ex, "MIN_STATIONS", 1), \
+                 patch.object(ex, "MIN_ALIASES", -1), \
+                 patch.object(ex, "MIN_HEADERS", 0), \
+                 patch.object(ex, "MIN_BYTES", 0), \
+                 patch.object(ex, "BACKUP_DIR", root / "backup"):
+                self.assertEqual(ex.main(argv), 0)
+                after = json.loads(assets.read_text(encoding="utf-8"))["stations"]
+                self.assertEqual([s["id"] for s in after], ["iptv:B", "iptv:C"])
+                self.assertEqual(len(after[0]["sources"]), 1)
+                doc = json.loads(excl.read_text(encoding="utf-8"))
+                self.assertEqual(doc["entries"][0]["reason"], ex.REASON_BOTH_GONE)
+                self.assertIn("intersectResult", doc["source"])
+                self.assertEqual(ex.main(["verify", "--assets", str(assets),
+                                          "--state", str(state_p),
+                                          "--exclusions", str(excl)]), 0)
+
+
 if __name__ == "__main__":
     unittest.main()
