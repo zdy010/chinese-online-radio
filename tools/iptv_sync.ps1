@@ -26,6 +26,39 @@ $work   = ".superpowers/tmp/iptv"
 # Retroclub 是音乐台，Tele Posadas 是阿根廷地方综合台，分类/标签都不是成人。
 # 不在这里兜住，每次重跑同步都会把误标写回来，成人开关又凭空多出 2 条。
 $NSFW_FALSE_POSITIVES = @('Retroclub.ar', 'TelePosadas.ar')
+
+# 实测确证不可播的排除名单：由 tools/iptv_exclusions.py 维护，每项带逐源剔除原因。
+# 清单是上游全量生成的，手工删掉的台/源不在这里拦，下次重跑同步会原样写回来。
+# 缺文件/版本不符一律 throw，绝不静默放行 —— 静默放行正是「剔掉的台又回来了」的成因。
+#
+# 名单分两层，语义不能混：
+#   entries[].id            整台排除，按 id 拦；
+#   entries[].urls +
+#   streamExclusions[].url  逐源排除，只从 sources 里拿掉这一条。
+# 后者若也按「整台剔除」处理，会把「还有好源、只是被删了一条坏源」的台误杀。
+$exclusionsFile = "tools/iptv_exclusions.json"
+if (-not (Test-Path $exclusionsFile)) { throw "排除名单不存在：$exclusionsFile（由 tools/iptv_exclusions.py 维护）" }
+$exDoc = Get-Content $exclusionsFile -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($exDoc.schemaVersion -ne 1) { throw "排除名单 schemaVersion=$($exDoc.schemaVersion)，只认 1" }
+$excludedIds = [System.Collections.Generic.HashSet[string]]::new()
+$excludedUrls = [System.Collections.Generic.HashSet[string]]::new()
+foreach ($e in $exDoc.entries) {
+    [void]$excludedIds.Add([string]$e.id)
+    foreach ($u in $e.urls) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$u)) { [void]$excludedUrls.Add([string]$u) }
+    }
+}
+# streamExclusions 是后加的字段，旧名单没有；@() 包一层避免 foreach 撞上 $null
+foreach ($e in @($exDoc.streamExclusions)) {
+    $u = [string]$e.url
+    if (-not [string]::IsNullOrWhiteSpace($u)) { [void]$excludedUrls.Add($u) }
+}
+function IsStationExcluded($r) { $excludedIds.Contains([string]$r.id) }
+function IsStreamExcluded($u) {
+    -not [string]::IsNullOrWhiteSpace([string]$u) -and $excludedUrls.Contains([string]$u)
+}
+"排除名单载入：$($excludedIds.Count) 台 / $($excludedUrls.Count) 条流地址"
+
 New-Item -ItemType Directory -Force -Path (Split-Path $assets) | Out-Null
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 
@@ -258,6 +291,27 @@ foreach ($d in $direct) {
     })
 }
 
+"=== 6b 应用排除名单：整台按 id、坏源按 url 逐条剔除 ==="
+$beforeExclude = @($rec).Count
+$dropStation = 0
+$dropStream = 0
+$keptRec = New-Object System.Collections.ArrayList
+foreach ($r in $rec) {
+    if (IsStationExcluded $r) { $dropStation++; continue }
+    $good = New-Object System.Collections.ArrayList
+    foreach ($s in $r.sources) {
+        if (IsStreamExcluded $s.url) { $dropStream++; continue }
+        [void]$good.Add($s)
+    }
+    # 源被剔光了就整条不收；否则重设主源，别让 streamUrl 指向已删掉的地址
+    if ($good.Count -eq 0) { $dropStation++; continue }
+    $r["sources"] = $good
+    $r["streamUrl"] = $good[0].url
+    [void]$keptRec.Add($r)
+}
+$rec = $keptRec
+"排除名单命中：整台 $dropStation 条、坏源 $dropStream 条；$beforeExclude → $(@($rec).Count) 条"
+
 "=== 7 重名消歧：同名追加短 host，仍重则追加序号 ==="
 # 排序不是美化，是可重复性的前提：PowerShell 7 走 .NET 的随机化字符串哈希，
 # 所以 $byChannel.Keys 的枚举顺序跳进程不同。不排序的话每次重跑都会把整份 6.33 MB
@@ -295,8 +349,17 @@ if (@($rec | Where-Object { [string]::IsNullOrWhiteSpace($_.name) }).Count -gt 0
     throw "存在空名条目，不产出（列表会出空白行）"
 }
 
-"=== 8 写盘前最后一道：条数下限 ==="
+"=== 8 写盘前最后一道：条数下限 + 排除名单零残留 ==="
 if (@($rec).Count -lt 10000) { throw "最终记录只有 $(@($rec).Count) 条，低于下限 10000" }
+$leakedIds = 0
+$leakedUrls = 0
+foreach ($r in $rec) {
+    if (IsStationExcluded $r) { $leakedIds++ }
+    foreach ($s in $r.sources) { if (IsStreamExcluded $s.url) { $leakedUrls++ } }
+}
+if ($leakedIds -gt 0 -or $leakedUrls -gt 0) {
+    throw "排除名单有 $leakedIds 个频道 / $leakedUrls 条流地址漏网 —— 不产出"
+}
 
 # 包装对象形状，与 radio_stations.json 一致（StationJson.parse 只认这个形状）
 # 顶层也固定键序，否则整份文件的开头字节会逐进程变化。
