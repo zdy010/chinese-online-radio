@@ -446,6 +446,25 @@ class TestIntersectExclusions(unittest.TestCase):
         ]
         self.assertEqual(ex.verify_exclusions(doc, kept), [])
 
+    def test_stream_entries_sorted_by_url(self):
+        # gone_keys 是 set，迭代序随 PYTHONHASHSEED 变；不排序的话每次重新
+        # 生成的入仓 diff 都不同（B 类已排序，C 类必须同样保证）
+        stations = [
+            station("iptv:F", ["https://h/f1.m3u8", "https://h/f2.m3u8"]),
+            station("iptv:G", ["https://h/g1.m3u8"]),
+        ]
+        streams, keys = ip.collect_streams(stations)
+        gone = {keys["iptv:F"][0], keys["iptv:G"][0]}
+        isect = {"streamClasses": {"both-gone": sorted(gone)},
+                 "stationClasses": {"both-gone": []}}
+        state = {"entries": {k: strict_entry(ip.GONE if k in gone else ip.LIVE)
+                             for k in streams}}
+        _, se, _ = ex.build_intersect_entries(stations, keys, streams, isect,
+                                              state, state)
+        self.assertEqual(len(se), 2)  # 两个保留台的失效源都进流级名单
+        self.assertEqual([e["url"] for e in se],
+                         sorted(e["url"] for e in se))
+
 
 class TestIntersectCli(unittest.TestCase):
     def test_apply_intersect_end_to_end(self):
