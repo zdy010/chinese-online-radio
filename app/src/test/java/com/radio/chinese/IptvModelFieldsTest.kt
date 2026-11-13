@@ -133,4 +133,24 @@ class IptvModelFieldsTest {
         assertEquals("UA/1.0", h.userAgent)
         assertEquals("https://x.y", h.referrer)
     }
+
+    @Test
+    fun `vpnOnly 手写解析能读入，缺字段回落 false`() {
+        val text = """{"stations":[
+            {"id":"iptv:a","name":"A","category":"general","vpnOnly":true},
+            {"id":"iptv:b","name":"B","category":"general","vpnOnly":false},
+            {"id":"iptv:c","name":"C","category":"general"}]}"""
+        val parsed = StationJson.parse(text)
+        assertTrue(parsed[0].vpnOnly)
+        assertFalse(parsed[1].vpnOnly)
+        assertFalse(parsed[2].vpnOnly)
+    }
+
+    @Test
+    fun `老自建台 JSON 缺 vpnOnly 时回落 false`() {
+        val legacy = """[{"id":"custom_1","name":"我的台","category":"news"}]"""
+        val st = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            .decodeFromString<List<RadioStation>>(legacy).single()
+        assertFalse(st.vpnOnly)
+    }
 }

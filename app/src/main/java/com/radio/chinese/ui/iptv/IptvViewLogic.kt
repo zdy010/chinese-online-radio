@@ -24,6 +24,8 @@ data class IptvLists(
     val countries: List<Pair<String, Int>>,
     /** 省份/区域 → 频道数。仅中国频道有值，「其他」固定排最后 */
     val regions: List<Pair<String, Int>> = emptyList(),
+    /** 语言 key → 频道数，按 [IptvLanguage.OPTIONS] 顺序，供分类页多选过滤 */
+    val languages: List<Pair<String, Int>> = emptyList(),
 )
 
 object IptvViewLogic {
@@ -38,6 +40,10 @@ object IptvViewLogic {
         /** 连续失败达到该次数后隐藏；0 = 不隐藏 */
         hideThreshold: Int = 0,
         scoreOf: (String) -> Int = { PlayabilityScore.UNKNOWN },
+        /** 关 = 隐藏「只有 VPN/代理才能访问」的频道 */
+        vpnOnlyEnabled: Boolean = false,
+        /** 分类页语言多选；空集沿用 allLanguagesEnabled 的默认口径 */
+        selectedLanguages: Set<String> = emptySet(),
     ): IptvLists {
         // 收藏与最近是电台 / iptv 共用的 id 集合，按前缀先把电台 id 挡在外面。
         // 绝不从 StationRepository.getAllStations() 解析：那里面没有 iptv 条目，
@@ -50,8 +56,18 @@ object IptvViewLogic {
         // 成人频道不受语言过滤：上游成人台常带非中英 language，若也按语言剔，
         // 打开成人开关后仍一条都看不到，开关等于假的。当前清单已无成人条目
         // （上游两条误标已修正），这条留作将来真出现成人台时的兜底。
-        var allowed = if (allLanguagesEnabled) adultOk
-        else adultOk.filter { IptvAdult.isAdult(it) || IptvLanguage.isPreferred(it.language) }
+        // 语言多选优先于「只中英」粗过滤；空选集保持原行为，不因新增功能改变默认列表
+        var allowed = when {
+            selectedLanguages.isNotEmpty() ->
+                adultOk.filter { IptvLanguage.matches(it.language, selectedLanguages) }
+            allLanguagesEnabled -> adultOk
+            else -> adultOk.filter { IptvAdult.isAdult(it) || IptvLanguage.isPreferred(it.language) }
+        }
+        // 只有 VPN 才能访问的频道：默认隐藏。与成人/语言共用同一份 allowed，
+        // 分类计数、收藏、最近一起过滤，不留「列表里没有、收藏页却冒出来」的旁路。
+        if (!vpnOnlyEnabled) {
+            allowed = allowed.filterNot { it.vpnOnly }
+        }
         // 连续失败达到阈值就隐藏（0 = 不隐藏）。与成人/语言同一份 allowed，
         // 收藏与最近一起过滤，避免"列表里没有、收藏页却能看到"。
         if (hideThreshold > 0) {
@@ -91,6 +107,16 @@ object IptvViewLogic {
                 // 「其他」放最后：它是兜底桶，不该压在一堆具体省份前面
                 .sortedWith(compareBy({ it.key == "其他" }, { -it.value }))
                 .map { it.key to it.value },
+            languages = run {
+                val counts = allowed
+                    .flatMap { IptvLanguage.codesOf(it.language) }
+                    .groupingBy { it }
+                    .eachCount()
+                // 按 OPTIONS 的固定顺序，不按数量：语言选项是词表，不该每次过滤都换位置
+                IptvLanguage.OPTIONS
+                    .map { (code, _) -> code to (counts[code] ?: 0) }
+                    .filter { it.second > 0 }
+            },
         )
     }
 }

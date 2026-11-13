@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -25,14 +27,18 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,6 +58,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.radio.chinese.data.repository.IptvStationRepository
 import com.radio.chinese.domain.model.IptvCategory
 import com.radio.chinese.domain.model.IptvChinaOrder
+import com.radio.chinese.domain.model.IptvLanguage
 import com.radio.chinese.domain.model.RadioStation
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.common.EmptyState
@@ -115,6 +122,7 @@ fun IptvScreen(
         mutableIntStateOf(DEFAULT_TAB_PAGE)
     }
     var showTvSearch by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
 
     // 系统返回键先退"搜索态"、再退"二级列表"，不要一步退出 iptv tab。
     // 不拦这一步时，在分类/国家列表按返回会直接回到电台页，看起来像"点进去就回不来了"。
@@ -162,6 +170,22 @@ fun IptvScreen(
                     showTvSearch = false
                     onRowClick(station)
                 },
+            )
+        }
+
+        // 语言多选常驻在搜索栏下：过滤在 ViewModel 层，对搜索、页签、分类目录同时生效，
+        // 不是只在「分类」页才有效，免得换个页签筛选就悄悄失效。
+        LanguageFilterRow(
+            selected = ui.selectedLanguages,
+            onOpen = { showLanguageDialog = true },
+        )
+        if (showLanguageDialog) {
+            LanguageFilterDialog(
+                selected = ui.selectedLanguages,
+                counts = ui.languages,
+                onToggle = viewModel::toggleLanguage,
+                onClear = { viewModel.setLanguages(emptySet()) },
+                onDismiss = { showLanguageDialog = false },
             )
         }
 
@@ -334,6 +358,98 @@ private fun listFor(ui: IptvUiState, mode: String): List<RadioStation> = when {
     mode.startsWith("cty:") -> ui.visible.filter { it.country == mode.removePrefix("cty:") }
     mode.startsWith("rgn:") -> ui.visible.filter { it.region == mode.removePrefix("rgn:") }
     else -> emptyList()
+}
+
+/** 常驻的语言筛选入口：一行文字 + 已选语言，点开多选对话框。 */
+@Composable
+private fun LanguageFilterRow(
+    selected: Set<String>,
+    onOpen: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpen)
+            .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.GapSmall),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            Icons.Default.Language,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(Modifier.width(Dimens.GapSmall))
+        val label = if (selected.isEmpty()) {
+            "语言：全部（默认中英）"
+        } else {
+            "语言：" + selected.joinToString("、") { IptvLanguage.labelOf(it) }
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "多选",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+/**
+ * 语言多选对话框。
+ *
+ * 不用 DropdownMenu：项目实测在对话框里点不开（ManageScreen 的多选标签也踩过）。
+ * 不用 FlowRow 是为了少一个 @OptIn(ExperimentalLayoutApi)：两列网格足够放 13 个选项，
+ * 手动 chunked(2) 还能顺手把奇数行补空格，最后一个 chip 不会拉满整行。
+ */
+@Composable
+private fun LanguageFilterDialog(
+    selected: Set<String>,
+    counts: List<Pair<String, Int>>,
+    onToggle: (String) -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val countMap = counts.toMap()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("按语言筛选") },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                IptvLanguage.OPTIONS.chunked(2).forEach { row ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        row.forEach { (code, label) ->
+                            val n = countMap[code] ?: 0
+                            FilterChip(
+                                selected = code in selected,
+                                onClick = { onToggle(code) },
+                                label = { Text(if (n > 0) "$label $n" else label) },
+                                // 不按 n>0 禁用：计数是「当前可见」的台数，需 VPN 开关关闭时
+                                // 只存在于需 VPN 台的语言会显示 0，禁用会让那个语言永远选不了。
+                                // 允许选中，选中后列表为空时由列表页的空态文案兜底。
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = Dimens.GapSmall, bottom = Dimens.GapSmall),
+                            )
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+                Text(
+                    text = "不选 = 保持默认（只显示中文与英语）；可多选，命中任意一个即显示。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("完成") } },
+        dismissButton = { TextButton(onClick = onClear) { Text("清空") } },
+    )
 }
 
 @Composable

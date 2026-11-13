@@ -60,6 +60,14 @@ data class RadioStation(
      * 都没有这个字段，去掉默认值会让升级后解析失败 —— 那是“收藏与自建台全空”的量级。
      */
     val nsfw: Boolean = false,
+    /**
+     * 只有 VPN/代理才能访问：所有源在直连严格探测都没通过、至少一个源在代理探测通过。
+     * 由 tools/iptv_vpn_only.py 从两轮实测生成，tools/iptv_sync.ps1 按 id 回填。
+     *
+     * 同样必须带默认值：老清单与用户自建台（DataStore JSON）没有这个字段，
+     * 去掉默认值会让升级后解析失败，收藏与自建台会整片变空。
+     */
+    val vpnOnly: Boolean = false,
 ) {
     /** 获取所有可用节目源（若 sources 为空则用 streamUrl 构造单源） */
     fun allSources(): List<StationSource> {

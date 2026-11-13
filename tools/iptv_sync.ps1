@@ -53,6 +53,16 @@ foreach ($e in @($exDoc.streamExclusions)) {
     $u = [string]$e.url
     if (-not [string]::IsNullOrWhiteSpace($u)) { [void]$excludedUrls.Add($u) }
 }
+# 「只有 VPN/代理才能访问」标记名单：由 tools/iptv_vpn_only.py 从两轮严格探测生成。
+# 上游没有这个语义字段，不在生成时按 id 回填，重跑同步就会把标记丢掉。
+$vpnOnlyFile = "tools/iptv_vpn_only.json"
+if (-not (Test-Path $vpnOnlyFile)) { throw "需 VPN 标记名单不存在：$vpnOnlyFile（由 tools/iptv_vpn_only.py 维护）" }
+$vpnDoc = Get-Content $vpnOnlyFile -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($vpnDoc.schemaVersion -ne 1) { throw "需 VPN 标记名单 schemaVersion=$($vpnDoc.schemaVersion)，只认 1" }
+$vpnOnlyIds = [System.Collections.Generic.HashSet[string]]::new()
+foreach ($sid in $vpnDoc.stationIds) { [void]$vpnOnlyIds.Add([string]$sid) }
+"需 VPN 标记载入：$($vpnOnlyIds.Count) 台"
+
 function IsStationExcluded($r) { $excludedIds.Contains([string]$r.id) }
 function IsStreamExcluded($u) {
     -not [string]::IsNullOrWhiteSpace([string]$u) -and $excludedUrls.Contains([string]$u)
@@ -271,7 +281,7 @@ foreach ($k in $byChannel.Keys) {
         category = "general"; streamUrl = $srcs[0].url; sources = $srcs
         website = [string]$c.website; description = $desc
         country = CNName ([string]$c.country); language = (LangOf $k ([string]$c.country)); region = $region
-        nsfw = (($c.is_nsfw -eq $true) -and ($k -notin $NSFW_FALSE_POSITIVES)); logoUrl = ""
+        nsfw = (($c.is_nsfw -eq $true) -and ($k -notin $NSFW_FALSE_POSITIVES)); vpnOnly = $vpnOnlyIds.Contains("iptv:$k"); logoUrl = ""
         tags = @(@($c.categories | ForEach-Object { [string]$_ }) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     })
 }
@@ -281,13 +291,14 @@ foreach ($d in $direct) {
     $h = try { ([System.Uri]$u).Host } catch { 'unknown' }
     $dn = DirectName $u
     if ([string]::IsNullOrWhiteSpace($dn)) { $dn = $h }
+    $did = "iptv:direct:$($h):$(Sha1Short $u)"
     [void]$rec.Add([ordered]@{
-        id = "iptv:direct:$($h):$(Sha1Short $u)"
+        id = $did
         name = $dn; altNames = @(); category = "general"; streamUrl = $u
         sources = @([ordered]@{ url = $u; label = ""; quality = [string]$d.quality
                        userAgent = [string]$d.user_agent; referrer = [string]$d.referrer })
         website = ""; description = ""; country = ""; language = ""
-        nsfw = $false; logoUrl = ""; tags = @()
+        nsfw = $false; vpnOnly = $vpnOnlyIds.Contains($did); logoUrl = ""; tags = @()
     })
 }
 
@@ -416,5 +427,6 @@ if (-not $SkipAudit) {
 "  direct 记录 = $($direct.Count)"
 "json 未压缩   = $([math]::Round((Get-Item $assets).Length/1MB,2)) MB"
 "成人条目      = $(@($rec | Where-Object { $_.nsfw }).Count)"
+"需 VPN 标记   = $(@($rec | Where-Object { $_.vpnOnly }).Count)"
 "分类 id       = $(@($cat | ForEach-Object { [string]$_.id } | Sort-Object -Unique).Count) 个"
 "更新完成。提交前请跑：.\gradlew.bat :app:testDebugUnitTest --tests `"com.radio.chinese.IptvAssetsGateTest`""

@@ -49,6 +49,10 @@ class RadioPreferences @Inject constructor(
     val iptvAdultEnabled: Flow<Boolean> = settings.iptvAdultEnabled
     /** 其他语言频道开关。默认关：只显示中文与英语频道 */
     val iptvAllLanguages: Flow<Boolean> = settings.iptvAllLanguages
+    /** 显示「只有 VPN/代理才能访问」的频道。默认关 */
+    val iptvVpnOnlyEnabled: Flow<Boolean> = settings.iptvVpnOnlyEnabled
+    /** 分类页语言多选过滤，空集 = 不额外过滤 */
+    val iptvLanguageFilter: Flow<Set<String>> = settings.iptvLanguageFilter
 
     /** 连续失败达到该次数后隐藏；0 = 不隐藏 */
     val playabilityHideThreshold: Flow<Int> = settings.playabilityHideThreshold
@@ -62,6 +66,8 @@ class RadioPreferences @Inject constructor(
     suspend fun setBootAutoStart(enabled: Boolean) = settings.setBootAutoStart(enabled)
     suspend fun setIptvAdultEnabled(enabled: Boolean) = settings.setIptvAdultEnabled(enabled)
     suspend fun setIptvAllLanguages(enabled: Boolean) = settings.setIptvAllLanguages(enabled)
+    suspend fun setIptvVpnOnlyEnabled(enabled: Boolean) = settings.setIptvVpnOnlyEnabled(enabled)
+    suspend fun setIptvLanguageFilter(codes: Set<String>) = settings.setIptvLanguageFilter(codes)
     suspend fun setPlayabilityHideThreshold(threshold: Int) = settings.setPlayabilityHideThreshold(threshold)
     suspend fun setPlayabilityJson(json: String) = settings.setPlayabilityJson(json)
 

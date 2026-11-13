@@ -159,4 +159,44 @@ class IptvViewModelTest {
         assertEquals(2, countries.toMap()["中国"])
         assertTrue(countries.all { it.first.isNotBlank() })
     }
+
+    @Test
+    fun `需 VPN 频道默认隐藏且收藏与最近不留旁路`() {
+        val data = listOf(
+            RadioStation(id = "iptv:local", name = "本地台", category = "general"),
+            RadioStation(id = "iptv:vpnonly", name = "需代理台", category = "general", vpnOnly = true),
+        )
+        val hidden = IptvViewLogic.build(
+            all = data, query = "", adultEnabled = false, allLanguagesEnabled = true,
+            favoriteIds = listOf("iptv:vpnonly"), recentIds = listOf("iptv:vpnonly"),
+        )
+        assertEquals(listOf("iptv:local"), hidden.visible.map { it.id })
+        assertTrue(hidden.favorites.isEmpty())
+        assertTrue(hidden.recents.isEmpty())
+
+        val shown = IptvViewLogic.build(
+            all = data, query = "", adultEnabled = false, allLanguagesEnabled = true,
+            favoriteIds = listOf("iptv:vpnonly"), recentIds = listOf("iptv:vpnonly"),
+            vpnOnlyEnabled = true,
+        )
+        assertEquals(setOf("iptv:local", "iptv:vpnonly"), shown.visible.map { it.id }.toSet())
+        assertEquals(listOf("iptv:vpnonly"), shown.favorites.map { it.id })
+    }
+
+    @Test
+    fun `语言多选精确过滤并生成按词表顺序的计数`() {
+        val data = listOf(
+            RadioStation(id = "iptv:zh", name = "中文台", category = "general", language = "zho"),
+            RadioStation(id = "iptv:es", name = "西语台", category = "general", language = "country:spa"),
+            RadioStation(id = "iptv:ru", name = "俄语台", category = "general", language = "country:rus"),
+        )
+        val lists = IptvViewLogic.build(
+            all = data, query = "", adultEnabled = false, allLanguagesEnabled = false,
+            favoriteIds = emptyList(), recentIds = emptyList(),
+            selectedLanguages = setOf("spa", "rus"),
+        )
+        assertEquals(setOf("iptv:es", "iptv:ru"), lists.visible.map { it.id }.toSet())
+        // 计数按 OPTIONS 固定顺序（spa 在 rus 前），不按数量排，避免每次过滤选项乱跳
+        assertEquals(listOf("spa" to 1, "rus" to 1), lists.languages)
+    }
 }

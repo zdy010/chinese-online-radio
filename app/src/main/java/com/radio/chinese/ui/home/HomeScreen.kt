@@ -455,6 +455,16 @@ fun StationListItem(
                         Spacer(modifier = Modifier.width(Dimens.GapSmall))
                         StatusChip(text = "单")
                     }
+                    // 只有代理/VPN 能连通的 iptv 频道：实测标记，台名后直接给角标，
+                    // 不用等点开播不出来才发现。角标只认字段，不依赖当前是否连着 VPN。
+                    if (station.vpnOnly) {
+                        Spacer(modifier = Modifier.width(Dimens.GapSmall))
+                        StatusChip(
+                            text = "需 VPN",
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    }
                 }
                 // iptv 简介单独一行。不用 MarqueeText：它的 SubcomposeLayout 在
                 // LazyGrid 里每次重组都要重新 subcompose 测量，电视上按方向键移动焦点时
