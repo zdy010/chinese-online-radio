@@ -58,6 +58,8 @@ object StationJson {
                     ?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList(),
                 // iptv 清单里成人频道靠这个字段隐藏；缺字段一律当 false，不能当 true
                 nsfw = (o["nsfw"] as? JsonPrimitive)?.content?.trim()?.toBooleanStrictOrNull() ?: false,
+                // 需 VPN 标记：只有 tools/iptv_vpn_only.py 命中的台才写了 true，缺字段当 false
+                vpnOnly = (o["vpnOnly"] as? JsonPrimitive)?.content?.trim()?.toBooleanStrictOrNull() ?: false,
             )
         }
     }

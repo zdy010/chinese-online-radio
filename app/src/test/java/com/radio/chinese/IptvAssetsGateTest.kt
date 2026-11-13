@@ -6,6 +6,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * 内置 iptv 清单的闸门。这条不测代码，测**数据**：
@@ -144,5 +148,25 @@ class IptvAssetsGateTest {
             "有 ${bad.size} 条中国频道省份为空或越界，例：${bad.take(3).map { "${it.id}=${it.region}" }}",
             bad.isEmpty(),
         )
+    }
+
+    /**
+     * vpnOnly 不是上游字段，是两轮实测后由 tools/iptv_vpn_only.py 标注的。
+     * 手改 assets 或重跑同步漏掉回填，标记会静默消失，用户就再也分不清哪些台需代理。
+     * 这条把「清单里的标记」与「入仓的标注名单」钉成同一份真相。
+     */
+    @Test
+    fun `需 VPN 标记与入仓名单完全一致`() {
+        val candidates = listOf(
+            File("tools/iptv_vpn_only.json"),
+            File("../tools/iptv_vpn_only.json"),
+        )
+        val file = candidates.firstOrNull { it.exists() }
+            ?: throw AssertionError("找不到 tools/iptv_vpn_only.json，尝试过: $candidates")
+        val root = Json.parseToJsonElement(file.readText(Charsets.UTF_8)).jsonObject
+        val ids = root["stationIds"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet()
+        assertTrue("需 VPN 名单为空", ids.isNotEmpty())
+        val marked = list.filter { it.vpnOnly }.map { it.id }.toSet()
+        assertEquals("assets 的 vpnOnly 标记与名单不一致", ids, marked)
     }
 }

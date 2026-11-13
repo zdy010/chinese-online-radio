@@ -54,4 +54,58 @@ object IptvLanguage {
         // 推测层要求官方语言全部是中英；明确标注只要有一个命中就算
         return if (isGuess) codes.all { it in PREFERRED } else codes.any { it in PREFERRED }
     }
+
+    // ========== 分类页的语言多选过滤 ==========
+    // 与 isPreferred 是两套口径：那套是「默认只留中英」的粗过滤，这套是用户主动多选的精确过滤。
+    // 数据里的 language 有两种形状：明确标注 zho/eng，或 country:<官方语言逗号串> 的推测值。
+    // codesOf 把两者归一成 OPTIONS 的 key，推测串里的方言码（cat/eus/glg 等）不单列选项，
+    // 但只要串里有一个已知码就归到那个码，不会被误丢进「其他」。
+
+    const val OTHER = "other"
+
+    val OPTIONS: List<Pair<String, String>> = listOf(
+        "zho" to "中文",
+        "eng" to "英语",
+        "jpn" to "日语",
+        "kor" to "韩语",
+        "spa" to "西班牙语",
+        "fra" to "法语",
+        "deu" to "德语",
+        "rus" to "俄语",
+        "por" to "葡萄牙语",
+        "ita" to "意大利语",
+        "ara" to "阿拉伯语",
+        "hin" to "印地语",
+        OTHER to "其他/未标注",
+    )
+
+    private val OPTION_KEYS: Set<String> = OPTIONS.map { it.first }.toSet() - OTHER
+
+    /** 选项的中文名；未识别的 key 原样回显，不猜。 */
+    fun labelOf(code: String): String = OPTIONS.firstOrNull { it.first == code }?.second ?: code
+
+    private fun normalize(code: String): String = when (code) {
+        in ZH_CODES -> "zho"
+        in EN_CODES -> "eng"
+        else -> code
+    }
+
+    fun codesOf(language: String): Set<String> {
+        val raw = language.trim()
+        if (raw.isEmpty()) return setOf(OTHER)
+        // 电台侧的「普通话」这类中文标签不是 ISO 码，归中文；iptv 侧基本不会出现
+        if (raw.any { it.code > 127 }) return setOf("zho")
+        val body = if (raw.startsWith(COUNTRY_PREFIX)) raw.removePrefix(COUNTRY_PREFIX) else raw
+        val codes = body.split(',')
+            .map { normalize(it.trim().lowercase()) }
+            .filter { it.isNotEmpty() }
+        val known = codes.filter { it in OPTION_KEYS }.toSet()
+        return if (known.isEmpty()) setOf(OTHER) else known
+    }
+
+    /** 空选集 = 不过滤（保留 isPreferred / allLanguages 的既有行为）。 */
+    fun matches(language: String, selected: Set<String>): Boolean {
+        if (selected.isEmpty()) return true
+        return codesOf(language).any { it in selected }
+    }
 }

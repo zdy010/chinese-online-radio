@@ -58,8 +58,8 @@ data class SettingsUiState(
     val fontScaleKey: String = FontScaleOption.STANDARD.key,
     val uiMode: Int = 0,
     val bootAutoStart: Boolean = false,
-    val iptvAdultEnabled: Boolean = false,
     val iptvAllLanguages: Boolean = false,
+    val iptvVpnOnlyEnabled: Boolean = false,
     val playabilityHideThreshold: Int = 0,
     val voiceAnnounceEnabled: Boolean = true,
     val localFirstEnabled: Boolean = true
@@ -135,8 +135,8 @@ class SettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            preferences.iptvAdultEnabled.collect { enabled ->
-                _uiState.value = _uiState.value.copy(iptvAdultEnabled = enabled)
+            preferences.iptvVpnOnlyEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(iptvVpnOnlyEnabled = enabled)
             }
         }
         viewModelScope.launch {
@@ -176,9 +176,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setIptvAdultEnabled(enabled: Boolean) {
+    fun setIptvVpnOnlyEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            preferences.setIptvAdultEnabled(enabled)
+            preferences.setIptvVpnOnlyEnabled(enabled)
         }
     }
 
@@ -435,20 +435,21 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
-            // iptv 成人频道：默认关，打开后 iptv 列表与搜索才含成人条目（spec V2）
+            // 需 VPN 频道：两轮实测（直连 / 代理）比对出来的标记，默认隐藏。
+            // 列表、搜索、分类计数、收藏、最近用同一份过滤，不留旁路。
             ListItem(
-                headlineContent = { Text("显示成人频道（iptv）") },
-                supportingContent = { Text("默认关闭。开启后 iptv 列表与搜索会出现成人内容") },
+                headlineContent = { Text("显示只有 VPN 才能访问的节目") },
+                supportingContent = { Text("默认隐藏实测中只有代理能连通的频道；开启后它们带「需 VPN」标记出现在列表里") },
                 leadingContent = { Icon(Icons.Default.Tv, contentDescription = null) },
                 trailingContent = {
                     Switch(
-                        checked = uiState.iptvAdultEnabled,
-                        onCheckedChange = { viewModel.setIptvAdultEnabled(it) }
+                        checked = uiState.iptvVpnOnlyEnabled,
+                        onCheckedChange = { viewModel.setIptvVpnOnlyEnabled(it) }
                     )
                 },
                 modifier = Modifier
                     .carTouchTarget()
-                    .clickable { viewModel.setIptvAdultEnabled(!uiState.iptvAdultEnabled) }
+                    .clickable { viewModel.setIptvVpnOnlyEnabled(!uiState.iptvVpnOnlyEnabled) }
             )
 
             HorizontalDivider()

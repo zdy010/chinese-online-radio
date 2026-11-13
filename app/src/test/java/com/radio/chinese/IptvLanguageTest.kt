@@ -70,4 +70,35 @@ class IptvLanguageTest {
         assertTrue(IptvLanguage.isPreferred("country: ZHO "))
         assertFalse(IptvLanguage.isPreferred("country: ENG , SPA "))
     }
+
+    // ========== 分类页语言多选 ==========
+
+    @Test
+    fun `多选语言码把推测串归一到选项`() {
+        // 西班牙多语言官方码：cat/eus/glg 不是选项，但串里有 spa 就归 spa，
+        // 不能整台丢进「其他」
+        assertEquals(setOf("spa"), IptvLanguage.codesOf("country:spa,cat,eus,glg"))
+        assertEquals(setOf("zho"), IptvLanguage.codesOf("zho"))
+        assertEquals(setOf("eng"), IptvLanguage.codesOf("EN"))
+        assertEquals(setOf("spa", "eng"), IptvLanguage.codesOf("country:eng,spa"))
+        assertEquals(setOf(IptvLanguage.OTHER), IptvLanguage.codesOf(""))
+        assertEquals(setOf(IptvLanguage.OTHER), IptvLanguage.codesOf("country:grn"))
+    }
+
+    @Test
+    fun `空选集不过滤，命中任意一个即显示`() {
+        assertTrue(IptvLanguage.matches("country:spa", emptySet()))
+        assertTrue(IptvLanguage.matches("country:spa", setOf("spa", "zho")))
+        assertFalse(IptvLanguage.matches("country:spa", setOf("zho")))
+        assertTrue(IptvLanguage.matches("", setOf(IptvLanguage.OTHER)))
+    }
+
+    @Test
+    fun `语言选项 key 唯一且都有中文名`() {
+        val keys = IptvLanguage.OPTIONS.map { it.first }
+        assertEquals(keys.size, keys.toSet().size)
+        assertTrue(keys.containsAll(listOf("zho", "eng", IptvLanguage.OTHER)))
+        assertEquals("中文", IptvLanguage.labelOf("zho"))
+        assertEquals("西班牙语", IptvLanguage.labelOf("spa"))
+    }
 }
