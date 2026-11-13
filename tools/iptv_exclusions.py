@@ -294,7 +294,13 @@ def _resolve_probe_path(raw: str) -> Path:
 
 
 def load_intersect(path: Path, fingerprint: str):
-    """读交集结果与它引用的两轮严格探测结论，并做完整性校验。"""
+    """读交集结果与它引用的两轮严格探测结论，并做完整性校验。
+
+    注意这是**一次性**操作：交集结果绑定生成时的清单指纹，而 C 类剔除本身
+    会改 assets 指纹 —— 剔除后本命令必然被指纹校验拒绝。这是防旧结论套新
+    清单的既定设计，不是 bug；要重新剔除得先在当前清单上重跑两轮探测，
+    再用 iptv_intersect.py 生成新交集。
+    """
     if not path.exists():
         raise SystemExit(f"交集结果不存在：{path}")
     doc = json.loads(path.read_text(encoding="utf-8"))
@@ -349,7 +355,7 @@ def build_intersect_entries(stations: list, station_keys: dict, streams: dict,
             "language": st.get("language", ""),
             "reason": REASON_BOTH_GONE,
             "reasonDetail": (
-                f"全部 {len(rows)} 个源在无代理直连与有代理两轮**严格模式**"
+                f"全部 {len(rows)} 个源在无代理直连与有代理两轮严格模式"
                 "（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）"
                 "均确证 GONE；两种网络环境、两套判定都失效，故剔除。"
             ),
@@ -375,7 +381,9 @@ def build_intersect_entries(stations: list, station_keys: dict, streams: dict,
             "probes": rows[0]["probes"],
             "excludedAt": _now(),
         }
-    return out, list(stream_entries.values()), gone_keys
+    # 与 B 类一致按 url 排序：gone_keys 是 set，迭代序受 PYTHONHASHSEED 影响，
+    # 不排序的话每次重新生成的入仓 diff 都不一样（见 iptv_sync.ps1 的排序注释）
+    return out, sorted(stream_entries.values(), key=lambda e: e["url"]), gone_keys
 
 
 # ---------------------------------------------------------------- 文档合并与校验

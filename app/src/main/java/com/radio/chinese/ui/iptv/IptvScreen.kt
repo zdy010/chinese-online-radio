@@ -381,7 +381,8 @@ private fun LanguageFilterRow(
         )
         Spacer(Modifier.width(Dimens.GapSmall))
         val label = if (selected.isEmpty()) {
-            "语言：全部（默认中英）"
+            // 不能写「全部」：空选集时走的是默认的只中英过滤，西语/日语等并不在列表里
+            "语言：默认（只显示中文与英语）"
         } else {
             "语言：" + selected.joinToString("、") { IptvLanguage.labelOf(it) }
         }

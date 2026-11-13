@@ -321,7 +321,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://2gblive.akamaized.net/hls/live/2033805/2GB/index.m3u8"
       ],
@@ -403,7 +403,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://3awlive.akamaized.net/hls/live/2032295/3AW/index.m3u8"
       ],
@@ -577,7 +577,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://6prlive.akamaized.net/hls/live/2033806/6PR/index.m3u8"
       ],
@@ -746,7 +746,7 @@
       "country": "哥斯达黎加",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://k3.usastreams.com/CableLatino/88stereo/playlist.m3u8"
       ],
@@ -1038,7 +1038,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://c.mjh.nz/abc-me.m3u8"
       ],
@@ -1079,7 +1079,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://c.mjh.nz/abc-kids.m3u8"
       ],
@@ -1120,7 +1120,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u8"
       ],
@@ -1161,7 +1161,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023569/abcnewshudson10/master.m3u8"
       ],
@@ -1202,7 +1202,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023561/abcnewshudson2/master.m3u8"
       ],
@@ -1243,7 +1243,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023562/abcnewshudson3/master.m3u8"
       ],
@@ -1284,7 +1284,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023563/abcnewshudson4/master.m3u8"
       ],
@@ -1325,7 +1325,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023564/abcnewshudson5/master.m3u8"
       ],
@@ -1366,7 +1366,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023565/abcnewshudson6/master.m3u8"
       ],
@@ -1407,7 +1407,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023566/abcnewshudson7/master.m3u8"
       ],
@@ -1448,7 +1448,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023567/abcnewshudson8/master.m3u8"
       ],
@@ -1489,7 +1489,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://abcnews-streams.akamaized.net/hls/live/2023568/abcnewshudson9/master.m3u8"
       ],
@@ -1530,7 +1530,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://c.mjh.nz/abc-tv-plus.m3u8"
       ],
@@ -1735,7 +1735,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://linear-12.frequency.stream/dist/plex/12/hls/master/playlist.m3u8"
       ],
@@ -2695,7 +2695,7 @@
       "country": "沙特阿拉伯",
       "language": "country:ara",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d2hng5r56zpsbw.cloudfront.net/out/v1/9c4c990f44bb4767bb46271f326dd574/index.m3u8"
       ],
@@ -3611,7 +3611,7 @@
       "country": "Palestine",
       "language": "country:ara",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://streaming.zaytonatube.com:8081/AlMadinatv/almadina21/index.m3u8"
       ],
@@ -5052,7 +5052,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ncdn.telewebion.ir/ara/live/playlist.m3u8"
       ],
@@ -5531,7 +5531,7 @@
       "country": "荷兰",
       "language": "country:nld",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://takeoff.jetstre.am/?account=OmroepAssen&file=OmroepAssenTV/playlist.m3u8&output=playlist.m3u8&protocol=https&service=webdav&type=live"
       ],
@@ -5572,7 +5572,7 @@
       "country": "印度尼西亚",
       "language": "country:ind",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://5bf7b725107e5.streamlock.net/abtv/abtv/playlist.m3u8"
       ],
@@ -6575,7 +6575,7 @@
       "country": "委内瑞拉",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cloud.fastchannel.es/manifiest/hls/prog9/btatv.m3u8"
       ],
@@ -6698,7 +6698,7 @@
       "country": "乌干达",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://streamfi-alphadgtl1.zettawiseroutes.com:8181/hls/stream.m3u8"
       ],
@@ -8188,7 +8188,7 @@
       "country": "印度",
       "language": "country:eng,hin,tam",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://jmp2.uk/stvp-IN4000600Q"
       ],
@@ -8687,7 +8687,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cbsn-phi.cbsnstream.cbsnews.com/out/v1/5c9ad3e215984b0e9ad845b335216b72/master.m3u8"
       ],
@@ -9222,7 +9222,7 @@
       "country": "法国",
       "language": "country:fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://raw.githubusercontent.com/Paradise-91/ParaTV/refs/heads/main/streams/canalplus/cstar-dm.m3u8"
       ],
@@ -11152,7 +11152,7 @@
       "country": "阿根廷",
       "language": "country:grn,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://nd106.republicaservers.com:4433/hls/c6611/index.m3u8"
       ],
@@ -11362,7 +11362,7 @@
       "country": "阿根廷",
       "language": "country:grn,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://5cd577a3dd8ec.streamlock.net/CANAL4/smil:CANAL4.smil/playlist.m3u8"
       ],
@@ -12550,7 +12550,7 @@
       "country": "阿根廷",
       "language": "country:grn,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://videostream.shockmedia.com.ar/hls/canaluniversidadmdp/canaluniversidadmdp.m3u8"
       ],
@@ -13528,7 +13528,7 @@
       "country": "乌克兰",
       "language": "country:ukr",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://streamvideol1.luxnet.ua/news24/smil:news24.stream.smil/playlist.m3u8"
       ],
@@ -13692,7 +13692,7 @@
       "country": "澳大利亚",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 4 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 4 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://9now-livestreams-fhd-t.akamaized.net/u/prod/simulcast/adl/ch9/hls/r1/index.m3u8",
         "https://9now-livestreams-fhd-t.akamaized.net/u/prod/simulcast/bne/ch9/hls/r1/index.m3u8",
@@ -14414,7 +14414,7 @@
       "country": "巴西",
       "language": "country:por",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://play.redecinturaoverde.com.br/playlist.m3u8"
       ],
@@ -14455,7 +14455,7 @@
       "country": "厄瓜多尔",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cloud37.ecuatel.com/ciracutv/live/manifest.m3u8"
       ],
@@ -14962,7 +14962,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://congresodirecto.akamaized.net/hls/live/2038274/canal1/master.m3u8"
       ],
@@ -15003,7 +15003,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://congresodirecto.akamaized.net/hls/live/2038275/canal2/master.m3u8"
       ],
@@ -15044,7 +15044,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://congresodirecto.akamaized.net/hls/live/2038276/canal3/master.m3u8"
       ],
@@ -15085,7 +15085,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://congresodirecto.akamaized.net/hls/live/2038277/canal4/master.m3u8"
       ],
@@ -15126,7 +15126,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://congresodirecto.akamaized.net/hls/live/2038278/canal5/master.m3u8"
       ],
@@ -15336,7 +15336,7 @@
       "country": "新加坡",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cdn09jtedge.indihometv.com/joss/133/crimeinvestigation/index.m3u8"
       ],
@@ -15551,7 +15551,7 @@
       "country": "意大利",
       "language": "country:ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://router.xdevel.com/video0s975363-69/stream/playlist.m3u8"
       ],
@@ -16521,7 +16521,7 @@
       "country": "德国",
       "language": "country:deu",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://jmp2.uk/stvp-CHAJ0500413A"
       ],
@@ -16951,7 +16951,7 @@
       "country": "克罗地亚",
       "language": "country:hrv",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://diadoratv.stream/live/diadora/playlist.m3u8"
       ],
@@ -17972,7 +17972,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/dongnai3/index.m3u8",
         "https://tv.vietanhtv.top/vieon/vieon.php?id=dong-nai-3"
@@ -20497,7 +20497,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ncdn.telewebion.ir/baenergy/live/playlist.m3u8"
       ],
@@ -21150,7 +21150,7 @@
       "country": "希腊",
       "language": "country:ell",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://62.1.176.18:8888/extra/index.m3u8"
       ],
@@ -21816,7 +21816,7 @@
       "country": "匈牙利",
       "language": "country:hun",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cloudfront44.lexanetwork.com:1344/freerelay/fehervartv.sdp/playlist.m3u8"
       ],
@@ -25573,7 +25573,7 @@
       "country": "委内瑞拉",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://vs20.live.opencaster.com/grande41_0b593479/index.m3u8"
       ],
@@ -26218,7 +26218,7 @@
       "country": "韩国",
       "language": "country:kor",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://andong.webcasting.co.kr/live/mbc/playlist.m3u8"
       ],
@@ -26533,7 +26533,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/htv1/index.m3u8"
       ],
@@ -26574,7 +26574,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/htv2/index.m3u8"
       ],
@@ -26615,7 +26615,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/htv3/index.m3u8"
       ],
@@ -26725,7 +26725,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/htvcphim/index.m3u8"
       ],
@@ -26766,7 +26766,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/htvcphunu/index.m3u8"
       ],
@@ -26830,7 +26830,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://vmttv.dpdns.org/tv360?id=htv-the-thao",
         "https://dethich.pw/htvthethao/index.m3u8"
@@ -28132,7 +28132,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://jstre.am/live/jsl:cZXINbwrFj6.m3u8"
       ],
@@ -28173,7 +28173,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://jstre.am/live/jsl:0sUSK6VA7GT.m3u8"
       ],
@@ -28214,7 +28214,7 @@
       "country": "菲律宾",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://jstre.am/live/jsl:nX5eC7gQvZb.m3u8"
       ],
@@ -30058,7 +30058,7 @@
       "country": "匈牙利",
       "language": "country:hun",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cloudfront44.lexanetwork.com:1344/relay01/broadcast007.sdp/playlist.m3u8"
       ],
@@ -32497,7 +32497,7 @@
       "country": "委内瑞拉",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://streamtv.intervenhosting.net:3718/live/kandelamedioslive.m3u8"
       ],
@@ -32707,7 +32707,7 @@
       "country": "喀麦隆",
       "language": "country:eng,fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://kemettv.cm/memfs/b6d60ea7-18b4-4afb-b84f-bd082ed7f74f.m3u8"
       ],
@@ -32748,7 +32748,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://2-fss-1.streamhoster.com/pl_122/amlst:200914-2942150/playlist.m3u8",
         "https://2-fss-2.streamhoster.com/pl_132/amlst:200914-1315486/playlist.m3u8"
@@ -33777,7 +33777,7 @@
       "country": "委内瑞拉",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://streamtv.intervenhosting.net:3403/hybrid/play.m3u8"
       ],
@@ -34760,7 +34760,7 @@
       "country": "意大利",
       "language": "country:ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://77.68.40.210:8888/hls/cronache.m3u8",
         "http://stucazz.com:8888/hls/cronache.m3u8"
@@ -36318,7 +36318,7 @@
       "country": "印度尼西亚",
       "language": "country:ind",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream.convergen.co/mbg_stream/smil:mbStream.smil/playlist.m3u8"
       ],
@@ -36359,7 +36359,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://edge-f.swagit.com/live/miamibeachfl/live-1-a/playlist.m3u8"
       ],
@@ -36487,7 +36487,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://5b200f5268ceb.streamlock.net/MCPSS/MCPSS247.smil/playlist.m3u8"
       ],
@@ -36853,7 +36853,7 @@
       "country": "North Macedonia",
       "language": "country:mkd",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://ares.mnet.mk/hls/mnet-kids.m3u8"
       ],
@@ -37242,7 +37242,7 @@
       "country": "英国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://livemtaasia.akamaized.net/hls/live/2039224/mta6asia/playlist.m3u8"
       ],
@@ -37283,7 +37283,7 @@
       "country": "英国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://livemtaasia.akamaized.net/hls/live/2039224/mtaasia2/playlist.m3u8"
       ],
@@ -38712,7 +38712,7 @@
       "country": "约旦",
       "language": "country:ara",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cdn3.wowza.com/1/OVRrOWxXUEswS2Yv/eGVxSWZy/hls/live/playlist.m3u8"
       ],
@@ -39242,7 +39242,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://204.11.235.251:1935/live_transcoder/ngrp:mohabat.stream_all/playlist.m3u8",
         "https://5acf9f9415a10.streamlock.net/live_transcoder/ngrp:mohabat.stream_all/playlist.m3u8"
@@ -39311,7 +39311,7 @@
       "country": "沙特阿拉伯",
       "language": "country:ara",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d2ow8h651gs7dx.cloudfront.net/out/v1/371fb663da604e659a2fb99bf89d92d4/index.m3u8"
       ],
@@ -40630,7 +40630,7 @@
       "country": "印度",
       "language": "country:eng,hin,tam",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://jmp2.uk/stvp-IN46000140Q"
       ],
@@ -41150,7 +41150,7 @@
       "country": "印度",
       "language": "country:eng,hin,tam",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://galaxyott.live/hls/ntv.m3u8"
       ],
@@ -42291,7 +42291,7 @@
       "country": "波兰",
       "language": "country:pol",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://1409502578.rsc.cdn77.org/live/stream-1/chunklist.m3u8",
         "https://1409502578.rsc.cdn77.org/live/stream-1/playlist.m3u8"
@@ -42629,7 +42629,7 @@
       "country": "印度",
       "language": "country:eng,hin,tam",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://newscapital.com/hls/stream.m3u8?token=Nc360PermanentSecureKey987"
       ],
@@ -42670,7 +42670,7 @@
       "country": "美国",
       "language": "country:eng,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://n1ottesorkatv.akamaized.net/hls/live/2113795/Live_1/index.m3u8"
       ],
@@ -43250,7 +43250,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://norcast-weather.streamology.live/api/v1/streams/c1b5b114698e1ad4687153c4402d5ef0/live.m3u8"
       ],
@@ -43396,7 +43396,7 @@
       "country": "黎巴嫩",
       "language": "country:ara,fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://svs.itworkscdn.net/nour3satlive/livestream/playlist.m3u8"
       ],
@@ -43437,7 +43437,7 @@
       "country": "黎巴嫩",
       "language": "country:ara,fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://svs.itworkscdn.net/nour9satlive/livestream/playlist.m3u8"
       ],
@@ -43972,7 +43972,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://tv.vietanhtv.top/vieon/vieon.php?id=vie-dramas-hd"
       ],
@@ -44512,7 +44512,7 @@
       "country": "匈牙利",
       "language": "country:hun",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://tab.parlament.hu:446/edgelive/smil:mkogytab.smil/playlist.m3u8"
       ],
@@ -44553,7 +44553,7 @@
       "country": "匈牙利",
       "language": "country:hun",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://plenaris.parlament.hu:446/edgelive/smil:mkogyplen.smil/playlist.m3u8"
       ],
@@ -44804,7 +44804,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1298290/playlist.m3u8"
       ],
@@ -46514,7 +46514,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://frndlymsl.akamaized.net/hls/live/2006426/pixlmsl/pixlmsl/playlist.m3u8?hdnts=st=1606053234~exp=3216054041~acl=*~hmac=208d261d9f98d76a5ac30aa2ce51751f88ee50cfc24812b7cbea8b0397489a07"
       ],
@@ -46719,7 +46719,7 @@
       "country": "委内瑞拉",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://vcp.myplaytv.com/glowtv/glowtv/playlist.m3u8"
       ],
@@ -48201,7 +48201,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ncdn.telewebion.ir/javaneh/live/playlist.m3u8"
       ],
@@ -49184,7 +49184,7 @@
       "country": "德国",
       "language": "country:deu",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://qvcde-live.akamaized.net/hls/live/2097104/qby/master.m3u8"
       ],
@@ -49225,7 +49225,7 @@
       "country": "德国",
       "language": "country:deu",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://qvcde-live.akamaized.net/hls/live/2097104/qps/master.m3u8"
       ],
@@ -50159,7 +50159,7 @@
       "country": "美国",
       "language": "country:eng,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://2-fss-2.streamhoster.com/pl_120/amlst:206708-4202592/playlist.m3u8"
       ],
@@ -50282,7 +50282,7 @@
       "country": "马来西亚",
       "language": "country:eng,msa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d25tgymtnqzu8s.cloudfront.net/smil:negara/playlist.m3u8?id=8"
       ],
@@ -50323,7 +50323,7 @@
       "country": "马来西亚",
       "language": "country:eng,msa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d25tgymtnqzu8s.cloudfront.net/smil:rakyat/playlist.m3u8?id=7"
       ],
@@ -51504,7 +51504,7 @@
       "country": "俄罗斯",
       "language": "country:rus",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream.radio1.ru/memfs/49dee7fe-77ba-4e6b-8cdc-fa840535b242.m3u8"
       ],
@@ -51545,7 +51545,7 @@
       "country": "瑞士",
       "language": "country:deu,fra,ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://vstream-cdn.ch/hls/radio3i.m3u8"
       ],
@@ -51837,7 +51837,7 @@
       "country": "荷兰",
       "language": "country:nld",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream.radionl.tv/radionltv/radionltv/playlist.m3u8"
       ],
@@ -52802,7 +52802,7 @@
       "country": "沙特阿拉伯",
       "language": "country:ara",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dphwv2ufgnfsq.cloudfront.net/out/v1/59cd80dfe93a479eb8b4d79bc6f225ca/index.m3u8"
       ],
@@ -53383,7 +53383,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://linear-142.frequency.stream/dist/24i/142/hls/master/playlist.m3u8"
       ],
@@ -53739,7 +53739,7 @@
       "country": "印度尼西亚",
       "language": "country:ind",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://rodjatv.com/rodjatv/live.m3u8"
       ],
@@ -53944,7 +53944,7 @@
       "country": "俄罗斯",
       "language": "country:rus",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://31.148.5.241/kanal_21/index.m3u8"
       ],
@@ -54797,7 +54797,7 @@
       "country": "芬兰",
       "language": "country:fin,swe",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://live-fi.tvkaista.net/star-channel/live.m3u8?src=freetv",
         "https://live-fi.tvkaista.net/star-channel/live.m3u8"
@@ -55322,7 +55322,7 @@
       "country": "San Marino",
       "language": "country:ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d2hrvno5bw6tg2.cloudfront.net/smrtv-ch01/smil:ch-01.smil/chunklist.m3u8"
       ],
@@ -55363,7 +55363,7 @@
       "country": "San Marino",
       "language": "country:ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d2hrvno5bw6tg2.cloudfront.net/smrtv-ch02/smil:ch-02.smil/master.m3u8"
       ],
@@ -55537,7 +55537,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ncdn.telewebion.ir/sarbedaran/live/playlist.m3u8"
       ],
@@ -55624,7 +55624,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream-us-east-1.getpublica.com/playlist.m3u8?network_id=2240"
       ],
@@ -55793,7 +55793,7 @@
       "country": "Senegal",
       "language": "country:fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream.sen-gt.com/senjeunestv/myStream/playlist.m3u8"
       ],
@@ -55875,7 +55875,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ncdn.telewebion.ir/sepehr/live/playlist.m3u8"
       ],
@@ -56244,7 +56244,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://open.http.mp.streamamg.com/p/3001314/sp/300131400/playManifest/entryId/0_ye0b8tc0/format/applehttp/protocol/https/uiConfId/30026292/a.m3u8"
       ],
@@ -56742,7 +56742,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00864-shemarooenterta-shemabollywood-ono/playlist.m3u8"
       ],
@@ -58232,7 +58232,7 @@
       "country": "加拿大",
       "language": "country:eng,fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://iptv.sohailtv.com/sohail/playlist/index.m3u8"
       ],
@@ -58314,7 +58314,7 @@
       "country": "Equatorial Guinea",
       "language": "country:fra,por,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream.solmediaeg.com/soltv/soltv.m3u8"
       ],
@@ -58355,7 +58355,7 @@
       "country": "秘鲁",
       "language": "country:aym,que,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://live-evg11.tv360.bitel.com.pe/bitel/solartvSRT/playlist.m3u8"
       ],
@@ -58437,7 +58437,7 @@
       "country": "俄罗斯",
       "language": "country:rus",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://player.smotrim.ru/iframe/stream/live_id/985d5c7b-9727-4942-a4ba-a6e852caf0c1"
       ],
@@ -58857,7 +58857,7 @@
       "country": "乌兹别克斯坦",
       "language": "country:rus,uzb",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream8.cinerama.uz/1004/tracks-v1a1/mono.m3u8"
       ],
@@ -61671,7 +61671,7 @@
       "country": "土耳其",
       "language": "country:tur",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://b01c02nl.mediatriple.net/videoonlylive/mtsxxkzwwuqtglive/broadcast_5fe462afc6a0e.smil/playlist.m3u8"
       ],
@@ -62298,7 +62298,7 @@
       "country": "土耳其",
       "language": "country:tur",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://tv-trt3.live.trt.com.tr/master.m3u8"
       ],
@@ -62772,7 +62772,7 @@
       "country": "意大利",
       "language": "country:ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 2 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://hls-live-tv2000.akamaized.net/hls/live/2028510/tv2000/master.m3u8",
         "http://mi1.wz.tv2000.it/tv2000_alfa.m3u8"
@@ -63266,7 +63266,7 @@
       "country": "马来西亚",
       "language": "country:eng,msa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d25tgymtnqzu8s.cloudfront.net/smil:tv6/playlist.m3u8?id=6"
       ],
@@ -63522,7 +63522,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ncdn.telewebion.ir/nava/live/playlist.m3u8"
       ],
@@ -64587,7 +64587,7 @@
       "country": "墨西哥",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://5f2c1b0d880e5.streamlock.net/tv42/tv42.smil/.m3u8"
       ],
@@ -66923,7 +66923,7 @@
       "country": "阿根廷",
       "language": "country:grn,spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://ca.centaurychile.com:2443/hls/mediospublicos.m3u8"
       ],
@@ -67307,7 +67307,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://rpn.bozztv.com/trn01/gusa-TVSFilmNoir/index.m3u8"
       ],
@@ -68283,7 +68283,7 @@
       "country": "巴西",
       "language": "country:por",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://wz4.dnip.com.br/fratevitv/fratevitv.sdp/playlist.m3u8"
       ],
@@ -69642,7 +69642,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://video.telesafor.com/hls/video.m3u8"
       ],
@@ -69724,7 +69724,7 @@
       "country": "意大利",
       "language": "country:ita",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://ts2000tv.streaming.nextware.it:8081/ts2000tv/ts2000tv/playlist.m3u8"
       ],
@@ -70075,7 +70075,7 @@
       "country": "Dominican Republic",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://streaming.grupomediosdelnorte.com:19360/telecomerciotv/telecomerciotv.m3u8"
       ],
@@ -71091,7 +71091,7 @@
       "country": "洪都拉斯",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://5e85d90130e77.streamlock.net/6028/6028/playlist.m3u8"
       ],
@@ -71342,7 +71342,7 @@
       "country": "波兰",
       "language": "country:pol",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cdn01.aztv.pl/live_tvjaslo/live_tvjaslo.stream/playlist.m3u8"
       ],
@@ -73652,7 +73652,7 @@
       "country": "黎巴嫩",
       "language": "country:ara,fra",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cdn.catiacast.video/abr/9436b5ab3c1171ab04a59af11951292f/playlist.m3u8"
       ],
@@ -74233,7 +74233,7 @@
       "country": "西班牙",
       "language": "country:spa,cat,eus,glg",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://5940924978228.streamlock.net/j_Directo2/mp4:j_Directo2/playlist.m3u8"
       ],
@@ -74912,7 +74912,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "http://dethich.pw/vtv5tn/index.m3u8"
       ],
@@ -74953,7 +74953,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/vtv8/index.m3u8"
       ],
@@ -75117,7 +75117,7 @@
       "country": "匈牙利",
       "language": "country:hun",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cloudfront44.lexanetwork.com:1344/freerelay/morvtv.sdp/playlist.m3u8"
       ],
@@ -76326,7 +76326,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/thvl3/index.m3u8"
       ],
@@ -76367,7 +76367,7 @@
       "country": "越南",
       "language": "country:vie",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://dethich.pw/thvl4/index.m3u8"
       ],
@@ -77081,7 +77081,7 @@
       "country": "美国",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://2-fss-2.streamhoster.com/pl_120/amlst:203530-1426406/playlist.m3u8"
       ],
@@ -79045,7 +79045,7 @@
       "country": "智利",
       "language": "country:spa",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://tv1.mediacp.eu:3131/live/dilxbgxylive.m3u8"
       ],
@@ -79127,7 +79127,7 @@
       "country": "乌兹别克斯坦",
       "language": "country:rus,uzb",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://stream8.cinerama.uz/1016/tracks-v1a1/mono.m3u8"
       ],
@@ -79168,7 +79168,7 @@
       "country": "匈牙利",
       "language": "country:hun",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cloudfront44.lexanetwork.com:1344/freerelay/zuglotv.sdp/playlist.m3u8"
       ],
@@ -85565,7 +85565,7 @@
       "country": "",
       "language": "",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://cbsn-dal.cbsnstream.cbsnews.com/out/v1/ffa98bbf7d2b4c038c229bd4d9122708/master.m3u8"
       ],
@@ -86108,7 +86108,7 @@
       "country": "",
       "language": "",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://d3p8ecnk6t4t73.cloudfront.net/scheduler/scheduleMaster/316.m3u8"
       ],
@@ -93797,7 +93797,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://live.presstv.co.uk/hls/ifilm2.m3u8"
       ],
@@ -93838,7 +93838,7 @@
       "country": "伊朗",
       "language": "country:fas",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://live.presstv.co.uk/hls/ifilmar.m3u8"
       ],
@@ -93879,7 +93879,7 @@
       "country": "伊朗",
       "language": "eng",
       "reason": "both-network-modes-gone",
-      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮**严格模式**（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
+      "reasonDetail": "全部 1 个源在无代理直连与有代理两轮严格模式（验 HLS 分片 / master 下钻 / DASH / 媒体魔数，参数完全一致）均确证 GONE；两种网络环境、两套判定都失效，故剔除。",
       "urls": [
         "https://live.presstv.co.uk/hls/ifilmen.m3u8"
       ],
