@@ -107,7 +107,7 @@ object TtsProbe {
             return TtsVerdict(
                 TtsVerdictLevel.ENGINE_INVISIBLE,
                 "系统有引擎但枚举不到：$synthPkg",
-                "标准 TTS action 查不到它（车机 ROM 常见）。按包名直连仍未绑上，需为该包补可见性声明",
+                "标准 TTS action 查不到它（车机 ROM 常见）。已按包名补可见性声明；若直连仍绑不上，说明该引擎未对外暴露标准 TTS 服务，需在设备上安装标准中文 TTS 引擎（如讯飞语云完整版）",
             )
         }
 
