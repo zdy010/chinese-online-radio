@@ -27,6 +27,12 @@
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
+        <!-- 车机 ROM 的厂商引擎（讯飞语云等）服务 Filter 常不标准，上面的 intent 模板匹配不到，
+             按 action 声明等于没声明。需按包名显式授予可见性，TextToSpeech(pkg) 直连与
+             Settings.Secure.tts_default_synth 指向的默认合成器才能解析/绑定到它的服务。
+             真机诊断再发现新的引擎包名时，按同样的形式追加。 -->
+        <package android:name="com.iflytek.speechcloud" />
+        <package android:name="com.iflytek.speechsuite" />
     </queries>
 
     <application
