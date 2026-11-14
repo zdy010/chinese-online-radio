@@ -1,6 +1,7 @@
 package com.radio.chinese.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -35,7 +36,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.radio.chinese.domain.epg.EpgQuery
 import com.radio.chinese.domain.model.EpgProgram
@@ -52,7 +52,6 @@ import com.radio.chinese.ui.common.LocalEpgInline
 import com.radio.chinese.ui.common.focusRingVisual
 import com.radio.chinese.ui.common.NowPlayingWave
 import com.radio.chinese.ui.common.playabilityNameColor
-import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.rememberStationRowOnClick
 import com.radio.chinese.ui.common.SectionHeader
 import com.radio.chinese.ui.common.StatusChip
@@ -78,34 +77,19 @@ fun HomeScreen(
     // EPG 状态改由 RadioPagerHost 通过 LocalEpgInline 提供，这里不再各自订阅
     val currentStation by viewModel.playerManager.currentStation.collectAsState()
     val isPlaying by viewModel.playerManager.isPlaying.collectAsState()
-    val playbackState by viewModel.playerManager.playbackState.collectAsState()
     // 长按电台弹出的管理菜单（与节目源管理页同一套交互），方便随时编辑
     var actionStation by remember { mutableStateOf<RadioStation?>(null) }
     // 行点击统一语义：点非当前台只起播并留在列表，点当前台才进播放页
     val onRowClick = rememberStationRowOnClick(viewModel.playerManager, onNavigateToPlayer)
 
+    // 迷你播放条上移到 RadioScreen（RadioPagerHost 外层）：五个页签共用一条。
+    // 以前只有「全部」页挂了迷你条，翻到地区/分类/收藏/最近后底部什么都没有，
+    // 在播的行又不够突出，用户感知就是「页面没有刷新、不知道播到哪了」。
     Scaffold(
         contentWindowInsets = NestedWindowInsets,
         topBar = {
             if (showTopBar) {
             TopAppBar(windowInsets = NestedWindowInsets, title = { Text("时光收音机") }, actions = { IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, contentDescription = "设置") } } )
-            }
-        },
-        bottomBar = {
-            if (currentStation != null) {
-                val statusText = when {
-                    playbackState == Player.STATE_BUFFERING -> "缓冲中…"
-                    isPlaying -> "正在播放"
-                    else -> "已暂停"
-                }
-                RadioMiniPlayerBar(
-                    title = currentStation!!.name,
-                    subtitle = statusText,
-                    coverUrl = currentStation!!.logoUrl,
-                    isPlaying = isPlaying,
-                    onPlayPause = { viewModel.playerManager.togglePlayPause() },
-                    onClick = { onNavigateToPlayer(currentStation!!.id) }
-                )
             }
         }
     ) { padding ->
@@ -145,7 +129,8 @@ fun HomeScreen(
                         start = Dimens.ScreenPadding,
                         end = Dimens.ScreenPadding,
                         top = Dimens.GapTiny,
-                        bottom = if (currentStation != null) Dimens.MiniPlayerSlim else Dimens.GapTiny
+                        // 迷你条已上移到 RadioScreen，列表底部不再被覆盖，固定留个小间距即可
+                        bottom = Dimens.GapTiny
                     )
                     val gap = Arrangement.spacedBy(Dimens.ListGap)
                     val cell: @Composable (RadioStation) -> Unit = { station ->
@@ -387,6 +372,12 @@ fun StationListItem(
         modifier = Modifier
             .focusRingVisual(focused)
             .then(itemModifier),
+        // 当前播放的行加主色描边：列表里只有一个小波浪标记不够扎眼，用户翻到别的
+        // 页签再回来就「不知道播到哪了」。描边随 isPlaying 出现/消失，暂停后不残留。
+        border = if (isPlaying) BorderStroke(
+            width = if (isCarSurface()) 2.dp else 1.dp,
+            color = MaterialTheme.colorScheme.primary
+        ) else null,
         shape = MaterialTheme.shapes.medium
     ) {
         Column {
@@ -490,9 +481,13 @@ fun StationListItem(
                 if (!nowProgram.isNullOrBlank() && epgPrograms == null) {
                     MarqueeText(
                         text = "正在播出：$nowProgram",
-                        // 主色：这一行是「有没有 EPG」的唯一视觉线索，灰色小字太容易漏看
+                        // 滚动只给正在播放的行：以前所有带节目单的行都在滚，满屏乱动，
+                        // 反而把「哪一行真的在响」盖住了。未播放的行静态单行省略，
+                        // 颜色退回次要色，把注意力让给在播的那一行
+                        enabled = isPlaying,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.primary
+                            color = if (isPlaying) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         modifier = Modifier.padding(top = Dimens.GapTiny)
                     )

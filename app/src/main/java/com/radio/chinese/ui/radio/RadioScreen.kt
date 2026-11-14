@@ -18,10 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.Player
 import com.radio.chinese.service.PlayerManager
 import com.radio.chinese.ui.category.CategoryScreen
 import com.radio.chinese.ui.common.EpgInlineState
 import com.radio.chinese.ui.common.LocalEpgInline
+import com.radio.chinese.ui.common.RadioMiniPlayerBar
 import com.radio.chinese.ui.common.SearchBarRow
 import com.radio.chinese.ui.common.SurfaceTab
 import com.radio.chinese.ui.common.SurfaceTabBar
@@ -180,6 +182,33 @@ fun RadioScreen(
                 onNavigateToTag = onNavigateToTag,
                 onJumpToPage = onJumpToPage,
                 modifier = Modifier.weight(1f)
+            )
+        }
+
+        // 迷你播放条挂在页签宿主这一层，五个页签共用一条。
+        // 以前只有「全部」页（HomeScreen 的 Scaffold bottomBar）有：用户翻到地区/分类/
+        // 收藏/最近后底部空空如也，列表里在播的行又不够突出，点播后页面也没有任何
+        // 状态变化可看——实测反馈就是「非默认页面播放时页面没有刷新、不知道播到哪」。
+        // 统一放这里后，任何页签、任何时刻都能看到在播的台，点一下进播放页。
+        val nowStation by playerManager.currentStation.collectAsState()
+        val playing by playerManager.isPlaying.collectAsState()
+        val pbState by playerManager.playbackState.collectAsState()
+        if (nowStation != null) {
+            RadioMiniPlayerBar(
+                title = nowStation!!.name,
+                subtitle = when {
+                    pbState == Player.STATE_BUFFERING -> "缓冲中…"
+                    playing -> "正在播放"
+                    else -> "已暂停"
+                },
+                coverUrl = nowStation!!.logoUrl,
+                isPlaying = playing,
+                onPlayPause = { playerManager.togglePlayPause() },
+                onClick = { onNavigateToPlayer(nowStation!!.id) },
+                modifier = Modifier.padding(
+                    horizontal = Dimens.ScreenPadding,
+                    vertical = Dimens.GapTiny
+                )
             )
         }
     }
