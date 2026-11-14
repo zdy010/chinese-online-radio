@@ -13,7 +13,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 
 /**
  * 焦点描边的**纯绘制**版本：焦点状态由调用方传入（通常来自 InteractionSource）。
@@ -27,42 +30,72 @@ import androidx.compose.ui.unit.dp
  * 焦点状态与点击手势共用同一个 source，Compose 会稳定维护它。
  *
  * 只画在卡片内（`topLeft/size` 内缩半个线宽），不越界压到相邻卡片。
+ *
+ * 增强参数（scale/zIndex/shadowElevation/tintAlpha/borderWidth）用于电视 10ft
+ * 场景：手机近看 22% 染色 + 6dp 描边够了，电视上隔着几米这层效果几乎不可见，
+ * 聚焦项要「整块亮起来 + 略微放大」才有遥控器导航的存在感。默认值即原有行为，
+ * 手机/车机调用处零回归。
  */
 @Composable
 fun Modifier.focusRingVisual(
     focused: Boolean,
     shape: Shape = MaterialTheme.shapes.medium,
+    /** 聚焦时整块放大（绘制级变换，不改变布局尺寸） */
+    scale: Float = 1f,
+    /** 放大后压住相邻行，防止溢出的描边边缘被后绘制的相邻行盖住 */
+    zIndex: Float = 0f,
+    /** 整卡染色的不透明度 */
+    tintAlpha: Float = 0.22f,
+    /** 内描边宽度 */
+    borderWidth: Dp = 6.dp,
 ): Modifier {
     val tint = if (focused) MaterialTheme.colorScheme.primary else Color.Transparent
-    val width = 6.dp
     val corner = 12.dp
-    return this.drawWithContent {
-        drawContent()
-        if (tint == Color.Transparent) return@drawWithContent
-        val radius = CornerRadius(corner.toPx())
-        // 整卡染色：只靠描边在深/浅主题下对比都不够，聚焦项要「整块亮起来」
-        drawRoundRect(color = tint.copy(alpha = 0.22f), cornerRadius = radius)
-        // 内描边：不外扩，不压到相邻卡片
-        val w = width.toPx()
-        drawRoundRect(
-            color = tint,
-            topLeft = Offset(w / 2, w / 2),
-            size = Size(size.width - w, size.height - w),
-            cornerRadius = radius,
-            style = Stroke(width = w),
-        )
-    }
+    return this
+        .zIndex(if (focused) zIndex else 0f)
+        .graphicsLayer {
+            if (focused) {
+                scaleX = scale
+                scaleY = scale
+            }
+        }
+        .drawWithContent {
+            drawContent()
+            if (tint == Color.Transparent) return@drawWithContent
+            val radius = CornerRadius(corner.toPx())
+            // 整卡染色：只靠描边在深/浅主题下对比都不够，聚焦项要「整块亮起来」
+            drawRoundRect(color = tint.copy(alpha = tintAlpha), cornerRadius = radius)
+            // 内描边：不外扩，不压到相邻卡片
+            val w = borderWidth.toPx()
+            drawRoundRect(
+                color = tint,
+                topLeft = Offset(w / 2, w / 2),
+                size = Size(size.width - w, size.height - w),
+                cornerRadius = radius,
+                style = Stroke(width = w),
+            )
+        }
 }
 
 /**
  * 自带焦点观察的版本，给**非 Lazy 容器**用（九键面板按钮、候选行、入口卡）。
  * 列表行请用 [focusRingVisual] + InteractionSource。
+ *
+ * 增强参数原样透传给 [focusRingVisual]，默认值即原有行为。
  */
 @Composable
-fun Modifier.focusRing(shape: Shape = MaterialTheme.shapes.medium): Modifier {
+fun Modifier.focusRing(
+    shape: Shape = MaterialTheme.shapes.medium,
+    scale: Float = 1f,
+    zIndex: Float = 0f,
+    tintAlpha: Float = 0.22f,
+    borderWidth: Dp = 6.dp,
+): Modifier {
     val focused = remember { mutableStateOf(false) }
     val observed = focused.value
     return this
         .onFocusChanged { focused.value = it.isFocused }
-        .then(focusRingVisual(observed, shape))
+        .then(
+            focusRingVisual(observed, shape, scale, zIndex, tintAlpha, borderWidth)
+        )
 }

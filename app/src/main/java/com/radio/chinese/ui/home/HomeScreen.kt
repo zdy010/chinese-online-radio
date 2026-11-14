@@ -62,6 +62,7 @@ import com.radio.chinese.ui.common.carTouchTarget
 import com.radio.chinese.ui.common.stationSubtitleOf
 import com.radio.chinese.ui.theme.Dimens
 import com.radio.chinese.ui.theme.isCarSurface
+import com.radio.chinese.ui.theme.isTvSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -367,15 +368,24 @@ fun StationListItem(
                 onClick = onClick,
             )
         }
+    // 电视 10ft 场景下 22% 染色 + 6dp 描边隔着几米看不见：聚焦行整块放大 1.05、
+    // 染色加深到 32%、描边加粗到 10dp，并抬高 zIndex 压住相邻行；手机/车机维持原参数。
+    val tv = isTvSurface()
     Card(
         // 电视/车机上方向键移焦点时必须有可见反馈：手机档点按后的短暂高亮也无害
         modifier = Modifier
-            .focusRingVisual(focused)
+            .focusRingVisual(
+                focused = focused,
+                scale = if (tv) 1.05f else 1f,
+                zIndex = if (tv) 1f else 0f,
+                tintAlpha = if (tv) 0.32f else 0.22f,
+                borderWidth = if (tv) 10.dp else 6.dp,
+            )
             .then(itemModifier),
         // 当前播放的行加主色描边：列表里只有一个小波浪标记不够扎眼，用户翻到别的
         // 页签再回来就「不知道播到哪了」。描边随 isPlaying 出现/消失，暂停后不残留。
         border = if (isPlaying) BorderStroke(
-            width = if (isCarSurface()) 2.dp else 1.dp,
+            width = if (isCarSurface() || tv) 2.dp else 1.dp,
             color = MaterialTheme.colorScheme.primary
         ) else null,
         shape = MaterialTheme.shapes.medium

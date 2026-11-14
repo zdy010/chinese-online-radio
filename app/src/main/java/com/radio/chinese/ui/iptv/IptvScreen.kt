@@ -714,9 +714,18 @@ private fun EntryCard(
     subtitle: String,
     onClick: () -> Unit,
 ) {
+    // 电视上分类入口卡与频道行同一套聚焦增强（放大 + 深染色 + 粗描边），否则
+    // 两级目录之间焦点观感不一致；手机/车机维持默认参数。
+    val tv = isTvSurface()
     Card(
         modifier = Modifier
-            .focusRing(MaterialTheme.shapes.large)
+            .focusRing(
+                shape = MaterialTheme.shapes.large,
+                scale = if (tv) 1.05f else 1f,
+                zIndex = if (tv) 1f else 0f,
+                tintAlpha = if (tv) 0.32f else 0.22f,
+                borderWidth = if (tv) 10.dp else 6.dp,
+            )
             .fillMaxWidth()
             .heightIn(min = Dimens.TouchMin)
             .clickable(onClick = onClick),
