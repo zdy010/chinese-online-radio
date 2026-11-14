@@ -1,7 +1,10 @@
 package com.radio.chinese.ui.diagnostics
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -139,16 +142,43 @@ fun DiagnosticsScreen(onNavigateBack: () -> Unit) {
                     )
                 } else {
                     hwLines.forEach { line ->
-                        Text(
-                            text = "${line.label}：${line.value}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = Dimens.GapSmall)
-                        )
+                        if (line.launchable != null) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "${line.label}：${line.value}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(vertical = Dimens.GapSmall)
+                                )
+                                TextButton(onClick = { launchRadioApp(context, line.launchable!!) }) {
+                                    Text(text = "打开")
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "${line.label}：${line.value}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = Dimens.GapSmall)
+                            )
+                        }
                     }
                 }
                 HorizontalDivider()
             }
         }
+    }
+}
+
+/** 拉起车机上已装的收音机应用；拉不起就静默——这页本来就是只读诊断 */
+private fun launchRadioApp(context: Context, pkg: String) {
+    runCatching {
+        val intent = context.packageManager.getLaunchIntentForPackage(pkg) ?: return
+        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }

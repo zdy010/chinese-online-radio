@@ -4,21 +4,25 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.media.broadcastradio.RadioManager
+import android.media.broadcastradio.RadioTuner
 import android.media.tv.TvInputManager
 import android.os.Build
 
-/** 硬件能力探测的一行结果：label + 一句人话 */
-data class HwLine(val label: String, val value: String)
+/** 硬件能力探测的一行结果：label + 一句人话；launchable 非空表示可直接拉起那个包 */
+data class HwLine(val label: String, val value: String, val launchable: String? = null)
 
 /**
  * 探测这台车机有没有把硬件收音机（FM/AM）开放给第三方 App。
  *
- * 五条互补通道，任何一条有信号都说明还有得做：
+ * 六条互补通道，任何一条有信号都说明还有得做：
  * 1. 系统 feature——连全表带关键词过滤一起看，能捞到厂商自造的名字；
  * 2. TvInputManager 输入源——Android 唯一公开的可调谐通路；
- * 3. 音频设备——是否存在 FM/TV 调谐器设备；
- * 4. 已装收音机应用——有应用说明芯片在，问题只剩"能不能被我们控制"；
- * 5. 厂商系统属性（getprop）——方易通/瑞芯微/全志这类常在这里露出来，读属性不需要权限。
+ * 3. RadioManager 实测——broadcastradio HAL 在跑只是条件，framework 放不放第三方调谐，
+ *    当场 openTuner 试一次才知道（试完立即 close，不开声音不调频）；
+ * 4. 音频设备——是否存在 FM/TV 调谐器设备；
+ * 5. 已装收音机应用——有应用说明芯片在，问题只剩"能不能被我们控制"；
+ * 6. 厂商系统属性（getprop）——方易通/瑞芯微/全志这类常在这里露出来，读属性不需要权限。
  *
  * 全程只读、不加任何权限、不联网、不写文件。结论直接给到"能不能做、下一步看哪条"，
  * 因为看这页的人是在车上、没条件翻日志的人。
@@ -28,6 +32,7 @@ object HardwareRadioProbe {
     private const val MAX_LIST = 5
     private const val PROP_MAX_LINES = 4
     private const val LINE_MAX = 200
+    private const val RADIO_TEST_TIMEOUT_MS = 4_000L
 
     /** 已知的车机/SoC 收音机与调谐器包名；枚举被 Android 11+ 包可见性挡住时靠它们兜底 */
     private val KNOWN_PACKAGES = listOf(
@@ -44,36 +49,47 @@ object HardwareRadioProbe {
 
         val (featText, featHit) = tunerFeatures(pm)
         val (tvText, tvHit) = tvInputs(context)
+        val (radioText, radioHit) = radioManagerTest(context)
         val (audioText, audioNode) = audioDevices(context)
-        val (appText, appHit) = radioApps(context, pm)
+        val (appText, appHit, launchPkg) = radioApps(context, pm)
         val (propText, propHit) = propClues()
 
         val hits = buildList {
+            if (radioHit == true) add("RadioManager 实测可用")
             if (featHit) add("系统 feature")
             if (tvHit) add("TvInput 输入源")
             if (appHit) add("已装收音机 App")
             if (propHit) add("厂商系统属性")
         }
         // 音频节点只证明“有这路音频”，不证明能被应用控台，所以不列入“线索”但要在结论里说清
-        val verdict = if (hits.isEmpty()) {
-            if (audioNode) {
-                "除一个只能证明音频通路存在的调谐节点外，其余四条可控通道都无信号：" +
-                    "硬件可能在，但没开放给第三方 App；继续用网络电台，或只能做「跳回车机自带收音机」。"
-            } else {
-                "五条通道都无信号：这台机器基本可以判定没给第三方 App 留硬件收音机接口，继续走网络电台。"
+        val verdict = when {
+            radioHit == true ->
+                "RadioManager 实测通过：framework 的广播收音机服务接受本应用调谐，" +
+                    "可以直接在 App 内做硬件 FM 收音机（调频走 RadioManager，声音来自 FM_TUNER 音频节点）。"
+            hits.isEmpty() && !audioNode ->
+                "六条通道都无信号：这台机器基本可以判定没给第三方 App 留硬件收音机接口，继续走网络电台。"
+            else -> {
+                val blocked = if (radioHit == false) "RadioManager 实测被系统权限挡住，公开调谐通路走不通；" else ""
+                if (hits.isEmpty()) {
+                    blocked +
+                        "除一个只能证明音频通路存在的调谐节点外，其余可控通道都无信号：" +
+                        "硬件可能在，但没开放给第三方 App；继续用网络电台，或只能做「跳回车机自带收音机」。"
+                } else {
+                    "有线索：" + hits.joinToString("、") + "。" + blocked +
+                        "公开通路就 TvInput 和 RadioManager 两条，各自实测结果见上；" +
+                        "剩下就看厂商属性指向的私有服务；只有「已装收音机 App」时，现实做法一般是" +
+                        "跳回车机自带收音机、或在车机设置里把按键派给那个应用。"
+                }
             }
-        } else {
-            "有线索：" + hits.joinToString("、") + "。" +
-                "优先看 TvInput（Android 唯一公开的可调谐通路）和厂商属性指向的私有服务；" +
-                "只有「已装收音机 App」时，现实做法一般是跳回车机自带收音机、或在车机设置里把按键指派给那个应用。"
         }
 
         return listOf(
             HwLine("运行环境", env.cut(LINE_MAX)),
             HwLine("调谐器特性", featText.cut(LINE_MAX)),
             HwLine("TvInput 输入源", tvText.cut(LINE_MAX)),
+            HwLine("RadioManager 实测", radioText.cut(LINE_MAX)),
             HwLine("音频设备", audioText.cut(LINE_MAX)),
-            HwLine("收音机应用", appText.cut(LINE_MAX)),
+            HwLine("收音机应用", appText.cut(LINE_MAX), launchPkg),
             HwLine("系统属性线索", propText.cut(LINE_MAX)),
             HwLine("综合判断", verdict)
         )
@@ -148,7 +164,67 @@ object HardwareRadioProbe {
         return "发现 ${infos.size} 个输入源：${labels.joinToString("、")}" to true
     }
 
-    // ---- 通道三：音频设备里有没有调谐器节点 ----
+    // ---- 通道三：RadioManager 实测——HAL 在跑只是条件，framework 放不放第三方调谐，当场试一次才知道 ----
+
+    private fun radioManagerTest(context: Context): Pair<String, Boolean?> {
+        // Boolean?：null=没测成（无框架服务），true=放行第三方调谐，false=没放行。
+        // broadcastradio 是 @SystemApi，靠源码 stub 编译、运行时解析 framework 真类；
+        // 本机没有这套框架或接口被限制时任何一步都可能抛 Error，整体兜底成"没测成"。
+        // openTuner/getModules 是阻塞的 binder 调用，HAL 卡死会无限等——单开线程限时，
+        // 超时把结论按"没放行"报，别让诊断页永远停在"正在探测"
+        var inner: Pair<String, Boolean?>? = null
+        var failure: Throwable? = null
+        val worker = Thread {
+            try {
+                inner = radioManagerTestInner(context)
+            } catch (e: Throwable) {
+                failure = e
+            }
+        }.apply {
+            isDaemon = true
+            start()
+            join(RADIO_TEST_TIMEOUT_MS)
+        }
+        return inner ?: when {
+            worker.isAlive ->
+                "RadioManager 实测超时（${RADIO_TEST_TIMEOUT_MS}ms 未返回，HAL 可能卡死）" to false
+            failure != null ->
+                "广播收音机框架不可用（${failure!!.javaClass.simpleName}），本机没有这条通路" to null
+            else -> "RadioManager 实测无结果，本机没有这条通路" to null
+        }
+    }
+
+    private fun radioManagerTestInner(context: Context): Pair<String, Boolean?> {
+        val mgr = runCatching { context.getSystemService(RadioManager::class.java) }.getOrNull()
+            ?: return "系统未提供 RadioManager（无广播收音机框架服务）" to null
+        val modules = try {
+            mgr.modules
+        } catch (e: Throwable) {
+            return "RadioManager 在，取模块列表被拒（${e.javaClass.simpleName}）——框架不放行第三方" to false
+        }
+        if (modules.isEmpty()) {
+            return "RadioManager 在，但模块列表为空（HAL 没注册成可用模块）" to false
+        }
+        val module = modules.first()
+        val band = runCatching { module.bands.firstOrNull()?.createBandConfig() }.getOrNull()
+        // withAudio=false：只拿调谐器句柄验证放行与否，不开声音不调频，测完立即关闭。
+        // callback 就地创建：让类加载问题落在本次 try 里，不拖垮整个探测对象
+        val tuner = try {
+            val callback = object : RadioTuner.Callback() {
+                override fun onConfigurationChanged(config: RadioManager.BandConfig?) {}
+                override fun onError(status: Int) {}
+            }
+            mgr.openTuner(module.id, band, false, callback, null)
+        } catch (e: Throwable) {
+            val detail = e.message?.take(60).orEmpty()
+            return "有 ${modules.size} 个调谐模块，openTuner 没成功" +
+                "（${e.javaClass.simpleName}: $detail）——framework 未放行第三方调谐" to false
+        }
+        runCatching { tuner.close() }
+        return "实测成功：打开调谐器（模块 ${module.id}）后已立即关闭，硬件可被本应用直接控制" to true
+    }
+
+    // ---- 通道四：音频设备里有没有调谐器节点 ----
 
     private fun audioDevices(context: Context): Pair<String, Boolean> {
         val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
@@ -175,9 +251,9 @@ object HardwareRadioProbe {
     private fun typeConstant(name: String): Int =
         runCatching { AudioDeviceInfo::class.java.getField(name).getInt(null) }.getOrDefault(-1)
 
-    // ---- 通道四：机器上装了哪些收音机应用 ----
+    // ---- 通道五：机器上装了哪些收音机应用 ----
 
-    private fun radioApps(context: Context, pm: PackageManager): Pair<String, Boolean> {
+    private fun radioApps(context: Context, pm: PackageManager): Triple<String, Boolean, String?> {
         // 自家包名必须排除：本包叫 com.radio.chinese，早先版本把“我们自己”列成了收音机应用
         val self = context.packageName
         val enumerated = runCatching {
@@ -194,16 +270,20 @@ object HardwareRadioProbe {
 
         if (found.isEmpty()) {
             val note = if (enumerated == null) "读不到应用列表（受包可见性限制）" else "未发现广播收音机应用"
-            return note to false
+            return Triple(note, false, null)
         }
         val launchable = found.filter { pkg ->
             runCatching { pm.getLaunchIntentForPackage(pkg) != null }.getOrDefault(false)
         }
         val tail = if (launchable.isEmpty()) "" else "；可直接跳转打开：${launchable.take(MAX_LIST).joinToString("、")}"
-        return "发现 ${found.size} 个：${found.take(MAX_LIST).joinToString("、")}$tail" to true
+        return Triple(
+            "发现 ${found.size} 个：${found.take(MAX_LIST).joinToString("、")}$tail",
+            true,
+            launchable.firstOrNull()
+        )
     }
 
-    // ---- 通道五：厂商系统属性（车机上往往最有料，且读属性不需要权限） ----
+    // ---- 通道六：厂商系统属性（车机上往往最有料，且读属性不需要权限） ----
 
     private fun propClues(): Pair<String, Boolean> {
         return try {
