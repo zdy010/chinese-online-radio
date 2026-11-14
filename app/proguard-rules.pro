@@ -36,6 +36,12 @@
 # ===== DataStore =====
 -keep class androidx.datastore.** { *; }
 
+# ===== broadcastradio 编译期 stub =====
+# android.media.broadcastradio 是 @SystemApi 不在公共 SDK，HardwareRadioProbe 靠源码 stub 编译；
+# 运行时依赖"类名与方法签名和 framework 完全一致"才能被 boot classpath 的真类按 parent-first 遮蔽。
+# 混淆一旦重命名或删改签名，遮蔽失效，实测通道会拿到 stub 抛的异常或 ClassCastException，结论失真。
+-keep class android.media.broadcastradio.** { *; }
+
 # ===== OkHttp =====
 -dontwarn okhttp3.**
 -dontwarn okio.**
